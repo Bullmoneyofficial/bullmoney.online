@@ -418,9 +418,9 @@ const LiveStreamContent = memo(() => {
 
       {/* Modal */}
       <motion.div
-        initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
-        animate={isDesktop ? { y: 0 } : { x: 0 }}
-        exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+        initial={isDesktop ? { y: '-100%' } : { y: '100%' }}
+        animate={isDesktop ? { y: 0 } : { y: 0 }}
+        exit={isDesktop ? { y: '-100%' } : { y: '100%' }}
         transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
         onClick={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
@@ -428,9 +428,9 @@ const LiveStreamContent = memo(() => {
         className={
           isDesktop
             ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
-            : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
+            : 'fixed inset-0 w-full bg-white flex flex-col safe-area-inset-bottom overflow-hidden'
         }
-        style={{ zIndex: 2147483649, color: '#1d1d1f', pointerEvents: 'auto' }}
+        style={{ zIndex: 2147483649, color: '#1d1d1f', pointerEvents: 'auto', isolation: 'isolate' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">

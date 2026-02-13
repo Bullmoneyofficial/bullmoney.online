@@ -382,18 +382,18 @@ const ProductsContent = memo(() => {
       />
 
       <motion.div
-        initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
-        animate={isDesktop ? { y: 0 } : { x: 0 }}
-        exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+        initial={isDesktop ? { y: '-100%' } : { y: '100%' }}
+        animate={isDesktop ? { y: 0 } : { y: 0 }}
+        exit={isDesktop ? { y: '-100%' } : { y: '100%' }}
         transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
         onClick={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
         className={
           isDesktop
             ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
-            : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
+            : 'fixed inset-0 w-full bg-white flex flex-col safe-area-inset-bottom overflow-hidden'
         }
-        style={{ zIndex: 2147483649, color: '#1d1d1f' }}
+        style={{ zIndex: 2147483649, color: '#1d1d1f', isolation: 'isolate' }}
         data-apple-section
       >
         {/* Header */}
@@ -519,11 +519,12 @@ const ProductsContent = memo(() => {
               onClick={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
               className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto bg-white text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
+              style={{ isolation: 'isolate', WebkitOverflowScrolling: 'touch' }}
             >
               {/* Close Button */}
-              <div className="sticky top-0 z-30 border-b border-white/10 bg-black backdrop-blur-md">
+              <div className="sticky top-0 z-30 border-b border-black/10 bg-white">
                 <div className="flex items-center justify-between p-4">
-                  <h2 className="text-lg font-bold text-white">Product Details</h2>
+                  <h2 className="text-lg font-bold text-black">Product Details</h2>
                   <motion.button
                     onClick={(e) => {
                       e.preventDefault();
@@ -535,7 +536,7 @@ const ProductsContent = memo(() => {
                       e.stopPropagation();
                       setExpandedProduct(null);
                     }}
-                    className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all shadow-lg z-40 cursor-pointer"
+                    className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/5 hover:bg-black/10 border border-black/10 flex items-center justify-center transition-all shadow-lg z-40 cursor-pointer"
                     style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.94 }}
@@ -544,7 +545,7 @@ const ProductsContent = memo(() => {
                     exit={{ opacity: 0, scale: 0 }}
                     aria-label="Close"
                   >
-                    <X className="w-4 h-4 text-white" strokeWidth={2.5} />
+                    <X className="w-4 h-4 text-black" strokeWidth={2.5} />
                   </motion.button>
                 </div>
               </div>

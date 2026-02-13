@@ -617,18 +617,18 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           />
 
           <motion.div
-            initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
-            animate={isDesktop ? { y: 0 } : { x: 0 }}
-            exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            initial={isDesktop ? { y: '-100%' } : { y: '100%' }}
+            animate={isDesktop ? { y: 0 } : { y: 0 }}
+            exit={isDesktop ? { y: '-100%' } : { y: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             onClick={(e) => e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
            className={
               isDesktop
                 ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
-                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
+                : 'fixed inset-0 w-full bg-white flex flex-col safe-area-inset-bottom overflow-hidden'
             }
-            style={{ zIndex: 2147483649, color: '#1d1d1f', pointerEvents: 'auto' }}
+            style={{ zIndex: 2147483649, color: '#1d1d1f', pointerEvents: 'auto', isolation: 'isolate' }}
             data-apple-section
           >
             {/* Header */}
@@ -2204,14 +2204,14 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         style={{ pointerEvents: 'auto' }}
       >
         {/* Inner Container */}
-        <div className="relative z-10 bg-white rounded-2xl md:rounded-3xl border border-black/10 overflow-hidden h-full flex flex-col shadow-2xl">
+        <div className="relative z-10 bg-white rounded-2xl md:rounded-3xl border border-black/10 overflow-hidden h-full flex flex-col shadow-2xl" style={{ isolation: 'isolate' }}>
           {/* Header */}
-          <div className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0 bg-black backdrop-blur-md">
+          <div className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-black/10 flex-shrink-0 bg-white">
             <div className="flex items-center gap-3">
-              <DollarSign className="w-6 h-6 text-white" />
+              <DollarSign className="w-6 h-6 text-black" />
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white">Affiliate Program</h2>
-                <p className="text-xs text-white/70">Earn commissions with BullMoney</p>
+                <h2 className="text-lg sm:text-xl font-bold text-black">Affiliate Program</h2>
+                <p className="text-xs text-black/60">Earn commissions with BullMoney</p>
               </div>
             </div>
             
@@ -2219,10 +2219,10 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               whileHover={isMobile ? {} : { scale: 1.08 }}
               whileTap={{ scale: 0.94 }}
               onClick={handleClose}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all shadow-lg cursor-pointer"
+              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/5 hover:bg-black/10 border border-black/10 flex items-center justify-center transition-all shadow-lg cursor-pointer"
               title="Close (ESC)"
             >
-              <X className="w-4 h-4 text-white" strokeWidth={2.5} />
+              <X className="w-4 h-4 text-black" strokeWidth={2.5} />
             </motion.button>
           </div>
           

@@ -47,10 +47,12 @@ export const LanguageToggle = memo(({
   const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
   const currentCurrency = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
 
-  // Close on outside click (account for portaled popup)
+  // Close on outside click/touch (account for portaled popup)
+  // Uses pointerdown (unified mouse+touch) with touchstart fallback for Instagram WebView
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
+    const handleClickOutside = (e: PointerEvent | TouchEvent | MouseEvent) => {
+      const target = (e instanceof TouchEvent ? e.touches[0]?.target : e.target) as Node | null;
+      if (!target) return;
       if (
         ref.current && !ref.current.contains(target) &&
         dropdownRef.current && !dropdownRef.current.contains(target)
@@ -59,8 +61,13 @@ export const LanguageToggle = memo(({
       }
     };
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      // pointerdown works on modern browsers; touchstart is fallback for Instagram/older WebViews
+      document.addEventListener('pointerdown', handleClickOutside as EventListener, { passive: true });
+      document.addEventListener('touchstart', handleClickOutside as EventListener, { passive: true });
+      return () => {
+        document.removeEventListener('pointerdown', handleClickOutside as EventListener);
+        document.removeEventListener('touchstart', handleClickOutside as EventListener);
+      };
     }
   }, [isOpen]);
 
@@ -131,9 +138,10 @@ export const LanguageToggle = memo(({
       {/* Trigger Button */}
       {variant === 'icon' ? (
         <button
-          onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
+          onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); setSearch(''); }}
+          onTouchEnd={(e) => { e.preventDefault(); setIsOpen(!isOpen); setSearch(''); }}
           className="h-10 px-2.5 flex items-center gap-1.5 rounded-xl transition-colors"
-          style={{ background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }}
+          style={{ background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
           aria-label={`${currentLang.name} · ${currentCurrency.code}`}
           title={`${currentLang.name} · ${currentCurrency.code}`}
         >
@@ -142,12 +150,15 @@ export const LanguageToggle = memo(({
         </button>
       ) : variant === 'row' ? (
         <button
-          onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
+          onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); setSearch(''); }}
+          onTouchEnd={(e) => { e.preventDefault(); setIsOpen(!isOpen); setSearch(''); }}
           className="w-full flex items-center justify-between px-2.5 py-1.5 min-h-[30px] rounded-xl text-[11px] font-medium transition-all duration-200 whitespace-nowrap sm:px-3 sm:py-1.5 sm:min-h-[34px] sm:text-xs"
           style={{ 
             color: isLight ? '#111111' : '#ffffff',
             backgroundColor: isLight ? 'rgb(255, 255, 255)' : 'rgba(255, 255, 255, 0.05)',
             border: isLight ? '1px solid rgba(0, 0, 0, 0.12)' : '1px solid rgba(255, 255, 255, 0.1)',
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
           }}
         >
           <div className="flex items-center gap-2">
@@ -162,12 +173,15 @@ export const LanguageToggle = memo(({
         </button>
       ) : (
         <button
-          onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
+          onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); setSearch(''); }}
+          onTouchEnd={(e) => { e.preventDefault(); setIsOpen(!isOpen); setSearch(''); }}
           className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-xs transition-colors"
           style={{
             background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.1)',
             border: isLight ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.15)',
-            color: isLight ? 'rgb(0,0,0)' : 'rgb(255,255,255)'
+            color: isLight ? 'rgb(0,0,0)' : 'rgb(255,255,255)',
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
           }}
           aria-label={`${currentLang.name} · ${currentCurrency.code}`}
         >
@@ -183,6 +197,9 @@ export const LanguageToggle = memo(({
           ref={dropdownRef}
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
           className={`absolute ${dropdownPos} ${dropdownAlign} rounded-xl overflow-hidden`}
           style={{
             zIndex: 60,
@@ -229,7 +246,7 @@ export const LanguageToggle = memo(({
             </div>
           </div>
 
-          <div className="max-h-48 overflow-y-auto p-1">
+          <div className="max-h-48 overflow-y-auto p-1" style={{ WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' }}>
             {tab === 'language' ? (
               <>
                 {!search && (
@@ -248,11 +265,15 @@ export const LanguageToggle = memo(({
                       )}
                       <button
                         onClick={() => handleSelectLang(lang)}
+                        onTouchEnd={(e) => { e.preventDefault(); handleSelectLang(lang); }}
                         className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-[11px] transition-colors"
-                        style={language === lang.code
-                          ? { background: 'rgba(0,0,0,0.06)', color: 'rgb(0,0,0)' }
-                          : { color: 'rgba(0,0,0,0.75)' }
-                        }
+                        style={{
+                          ...(language === lang.code
+                            ? { background: 'rgba(0,0,0,0.06)', color: 'rgb(0,0,0)' }
+                            : { color: 'rgba(0,0,0,0.75)' }),
+                          touchAction: 'manipulation',
+                          WebkitTapHighlightColor: 'transparent',
+                        }}
                       >
                         <span className="flex items-center gap-2">
                           <span>{lang.flag}</span>
@@ -293,11 +314,15 @@ export const LanguageToggle = memo(({
                   <button
                     key={curr.code}
                     onClick={() => handleSelectCurrency(curr)}
+                    onTouchEnd={(e) => { e.preventDefault(); handleSelectCurrency(curr); }}
                     className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-[11px] transition-colors"
-                    style={currency === curr.code
-                      ? { background: 'rgba(0,0,0,0.06)', color: 'rgb(0,0,0)' }
-                      : { color: 'rgba(0,0,0,0.75)' }
-                    }
+                    style={{
+                      ...(currency === curr.code
+                        ? { background: 'rgba(0,0,0,0.06)', color: 'rgb(0,0,0)' }
+                        : { color: 'rgba(0,0,0,0.75)' }),
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
                   >
                     <span className="flex items-center gap-2">
                       <span className="font-mono w-6" style={{ color: 'rgba(0,0,0,0.5)' }}>{curr.symbol}</span>
@@ -324,14 +349,18 @@ export const LanguageToggle = memo(({
           {/* Backdrop */}
           <div 
             className="fixed inset-0"
-            style={{ background: 'rgba(0,0,0,0.5)', zIndex: 2147483646 }}
+            style={{ background: 'rgba(0,0,0,0.5)', zIndex: 2147483646, touchAction: 'manipulation' }}
             onClick={() => setIsOpen(false)}
+            onTouchEnd={(e) => { e.preventDefault(); setIsOpen(false); }}
           />
           {/* Centered panel */}
           <div
             ref={dropdownRef}
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             className="fixed rounded-xl overflow-hidden"
             style={{
               zIndex: 2147483647,
@@ -351,9 +380,9 @@ export const LanguageToggle = memo(({
               <button
                 onClick={() => { setTab('language'); setSearch(''); }}
                 className="flex-1 py-2.5 text-xs font-medium transition-colors"
-                style={tab === 'language' 
+                style={{ ...(tab === 'language' 
                   ? { color: 'rgb(255,255,255)', background: 'rgba(255,255,255,0.05)' }
-                  : { color: 'rgba(255,255,255,0.5)' }
+                  : { color: 'rgba(255,255,255,0.5)' }), touchAction: 'manipulation' as const }
                 }
               >
                 🌐 Language
@@ -361,9 +390,9 @@ export const LanguageToggle = memo(({
               <button
                 onClick={() => { setTab('currency'); setSearch(''); }}
                 className="flex-1 py-2.5 text-xs font-medium transition-colors"
-                style={tab === 'currency' 
+                style={{ ...(tab === 'currency' 
                   ? { color: 'rgb(255,255,255)', background: 'rgba(255,255,255,0.05)' }
-                  : { color: 'rgba(255,255,255,0.5)' }
+                  : { color: 'rgba(255,255,255,0.5)' }), touchAction: 'manipulation' as const }
                 }
               >
                 💰 Currency
@@ -375,18 +404,18 @@ export const LanguageToggle = memo(({
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.4)' }} />
                 <input
                   type="text"
+                  inputMode="search"
                   placeholder={`Search ${tab === 'language' ? 'languages' : 'currencies'}...`}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full h-7 pl-8 pr-3 rounded-lg text-xs focus:outline-none"
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }}
-                  autoFocus
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgb(255,255,255)', fontSize: '16px' }}
                 />
               </div>
             </div>
 
             {/* List */}
-            <div className="max-h-[50vh] overflow-y-auto p-1">
+            <div className="max-h-[50vh] overflow-y-auto p-1" style={{ WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' }}>
               {tab === 'language' ? (
                 <>
                   {!search && (
@@ -405,11 +434,15 @@ export const LanguageToggle = memo(({
                         )}
                         <button
                           onClick={() => handleSelectLang(lang)}
+                          onTouchEnd={(e) => { e.preventDefault(); handleSelectLang(lang); }}
                           className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors"
-                          style={language === lang.code 
-                            ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
-                            : { color: 'rgba(255,255,255,0.7)' }
-                          }
+                          style={{
+                            ...(language === lang.code 
+                              ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
+                              : { color: 'rgba(255,255,255,0.7)' }),
+                            touchAction: 'manipulation',
+                            WebkitTapHighlightColor: 'transparent',
+                          }}
                         >
                           <span className="flex items-center gap-2">
                             <span>{lang.flag}</span>
@@ -428,9 +461,9 @@ export const LanguageToggle = memo(({
                     <button
                       onClick={() => { setCurrencyCategory('forex'); setSearch(''); }}
                       className="flex-1 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors"
-                      style={currencyCategory === 'forex'
+                      style={{ ...(currencyCategory === 'forex'
                         ? { background: 'rgba(74,222,128,0.15)', color: 'rgb(74,222,128)', border: '1px solid rgba(74,222,128,0.3)' }
-                        : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }
+                        : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }), touchAction: 'manipulation' as const }
                       }
                     >
                       💱 Forex
@@ -438,9 +471,9 @@ export const LanguageToggle = memo(({
                     <button
                       onClick={() => { setCurrencyCategory('crypto'); setSearch(''); }}
                       className="flex-1 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors"
-                      style={currencyCategory === 'crypto'
+                      style={{ ...(currencyCategory === 'crypto'
                         ? { background: 'rgba(251,191,36,0.15)', color: 'rgb(251,191,36)', border: '1px solid rgba(251,191,36,0.3)' }
-                        : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }
+                        : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }), touchAction: 'manipulation' as const }
                       }
                     >
                       ₿ Crypto
@@ -450,11 +483,15 @@ export const LanguageToggle = memo(({
                     <button
                       key={curr.code}
                       onClick={() => handleSelectCurrency(curr)}
+                      onTouchEnd={(e) => { e.preventDefault(); handleSelectCurrency(curr); }}
                       className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors"
-                      style={currency === curr.code 
-                        ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
-                        : { color: 'rgba(255,255,255,0.7)' }
-                      }
+                      style={{
+                        ...(currency === curr.code 
+                          ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
+                          : { color: 'rgba(255,255,255,0.7)' }),
+                        touchAction: 'manipulation',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
                     >
                       <span className="flex items-center gap-2">
                         <span className="font-mono w-6" style={{ color: 'rgba(255,255,255,0.5)' }}>{curr.symbol}</span>
@@ -483,14 +520,18 @@ export const LanguageToggle = memo(({
           {/* Backdrop */}
           <div 
             className="fixed inset-0"
-            style={{ background: 'rgba(0,0,0,0.5)', zIndex: 2147483646 }}
+            style={{ background: 'rgba(0,0,0,0.5)', zIndex: 2147483646, touchAction: 'manipulation' }}
             onClick={() => setIsOpen(false)}
+            onTouchEnd={(e) => { e.preventDefault(); setIsOpen(false); }}
           />
           {/* Centered panel */}
           <div
             ref={dropdownRef}
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             className="fixed rounded-xl overflow-hidden"
             style={{ 
               zIndex: 2147483647,
@@ -510,9 +551,9 @@ export const LanguageToggle = memo(({
             <button
               onClick={() => { setTab('language'); setSearch(''); }}
               className="flex-1 py-2.5 text-xs font-medium transition-colors"
-              style={tab === 'language' 
+              style={{ ...(tab === 'language' 
                 ? { color: 'rgb(255,255,255)', background: 'rgba(255,255,255,0.05)' }
-                : { color: 'rgba(255,255,255,0.5)' }
+                : { color: 'rgba(255,255,255,0.5)' }), touchAction: 'manipulation' as const }
               }
             >
               🌐 Language
@@ -520,9 +561,9 @@ export const LanguageToggle = memo(({
             <button
               onClick={() => { setTab('currency'); setSearch(''); }}
               className="flex-1 py-2.5 text-xs font-medium transition-colors"
-              style={tab === 'currency' 
+              style={{ ...(tab === 'currency' 
                 ? { color: 'rgb(255,255,255)', background: 'rgba(255,255,255,0.05)' }
-                : { color: 'rgba(255,255,255,0.5)' }
+                : { color: 'rgba(255,255,255,0.5)' }), touchAction: 'manipulation' as const }
               }
             >
               💰 Currency
@@ -534,18 +575,18 @@ export const LanguageToggle = memo(({
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.4)' }} />
               <input
                 type="text"
+                inputMode="search"
                 placeholder={`Search ${tab === 'language' ? 'languages' : 'currencies'}...`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full h-7 pl-8 pr-3 rounded-lg text-xs focus:outline-none"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }}
-                autoFocus
+                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgb(255,255,255)', fontSize: '16px' }}
               />
             </div>
           </div>
 
           {/* List */}
-          <div className="max-h-56 overflow-y-auto p-1">
+          <div className="max-h-56 overflow-y-auto p-1" style={{ WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' }}>
             {tab === 'language' ? (
               <>
                 {/* Popular separator */}
@@ -567,11 +608,15 @@ export const LanguageToggle = memo(({
                       )}
                       <button
                         onClick={() => handleSelectLang(lang)}
+                        onTouchEnd={(e) => { e.preventDefault(); handleSelectLang(lang); }}
                         className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors"
-                        style={language === lang.code 
-                          ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
-                          : { color: 'rgba(255,255,255,0.7)' }
-                        }
+                        style={{
+                          ...(language === lang.code 
+                            ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
+                            : { color: 'rgba(255,255,255,0.7)' }),
+                          touchAction: 'manipulation',
+                          WebkitTapHighlightColor: 'transparent',
+                        }}
                       >
                         <span className="flex items-center gap-2">
                           <span>{lang.flag}</span>
@@ -591,9 +636,9 @@ export const LanguageToggle = memo(({
                   <button
                     onClick={() => { setCurrencyCategory('forex'); setSearch(''); }}
                     className="flex-1 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors"
-                    style={currencyCategory === 'forex'
+                    style={{ ...(currencyCategory === 'forex'
                       ? { background: 'rgba(74,222,128,0.15)', color: 'rgb(74,222,128)', border: '1px solid rgba(74,222,128,0.3)' }
-                      : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }
+                      : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }), touchAction: 'manipulation' as const }
                     }
                   >
                     💱 Forex
@@ -601,9 +646,9 @@ export const LanguageToggle = memo(({
                   <button
                     onClick={() => { setCurrencyCategory('crypto'); setSearch(''); }}
                     className="flex-1 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors"
-                    style={currencyCategory === 'crypto'
+                    style={{ ...(currencyCategory === 'crypto'
                       ? { background: 'rgba(251,191,36,0.15)', color: 'rgb(251,191,36)', border: '1px solid rgba(251,191,36,0.3)' }
-                      : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }
+                      : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }), touchAction: 'manipulation' as const }
                     }
                   >
                     ₿ Crypto
@@ -614,11 +659,15 @@ export const LanguageToggle = memo(({
                   <button
                     key={curr.code}
                     onClick={() => handleSelectCurrency(curr)}
+                    onTouchEnd={(e) => { e.preventDefault(); handleSelectCurrency(curr); }}
                     className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors"
-                    style={currency === curr.code 
-                      ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
-                      : { color: 'rgba(255,255,255,0.7)' }
-                    }
+                    style={{
+                      ...(currency === curr.code 
+                        ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
+                        : { color: 'rgba(255,255,255,0.7)' }),
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
                   >
                     <span className="flex items-center gap-2">
                       <span className="font-mono w-6" style={{ color: 'rgba(255,255,255,0.5)' }}>{curr.symbol}</span>
