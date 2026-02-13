@@ -728,10 +728,15 @@ export default function RootLayout({
                 var ua = String(nav.userAgent || '').toLowerCase();
                 var mem = Number(nav.deviceMemory || 0);
                 var cores = Number(nav.hardwareConcurrency || 0);
+                var touch = Number(nav.maxTouchPoints || 0);
+                var vw = window.innerWidth || 0;
+                var vh = window.innerHeight || 0;
 
-                var isIOS = /iphone|ipad|ipod/.test(ua);
-                var isInApp = /fban|fbav|instagram|line|tiktok|telegram|wechat|wv|webview/.test(ua);
-                var constrained = isIOS || isInApp || (mem > 0 && mem <= 4) || (cores > 0 && cores <= 4);
+                var isIOS = /iphone|ipad|ipod/.test(ua) || (/macintosh/.test(ua) && touch > 1);
+                var isIOSWebKit = isIOS && /applewebkit/.test(ua) && !/crios|fxios|edgios|opios/.test(ua);
+                var isInApp = /fban|fbav|instagram|line|tiktok|telegram|wechat|wv|webview|micromessenger|gsa|snapchat|linkedinapp/.test(ua);
+                var isSmallScreen = (vw > 0 && vw <= 430) || (vh > 0 && vh <= 760);
+                var constrained = isIOS || isIOSWebKit || isInApp || isSmallScreen || (mem > 0 && mem <= 4) || (cores > 0 && cores <= 4);
 
                 var inject = function () {
                   if (window.__BM_MEMORY_MANAGER_LOADED__) return;

@@ -534,6 +534,20 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     }
   }, [showProducts, showProductSections]);
 
+  const handleStoreAccountClick = useCallback(() => {
+    try {
+      SoundEffects.click();
+    } catch {
+      // Ignore audio failures
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('bullmoney_open_account_drawer'));
+      return;
+    }
+
+    router.push('/');
+  }, [router]);
+
   const columnNavItems = useMemo(() => ([
     { label: 'Home', href: '/' },
     { label: 'Store', href: '/store' },
@@ -565,7 +579,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
           cartCount={cartCount}
           onCartClick={openCart}
           onSearchClick={handleVisitShop}
-          onUserClick={() => router.push('/login')}
+          onUserClick={handleStoreAccountClick}
         />
       </div>
     </section>

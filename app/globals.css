@@ -24,6 +24,38 @@
   --bm-drunk-rot: 0deg;
 }
 
+/* In-app small-screen viewport normalization (iPhone SE/mini/11-16 buckets) */
+html.bm-small-screen {
+  --bm-mobile-edge-pad: 12px;
+}
+
+html.bm-compact-screen {
+  --bm-mobile-edge-pad: 10px;
+}
+
+html.bm-tiny-screen {
+  --bm-mobile-edge-pad: 8px;
+}
+
+html.bm-small-screen body,
+html.bm-compact-screen body,
+html.bm-tiny-screen body {
+  overflow-x: hidden;
+}
+
+html.bm-small-screen [role="dialog"],
+html.bm-compact-screen [role="dialog"],
+html.bm-tiny-screen [role="dialog"] {
+  max-height: calc(var(--app-height, 100dvh) - 24px);
+}
+
+html.bm-small-screen .container,
+html.bm-compact-screen .container,
+html.bm-tiny-screen .container {
+  padding-left: var(--bm-mobile-edge-pad, 12px) !important;
+  padding-right: var(--bm-mobile-edge-pad, 12px) !important;
+}
+
 /* Drunk scroll effects - ONLY active during showcase scroll animation */
 /* Non-blocking: purely visual, doesn't affect scroll functionality */
 html.bm-drunk-scroll body {

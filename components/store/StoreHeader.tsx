@@ -43,6 +43,7 @@ const LanguageToggle = dynamic(() => import('@/components/LanguageToggle').then(
 const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false, loading: () => null });
 const ProductsModal = dynamic(() => import('@/components/ProductsModal').then(m => ({ default: m.ProductsModal })), { ssr: false, loading: () => null });
 const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer').then(m => ({ default: m.CartDrawer })), { ssr: false, loading: () => null });
+const StoreAccountDrawer = dynamic(() => import('@/components/store/StoreAccountDrawer').then(m => ({ default: m.StoreAccountDrawer })), { ssr: false, loading: () => null });
 const LiveStreamModal = dynamic(() => import('@/components/LiveStreamModal'), { ssr: false, loading: () => null });
 
 // ============================================================================
@@ -127,6 +128,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   } = useStoreMenuUI();
   const { isUltimateHubOpen } = useUIState();
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [accountManagerOpen, setAccountManagerOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
@@ -166,14 +168,23 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const PAGEMODE_FORCE_LOGIN_KEY = 'bullmoney_pagemode_force_login';
   const PAGEMODE_LOGIN_VIEW_KEY = 'bullmoney_pagemode_login_view';
   const PAGEMODE_REDIRECT_PATH_KEY = 'bullmoney_pagemode_redirect_path';
+  const ACCOUNT_DRAWER_PENDING_KEY = 'bullmoney_store_open_account_drawer';
 
-  const startPagemodeLogin = useCallback(() => {
-    SoundEffects.click();
+  const safeClickSound = useCallback(() => {
+    try {
+      SoundEffects.click();
+    } catch {
+      // Ignore audio failures
+    }
+  }, []);
+
+  const startPagemodeLogin = useCallback((redirectPath: string = '/store') => {
+    safeClickSound();
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(PAGEMODE_FORCE_LOGIN_KEY, 'true');
         localStorage.setItem(PAGEMODE_LOGIN_VIEW_KEY, 'true');
-        localStorage.setItem(PAGEMODE_REDIRECT_PATH_KEY, '/store/account');
+        localStorage.setItem(PAGEMODE_REDIRECT_PATH_KEY, redirectPath);
       } catch {
         // Ignore storage errors and still navigate to pagemode.
       }
@@ -184,7 +195,33 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     } else {
       router.push('/');
     }
-  }, [router, pathname]);
+  }, [router, pathname, safeClickSound]);
+
+  const openAccountDrawer = useCallback(() => {
+    safeClickSound();
+    setAccountManagerOpen(true);
+    setDesktopMenuOpen(false);
+    setMobileMenuOpen(false);
+  }, [setDesktopMenuOpen, setMobileMenuOpen, safeClickSound]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const currentRedirect = localStorage.getItem(PAGEMODE_REDIRECT_PATH_KEY);
+      if (currentRedirect === '/store/account') {
+        localStorage.setItem(PAGEMODE_REDIRECT_PATH_KEY, '/store');
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    if (!isAuthenticated) return;
+
+    const shouldOpenDrawer = localStorage.getItem(ACCOUNT_DRAWER_PENDING_KEY) === 'true';
+    if (!shouldOpenDrawer) return;
+
+    localStorage.removeItem(ACCOUNT_DRAWER_PENDING_KEY);
+    setAccountManagerOpen(true);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     return () => {
@@ -561,15 +598,23 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setMobileMenuOpen(false);
   }, [signOut]);
   
-  // Handle user click - always open pagemode login first, then redirect to /store/account
+  // Handle user click - open account drawer when authenticated
   const handleUserClick = useCallback(() => {
-    SoundEffects.click();
-    if (isAuthenticated) {
-      router.push('/store/account');
-      return;
-    }
-    startPagemodeLogin();
-  }, [isAuthenticated, router, startPagemodeLogin]);
+    openAccountDrawer();
+  }, [openAccountDrawer]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleAccountDrawerRequest = () => {
+      handleUserClick();
+    };
+
+    window.addEventListener('bullmoney_open_account_drawer', handleAccountDrawerRequest);
+    return () => {
+      window.removeEventListener('bullmoney_open_account_drawer', handleAccountDrawerRequest);
+    };
+  }, [handleUserClick]);
   
   // Handle search click - open site-wide search overlay
   const handleSearchClick = useCallback(() => {
@@ -605,12 +650,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
   const handleRewardsClick = useCallback(() => {
     if (isAuthenticated && recruit) {
-      SoundEffects.click();
-      router.push('/store/account');
+      openAccountDrawer();
     } else {
-      startPagemodeLogin();
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(ACCOUNT_DRAWER_PENDING_KEY, 'true');
+        } catch {
+          // Ignore storage errors
+        }
+      }
+      startPagemodeLogin('/store');
     }
-  }, [isAuthenticated, recruit, router, startPagemodeLogin]);
+  }, [isAuthenticated, recruit, openAccountDrawer, startPagemodeLogin]);
   
   // Handle category click - navigate and scroll to products (only for store pages)
   const handleCategoryClick = useCallback((href: string) => {
@@ -877,7 +928,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   <button
                     onClick={() => {
                       setDesktopMenuOpen(false);
-                      router.push('/store/account');
+                      openAccountDrawer();
                     }}
                     className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
                     style={{ color: '#000000' }}
@@ -1215,10 +1266,17 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     onClick={() => {
                       setMobileMenuOpen(false);
                       if (isAuthenticated && recruit) {
-                        router.push('/store/account');
+                        openAccountDrawer();
                         return;
                       }
-                      startPagemodeLogin();
+                      if (typeof window !== 'undefined') {
+                        try {
+                          localStorage.setItem(ACCOUNT_DRAWER_PENDING_KEY, 'true');
+                        } catch {
+                          // Ignore storage errors
+                        }
+                      }
+                      startPagemodeLogin('/store');
                     }}
                     className="h-8 w-8 flex items-center justify-center rounded-lg"
                     style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
@@ -1330,14 +1388,13 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                       </span>
                     </summary>
                     <div className="space-y-1 pb-1 pl-2">
-                      <Link
-                        href="/recruit"
-                        onClick={handleCloseMobileMenu}
-                        className="block py-1.5 text-sm"
+                      <button
+                        onClick={openAccountDrawer}
+                        className="block w-full py-1.5 text-left text-sm"
                         style={{ color: 'rgba(0,0,0,0.85)' }}
                       >
                         Profile
-                      </Link>
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="block w-full py-1.5 text-left text-sm"
@@ -1527,6 +1584,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       <LazyAffiliateModal
         isOpen={affiliateModalOpen}
         onClose={() => setAffiliateModalOpen(false)}
+      />
+
+      {/* Account Drawer */}
+      <StoreAccountDrawer
+        isOpen={accountManagerOpen}
+        onClose={() => setAccountManagerOpen(false)}
       />
       
       {/* FAQ Modal - Using Lazy System */}

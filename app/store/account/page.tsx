@@ -174,7 +174,11 @@ const STATUS_CONFIG = {
   refunded: { color: 'text-orange-400', bg: 'bg-orange-400/10', icon: Package, label: 'Refunded' },
 };
 
-export default function AccountPage() {
+type AccountPageContentProps = {
+  embedded?: boolean;
+};
+
+export function StoreAccountPageContent({ embedded = false }: AccountPageContentProps = {}) {
   const router = useRouter();
   const { recruit, isAuthenticated, isLoading: authLoading, signOut } = useRecruitAuth();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -194,15 +198,28 @@ export default function AccountPage() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
+    if (embedded) return;
     if (!authLoading && !isAuthenticated) {
       router.push('/store');
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [embedded, authLoading, isAuthenticated, router]);
 
   // Fetch orders from Supabase (with local cache for instant loads)
   useEffect(() => {
     async function fetchOrders() {
-      if (!recruit) return;
+      if (!recruit) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T | null> => {
+        return await Promise.race([
+          promise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+        ]);
+      };
       
       // ===== INSTANT LOAD: Show cached data first =====
       const cachedOrders = getCachedOrders(recruit.email);
@@ -294,13 +311,17 @@ export default function AccountPage() {
         console.error('Exception fetching addresses:', err);
       }
 
-      // Sync wishlist and cart from SQL
-      await Promise.all([
-        syncWishlistFromSQL(recruit.email),
-        syncCartFromSQL(recruit.email),
-      ]);
-      
-      setLoading(false);
+      // Sync wishlist and cart from SQL (do not block UI indefinitely)
+      try {
+        await withTimeout(Promise.all([
+          syncWishlistFromSQL(recruit.email),
+          syncCartFromSQL(recruit.email),
+        ]), 3500);
+      } catch (err) {
+        console.error('Account sync timeout/error:', err);
+      } finally {
+        setLoading(false);
+      }
     }
     
     fetchOrders();
@@ -438,13 +459,56 @@ export default function AccountPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className={`${embedded ? 'h-full min-h-0' : 'min-h-screen'} bg-white flex items-center justify-center`}>
         <div className="w-8 h-8 border-2 border-black/20 border-t-black rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!isAuthenticated || !recruit) {
+    if (embedded) {
+      return (
+        <div className="h-full bg-white flex items-center justify-center px-6" style={{ color: 'rgb(0,0,0)' }}>
+          <div className="text-center max-w-sm">
+            <h2 className="text-xl font-medium">Sign in to view your account</h2>
+            <p className="text-sm text-black/50 mt-2">Access your orders, wishlist, addresses, and settings.</p>
+            <div className="mt-5 grid grid-cols-3 gap-2 text-left">
+              <div className="rounded-xl border border-black/10 bg-black/[0.03] px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-black/45">Orders</p>
+                <p className="text-base font-semibold text-black">0</p>
+              </div>
+              <div className="rounded-xl border border-black/10 bg-black/[0.03] px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-black/45">Wishlist</p>
+                <p className="text-base font-semibold text-black">0</p>
+              </div>
+              <div className="rounded-xl border border-black/10 bg-black/[0.03] px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-black/45">Addresses</p>
+                <p className="text-base font-semibold text-black">0</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  try {
+                    localStorage.setItem('bullmoney_pagemode_force_login', 'true');
+                    localStorage.setItem('bullmoney_pagemode_login_view', 'true');
+                    localStorage.setItem('bullmoney_pagemode_redirect_path', '/store');
+                    localStorage.setItem('bullmoney_store_open_account_drawer', 'true');
+                  } catch {
+                    // Ignore storage errors
+                  }
+                  window.location.assign('/');
+                }
+              }}
+              className="mt-5 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium"
+              style={{ background: '#111111', color: '#ffffff' }}
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 
@@ -510,16 +574,18 @@ export default function AccountPage() {
           filter: invert(0);
         }
       `}</style>
-    <div className="min-h-screen bg-white" style={{ color: 'rgb(0, 0, 0)' }}>
-      <div className="max-w-350 mx-auto px-4 md:px-8 py-8 md:py-16">
+    <div className={`${embedded ? 'h-full min-h-0 overflow-y-auto overscroll-contain' : 'min-h-screen'} bg-white`} style={{ color: 'rgb(0, 0, 0)' }}>
+      <div className="max-w-350 mx-auto px-4 md:px-8 py-6 md:py-10">
         {/* Back to Store */}
-        <Link
-          href="/store"
-          className="inline-flex items-center gap-2 text-black/50 hover:text-black/80 transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back to Store</span>
-        </Link>
+        {!embedded && (
+          <Link
+            href="/store"
+            className="inline-flex items-center gap-2 text-black/50 hover:text-black/80 transition-colors mb-8"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back to Store</span>
+          </Link>
+        )}
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-10">
@@ -1370,4 +1436,8 @@ export default function AccountPage() {
     </AnimatePresence>
     </>
   );
+}
+
+export default function AccountPage() {
+  return <StoreAccountPageContent />;
 }

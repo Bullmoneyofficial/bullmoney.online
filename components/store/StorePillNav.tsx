@@ -116,6 +116,27 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
     onMobileMenuClick?.();
   }, [onMobileMenuClick]);
 
+  const handleUserButtonClick = useCallback(() => {
+    try {
+      if (onUserClick) {
+        onUserClick();
+        return;
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('bullmoney_open_account_drawer'));
+      }
+    } catch (error) {
+      console.error('[StorePillNav] Account button handler failed:', error);
+      if (typeof window !== 'undefined') {
+        try {
+          window.dispatchEvent(new Event('bullmoney_open_account_drawer'));
+        } catch {
+          // no-op fallback
+        }
+      }
+    }
+  }, [onUserClick]);
+
   const headerClassName = position === 'fixed'
     ? `fixed top-0 left-0 right-0 z-[1000] ${className}`
     : `relative w-full ${className}`;
@@ -316,7 +337,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                 type="button"
                 className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10 active:scale-95"
                 style={{ color: 'rgba(0,0,0,0.85)' }}
-                onClick={onUserClick}
+                onClick={handleUserButtonClick}
                 aria-label="Account"
               >
                 {isAuthenticated ? (

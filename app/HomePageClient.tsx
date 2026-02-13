@@ -955,9 +955,10 @@ function HomeContent() {
 
     const redirectPath = safeGetLocal(PAGEMODE_REDIRECT_PATH_KEY);
     if (redirectPath) {
+      const normalizedRedirectPath = redirectPath === '/store/account' ? '/store' : redirectPath;
       safeRemoveLocal(PAGEMODE_REDIRECT_PATH_KEY);
       safeRemoveLocal(PAGEMODE_FORCE_LOGIN_KEY);
-      window.location.assign(redirectPath);
+      window.location.assign(normalizedRedirectPath);
       return;
     }
     

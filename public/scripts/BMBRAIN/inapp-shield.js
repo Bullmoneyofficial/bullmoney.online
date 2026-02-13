@@ -5,8 +5,30 @@
 var w=window,d=document,n=navigator;
 var ua=n.userAgent||'';
 var isIOS=/iphone|ipad|ipod/i.test(ua)||(/macintosh/i.test(ua)&&n.maxTouchPoints>1);
+var isIOSWebKit=isIOS&&/applewebkit/i.test(ua)&&!/crios|fxios|edgios|opios/i.test(ua);
+var hasVisualViewport=!!(w.visualViewport&&typeof w.visualViewport.addEventListener==='function');
 var B=w.__BM_BRAIN__=w.__BM_BRAIN__||{};
 var S=w.__BM_INAPP_SHIELD__={active:false,browser:null,fixes:[]};
+
+if(typeof w.CustomEvent!=='function'){
+  var CustomEventPolyfill=function(event,params){
+    params=params||{bubbles:false,cancelable:false,detail:null};
+    var evt=d.createEvent('CustomEvent');
+    evt.initCustomEvent(event,params.bubbles,params.cancelable,params.detail);
+    return evt;
+  };
+  CustomEventPolyfill.prototype=w.Event&&w.Event.prototype;
+  w.CustomEvent=CustomEventPolyfill;
+}
+
+function closestAnchor(node){
+  var current=node;
+  while(current&&current!==d&&current!==d.body){
+    if(current.tagName==='A'&&current.getAttribute&&current.getAttribute('href')) return current;
+    current=current.parentNode;
+  }
+  return null;
+}
 
 var detections=[
   {name:'instagram',pattern:/instagram/i},
@@ -21,11 +43,19 @@ var detections=[
   {name:'pinterest',pattern:/pinterest/i},
   {name:'reddit',pattern:/reddit/i},
   {name:'discord',pattern:/discord/i},
-  {name:'webview-ios',pattern:/\bwv\b.*safari/i},
+  {name:'webview-ios',pattern:/iphone|ipad|ipod/i},
   {name:'webview-android',pattern:/\bwv\b/i}
 ];
 
 for(var i=0;i<detections.length;i++){
+  if(detections[i].name==='webview-ios'){
+    if(isIOSWebKit&&(/instagram|fban|fbav|line|tiktok|telegram|micromessenger|gsa|snapchat|linkedinapp|webview/i.test(ua)||!/safari/i.test(ua))){
+      S.browser=detections[i].name;
+      S.active=true;
+      break;
+    }
+    continue;
+  }
   if(detections[i].pattern.test(ua)){
     S.browser=detections[i].name;
     S.active=true;
@@ -43,8 +73,8 @@ root.classList.add('in-app-browser','reduce-effects');
 S.fixes.push('inapp-detected','keep-3d');
 
 function fixViewport(){
-  var h=(w.visualViewport&&w.visualViewport.height)||w.innerHeight;
-  var ww=(w.visualViewport&&w.visualViewport.width)||w.innerWidth;
+  var h=(hasVisualViewport&&w.visualViewport.height)||w.innerHeight;
+  var ww=(hasVisualViewport&&w.visualViewport.width)||w.innerWidth;
   var rs=root.style;
   rs.setProperty('--vh',(h*0.01)+'px');
   rs.setProperty('--app-height',h+'px');
@@ -52,11 +82,16 @@ function fixViewport(){
   if(!rs.getPropertyValue('--safe-bottom'))rs.setProperty('--safe-bottom','env(safe-area-inset-bottom,0px)');
 
   if(isIOS){
-    // Normalize large iPhone CSS viewport to feel closer to Android (360dp baseline).
-    var targetWidth=360;
+    // Normalize iPhone viewport buckets (SE/mini/11-16) for consistent in-app layout.
+    var isTinyScreen=ww<=320||h<=640;
+    var isCompactScreen=ww<=375||h<=700;
+    var isSmallScreen=ww<=430||h<=760;
+
+    var targetWidth=isTinyScreen?340:(isCompactScreen?356:(isSmallScreen?372:390));
     var rawScale=ww>targetWidth?(targetWidth/ww):1;
     // Keep range safe to avoid breaking fixed/sticky layers in webviews.
-    var scale=Math.max(0.88,Math.min(1,rawScale));
+    var minScale=isTinyScreen?0.80:(isCompactScreen?0.84:(isSmallScreen?0.88:0.90));
+    var scale=Math.max(minScale,Math.min(1,rawScale));
 
     // Use rem scaling for broad, low-risk size normalization across Tailwind layouts.
     rs.setProperty('font-size',(scale*100).toFixed(2)+'%');
@@ -72,13 +107,31 @@ function fixViewport(){
       root.removeAttribute('data-ios-inapp-scale');
       S.scale=1;
     }
+
+    if(isSmallScreen){
+      root.classList.add('bm-small-screen');
+    }else{
+      root.classList.remove('bm-small-screen');
+    }
+    if(isCompactScreen){
+      root.classList.add('bm-compact-screen');
+    }else{
+      root.classList.remove('bm-compact-screen');
+    }
+    if(isTinyScreen){
+      root.classList.add('bm-tiny-screen');
+    }else{
+      root.classList.remove('bm-tiny-screen');
+    }
   }
 }
 fixViewport();
 w.addEventListener('resize',fixViewport,{passive:true});
-if(w.visualViewport&&w.visualViewport.addEventListener){
+if(hasVisualViewport){
   w.visualViewport.addEventListener('resize',fixViewport,{passive:true});
+  w.visualViewport.addEventListener('scroll',fixViewport,{passive:true});
 }
+w.addEventListener('orientationchange',function(){setTimeout(fixViewport,80);},{passive:true});
 S.fixes.push('viewport-fix');
 if(isIOS)S.fixes.push('ios-viewport-normalize');
 
@@ -123,7 +176,7 @@ if(d.head)d.head.appendChild(style);
 S.fixes.push('css-reduced');
 
 d.addEventListener('click',function(e){
-  var a=e.target&&e.target.closest?e.target.closest('a[href]'):null;
+  var a=e.target&&e.target.closest?e.target.closest('a[href]'):closestAnchor(e.target);
   if(!a)return;
   var href=a.getAttribute('href')||'';
   if(href.indexOf('http')!==0||href.indexOf(w.location.hostname)!==-1)return;

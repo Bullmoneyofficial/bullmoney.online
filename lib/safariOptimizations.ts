@@ -16,6 +16,8 @@ export interface SafariInfo {
   isMobileSafari: boolean;
   isIOSSafari: boolean;
   isIOSWebKit: boolean;
+  isChromeIOS: boolean;
+  isChromeAndroid: boolean;
   isInAppBrowser: boolean;
   isLegacyIOS: boolean;
   supportsIOS16Plus: boolean;
@@ -166,7 +168,9 @@ function setupSafariGpuMemoryManager(): void {
   let idleTimer: number | null = null;
   const ua = navigator.userAgent;
   const isAndroidFamily = /Android|SamsungBrowser/i.test(ua);
-  const IDLE_MS = (detectSafari().isMobileSafari || isAndroidFamily) ? 60_000 : 90_000;
+  const info = detectSafari();
+  const isMobilePriority = info.isMobileSafari || info.isIOSWebKit || info.isChromeIOS || info.isChromeAndroid || isAndroidFamily;
+  const IDLE_MS = isMobilePriority ? 60_000 : 90_000;
 
   const queueIdlePause = () => {
     const task = () => pauseGpuElements('idle');
@@ -240,6 +244,8 @@ export function detectSafari(): SafariInfo {
 
   const ua = navigator.userAgent;
   const uaLower = ua.toLowerCase();
+  const isChromeIOS = /crios/i.test(ua);
+  const isChromeAndroid = /android/i.test(ua) && /chrome\//i.test(ua) && !/edg|opr|opera|samsungbrowser/i.test(ua);
   
   // Safari detection (must exclude Chrome which also contains 'Safari')
   const isSafari = /^((?!chrome|android|crios|fxios|opera|opr|edge|edg).)*safari/i.test(ua);
@@ -255,7 +261,7 @@ export function detectSafari(): SafariInfo {
   const isIOSSafari = isIOS && isSafari;
 
   // iOS WebKit engine browsers/webviews (Safari + in-app + other iOS wrappers on WebKit)
-  const isIOSWebKit = isIOS && /AppleWebKit/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+  const isIOSWebKit = isIOS && /AppleWebKit/i.test(ua);
   
   // Mobile Safari (includes iPadOS in mobile mode)
   const isMobileSafari = isIOSSafari || (uaLower.includes('mobile') && isSafari) || (isIOSWebKit && isInAppBrowser);
@@ -307,6 +313,8 @@ export function detectSafari(): SafariInfo {
     isMobileSafari,
     isIOSSafari,
     isIOSWebKit,
+    isChromeIOS,
+    isChromeAndroid,
     isInAppBrowser,
     isLegacyIOS,
     supportsIOS16Plus,
@@ -335,6 +343,8 @@ function getDefaultSafariInfo(): SafariInfo {
     isMobileSafari: false,
     isIOSSafari: false,
     isIOSWebKit: false,
+    isChromeIOS: false,
+    isChromeAndroid: false,
     isInAppBrowser: false,
     isLegacyIOS: false,
     supportsIOS16Plus: false,
@@ -358,7 +368,7 @@ export function applySafariCSSFixes(): void {
   if (typeof document === 'undefined') return;
   
   const info = detectSafari();
-  if (!info.isSafari && !info.isIOSWebKit) return;
+  if (!info.isSafari && !info.isIOSWebKit && !info.isChromeIOS && !info.isChromeAndroid) return;
   
   const root = document.documentElement;
   
@@ -366,6 +376,12 @@ export function applySafariCSSFixes(): void {
   root.classList.add('is-safari');
   if (info.isIOSWebKit) {
     root.classList.add('is-ios-webkit');
+  }
+  if (info.isChromeIOS) {
+    root.classList.add('is-chrome-ios');
+  }
+  if (info.isChromeAndroid) {
+    root.classList.add('is-chrome-android');
   }
   if (info.isMobileSafari) {
     root.classList.add('is-mobile-safari');
@@ -576,7 +592,7 @@ export function setupSafariWebGLFix(): void {
   if (typeof window === 'undefined') return;
   
   const info = detectSafari();
-  if (!info.isSafari && !info.isIOSWebKit) return;
+  if (!info.isSafari && !info.isIOSWebKit && !info.isChromeIOS && !info.isChromeAndroid) return;
   
   // Safari can lose WebGL context under memory pressure
   // Listen for context loss and attempt recovery
@@ -608,8 +624,8 @@ export function applySafariMemoryOptimizations(): void {
   const ua = navigator.userAgent;
   const isSamsungInternet = /SamsungBrowser/i.test(ua);
   const isAndroidBrowser = /Android/i.test(ua);
-  const shouldRunGpuManager = info.isSafari || info.isIOSWebKit || info.isInAppBrowser || isSamsungInternet || isAndroidBrowser;
-  const shouldApplySafariLikeTuning = info.isSafari || info.isIOSWebKit;
+  const shouldRunGpuManager = info.isSafari || info.isIOSWebKit || info.isChromeIOS || info.isChromeAndroid || info.isInAppBrowser || isSamsungInternet || isAndroidBrowser;
+  const shouldApplySafariLikeTuning = info.isSafari || info.isIOSWebKit || info.isChromeIOS || info.isChromeAndroid;
 
   if (!shouldApplySafariLikeTuning) {
     if (shouldRunGpuManager) {
