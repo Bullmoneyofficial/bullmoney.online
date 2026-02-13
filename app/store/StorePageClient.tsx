@@ -1302,7 +1302,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const timelineProducts = useMemo(() => products.slice(4, 8), [products]);
   const heroMedia = useMemo(() => {
     const slide = resolvedHeroSlide;
-    const forcedSplineScene = slide.type === 'spline' ? slide.scene : '/scene1.splinecode';
+    const forcedSplineScene = slide.type === 'spline' ? (slide.scene ?? '/scene1.splinecode') : '/scene1.splinecode';
 
     return (
       <div
@@ -1497,7 +1497,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         className="absolute inset-0 z-0 h-full w-full"
         style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
       >
-        <SplineBackground scene={slide.scene} className="h-full w-full" priority />
+        <SplineBackground scene={slide.type === 'spline' ? (slide.scene ?? '/scene1.splinecode') : '/scene1.splinecode'} className="h-full w-full" priority />
       </div>
     );
   }, [resolvedHeroSlide, allowHeavyHeroReady]);
