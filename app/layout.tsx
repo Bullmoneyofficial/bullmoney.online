@@ -297,8 +297,11 @@ export default function RootLayout({
       /* Loading steps */
       #bm-splash .bm-steps{display:flex;flex-direction:column;gap:6px;margin-top:20px;position:relative;z-index:10;}
       #bm-splash .bm-step{display:flex;align-items:center;gap:10px;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.05em;color:rgba(0,0,0,.25);transition:color .3s ease,opacity .3s ease,transform .3s ease;opacity:.5;transform:translateX(0);}
+      #bm-splash .bm-step span:last-child{position:relative;display:inline-block;}
       #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;transform:translateX(3px);}
+      #bm-splash .bm-step.active span:last-child{background:linear-gradient(100deg,#0f0f12 0%,#3f3f46 35%,#0f0f12 70%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-step-sheen 1.4s ease-in-out infinite;}
       #bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}
+      #bm-splash .bm-step.done span:last-child{animation:bm-step-settle .5s ease-out both;}
       #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
       #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
       #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
@@ -306,8 +309,10 @@ export default function RootLayout({
 
       @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9)}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
       @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
+      @keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
+      @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
       @keyframes bm-sway{0%{transform:translate3d(0,0,0) rotate(0deg)}12%{transform:translate3d(-18px,2px,0) rotate(-1.2deg)}24%{transform:translate3d(14px,-2px,0) rotate(1deg)}38%{transform:translate3d(-22px,3px,0) rotate(-1.5deg)}52%{transform:translate3d(16px,-3px,0) rotate(1.1deg)}68%{transform:translate3d(-12px,2px,0) rotate(-0.7deg)}84%{transform:translate3d(8px,-1px,0) rotate(0.5deg)}100%{transform:translate3d(0,0,0) rotate(0deg)}}
-      @media(prefers-reduced-motion:reduce){#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
+      @media(prefers-reduced-motion:reduce){#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
       @media(min-width:768px){#bm-splash .bm-logo-wrap{width:160px;height:160px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}
         ` }} />
         {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
