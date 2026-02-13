@@ -1,12 +1,41 @@
 'use client';
 
+import { useEffect } from 'react';
 import DesignStudioPage from "@/components/studio/DesignStudioPage";
 import DesignSections from "@/components/studio/DesignSections";
 import DesignPrintSections from "./DesignPrintSections";
 import DesignShowcaseCards from "./DesignShowcaseCards";
+import { forceEnableScrolling } from '@/lib/forceScrollEnabler';
+import { useShowcaseScroll } from '@/hooks/useShowcaseScroll';
 import "./design.css";
 
 export default function DesignPage() {
+  // Showcase scroll animation - runs once per session
+  useShowcaseScroll({
+    scrollDownDuration: 1800,
+    springBackDuration: 1200,
+    genieDuration: 500,
+    genieScale: 0.96,
+    startDelay: 800,
+    enabled: true,
+    pageId: 'design',
+  });
+
+  // Force enable scrolling for all devices
+  useEffect(() => {
+    // Mark as design page
+    document.documentElement.setAttribute('data-design-page', 'true');
+    document.body.setAttribute('data-design-page', 'true');
+    
+    const cleanup = forceEnableScrolling();
+    
+    return () => {
+      cleanup?.();
+      document.documentElement.removeAttribute('data-design-page');
+      document.body.removeAttribute('data-design-page');
+    };
+  }, []);
+
   return (
     <>
       <main className="design-page-root">

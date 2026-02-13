@@ -1,13 +1,26 @@
-/* Modal Scroll Lock - Prevents background scrolling when modals are open */
+/* Modal Scroll Lock - Prevents background scrolling when modals are open
+   CRITICAL: Only applies when modals are ACTUALLY open */
 
-body.modal-open,
-body[data-modal-open="true"] {
+/* SAFETY: Only lock scroll when modal is genuinely open AND visible */
+body.modal-open:has([role="dialog"]:not([data-state="closed"])),
+body[data-modal-open="true"]:has([role="dialog"]:not([data-state="closed"])) {
   overflow: hidden !important;
   position: fixed;
   width: 100%;
   height: 100%;
   touch-action: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Fallback for browsers without :has() support */
+@supports not (selector(:has(*))) {
+  body.modal-open,
+  body[data-modal-open="true"] {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 body[data-active-ui="gamesDrawer"].modal-open,
@@ -19,14 +32,25 @@ body[data-active-ui="supportDrawer"][data-modal-open="true"] {
   height: auto !important;
 }
 
-/* Affiliate modal hard lock (beats global/store overflow:auto !important rules) */
-html[data-affiliate-open="true"],
-html[data-affiliate-open="true"] body,
-body[data-affiliate-open="true"] {
+/* Affiliate modal hard lock (beats global/store overflow:auto !important rules)
+   CRITICAL: Only lock when affiliate modal is ACTUALLY visible */
+html[data-affiliate-open="true"]:has([data-affiliate-modal]:not([data-state="closed"])),
+html[data-affiliate-open="true"]:has([data-affiliate-modal]:not([data-state="closed"])) body,
+body[data-affiliate-open="true"]:has([data-affiliate-modal]:not([data-state="closed"])) {
   overflow: hidden !important;
   overflow-y: hidden !important;
   overscroll-behavior: none !important;
   -webkit-overflow-scrolling: auto !important;
+}
+
+/* Fallback for browsers without :has() support */
+@supports not (selector(:has(*))) {
+  html[data-affiliate-open="true"],
+  html[data-affiliate-open="true"] body,
+  body[data-affiliate-open="true"] {
+    overflow: hidden !important;
+    overflow-y: hidden !important;
+  }
 }
 
 /* Preserve scroll position when locking */

@@ -3,7 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 // Combined 12 CSS files into 1 for faster compilation (fewer modules to resolve)
 import "../styles/_combined-layout.css";
-import "./styles/90-scroll-anywhere.css";
+// import "./styles/90-scroll-anywhere.css"; // Temporarily disabled - causing PostCSS parse errors, scroll fixes moved to inline styles
 import { cn } from "@/lib/utils";
 import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";
 
@@ -249,6 +249,7 @@ export default function RootLayout({
         <style dangerouslySetInnerHTML={{ __html: `
       :root{--app-vh:1vh;}
       html,body{background:#000000!important;}
+      
       #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100vw;height:calc(var(--app-vh,1vh)*100);min-height:100vh;min-height:100dvh;min-height:100svh;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;}
       #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);}
 
@@ -298,6 +299,179 @@ export default function RootLayout({
       #bm-splash .bm-steps{display:flex;flex-direction:column;gap:6px;margin-top:20px;position:relative;z-index:10;}
       #bm-splash .bm-step{display:flex;align-items:center;gap:10px;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.05em;color:rgba(0,0,0,.25);transition:color .3s ease,opacity .3s ease,transform .3s ease;opacity:.5;transform:translateX(0);}
       #bm-splash .bm-step span:last-child{position:relative;display:inline-block;}
+
+      /* ═══════════════════════════════════════════════════════════════════ */
+      /* CRITICAL SCROLL FIX - Ensures scrolling works on ALL devices/browsers */
+      /* Fixes: Chrome, Safari, iOS Safari, Android, Samsung Internet */
+      /* Updated 2026-02-13: Enhanced for games/design/store/app pages */
+      /* ═══════════════════════════════════════════════════════════════════ */
+      
+      /* BASE SCROLL ENABLEMENT - Works unless modal is actually open */
+      html:not(:has([role="dialog"]:not([data-state="closed"]))),
+      body:not(:has([role="dialog"]:not([data-state="closed"]))) {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        touch-action: pan-y pan-x !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain !important;
+        scroll-behavior: auto !important;
+        position: relative !important;
+      }
+      
+      /* Fallback for browsers without :has() support */
+      @supports not (selector(:has(*))) {
+        html:not(.modal-open):not([data-modal-open="true"]),
+        body:not(.modal-open):not([data-modal-open="true"]) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          height: auto !important;
+          min-height: 100vh !important;
+          touch-action: pan-y pan-x !important;
+          position: relative !important;
+        }
+      }
+      
+      /* Remove any blocking pointer events */
+      html:not(:has([role="dialog"])), 
+      body:not(:has([role="dialog"])), 
+      #__next, #root {
+        pointer-events: auto !important;
+      }
+      
+      /* iOS-specific scroll fixes - CRITICAL */
+      @supports (-webkit-touch-callout: none) {
+        html:not(.modal-open), 
+        body:not(.modal-open) {
+          -webkit-overflow-scrolling: touch !important;
+          overflow-y: auto !important;
+        }
+      }
+      
+      /* Android-specific fixes - CRITICAL */
+      @media (max-width: 768px) {
+        html:not(.modal-open) {
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+        }
+        body:not(.modal-open) {
+          overflow-y: auto !important;
+          position: relative !important;
+          min-height: 100vh !important;
+        }
+      }
+      
+      /* Samsung Internet & Chrome Mobile fixes */
+      @supports (-webkit-appearance: none) {
+        html:not(.modal-open), 
+        body:not(.modal-open) {
+          overflow-y: auto !important;
+          touch-action: pan-y pan-x !important;
+        }
+        
+        /* Samsung-specific scroll enhancements */
+        html.samsung-browser:not(.modal-open),
+        body.samsung-scroll:not(.modal-open) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          touch-action: pan-y pan-x !important;
+          -webkit-overflow-scrolling: touch !important;
+          height: auto !important;
+          transform: none !important;
+        }
+        
+        /* Chrome/Chromium scroll enhancements */
+        html.chrome-browser:not(.modal-open),
+        body.chrome-scroll:not(.modal-open) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          touch-action: pan-y pan-x !important;
+          -webkit-overflow-scrolling: touch !important;
+          height: auto !important;
+          transform: none !important;
+        }
+        
+        /* Safari scroll enhancements */
+        html.safari-browser:not(.modal-open),
+        body.safari-scroll:not(.modal-open) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          touch-action: pan-y pan-x !important;
+          -webkit-overflow-scrolling: touch !important;
+          height: auto !important;
+          transform: none !important;
+        }
+        
+        /* In-app browser scroll enhancements */
+        html.inapp-browser:not(.modal-open),
+        html.instagram-browser:not(.modal-open),
+        html.facebook-browser:not(.modal-open),
+        html.google-browser:not(.modal-open),
+        body.inapp-scroll:not(.modal-open) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          touch-action: pan-y pan-x !important;
+          -webkit-overflow-scrolling: touch !important;
+          height: auto !important;
+          transform: none !important;
+        }
+      }
+      
+      /* Ensure all pages can scroll */
+      main:not(:has([role="dialog"])), 
+      [role="main"]:not(:has([role="dialog"])), 
+      .page-container:not(:has([role="dialog"])) {
+        overflow-y: visible !important;
+        min-height: 100vh !important;
+      }
+      
+      /* Page-specific scroll fixes */
+      [data-games-page]:not(.modal-open),
+      [data-design-page]:not(.modal-open),
+      [data-store-page]:not(.modal-open),
+      [data-app-page]:not(.modal-open) {
+        overflow-y: auto !important;
+        height: auto !important;
+        touch-action: pan-y pan-x !important;
+      }
+      
+      /* CRITICAL: Allow scroll when modal classes exist but no modal is open */
+      body.modal-open:not(:has([role="dialog"]:not([data-state="closed"]))), 
+      html.modal-open:not(:has([role="dialog"]:not([data-state="closed"]))) {
+        overflow-y: auto !important;
+        position: relative !important;
+        height: auto !important;
+        touch-action: pan-y pan-x !important;
+      }
+      
+      /* Ensure scroll position is maintained - AUTO to prevent unwanted smooth scrolling */
+      html {
+        scroll-behavior: auto !important;
+      }
+      
+      html.enable-smooth-scroll {
+        scroll-behavior: smooth !important;
+      }
+      
+      /* Whiteboard/Canvas iframe protection - prevents scroll snapping and auto-focus scroll */
+      iframe[src*="excalidraw"],
+      iframe[title*="Canvas"],
+      iframe[title*="Whiteboard"],
+      [data-whiteboard-container] {
+        pointer-events: none !important;
+        touch-action: none !important;
+        scroll-margin-top: 100vh !important;
+        contain: strict !important;
+      }
+      
+      iframe[src*="excalidraw"].active,
+      iframe[title*="Canvas"].active,
+      iframe[title*="Whiteboard"].active {
+        pointer-events: auto !important;
+        touch-action: auto !important;
+      }
+      /* ═══════════════════════════════════════════════════════════════════ */
       #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;transform:translateX(3px);}
       #bm-splash .bm-step.active span:last-child{background:linear-gradient(100deg,#0f0f12 0%,#3f3f46 35%,#0f0f12 70%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-step-sheen 1.4s ease-in-out infinite;}
       #bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}

@@ -1,0 +1,301 @@
+/**
+ * BULLMONEY - In-App Browser Optimizations
+ * ==========================================
+ * Fixes for Instagram, Facebook, Google, TikTok, Twitter/X in-app browsers
+ */
+
+/* ============================================
+   IN-APP BROWSER DETECTION & BASE FIXES
+   ============================================ */
+/* Instagram in-app browser */
+html.instagram-browser,
+html.instagram-browser body,
+/* Facebook in-app browser */
+html.facebook-browser,
+html.facebook-browser body,
+/* Google app browser */
+html.google-browser,
+html.google-browser body,
+/* TikTok in-app browser */
+html.tiktok-browser,
+html.tiktok-browser body,
+/* Twitter/X in-app browser */
+html.twitter-browser,
+html.twitter-browser body,
+/* Generic in-app browser */
+html.inapp-browser,
+html.inapp-browser body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  position: relative !important;
+  transform: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* ============================================
+   PAGE-SPECIFIC IN-APP SCROLL FIXES
+   ============================================ */
+/* Games page */
+html.inapp-browser[data-games-page],
+html.instagram-browser[data-games-page],
+html.facebook-browser[data-games-page],
+html.google-browser[data-games-page] {
+  overflow-y: auto !important;
+  height: auto !important;
+}
+
+html.inapp-browser[data-games-page] body,
+html.instagram-browser[data-games-page] body,
+html.facebook-browser[data-games-page] body,
+html.google-browser[data-games-page] body {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+/* Design page */
+html.inapp-browser[data-design-page],
+html.instagram-browser[data-design-page],
+html.facebook-browser[data-design-page],
+html.google-browser[data-design-page] {
+  overflow-y: auto !important;
+  height: auto !important;
+}
+
+html.inapp-browser[data-design-page] body,
+html.instagram-browser[data-design-page] body,
+html.facebook-browser[data-design-page] body,
+html.google-browser[data-design-page] body {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+/* Store page */
+html.inapp-browser[data-store-page],
+html.instagram-browser[data-store-page],
+html.facebook-browser[data-store-page],
+html.google-browser[data-store-page] {
+  overflow-y: auto !important;
+  height: auto !important;
+}
+
+html.inapp-browser[data-store-page] body,
+html.instagram-browser[data-store-page] body,
+html.facebook-browser[data-store-page] body,
+html.google-browser[data-store-page] body {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+/* Home page */
+html.inapp-browser.home-active,
+html.instagram-browser.home-active,
+html.facebook-browser.home-active,
+html.google-browser.home-active {
+  overflow-y: auto !important;
+  height: auto !important;
+}
+
+html.inapp-browser.home-active body,
+html.instagram-browser.home-active body,
+html.facebook-browser.home-active body,
+html.google-browser.home-active body {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+/* ============================================
+   INSTAGRAM IN-APP BROWSER SPECIFIC
+   ============================================ */
+/* Instagram browser has strict security policies */
+html.instagram-browser {
+  /* Force scroll on Instagram */
+  overscroll-behavior: auto;
+}
+
+/* Instagram blocks some pointer events */
+html.instagram-browser body > * {
+  pointer-events: auto !important;
+}
+
+/* Instagram viewport fix */
+html.instagram-browser {
+  height: 100vh;
+  height: 100dvh;
+}
+
+html.instagram-browser body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ============================================
+   FACEBOOK IN-APP BROWSER SPECIFIC
+   ============================================ */
+/* Facebook browser has its own quirks */
+html.facebook-browser {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: none;
+}
+
+/* Facebook blocks pull-to-refresh */
+html.facebook-browser body {
+  overscroll-behavior-y: contain;
+}
+
+/* ============================================
+   GOOGLE APP BROWSER SPECIFIC
+   ============================================ */
+/* Google app uses Chrome WebView but with restrictions */
+html.google-browser {
+  /* Ensure momentum scrolling */
+  -webkit-overflow-scrolling: touch !important;
+}
+
+html.google-browser body {
+  /* Google app scroll fix */
+  overflow-y: auto !important;
+  touch-action: pan-y pan-x !important;
+}
+
+/* ============================================
+   TIKTOK IN-APP BROWSER SPECIFIC
+   ============================================ */
+html.tiktok-browser {
+  /* TikTok browser scroll optimization */
+  scroll-behavior: auto;
+  overscroll-behavior: contain;
+}
+
+html.tiktok-browser body {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   TWITTER/X IN-APP BROWSER SPECIFIC
+   ============================================ */
+html.twitter-browser {
+  /* Twitter browser scroll fix */
+  overflow-y: auto !important;
+}
+
+html.twitter-browser body {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   IN-APP BROWSER TOUCH OPTIMIZATIONS
+   ============================================ */
+.inapp-touch {
+  touch-action: pan-y pan-x;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Allow scrolling through overlays in in-app browsers */
+html.inapp-browser [data-overlay],
+html.instagram-browser [data-overlay],
+html.facebook-browser [data-overlay] {
+  pointer-events: none !important;
+  touch-action: pan-y pan-x !important;
+}
+
+/* ============================================
+   IN-APP BROWSER VIDEO/CANVAS FIXES
+   ============================================ */
+/* Prevent media from blocking scroll in in-app browsers */
+html.inapp-browser canvas:not([data-game-canvas]),
+html.instagram-browser canvas:not([data-game-canvas]),
+html.facebook-browser canvas:not([data-game-canvas]),
+html.google-browser canvas:not([data-game-canvas]) {
+  pointer-events: none !important;
+  touch-action: pan-y pan-x !important;
+}
+
+html.inapp-browser video:not([data-interactive]),
+html.instagram-browser video:not([data-interactive]),
+html.facebook-browser video:not([data-interactive]),
+html.google-browser video:not([data-interactive]) {
+  pointer-events: none !important;
+  touch-action: pan-y pan-x !important;
+}
+
+/* ============================================
+   IN-APP BROWSER PERFORMANCE
+   ============================================ */
+/* Reduce animations in in-app browsers for better performance */
+@media (prefers-reduced-motion: reduce) {
+  html.inapp-browser *,
+  html.instagram-browser *,
+  html.facebook-browser * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   IN-APP BROWSER SAFE AREA
+   ============================================ */
+/* Handle safe areas in in-app browsers */
+.inapp-safe-top {
+  padding-top: max(env(safe-area-inset-top), 16px);
+}
+
+.inapp-safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+
+/* ============================================
+   IN-APP BROWSER VIEWPORT FIX
+   ============================================ */
+/* Fix viewport height in in-app browsers */
+@supports (-webkit-touch-callout: none) {
+  html.inapp-browser,
+  html.instagram-browser,
+  html.facebook-browser,
+  html.google-browser {
+    height: -webkit-fill-available;
+  }
+  
+  html.inapp-browser body,
+  html.instagram-browser body,
+  html.facebook-browser body,
+  html.google-browser body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* ============================================
+   IN-APP BROWSER FORM FIXES
+   ============================================ */
+/* Prevent zoom on input focus in in-app browsers */
+html.inapp-browser input,
+html.instagram-browser input,
+html.facebook-browser input,
+html.google-browser input,
+html.inapp-browser textarea,
+html.instagram-browser textarea,
+html.facebook-browser textarea,
+html.google-browser textarea {
+  font-size: 16px !important;
+}
+
+/* ============================================
+   IN-APP BROWSER LINK BEHAVIOR
+   ============================================ */
+/* Open external links properly from in-app browsers */
+html.inapp-browser a[target="_blank"],
+html.instagram-browser a[target="_blank"],
+html.facebook-browser a[target="_blank"] {
+  -webkit-touch-callout: default;
+}

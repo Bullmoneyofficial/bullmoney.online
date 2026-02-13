@@ -146,6 +146,35 @@
   }
 }
 
+/* Safari-specific page scroll fixes */
+html.safari-browser,
+html.safari-browser body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  position: relative !important;
+  transform: none !important;
+}
+
+/* Safari page-specific scroll */
+html.safari-browser[data-games-page],
+html.safari-browser[data-design-page],
+html.safari-browser[data-store-page],
+html.safari-browser.home-active {
+  scroll-behavior: auto !important;
+}
+
+html.safari-browser[data-games-page] body,
+html.safari-browser[data-design-page] body,
+html.safari-browser[data-store-page] body,
+html.safari-browser.home-active body {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
 /* ============================================
    SAFARI ANIMATION PERFORMANCE
    ============================================ */

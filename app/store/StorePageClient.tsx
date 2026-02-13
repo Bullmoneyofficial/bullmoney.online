@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ShoppingBag, CreditCard, X } from 'lucide-react';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { forceEnableScrolling } from '@/lib/forceScrollEnabler';
 const SearchAutocomplete = dynamic(
   () => import('@/components/shop/SearchAutocomplete').then(m => ({ default: m.SearchAutocomplete })),
   { ssr: false, loading: () => null }
@@ -305,6 +306,12 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const { heroMode, setHeroMode: setSharedHeroMode } = useHeroMode();
   const showProducts = showProductSections && heroMode === 'store';
 
+  // Force enable scrolling for all devices
+  useEffect(() => {
+    const cleanup = forceEnableScrolling();
+    return () => cleanup?.();
+  }, []);
+
   // Handle mode toggle with sound effect
   const handleModeChange = useCallback((mode: 'store' | 'trader' | 'design') => {
     SoundEffects.play('click');
@@ -357,8 +364,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const heroCacheLoadedRef = useRef(false);
   const allowHeavyHeroReady = allowHeavyHero && hasMounted && heroImageReady;
 
-  // Showcase scroll: hero → footer → hero spring + genie snap on first load
-  // Wait for splash / hero images to be ready before starting
+  // Showcase scroll - Re-enabled with fixed drunk scroll that doesn't block user interaction
   useShowcaseScroll({
     scrollDownDuration: 1800,
     springBackDuration: 1200,

@@ -2,12 +2,19 @@
    SCROLL ANYWHERE OVERRIDES (HOME + STORE)
    Allow pan gestures on any hit target while
    keeping explicit draggables locked.
+   Updated 2026-02-13: Enhanced for all pages
    ============================================ */
 
 html.home-active body,
 html.home-active body *,
 html.store-active body,
-html.store-active body * {
+html.store-active body *,
+html[data-games-page] body,
+html[data-games-page] body *,
+html[data-design-page] body,
+html[data-design-page] body *,
+html[data-app-page] body,
+html[data-app-page] body * {
   touch-action: pan-y pan-x !important;
 }
 
@@ -47,8 +54,8 @@ html.store-active [data-draggable] {
   touch-action: none !important;
 }
 
-/* ALL viewports: let scroll pass through Spline on home + store pages */
-/* FIXED: Was limited to <=1200px - now covers ALL screen sizes */
+/* ALL viewports: let scroll pass through Spline on home + store + games + design pages */
+/* FIXED: Was limited to <=1200px - now covers ALL screen sizes and ALL pages */
 html.home-active .spline-container,
 html.home-active .spline-viewport-fill,
 html.home-active .spline-wrapper,
@@ -62,7 +69,28 @@ html.store-active .spline-wrapper,
 html.store-active [data-spline],
 html.store-active iframe[src*="spline"],
 html.store-active canvas,
-html.store-active spline-viewer {
+html.store-active spline-viewer,
+html[data-games-page] .spline-container,
+html[data-games-page] .spline-viewport-fill,
+html[data-games-page] .spline-wrapper,
+html[data-games-page] [data-spline],
+html[data-games-page] iframe[src*="spline"],
+html[data-games-page] canvas,
+html[data-games-page] spline-viewer,
+html[data-design-page] .spline-container,
+html[data-design-page] .spline-viewport-fill,
+html[data-design-page] .spline-wrapper,
+html[data-design-page] [data-spline],
+html[data-design-page] iframe[src*="spline"],
+html[data-design-page] canvas,
+html[data-design-page] spline-viewer,
+html[data-app-page] .spline-container,
+html[data-app-page] .spline-viewport-fill,
+html[data-app-page] .spline-wrapper,
+html[data-app-page] [data-spline],
+html[data-app-page] iframe[src*="spline"],
+html[data-app-page] canvas,
+html[data-app-page] spline-viewer {
   pointer-events: none !important;
   touch-action: pan-y pan-x !important;
 }
@@ -132,4 +160,126 @@ html.store-active spline-viewer {
 #hero select,
 #hero textarea {
   pointer-events: auto !important;
+}
+
+/* ============================================
+   SAMSUNG BROWSER SCROLL ENHANCEMENTS
+   Additional fixes for Samsung Internet
+   ============================================ */
+@supports (-webkit-appearance: none) and (not (-webkit-touch-callout: none)) {
+  /* Samsung browser - ensure all pages can scroll */
+  html.samsung-browser,
+  html.samsung-browser body,
+  body.samsung-scroll {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    transform: none !important;
+  }
+  
+  /* Samsung browser - page-specific scroll */
+  html.samsung-browser.home-active,
+  html.samsung-browser.store-active,
+  html.samsung-browser[data-games-page],
+  html.samsung-browser[data-design-page] {
+    height: auto !important;
+    min-height: 100vh !important;
+    position: relative !important;
+  }
+}
+
+/* ============================================
+   CHROME BROWSER SCROLL ENHANCEMENTS
+   Chrome, Edge, Brave, Opera fixes
+   ============================================ */
+html.chrome-browser,
+html.chrome-browser body,
+body.chrome-scroll {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  touch-action: pan-y pan-x !important;
+  -webkit-overflow-scrolling: touch !important;
+  transform: none !important;
+}
+
+html.chrome-browser.home-active,
+html.chrome-browser.store-active,
+html.chrome-browser[data-games-page],
+html.chrome-browser[data-design-page] {
+  height: auto !important;
+  min-height: 100vh !important;
+  position: relative !important;
+}
+
+/* ============================================
+   SAFARI BROWSER SCROLL ENHANCEMENTS
+   Safari desktop & iOS fixes
+   ============================================ */
+html.safari-browser,
+html.safari-browser body,
+body.safari-scroll {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  touch-action: pan-y pan-x !important;
+  -webkit-overflow-scrolling: touch !important;
+  transform: none !important;
+}
+
+html.safari-browser.home-active,
+html.safari-browser.store-active,
+html.safari-browser[data-games-page],
+html.safari-browser[data-design-page] {
+  height: auto !important;
+  min-height: 100vh !important;
+  position: relative !important;
+}
+
+/* iOS Safari specific */
+html.ios-safari {
+  height: -webkit-fill-available;
+  min-height: -webkit-fill-available;
+}
+
+html.ios-safari body {
+  min-height: -webkit-fill-available;
+}
+
+/* ============================================
+   IN-APP BROWSER SCROLL ENHANCEMENTS
+   Instagram, Facebook, Google, TikTok, Twitter
+   ============================================ */
+html.inapp-browser,
+html.instagram-browser,
+html.facebook-browser,
+html.google-browser,
+html.tiktok-browser,
+html.twitter-browser,
+body.inapp-scroll {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  touch-action: pan-y pan-x !important;
+  -webkit-overflow-scrolling: touch !important;
+  transform: none !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+html.inapp-browser.home-active,
+html.instagram-browser.home-active,
+html.facebook-browser.home-active,
+html.google-browser.home-active,
+html.inapp-browser.store-active,
+html.instagram-browser.store-active,
+html.facebook-browser.store-active,
+html.google-browser.store-active,
+html.inapp-browser[data-games-page],
+html.instagram-browser[data-games-page],
+html.facebook-browser[data-games-page],
+html.google-browser[data-games-page],
+html.inapp-browser[data-design-page],
+html.instagram-browser[data-design-page],
+html.facebook-browser[data-design-page],
+html.google-browser[data-design-page] {
+  position: relative !important;
 }

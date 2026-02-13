@@ -64,6 +64,83 @@
 }
 
 /* ============================================
+   SAMSUNG PAGE-SPECIFIC SCROLL FIXES
+   ============================================ */
+/* Ensure all main pages can scroll on Samsung devices */
+@supports (-webkit-appearance: none) and (not (-webkit-touch-callout: none)) {
+  /* Android WebView/Samsung Internet - Force scroll on all pages */
+  html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+  
+  /* Games page scroll fix */
+  [data-games-page], 
+  [data-games-page] body,
+  [data-games-page] main,
+  .games-page-root {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    position: relative !important;
+  }
+  
+  /* Design page scroll fix */
+  [data-design-page],
+  [data-design-page] body,
+  [data-design-page] main,
+  .design-page-root {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    position: relative !important;
+  }
+  
+  /* Store page scroll fix */
+  [data-store-page],
+  [data-store-page] body,
+  [data-store-page] main,
+  .store-layout {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    position: relative !important;
+  }
+  
+  /* Home page scroll fix */
+  html.home-active,
+  html.home-active body,
+  html.home-active main {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    position: relative !important;
+  }
+  
+  /* Disable any scroll-blocking transforms */
+  html, body, main {
+    transform: none !important;
+  }
+  
+  /* Ensure content sections can scroll */
+  section, article, div[class*="content"] {
+    overflow: visible !important;
+  }
+}
+
+/* ============================================
    SAMSUNG BACKDROP BLUR FIX
    ============================================ */
 /* Samsung Internet has backdrop-filter issues */

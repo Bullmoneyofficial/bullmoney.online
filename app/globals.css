@@ -11,18 +11,30 @@
 @import "./styles/50-fps-overrides.css";
 @import "./styles/60-desktop-zindex-fix.css";
 @import "./styles/70-mobile-performance.css";
+@import "./styles/90-scroll-anywhere.css";
 @import "../styles/themes/supreme-z-index.css";
 @import "../styles/modal-scroll-lock.css";
+@import "../styles/browsers/_samsung.css";
+@import "../styles/browsers/_chrome.css";
+@import "../styles/browsers/_safari.css";
+@import "../styles/browsers/_inapp.css";
 
 :root {
   --bm-drunk-x: 0px;
   --bm-drunk-rot: 0deg;
 }
 
+/* Drunk scroll effects - ONLY active during showcase scroll animation */
+/* Non-blocking: purely visual, doesn't affect scroll functionality */
 html.bm-drunk-scroll body {
-  transform: translate3d(var(--bm-drunk-x), 0, 0) rotate(var(--bm-drunk-rot)) translateZ(0) !important;
+  transform: translate3d(var(--bm-drunk-x), 0, 0) rotate(var(--bm-drunk-rot)) translateZ(0);
   transform-origin: 50% 30%;
   will-change: transform;
+  pointer-events: none; /* Allow clicks to pass through during animation */
+}
+
+html.bm-drunk-scroll body > * {
+  pointer-events: auto; /* Re-enable pointer events on children */
 }
 
 /* Hide horizontal scrollbar for the world map scroller */
@@ -40,7 +52,7 @@ html.bm-drunk-scroll body {
   /* Page-level snap container so columns lock to viewport center */
   .store-snap-scroll {
     scroll-snap-type: y proximity;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
   }
 
   /* Columns container: sticky so it locks full-screen when scrolled into view */
@@ -627,6 +639,7 @@ body.store-page-body {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y pan-x;
   overscroll-behavior: contain;
+  scroll-behavior: auto;
 }
 
 /* Store featured section: prevent glass panels between map and products */

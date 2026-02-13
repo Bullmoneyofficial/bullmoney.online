@@ -1,10 +1,47 @@
 .design-page-root {
   background: #000000;
   min-height: 100vh;
+  /* CRITICAL: Ensure scrolling works on all devices */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  touch-action: pan-y pan-x !important;
+  -webkit-overflow-scrolling: touch !important;
+  position: relative !important;
+}
+
+/* Samsung browser specific scroll fix */
+@supports (-webkit-appearance: none) and (not (-webkit-touch-callout: none)) {
+  .design-page-root,
+  html[data-design-page],
+  body[data-design-page] {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    transform: none !important;
+    height: auto !important;
+    position: relative !important;
+  }
+}
+
+/* Chrome/Safari/In-app browser scroll fixes for design page */
+html.chrome-browser[data-design-page],
+html.safari-browser[data-design-page],
+html.inapp-browser[data-design-page],
+html.instagram-browser[data-design-page],
+html.facebook-browser[data-design-page],
+html.google-browser[data-design-page] {
+  overflow-y: auto !important;
+  touch-action: pan-y pan-x !important;
+  -webkit-overflow-scrolling: touch !important;
+  transform: none !important;
 }
 
 .design-content-wrap {
   background: #000000;
+  /* CRITICAL: Ensure scrolling works */
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
 }
 
 .design-hero-layout {

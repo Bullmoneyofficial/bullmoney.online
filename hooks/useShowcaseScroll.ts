@@ -11,10 +11,15 @@ import { useEffect, useRef } from "react";
  *  3. Springs back to the top with a genie snap-back effect
  *  4. Applies a quick scale "genie pinch" on the viewport then releases
  *
+ * User interaction behavior:
+ *  - If user scrolls or touches: Speeds up 8x (completes quickly without being annoying)
+ *  - If user clicks/taps/keys: Cancels completely (user wants to interact)
+ *  - Shows "Fast-forward ⏩" overlay when sped up
+ *
  * Designed for mobile (low memory) + desktop:
  *  - Uses requestAnimationFrame easing (no libraries)
  *  - Only runs once per session (sessionStorage guard)
- *  - Cancels immediately on any user interaction (touch / wheel / key)
+ *  - Respects user's scroll intent by speeding up instead of blocking
  *  - Cleans up all listeners on unmount
  */
 
@@ -48,7 +53,7 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function easeInCubic(t: number): numbe                                     r {
+function easeInCubic(t: number): number {
   return t * t * t;
 }
 
@@ -80,6 +85,7 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
   const rafRef = useRef<number>(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hasRunRef = useRef(false);
+  const speedUpRef = useRef(false); // NEW: Speed up instead of cancel when user scrolls
   const drunkRafRef = useRef<number>(0);
   const drunkLastScrollRef = useRef<number>(0);
   const drunkActiveRef = useRef(false);
@@ -188,11 +194,14 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       const smooth = 0.18 + 0.12 * strength;
       const x = lerp(drunkXRef.current, targetX, smooth);
       const rot = lerp(drunkRotRef.current, targetRot, smooth);
+      
+      // Reduce drunk effect by 70% when user speeds up (less distracting)
+      const effectMultiplier = speedUpRef.current ? 0.3 : 1;
       drunkXRef.current = x;
       drunkRotRef.current = rot;
 
-      root.style.setProperty("--bm-drunk-x", `${Math.round(x * 100) / 100}px`);
-      root.style.setProperty("--bm-drunk-rot", `${Math.round(rot * 1000) / 1000}deg`);
+      root.style.setProperty("--bm-drunk-x", `${Math.round(x * effectMultiplier * 100) / 100}px`);
+      root.style.setProperty("--bm-drunk-rot", `${Math.round(rot * effectMultiplier * 1000) / 1000}deg`);
       drunkRafRef.current = requestAnimationFrame(updateDrunk);
     };
 
@@ -209,7 +218,15 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       startDrunk();
     };
 
-    // Cancel on any user interaction
+    // Speed up animation when user starts scrolling (finish quickly without canceling)
+    const speedUp = () => {
+      if (speedUpRef.current || cancelledRef.current) return;
+      speedUpRef.current = true;
+      // Overlay shows "Fast-forwarding" when sped up
+      setOverlayPhase("Fast-forward ⏩");
+    };
+
+    // Cancel completely on explicit user interaction (click/tap/key)
     const cancel = () => {
       cancelledRef.current = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -271,13 +288,15 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
     const removeOverlay = () => {
       if (!overlayEl) return;
       setOverlayProgress(100);
-      setOverlayPhase("Cached ✓");
+      setOverlayPhase(speedUpRef.current ? "Done ✓" : "Cached ✓");
       const el = overlayEl;
       const styleEl = overlayStyleEl;
+      // Dismiss faster when sped up
+      const dismissDelay = speedUpRef.current ? 200 : 1300;
       setTimeout(() => {
         el.classList.add("out");
         setTimeout(() => { el?.remove(); styleEl?.remove(); }, 350);
-      }, 1300);
+      }, dismissDelay);
       overlayEl = null;
       overlayStyleEl = null;
       progressBarEl = null;
@@ -285,8 +304,17 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
     };
     // ────────────────────────────────────────────────────────────────────
 
-    const interactionEvents = ["wheel", "touchstart", "mousedown", "keydown"] as const;
-    interactionEvents.forEach((evt) => window.addEventListener(evt, cancel, { passive: true, once: true }));
+    // Speed up on scroll (user wants to explore) - don't cancel completely
+    const onWheel = () => speedUp();
+    const onTouchMove = () => speedUp();
+    window.addEventListener("wheel", onWheel, { passive: true, once: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true, once: true });
+    
+    // Cancel on explicit interaction (click/tap/key)
+    const onExplicitInteraction = () => cancel();
+    window.addEventListener("mousedown", onExplicitInteraction, { passive: true, once: true });
+    window.addEventListener("touchstart", onExplicitInteraction, { passive: true, once: true });
+    window.addEventListener("keydown", onExplicitInteraction, { passive: true, once: true });
 
     const scrollTarget = getContainer() || window;
     const onScroll = () => {
@@ -301,7 +329,11 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
     window.addEventListener("resize", onResize, { passive: true });
 
     const cleanup = () => {
-      interactionEvents.forEach((evt) => window.removeEventListener(evt, cancel));
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("mousedown", onExplicitInteraction);
+      window.removeEventListener("touchstart", onExplicitInteraction);
+      window.removeEventListener("keydown", onExplicitInteraction);
       scrollTarget.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
     };
@@ -315,6 +347,8 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       onFrame: (value: number) => void,
     ): Promise<void> => {
       return new Promise((resolve) => {
+        // Speed up 8x when user scrolls (finish quickly without canceling)
+        const effectiveDuration = speedUpRef.current ? duration / 8 : duration;
         const start = performance.now();
         let lastFrameTime = start;
         const tick = (now: number) => {
@@ -326,7 +360,7 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
           }
           lastFrameTime = now;
           const elapsed = now - start;
-          const progress = Math.min(elapsed / duration, 1);
+          const progress = Math.min(elapsed / effectiveDuration, 1);
           const easedProgress = easing(progress);
           const value = from + (to - from) * easedProgress;
           onFrame(value);
@@ -342,7 +376,9 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
 
     const delay = (ms: number): Promise<void> =>
       new Promise((resolve) => {
-        timeoutRef.current = setTimeout(resolve, ms);
+        // Speed up pauses too when user scrolls
+        const effectiveDelay = speedUpRef.current ? ms / 10 : ms;
+        timeoutRef.current = setTimeout(resolve, effectiveDelay);
       });
 
     const waitForScrollable = async (): Promise<number> => {
@@ -448,29 +484,35 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       setOverlayPhase("Finalizing");
 
       // 4) Genie pinch effect on viewport — progress 90→100%
-      const root = document.documentElement;
-      root.style.transformOrigin = "center top";
-      root.style.transition = "none";
+      // Skip genie effect if user sped up (just decorative)
+      if (!speedUpRef.current) {
+        const root = document.documentElement;
+        root.style.transformOrigin = "center top";
+        root.style.transition = "none";
 
-      // Pinch in
-      await animate(1, genieScale, genieDuration * 0.5, easeInOutCubic, (v) => {
-        root.style.transform = `scale(${v})`;
-        const pinchProgress = (1 - v) / (1 - genieScale);
-        setOverlayProgress(90 + pinchProgress * 5);
-      });
-      if (cancelledRef.current) return;
+        // Pinch in
+        await animate(1, genieScale, genieDuration * 0.5, easeInOutCubic, (v) => {
+          root.style.transform = `scale(${v})`;
+          const pinchProgress = (1 - v) / (1 - genieScale);
+          setOverlayProgress(90 + pinchProgress * 5);
+        });
+        if (cancelledRef.current) return;
 
-      // Snap back with spring
-      await animate(genieScale, 1, genieDuration * 0.5, easeOutBack, (v) => {
-        root.style.transform = `scale(${v})`;
-        const snapProgress = (v - genieScale) / (1 - genieScale);
-        setOverlayProgress(95 + snapProgress * 5);
-      });
+        // Snap back with spring
+        await animate(genieScale, 1, genieDuration * 0.5, easeOutBack, (v) => {
+          root.style.transform = `scale(${v})`;
+          const snapProgress = (v - genieScale) / (1 - genieScale);
+          setOverlayProgress(95 + snapProgress * 5);
+        });
 
-      // Cleanup transform
-      root.style.removeProperty("transform");
-      root.style.removeProperty("transform-origin");
-      root.style.removeProperty("transition");
+        // Cleanup transform
+        root.style.removeProperty("transform");
+        root.style.removeProperty("transform-origin");
+        root.style.removeProperty("transition");
+      } else {
+        // Skip genie, just complete
+        setOverlayProgress(100);
+      }
 
       // Dismiss the overlay
       removeOverlay();

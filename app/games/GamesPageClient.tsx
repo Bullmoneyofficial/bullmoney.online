@@ -18,6 +18,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { DonationFundSection } from '@/components/games/DonationFundSection';
+import { forceEnableScrolling } from '@/lib/forceScrollEnabler';
+import { useShowcaseScroll } from '@/hooks/useShowcaseScroll';
 const BullcasinoShell = dynamic(
   () => import('./components/BullcasinoShell'),
   { ssr: false, loading: () => <div className="min-h-[40vh] w-full" /> }
@@ -189,69 +191,31 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
     return () => clearInterval(id);
   }, [embedMode]);
 
-  // Force enable scrolling on mount and after any modal/hub closes
+  // Showcase scroll animation - runs once per session
+  useShowcaseScroll({
+    scrollDownDuration: 1800,
+    springBackDuration: 1200,
+    genieDuration: 500,
+    genieScale: 0.96,
+    startDelay: 800,
+    enabled: !embedMode,
+    pageId: 'games',
+  });
+
+  // Force enable scrolling on mount and watch for changes
   useEffect(() => {
     if (embedMode) return;
     // Mark the document as a games page for scripts to detect
     document.documentElement.setAttribute('data-games-page', 'true');
     document.body.setAttribute('data-games-page', 'true');
 
-    const forceEnableScroll = () => {
-      const body = document.body;
-      const html = document.documentElement;
-
-      // Only fix if scroll is broken (overflow is hidden)
-      if (body.style.overflow === 'hidden' || html.style.overflowY === 'hidden') {
-        body.style.overflow = 'auto';
-        body.style.height = 'auto';
-        html.style.overflowY = 'auto';
-        html.style.overflowX = 'hidden';
-        html.style.height = 'auto';
-      }
-
-      // Also ensure touch-action is not restricted
-      body.style.touchAction = 'auto';
-      html.style.touchAction = 'auto';
-    };
-
-    // Run immediately
-    forceEnableScroll();
-
-    // Watch for style changes on body and html
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-          // Small delay to let modal logic finish
-          setTimeout(forceEnableScroll, 100);
-        }
-      }
-    });
-
-    observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
-
-    // Also re-check periodically as backup (less frequent now)
-    const interval = setInterval(forceEnableScroll, 2000);
-
-    // Re-enable scroll when page becomes visible (user returns from another tab)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        forceEnableScroll();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Re-enable scroll when user clicks anywhere (catches modal closes)
-    const handleClick = () => {
-      setTimeout(forceEnableScroll, 150);
-    };
-    document.addEventListener('click', handleClick, { passive: true });
+    // Use the new scroll enabler utility
+    const cleanup = forceEnableScrolling();
 
     return () => {
-      observer.disconnect();
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.removeEventListener('click', handleClick);
+      cleanup?.();
+      document.documentElement.removeAttribute('data-games-page');
+      document.body.removeAttribute('data-games-page');
     };
   }, [embedMode]);
 
@@ -269,6 +233,32 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           }
           body {
             overflow-y: auto !important;
+          }
+          
+          /* Samsung browser scroll fixes */
+          @supports (-webkit-appearance: none) and (not (-webkit-touch-callout: none)) {
+            html[data-games-page], body[data-games-page] {
+              overflow-y: auto !important;
+              overflow-x: hidden !important;
+              touch-action: pan-y pan-x !important;
+              -webkit-overflow-scrolling: touch !important;
+              transform: none !important;
+              height: auto !important;
+              position: relative !important;
+            }
+          }
+          
+          /* Chrome/Safari/In-app browser scroll fixes */
+          html.chrome-browser[data-games-page],
+          html.safari-browser[data-games-page],
+          html.inapp-browser[data-games-page],
+          html.instagram-browser[data-games-page],
+          html.facebook-browser[data-games-page],
+          html.google-browser[data-games-page] {
+            overflow-y: auto !important;
+            touch-action: pan-y pan-x !important;
+            -webkit-overflow-scrolling: touch !important;
+            transform: none !important;
           }
           
           /* ─── Full-width responsive games grid ─── */

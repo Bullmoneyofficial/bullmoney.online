@@ -54,6 +54,9 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     const html = document.documentElement;
     const body = document.body;
     
+    // NOTE: Don't remove drunk scroll here - it's used by showcase scroll animation
+    // forceScrollEnabler will handle cleanup when showcase is not active
+    
     // Store original styles
     const originalHtmlOverflow = html.style.overflow;
     const originalBodyOverflow = body.style.overflow;
@@ -64,9 +67,11 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     html.style.overflow = 'auto';
     html.style.overflowX = 'hidden';
     html.style.height = 'auto';
+    html.style.scrollBehavior = 'auto';
     body.style.overflow = 'visible';
     body.style.overflowX = 'hidden';
     body.style.height = 'auto';
+    body.style.scrollBehavior = 'auto';
     
     // Add store-active class for CSS targeting
     html.classList.add('store-active');
