@@ -622,12 +622,13 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className={
+            onWheel={(e) => e.stopPropagation()}
+           className={
               isDesktop
                 ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
                 : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
             }
-            style={{ zIndex: 2147483649, color: '#1d1d1f' }}
+            style={{ zIndex: 2147483649, color: '#1d1d1f', pointerEvents: 'auto' }}
             data-apple-section
           >
             {/* Header */}
@@ -654,8 +655,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
             {/* Content */}
             <div
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6 pb-safe"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y scroll-smooth p-4 md:p-6 pb-4 md:pb-6"
+              style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
             >
               <AffiliateModalContent isOpen={isOpen} onClose={onClose} />
             </div>
@@ -2080,9 +2081,9 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
   // =========================================
   const renderDashboard = () => {
     return (
-      <div className="flex h-full min-h-0 flex-col">
-        {/* Header (inline, not fixed) */}
-        <div className="flex items-center justify-between p-2 md:p-4 border-b border-black/10">
+      <>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-black/10">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold">Affiliate Dashboard</h1>
             {isDevMode && devSkipAuthEnabled && (
@@ -2133,15 +2134,13 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         </div>
 
         {/* Content area (dashboard/admin panels) */}
-        <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-          {dashboardTab === 'dashboard' && (
-            <AffiliateRecruitsDashboard onBack={() => setStep('success')} skipAuthInDev={devSkipAuthEnabled} />
-          )}
-          {dashboardTab === 'admin' && isAffiliateAdmin && (
-            <AffiliateAdminPanel />
-          )}
-        </div>
-      </div>
+        {dashboardTab === 'dashboard' && (
+          <AffiliateRecruitsDashboard onBack={() => setStep('success')} skipAuthInDev={devSkipAuthEnabled} />
+        )}
+        {dashboardTab === 'admin' && isAffiliateAdmin && (
+          <AffiliateAdminPanel />
+        )}
+      </>
     );
   };
 
@@ -2200,7 +2199,9 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
         onClick={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
         className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-hidden my-auto mx-auto rounded-2xl md:rounded-3xl"
+        style={{ pointerEvents: 'auto' }}
       >
         {/* Inner Container */}
         <div className="relative z-10 bg-white rounded-2xl md:rounded-3xl border border-black/10 overflow-hidden h-full flex flex-col shadow-2xl">
@@ -2228,7 +2229,8 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
           {/* Content */}
           <div 
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto p-4 sm:p-6"
+            className="flex-1 overflow-y-auto scroll-smooth p-4 sm:p-6"
+            style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
           >
             <AnimatePresence mode="wait">
               {step === 'intro' && renderIntro()}

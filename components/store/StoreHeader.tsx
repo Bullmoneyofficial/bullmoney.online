@@ -17,7 +17,7 @@ import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useUIState, useAudioWidgetUI } from '@/contexts/UIStateContext';
+import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useUIState, useAudioWidgetUI, useLiveStreamModalUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useHeroMode } from '@/hooks/useHeroMode';
@@ -43,6 +43,7 @@ const LanguageToggle = dynamic(() => import('@/components/LanguageToggle').then(
 const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false, loading: () => null });
 const ProductsModal = dynamic(() => import('@/components/ProductsModal').then(m => ({ default: m.ProductsModal })), { ssr: false, loading: () => null });
 const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer').then(m => ({ default: m.CartDrawer })), { ssr: false, loading: () => null });
+const LiveStreamModal = dynamic(() => import('@/components/LiveStreamModal'), { ssr: false, loading: () => null });
 
 // ============================================================================
 // STORE HEADER - MODERN PILL NAVIGATION 
@@ -56,6 +57,7 @@ const STORE_NAV_ITEMS = [
   { href: '/design', label: 'Design', category: '' },
   { href: '#action:games', label: 'Games', category: '' },
   { href: '#action:products', label: 'BULLMONEY VIP+', category: '' },
+  { href: '#action:livestream', label: 'Live Stream', category: '' },
   { href: '#action:faq', label: 'FAQ', category: '' },
   { href: '#action:themes', label: 'Themes', category: '' },
   { href: '#action:hub', label: 'Hub', category: '' },
@@ -146,6 +148,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const { open: openProductsModal, isOpen: isProductsModalOpen } = useProductsModalUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
   const { setAudioWidgetOpen } = useAudioWidgetUI();
+  const { setIsOpen: setLiveStreamModalOpen } = useLiveStreamModalUI();
   const itemCount = getItemCount();
   const router = useRouter();
   const pathname = usePathname();
@@ -625,6 +628,10 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     }
     if (href === '#action:games' || href === '/games') {
       navigateToGames();
+      return;
+    }
+    if (href === '#action:livestream') {
+      setLiveStreamModalOpen(true);
       return;
     }
     if (href === '#action:faq') {
@@ -1257,6 +1264,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     >
                       BULLMONEY VIP+
                     </button>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setLiveStreamModalOpen(true);
+                      }}
+                      className="block w-full py-1.5 text-left text-sm"
+                      style={{ color: 'rgba(0,0,0,0.85)' }}
+                    >
+                      Live Stream
+                    </button>
                     <Link
                       href="/design"
                       onClick={handleCloseMobileMenu}
@@ -1499,6 +1516,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       
       {/* Products Modal - Rendered once, controlled by context */}
       {isProductsModalOpen && <ProductsModal />}
+
+      {/* Live Stream Modal - Rendered once, controlled by context */}
+      <LiveStreamModal />
 
       {/* Affiliate Modal - Using Lazy System */}
       <LazyAffiliateModal
