@@ -16,9 +16,8 @@ export function generateStaticParams() {
   return VALID_GAMES.map((game) => ({ game }));
 }
 
-/** Static export: only build known slugs to avoid 404 on first load */
-export const dynamicParams = false;
-export const dynamic = 'force-static';
+/** Allow runtime handling so routes never 404 due to missing static output */
+export const dynamicParams = true;
 
 export default function GamePage({
   params,
