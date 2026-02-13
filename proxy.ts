@@ -31,6 +31,25 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Canonicalize legacy/app aliases that can appear in mobile app links
+  const aliasRedirects: Record<string, string> = {
+    '/game': '/games',
+    '/app/game': '/games',
+    '/app/games': '/games',
+    '/app/design': '/design',
+  };
+
+  const normalizedPath = pathname.endsWith('/') && pathname.length > 1
+    ? pathname.slice(0, -1)
+    : pathname;
+
+  const aliasTarget = aliasRedirects[normalizedPath];
+  if (aliasTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = aliasTarget;
+    return NextResponse.redirect(url, 308);
+  }
+
   // Root → rewrite to /store
   if (pathname === '/') {
     const url = request.nextUrl.clone();

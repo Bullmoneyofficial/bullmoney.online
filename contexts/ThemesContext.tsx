@@ -1863,18 +1863,10 @@ export function ThemesPanel() {
     const updateDesktop = () => setIsDesktop(mediaQuery.matches);
     updateDesktop();
 
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', updateDesktop);
-    } else {
-      mediaQuery.addListener(updateDesktop);
-    }
+    mediaQuery.addEventListener?.('change', updateDesktop);
 
     return () => {
-      if (mediaQuery.addEventListener) {
-        mediaQuery.removeEventListener('change', updateDesktop);
-      } else {
-        mediaQuery.removeListener(updateDesktop);
-      }
+      mediaQuery.removeEventListener?.('change', updateDesktop);
     };
   }, []);
   

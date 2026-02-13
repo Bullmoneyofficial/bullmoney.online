@@ -70,6 +70,7 @@ import {
 interface ClientProvidersProps {
   children: ReactNode;
   modal?: ReactNode;
+  splashFinished?: boolean;
 }
 
 /**
@@ -158,13 +159,14 @@ const LazyGlobalModals = memo(function LazyGlobalModals() {
   );
 });
 
-export function ClientProviders({ children, modal }: ClientProvidersProps) {
+export function ClientProviders({ children, modal, splashFinished = false }: ClientProvidersProps) {
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(240);
   const allowMobileComponents = allowMobileLazy || !isMobileViewport;
   const { masterMuted } = useAudioSettings();
   useUIState();
   const [audioWidgetReady] = useState(true);
   const [showAudioWidget, setShowAudioWidget] = useState(true);
+  const canMountAudioWidget = audioWidgetReady && showAudioWidget && splashFinished;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -234,7 +236,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
           <MobilePerformanceProvider>
             <SoundProvider enabled={!masterMuted} volume={0.4}>
               <AuthProvider>
-                {audioWidgetReady && showAudioWidget && <AudioWidget />}
+                {canMountAudioWidget && <AudioWidget />}
                 {modal}
                 <div data-lenis-content data-store-lenis>
                   <main
@@ -285,7 +287,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
           */}
               {/* NOTE: ClientCursor moved to LayoutProviders - rendered LAST in DOM */}
               {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
-              {audioWidgetReady && showAudioWidget && <AudioWidget />}
+              {canMountAudioWidget && <AudioWidget />}
               {allowMobileComponents && <AutoRefreshPrompt />}
               {modal}
               

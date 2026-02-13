@@ -213,6 +213,12 @@
     splash.classList.add('hide');
     setTimeout(function() {
       if (splash.parentNode) splash.parentNode.removeChild(splash);
+      window.__BM_SPLASH_FINISHED__ = true;
+      try {
+        window.dispatchEvent(new Event('bm-splash-finished'));
+      } catch (e) {
+        // noop
+      }
     }, 700);
   }
 

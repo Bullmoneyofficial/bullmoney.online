@@ -287,17 +287,13 @@ export default function Page({
 }: {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isAllowed = (searchParams?.get('src') || '') === 'nav';
 
   useEffect(() => {
-    if ((searchParams?.get('src') || '') !== 'nav') {
+    if (!isAllowed) {
       router.replace('/');
     }
-  }, [searchParams, router]);
-
-  // Master Gating Logic
-  if ((searchParams?.get('src') || '') !== 'nav') {
-    return null;
-  }
+  }, [isAllowed, router]);
 
   const [currentStage, setCurrentStage] = useState<"register" | "hold" | "v2" | "content">("v2");
   const [isClient, setIsClient] = useState(false);
@@ -434,7 +430,7 @@ export default function Page({
       safePlay();
   }, [safePlay]);
 
-  if (!isClient) return null;
+  if (!isAllowed || !isClient) return null;
 
   return (
     <>

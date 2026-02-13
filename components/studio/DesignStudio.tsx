@@ -1,14 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type * as FabricNS from "fabric";
-import type {
-  Canvas as FabricCanvas,
-  Rect as FabricRect,
-  FabricObject,
-  IText as FabricIText,
-  Image as FabricImage,
-} from "fabric";
 import FallbackCanvas from "./FallbackCanvas";
 import KonvaEditor from "./KonvaEditor";
 import DrawingCanvas from "./DrawingCanvas";
@@ -22,6 +14,13 @@ import TLDrawEditor from "./TLDrawEditor";
 
 const ARTBOARD = { width: 1200, height: 800 };
 const ZOOM_LIMITS = { min: 0.1, max: 3 };
+
+type FabricCanvas = any;
+type FabricRect = any;
+type FabricObject = any;
+type FabricIText = any;
+type FabricImage = any;
+type FabricModule = any;
 
 type EditorType =
   | "fabric"
@@ -148,7 +147,7 @@ export default function DesignStudio() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<FabricCanvas | null>(null);
   const artboardRef = useRef<FabricRect | null>(null);
-  const fabricRef = useRef<FabricNS | null>(null);
+  const fabricRef = useRef<FabricModule | null>(null);
   const historyRef = useRef<HistoryState>({ stack: [], index: -1, applying: false });
   const objectIdRef = useRef(1);
   const lastClickRef = useRef<{ button: string; time: number } | null>(null);
@@ -215,7 +214,6 @@ export default function DesignStudio() {
     if (!canvas) {
       return;
     }
-          artboardRef.current = instance as Rect;
     if (!object) {
       canvas.discardActiveObject();
       canvas.requestRenderAll();
@@ -261,8 +259,8 @@ export default function DesignStudio() {
 
     const items: LayerItem[] = canvas
       .getObjects()
-      .filter((object) => object.get("objectId") !== "artboard")
-      .map((object) => ({
+      .filter((object: FabricObject) => object.get("objectId") !== "artboard")
+      .map((object: FabricObject) => ({
         id: String(object.get("objectId")),
         label: String(object.get("studioLabel") || "Layer"),
         type: String(object.type),
@@ -297,7 +295,7 @@ export default function DesignStudio() {
         setSelectedObject(null);
         syncLayers();
       },
-      (_object, instance) => {
+      (_object: FabricObject, instance: FabricObject | null) => {
         if (!instance) {
           return;
         }
@@ -535,7 +533,7 @@ export default function DesignStudio() {
       }
 
       const { Image } = fabricModule;
-      Image.fromURL(String(reader.result), (image) => {
+      Image.fromURL(String(reader.result), (image: FabricImage) => {
         const maxWidth = ARTBOARD.width * 0.7;
         const maxHeight = ARTBOARD.height * 0.7;
         const scale = Math.min(maxWidth / image.width!, maxHeight / image.height!, 1);
@@ -579,7 +577,7 @@ export default function DesignStudio() {
       return;
     }
 
-    active.clone((cloned) => {
+    active.clone((cloned: FabricObject) => {
       cloned.set({ left: (active.left ?? 0) + 30, top: (active.top ?? 0) + 30 });
       ensureObjectMeta(cloned);
       canvas.add(cloned);
@@ -797,7 +795,7 @@ export default function DesignStudio() {
           syncLayers();
           pushHistory();
         },
-        (_object, instance) => {
+        (_object: FabricObject, instance: FabricObject | null) => {
           if (instance?.get("objectId") === "artboard") {
             instance.set({ selectable: false, evented: false });
             artboardRef.current = instance as FabricRect;
@@ -1656,7 +1654,7 @@ export default function DesignStudio() {
 
                   const target = canvas
                     .getObjects()
-                    .find((object) => String(object.get("objectId")) === layer.id);
+                    .find((object: FabricObject) => String(object.get("objectId")) === layer.id);
                   if (target) {
                     setActiveObject(target);
                     updateSelectionState(target);

@@ -23,7 +23,7 @@ import {
   Users,
   Globe,
 } from 'lucide-react';
-import { useSupportDrawerUI } from '@/contexts/UIStateContext';
+import { useSupportDrawerUI, useUIState } from '@/contexts/UIStateContext';
 
 // ============================================================================
 // SUPPORT DRAWER — CartDrawer-style slide-out panel with React Portal
@@ -123,8 +123,10 @@ type View = 'home' | 'faq' | 'faq-category' | 'social' | 'chat' | 'telegram' | '
 
 export function SupportDrawer() {
   const { isOpen, setIsOpen } = useSupportDrawerUI();
+  const { shouldSkipHeavyEffects } = useUIState();
   const SUPPORT_DRAWER_BACKDROP_Z_INDEX = 2147483602;
   const SUPPORT_DRAWER_PANEL_Z_INDEX = 2147483603;
+  const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [view, setView] = useState<View>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -135,6 +137,10 @@ export function SupportDrawer() {
   const [aiThinking, setAiThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Desktop detection (same as CartDrawer)
   useEffect(() => {
@@ -288,10 +294,10 @@ export function SupportDrawer() {
         <>
           {/* Backdrop — same as CartDrawer */}
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.12 }}
+            exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.12 }}
             onClick={closeDrawer}
             className="fixed inset-0"
             style={{ zIndex: SUPPORT_DRAWER_BACKDROP_Z_INDEX, background: 'rgba(0,0,0,0.2)' }}
@@ -299,10 +305,10 @@ export function SupportDrawer() {
 
           {/* Drawer Panel — same dimensions/animation as CartDrawer */}
           <motion.div
-            initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            initial={shouldSkipHeavyEffects ? false : (isDesktop ? { y: '-100%' } : { x: '100%' })}
             animate={isDesktop ? { y: 0 } : { x: 0 }}
-            exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
-            transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+            exit={shouldSkipHeavyEffects ? undefined : (isDesktop ? { y: '-100%' } : { x: '100%' })}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             className={
               isDesktop
                 ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
@@ -342,7 +348,13 @@ export function SupportDrawer() {
 
                 {/* HOME */}
                 {view === 'home' && (
-                  <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                  <motion.div
+                    key="home"
+                    initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+                    className="space-y-3"
+                  >
                     {/* Welcome card */}
                     <div className="rounded-xl p-4 bg-black/[0.03] border border-black/[0.05]">
                       <p className="text-sm leading-relaxed" style={{ color: 'rgba(0,0,0,0.6)' }}>
@@ -388,7 +400,13 @@ export function SupportDrawer() {
 
                 {/* FAQ LIST */}
                 {view === 'faq' && (
-                  <motion.div key="faq" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-2">
+                  <motion.div
+                    key="faq"
+                    initial={shouldSkipHeavyEffects ? false : { opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={shouldSkipHeavyEffects ? undefined : { opacity: 0, x: -10 }}
+                    className="space-y-2"
+                  >
                     <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(0,0,0,0.3)' }}>Topics</p>
                     {FAQ_CATEGORIES.map(cat => (
                       <Row key={cat.id} onClick={() => navigateTo('faq-category', cat.id)} className="w-full">
@@ -405,7 +423,13 @@ export function SupportDrawer() {
 
                 {/* FAQ DETAIL */}
                 {view === 'faq-category' && catData && (
-                  <motion.div key="faq-d" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-2">
+                  <motion.div
+                    key="faq-d"
+                    initial={shouldSkipHeavyEffects ? false : { opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={shouldSkipHeavyEffects ? undefined : { opacity: 0, x: -10 }}
+                    className="space-y-2"
+                  >
                     <div className="flex items-center gap-2 mb-3">
                       <catData.icon className="w-3.5 h-3.5" style={{ color: 'rgba(0,0,0,0.35)' }} />
                       <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.3)' }}>{catData.label}</p>
@@ -423,7 +447,13 @@ export function SupportDrawer() {
 
                 {/* SOCIAL */}
                 {view === 'social' && (
-                  <motion.div key="soc" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-2">
+                  <motion.div
+                    key="soc"
+                    initial={shouldSkipHeavyEffects ? false : { opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={shouldSkipHeavyEffects ? undefined : { opacity: 0, x: -10 }}
+                    className="space-y-2"
+                  >
                     <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(0,0,0,0.3)' }}>DM us for support</p>
                     {SOCIAL_CHANNELS.map(ch => (
                       <Row key={ch.name} href={ch.url}>
@@ -463,7 +493,13 @@ export function SupportDrawer() {
 
                 {/* INLINE TELEGRAM */}
                 {view === 'telegram' && (
-                  <motion.div key="tg" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col space-y-4">
+                  <motion.div
+                    key="tg"
+                    initial={shouldSkipHeavyEffects ? false : { opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={shouldSkipHeavyEffects ? undefined : { opacity: 0, x: -10 }}
+                    className="flex flex-col space-y-4"
+                  >
                     <div className="w-full rounded-xl overflow-hidden bg-black/[0.02] border border-black/[0.06]">
                       <iframe
                         src={`https://t.me/${TELEGRAM_BOT_NAME}`}
@@ -500,7 +536,13 @@ export function SupportDrawer() {
 
                 {/* INLINE DISCORD */}
                 {view === 'discord' && (
-                  <motion.div key="dc" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col space-y-3">
+                  <motion.div
+                    key="dc"
+                    initial={shouldSkipHeavyEffects ? false : { opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={shouldSkipHeavyEffects ? undefined : { opacity: 0, x: -10 }}
+                    className="flex flex-col space-y-3"
+                  >
                     <div className="w-full rounded-xl overflow-hidden bg-black/[0.02] border border-black/[0.06]">
                       <iframe
                         src="https://discord.com/widget?id=1255567399289577544&theme=light"
@@ -537,7 +579,13 @@ export function SupportDrawer() {
 
                 {/* AI CHAT */}
                 {view === 'chat' && (
-                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col h-full -m-4 md:-m-6">
+                  <motion.div
+                    key="chat"
+                    initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+                    className="flex flex-col h-full -m-4 md:-m-6"
+                  >
                     <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
                       {messages.map(msg => (
                         <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -645,7 +693,7 @@ export function SupportDrawer() {
     </AnimatePresence>
   );
 
-  if (typeof document === 'undefined') return null;
+  if (!mounted || typeof document === 'undefined') return null;
   return createPortal(drawerContent, document.body);
 }
 

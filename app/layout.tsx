@@ -465,8 +465,8 @@ export default function RootLayout({
         <meta name="HandheldFriendly" content="true" />
 
         {/* PERFORMANCE: dns-prefetch only origins actually used during page load */}
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
         {/* PERFORMANCE: Preload critical assets with proper priorities */}
         <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />

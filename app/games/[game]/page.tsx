@@ -2361,9 +2361,6 @@ function CasinoGameInner({ game, content, scripts, casinoBase, casinoSocket }: {
   return (
     <BullcasinoShell>
       <style dangerouslySetInnerHTML={{ __html: GAME_STYLES }} />
-      <link rel="stylesheet" href="/assets/css/style.css" />
-      <link rel="stylesheet" href="/assets/css/notifyme.css" />
-      {game === 'flappybird' && <link rel="stylesheet" href="/games/bullcasino/css/flappybird.css" />}
       {content}
     </BullcasinoShell>
   );

@@ -16,7 +16,7 @@ export default function PaperEditor({ onExport }: PaperEditorProps) {
 
     const loadPaper = async () => {
       try {
-        const paper = await import('paper');
+        const paper = (await import('paper')) as any;
         if (!mounted || !canvasRef.current) return;
 
         // Setup Paper.js

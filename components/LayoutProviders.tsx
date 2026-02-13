@@ -129,6 +129,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Default OFF to prevent heavy component from loading and blocking page render
   const [showUltimateHub, setShowUltimateHub] = useState(false);
   const [mountStage, setMountStage] = useState(0);
+  const [isSplashFinished, setIsSplashFinished] = useState(false);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -194,11 +195,43 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     };
   }, [pathname]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkSplash = () => {
+      const splashEl = document.getElementById('bm-splash');
+      const finished = !splashEl || splashEl.classList.contains('hide') || (window as any).__BM_SPLASH_FINISHED__ === true;
+      setIsSplashFinished(finished);
+    };
+
+    checkSplash();
+
+    const onSplashFinished = () => setIsSplashFinished(true);
+    window.addEventListener('bm-splash-finished', onSplashFinished);
+
+    let observer: MutationObserver | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    if (typeof MutationObserver !== 'undefined' && document.body) {
+      observer = new MutationObserver(() => checkSplash());
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    } else {
+      // Fallback for older/embedded browsers without MutationObserver support.
+      pollTimer = setInterval(checkSplash, 300);
+    }
+
+    return () => {
+      window.removeEventListener('bm-splash-finished', onSplashFinished);
+      if (observer) observer.disconnect();
+      if (pollTimer) clearInterval(pollTimer);
+    };
+  }, []);
+
   const canShowNavbar = mountStage >= 1;
   const canShowChildren = mountStage >= 2;
   const canShowUltimateHub = mountStage >= 2;
   const canShowCursor = mountStage >= 3;
-  const canShowSupport = canShowUltimateHub && supportReady;
+  const canShowSupport = canShowUltimateHub && supportReady && isSplashFinished;
 
   // ============================================
   // ADMIN PANEL KEYBOARD SHORTCUT: Cmd/Ctrl+Shift+A
@@ -284,7 +317,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         {canShowChildren ? (
-          <ClientProviders modal={modal}>
+          <ClientProviders modal={modal} splashFinished={isSplashFinished}>
             {/* ✅ OFF-SCREEN ANIMATION PAUSE - Saves CPU by pausing invisible animations */}
             {/* SKIPPED on store pages — its global MutationObserver + IntersectionObserver
                 causes a mutation storm with StoreLayoutClient's own overlay-hiding logic */}

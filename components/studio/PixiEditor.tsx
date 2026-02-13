@@ -17,10 +17,10 @@ export default function PixiEditor({ onExport }: PixiEditorProps) {
 
     const loadPixi = async () => {
       try {
-        const PIXI = await import('pixi.js');
+        const PIXI = (await import('pixi.js')) as any;
         if (!mounted || !containerRef.current) return;
 
-        const app = new PIXI.Application();
+        const app = new PIXI.Application() as any;
         await app.init({
           width: 1200,
           height: 800,
@@ -28,7 +28,10 @@ export default function PixiEditor({ onExport }: PixiEditorProps) {
           antialias: true
         });
 
-        containerRef.current.appendChild(app.canvas);
+        const appCanvas = app.canvas ?? app.view;
+        if (appCanvas) {
+          containerRef.current.appendChild(appCanvas);
+        }
 
         // Welcome text
         const text = new PIXI.Text({
@@ -161,7 +164,7 @@ export default function PixiEditor({ onExport }: PixiEditorProps) {
     const app = appRef.current;
     if (!app) return;
 
-    const canvas = app.canvas;
+    const canvas = app.canvas ?? app.view;
     const dataURL = canvas.toDataURL('image/png', 2);
     const link = document.createElement('a');
     link.download = `pixi-design-${Date.now()}.png`;

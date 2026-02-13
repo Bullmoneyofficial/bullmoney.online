@@ -259,6 +259,8 @@ export default function AffiliateRecruitsDashboard({
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showQrProfileModal, setShowQrProfileModal] = useState(false);
+  const [qrEmailInput, setQrEmailInput] = useState('');
+  const [qrEmailSending, setQrEmailSending] = useState(false);
   const [activeTab, setActiveTab] = useState<DashboardTabId>('overview');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showTutorial, setShowTutorial] = useState(false);
@@ -392,17 +394,26 @@ export default function AffiliateRecruitsDashboard({
   }, [lastUpdatedAt]);
 
   const appBaseUrl = useMemo(() => {
+    // Client-side: Use window.location.origin (most reliable in browser)
     if (typeof window !== 'undefined' && window.location?.origin) {
-      return window.location.origin.replace(/\/$/, '');
+      const url = window.location.origin.replace(/\/$/, '');
+      console.log('[AffiliateRecruitsDashboard] Base URL from window.location.origin:', url);
+      return url;
     }
 
-    const envBase = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+    // Server/SSR: Try environment variables
+    const envBase = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
     if (envBase && envBase.trim()) {
       const normalized = envBase.trim().replace(/\/$/, '');
-      return normalized.startsWith('http') ? normalized : `https://${normalized}`;
+      const url = normalized.startsWith('http') ? normalized : `https://${normalized}`;
+      console.log('[AffiliateRecruitsDashboard] Base URL from environment:', url);
+      return url;
     }
 
-    return 'https://bullmoney.online';
+    // Fallback for development
+    const fallback = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://bullmoney.online';
+    console.log('[AffiliateRecruitsDashboard] Base URL fallback:', fallback);
+    return fallback;
   }, []);
 
   const currentWeekKey = useMemo(() => getIsoWeekKey(), []);
@@ -493,7 +504,9 @@ export default function AffiliateRecruitsDashboard({
 
     // Return base URL if no valid tracking code
     if (!myTrackingCode || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found' || myTrackingCode.trim() === '') {
-      return `${appBaseUrl}${referralPath}`;
+      const link = `${appBaseUrl}${referralPath}`;
+      console.log('[AffiliateRecruitsDashboard] Referral link (no code):', link);
+      return link;
     }
     
     // Build URL safely without using URL constructor (which can fail in some SSR contexts)
@@ -504,13 +517,13 @@ export default function AffiliateRecruitsDashboard({
     if (affiliateAttribution.affiliateName) params.set('aff_name', affiliateAttribution.affiliateName);
     if (affiliateAttribution.affiliateEmail) params.set('aff_email', affiliateAttribution.affiliateEmail);
     params.set('aff_code', myTrackingCode.trim());
-    params.set('quick_start', '1');
-    params.set('skip_to', 'broker');
     params.set('utm_source', 'affiliate');
     params.set('utm_medium', 'dashboard');
     params.set('utm_campaign', 'partner_link');
     
-    return `${baseUrl}?${params.toString()}`;
+    const link = `${baseUrl}?${params.toString()}`;
+    console.log('[AffiliateRecruitsDashboard] Referral link generated:', link);
+    return link;
   }, [myTrackingCode, appBaseUrl, affiliateAttribution]);
 
   const affiliateDisplayName = useMemo(() => {
@@ -625,11 +638,33 @@ export default function AffiliateRecruitsDashboard({
         }
         
         if (!userData?.affiliate_code) {
-          setMyTrackingCode('No Code Found');
-          setErrorMsg('Your affiliate code is not set up yet. Please contact support.');
-          setRecruits([]);
-          if (!isPolling) setLoading(false);
-          return;
+          // Try to generate an affiliate code if one doesn't exist
+          try {
+            const genResponse = await fetch('/api/recruit/generate-affiliate-code', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId,
+                email: userData?.email || session?.email || '',
+              }),
+            });
+
+            const genData = await genResponse.json();
+            if (genData.success && genData.affiliateCode) {
+              codeToSearch = genData.affiliateCode;
+              setMyTrackingCode(genData.affiliateCode);
+              console.log(`[AffiliateRecruitsDashboard] Generated new affiliate code: ${genData.affiliateCode}`);
+            } else {
+              throw new Error(genData.error || 'Failed to generate affiliate code');
+            }
+          } catch (genError: any) {
+            console.error('[AffiliateRecruitsDashboard] Code generation error:', genError);
+            setMyTrackingCode('No Code Found');
+            setErrorMsg(`Could not generate affiliate code: ${genError.message || 'Please try again later'}`);
+            setRecruits([]);
+            if (!isPolling) setLoading(false);
+            return;
+          }
         }
 
         codeToSearch = userData.affiliate_code;
@@ -923,47 +958,88 @@ export default function AffiliateRecruitsDashboard({
   };
 
   const handleCopyLink = async () => {
-    if (!referralLink || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found') {
+    const hasActiveCode = Boolean(
+      myTrackingCode &&
+      myTrackingCode !== 'Loading...' &&
+      myTrackingCode !== 'No Code Found' &&
+      myTrackingCode.trim() !== ''
+    );
+
+    if (!referralLink) {
       setErrorMsg('No referral link available. Please ensure you have an affiliate code.');
       setTimeout(() => setErrorMsg(null), 3000);
       return;
     }
+
+    if (!hasActiveCode && !isDevMode) {
+      setErrorMsg('No referral link available. Please ensure you have an affiliate code.');
+      setTimeout(() => setErrorMsg(null), 3000);
+      return;
+    }
+
     try {
+      if (!hasActiveCode && isDevMode) {
+        console.log('[AffiliateRecruitsDashboard][DEV] Copying development default referral link:', referralLink);
+      } else {
+        console.log('[AffiliateRecruitsDashboard] Copying referral link:', referralLink);
+      }
       const success = await copyToClipboard(referralLink);
       if (success) {
         setCopiedLink(true);
-        setTimeout(() => setCopiedLink(false), 1500);
-        setErrorMsg('Referral link copied.');
-        setTimeout(() => setErrorMsg(null), 1500);
+        setTimeout(() => setCopiedLink(false), 2000);
+        setErrorMsg('✓ Referral link copied to clipboard!');
+        setTimeout(() => setErrorMsg(null), 2000);
       } else {
         // Show error to user
         setErrorMsg('Failed to copy link. Please copy manually.');
         setTimeout(() => setErrorMsg(null), 3000);
       }
     } catch (err) {
-      console.error('Copy failed', err);
+      console.error('[AffiliateRecruitsDashboard] Copy failed', err);
       setErrorMsg('Failed to copy link. Please copy manually.');
       setTimeout(() => setErrorMsg(null), 3000);
     }
   };
 
   const handleOpenReferralLink = () => {
-    if (!referralLink || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found') {
+    const hasActiveCode = Boolean(
+      myTrackingCode &&
+      myTrackingCode !== 'Loading...' &&
+      myTrackingCode !== 'No Code Found' &&
+      myTrackingCode.trim() !== ''
+    );
+
+    if (!referralLink || (!hasActiveCode && !isDevMode)) {
       setErrorMsg('Referral link unavailable until your affiliate code is active.');
       setTimeout(() => setErrorMsg(null), 2500);
       return;
     }
+
+    if (!hasActiveCode && isDevMode) {
+      console.log('[AffiliateRecruitsDashboard][DEV] Opening development default referral link:', referralLink);
+    }
+
     window.open(referralLink, '_blank', 'noopener,noreferrer');
   };
 
   const handleShareReferralLink = async () => {
-    if (!referralLink || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found') {
+    const hasActiveCode = Boolean(
+      myTrackingCode &&
+      myTrackingCode !== 'Loading...' &&
+      myTrackingCode !== 'No Code Found' &&
+      myTrackingCode.trim() !== ''
+    );
+
+    if (!referralLink || (!hasActiveCode && !isDevMode)) {
       setErrorMsg('Referral link unavailable until your affiliate code is active.');
       setTimeout(() => setErrorMsg(null), 2500);
       return;
     }
 
     try {
+      if (!hasActiveCode && isDevMode) {
+        console.log('[AffiliateRecruitsDashboard][DEV] Sharing development default referral link:', referralLink);
+      }
       if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
         await navigator.share({
           title: 'Join BullMoney',
@@ -1100,6 +1176,11 @@ export default function AffiliateRecruitsDashboard({
     }
   };
 
+  const handleAutoSaveQrProfileImages = () => {
+    handleDownloadQrProfileImage('png');
+    handleDownloadQrProfileImage('jpeg');
+  };
+
   const handleDownloadQrProfileSvg = () => {
     try {
       const qrCanvas = getQrCanvas();
@@ -1182,6 +1263,125 @@ export default function AffiliateRecruitsDashboard({
       setTimeout(() => setErrorMsg(null), 2500);
     }
   };
+
+  const createQrProfileSvgString = () => {
+    const qrCanvas = getQrCanvas();
+    if (!qrCanvas) throw new Error('QR canvas unavailable');
+
+    const qrDataUrl = qrCanvas.toDataURL('image/png');
+    const codeLabel = (myTrackingCode && myTrackingCode !== 'Loading...' && myTrackingCode !== 'No Code Found')
+      ? myTrackingCode
+      : 'PARTNER';
+    const escapedName = affiliateDisplayName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escapedShort = shortReferralDisplay.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escapedInfo = bullMoneyShortInfo.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#ffffff"/>
+  <text x="540" y="200" text-anchor="middle" font-size="54" font-family="Inter, Arial, sans-serif" font-weight="700" fill="#111111">BullMoney</text>
+  <text x="540" y="300" text-anchor="middle" font-size="44" font-family="Inter, Arial, sans-serif" font-weight="600" fill="#111111">${escapedName}</text>
+  <text x="540" y="360" text-anchor="middle" font-size="32" font-family="Inter, Arial, sans-serif" font-weight="500" fill="#333333">Code: ${codeLabel}</text>
+  <rect x="240" y="440" width="600" height="600" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <image href="${qrDataUrl}" x="260" y="460" width="560" height="560"/>
+  <text x="540" y="1100" text-anchor="middle" font-size="30" font-family="Inter, Arial, sans-serif" font-weight="500" fill="#111111">${escapedShort}</text>
+  <text x="540" y="1170" text-anchor="middle" font-size="26" font-family="Inter, Arial, sans-serif" font-weight="400" fill="#666666">Scan to join with my affiliate link</text>
+  <text x="540" y="1230" text-anchor="middle" font-size="26" font-family="Inter, Arial, sans-serif" font-weight="400" fill="#666666">${escapedInfo}</text>
+</svg>`;
+  };
+
+  const handleSendQrCardToGmail = async () => {
+    const email = qrEmailInput.trim().toLowerCase();
+    const isGmail = /^[^\s@]+@(gmail\.com|googlemail\.com)$/i.test(email);
+
+    if (!isGmail) {
+      setErrorMsg('Please enter a valid Gmail address.');
+      setTimeout(() => setErrorMsg(null), 2500);
+      return;
+    }
+
+    const codeLabel = (myTrackingCode && myTrackingCode !== 'Loading...' && myTrackingCode !== 'No Code Found')
+      ? myTrackingCode
+      : 'PARTNER';
+
+    try {
+      setQrEmailSending(true);
+      const pngDataUrl = createQrProfileCardDataUrl('png');
+      const jpegDataUrl = createQrProfileCardDataUrl('jpeg');
+      const svgContent = createQrProfileSvgString();
+      const codeSlug = codeLabel.trim() || 'partner';
+
+      const csvContent = [
+        'name,code,short_link,full_link,about',
+        `"${affiliateDisplayName.replace(/"/g, '""')}","${codeSlug}","${shortReferralDisplay}","${referralLink}","${bullMoneyShortInfo}"`,
+      ].join('\n');
+
+      const txtContent = [
+        'BullMoney Affiliate QR Card',
+        `Name: ${affiliateDisplayName}`,
+        `Code: ${codeSlug}`,
+        `Short Link: ${shortReferralDisplay}`,
+        `Full Link: ${referralLink}`,
+        `About: ${bullMoneyShortInfo}`,
+      ].join('\n');
+
+      const docContent = `
+        <html><head><meta charset="utf-8"/></head><body>
+          <h1>BullMoney Affiliate QR Card</h1>
+          <p><strong>Name:</strong> ${affiliateDisplayName}</p>
+          <p><strong>Code:</strong> ${codeSlug}</p>
+          <p><strong>Short Link:</strong> ${shortReferralDisplay}</p>
+          <p><strong>Full Link:</strong> ${referralLink}</p>
+          <p><strong>About:</strong> ${bullMoneyShortInfo}</p>
+        </body></html>
+      `;
+
+      const response = await fetch('/api/recruit/send-qr-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          name: affiliateDisplayName,
+          code: codeSlug,
+          shortLink: shortReferralDisplay,
+          referralLink,
+          info: bullMoneyShortInfo,
+          files: {
+            pngDataUrl,
+            jpegDataUrl,
+            svgContent,
+            csvContent,
+            txtContent,
+            docContent,
+          },
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.error || 'Could not send email right now.');
+      }
+
+      setErrorMsg(`Sent to ${email}`);
+      setTimeout(() => setErrorMsg(null), 2500);
+    } catch (error) {
+      console.error('QR Gmail send failed:', error);
+      setErrorMsg(error instanceof Error ? error.message : 'Could not send email right now.');
+      setTimeout(() => setErrorMsg(null), 2500);
+    } finally {
+      setQrEmailSending(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!showQrProfileModal) return;
+    if (qrEmailInput.trim()) return;
+
+    const candidate = String(profileForm.email || '').trim();
+    if (/^[^\s@]+@(gmail\.com|googlemail\.com)$/i.test(candidate)) {
+      setQrEmailInput(candidate);
+    }
+  }, [showQrProfileModal, profileForm.email, qrEmailInput]);
 
   const handleShareQrCard = async () => {
     try {
@@ -1438,7 +1638,16 @@ export default function AffiliateRecruitsDashboard({
     ? ((earnings.this_month - earnings.last_month) / earnings.last_month * 100).toFixed(1)
     : '0';
 
-  const tutorialSlides = [
+  type TutorialSlide = {
+    id: string;
+    title: string;
+    summary: string;
+    bullets: string[];
+    ctaLabel?: string;
+    ctaAction?: () => void | Promise<void>;
+  };
+
+  const tutorialSlides: TutorialSlide[] = [
     {
       id: 'goal',
       title: 'Main Goal: Get Active Traders, Not Just Clicks',
@@ -1733,64 +1942,114 @@ export default function AffiliateRecruitsDashboard({
           </div>
         </header>
 
-        <section className="mb-6 rounded-2xl border border-black/15 bg-white p-3 md:p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            <div>
-              <h3 className="text-sm md:text-base font-bold text-black">Staff Group Updates</h3>
-              <p className="text-[11px] md:text-xs text-black/60">Live messages from BullMoney staff Telegram</p>
+        <section className="mb-6 rounded-2xl border border-black/15 bg-white p-2 md:p-4">
+          {/* Desktop Layout */}
+          <div className="hidden md:block">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-base font-bold text-black">Staff Group Updates</h3>
+                <p className="text-xs text-black/60">Live messages from BullMoney staff Telegram</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => loadStaffFeed(false)}
+                  className="px-3 py-2 rounded-lg text-sm font-semibold bg-white text-black hover:bg-black/5 border border-black/20"
+                  style={{ backgroundColor: '#ffffff', color: '#000000' }}
+                >
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.open(STAFF_GROUP_LINK, '_blank', 'noopener,noreferrer')}
+                  className="px-3 py-2 rounded-lg text-sm font-semibold bg-white text-black hover:bg-black/5 border border-black/20"
+                  style={{ backgroundColor: '#ffffff', color: '#000000' }}
+                >
+                  Open Group
+                </button>
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 shrink-0 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => loadStaffFeed(false)}
-                className="w-full sm:w-auto px-3 py-2 rounded-lg text-xs md:text-sm font-semibold bg-black text-white hover:bg-black/85 border border-black"
-                style={{ backgroundColor: '#000000', color: '#ffffff' }}
-              >
-                Refresh
-              </button>
+
+            {staffLoading && staffMessages.length === 0 && (
+              <div className="rounded-xl border border-black/10 bg-white p-3 text-xs text-black/60">Loading staff messages...</div>
+            )}
+
+            {staffError && staffMessages.length === 0 && (
+              <div className="rounded-xl border border-black/15 bg-white p-3 text-xs text-black/70">
+                Could not load staff feed. If this persists, add the staff group chat id to `NEXT_PUBLIC_TELEGRAM_STAFF_CHAT_ID`.
+              </div>
+            )}
+
+            {!staffLoading && staffMessages.length === 0 && !staffError && (
+              <div className="rounded-xl border border-black/10 bg-white p-3 text-xs text-black/60">
+                No recent staff messages yet.
+              </div>
+            )}
+
+            {staffMessages.length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {staffMessages.slice(0, 6).map((message) => (
+                  <article key={message.id} className="rounded-xl border border-black/12 bg-white p-3">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <p className="text-xs font-semibold text-black truncate">{message.author || 'Staff'}</p>
+                      <p className="text-[10px] text-black/50 shrink-0">{message.formattedTime}</p>
+                    </div>
+                    <p className="text-xs text-black/80 leading-relaxed line-clamp-3">{message.text || '(Media message)'}</p>
+                    {message.hasMedia && (
+                      <p className="mt-1.5 text-[10px] font-medium text-black/55 uppercase tracking-wide">{message.mediaType || 'media'}</p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Banner Layout */}
+          <div className="md:hidden">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div>
+                <h3 className="text-xs font-bold text-black">Staff Updates</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => window.open(STAFF_GROUP_LINK, '_blank', 'noopener,noreferrer')}
-                className="w-full sm:w-auto px-3 py-2 rounded-lg text-xs md:text-sm font-semibold bg-black text-white hover:bg-black/85 border border-black"
-                style={{ backgroundColor: '#000000', color: '#ffffff' }}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-black hover:bg-black/5 border border-black/20 shrink-0"
+                style={{ backgroundColor: '#ffffff', color: '#000000' }}
               >
-                Open Group
+                Join
               </button>
             </div>
+
+            {staffLoading && staffMessages.length === 0 && (
+              <div className="rounded-lg border border-black/10 bg-black/2 p-2 text-[11px] text-black/60">Loading...</div>
+            )}
+
+            {staffError && staffMessages.length === 0 && (
+              <div className="rounded-lg border border-black/15 bg-black/2 p-2 text-[11px] text-black/70">
+                Could not load messages
+              </div>
+            )}
+
+            {!staffLoading && staffMessages.length === 0 && !staffError && (
+              <div className="rounded-lg border border-black/10 bg-black/2 p-2 text-[11px] text-black/60">
+                No recent messages
+              </div>
+            )}
+
+            {staffMessages.length > 0 && (
+              <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                {staffMessages.slice(0, 3).map((message) => (
+                  <article key={message.id} className="rounded-lg border border-black/12 bg-black/3 p-2">
+                    <div className="flex items-start justify-between gap-1.5">
+                      <p className="text-[11px] font-semibold text-black truncate flex-1">{message.author || 'Staff'}</p>
+                      <p className="text-[9px] text-black/50 shrink-0">{message.formattedTime}</p>
+                    </div>
+                    <p className="text-[11px] text-black/80 leading-snug line-clamp-2 mt-0.5">{message.text || '(Media message)'}</p>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
-
-          {staffLoading && staffMessages.length === 0 && (
-            <div className="rounded-xl border border-black/10 bg-white p-3 text-xs text-black/60">Loading staff messages...</div>
-          )}
-
-          {staffError && staffMessages.length === 0 && (
-            <div className="rounded-xl border border-black/15 bg-white p-3 text-xs text-black/70">
-              Could not load staff feed. If this persists, add the staff group chat id to `NEXT_PUBLIC_TELEGRAM_STAFF_CHAT_ID`.
-            </div>
-          )}
-
-          {!staffLoading && staffMessages.length === 0 && !staffError && (
-            <div className="rounded-xl border border-black/10 bg-white p-3 text-xs text-black/60">
-              No recent staff messages yet.
-            </div>
-          )}
-
-          {staffMessages.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-              {staffMessages.slice(0, 6).map((message) => (
-                <article key={message.id} className="rounded-xl border border-black/12 bg-white p-3">
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <p className="text-xs font-semibold text-black truncate">{message.author || 'Staff'}</p>
-                    <p className="text-[10px] text-black/50 shrink-0">{message.formattedTime}</p>
-                  </div>
-                  <p className="text-xs text-black/80 leading-relaxed line-clamp-3">{message.text || '(Media message)'}</p>
-                  {message.hasMedia && (
-                    <p className="mt-1.5 text-[10px] font-medium text-black/55 uppercase tracking-wide">{message.mediaType || 'media'}</p>
-                  )}
-                </article>
-              ))}
-            </div>
-          )}
         </section>
 
         {showTutorial && (
@@ -2074,9 +2333,9 @@ export default function AffiliateRecruitsDashboard({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowQrProfileModal(true)}
+                  onClick={() => setShowQrProfileModal((prev) => !prev)}
                   className="rounded-lg border border-black/20 bg-white p-1 hover:bg-black/5"
-                  title="Open full screen QR card"
+                  title="Show QR card details"
                 >
                   <QRCodeSVG value={referralLink} size={84} includeMargin />
                 </button>
@@ -2096,10 +2355,10 @@ export default function AffiliateRecruitsDashboard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowQrProfileModal(true)}
+                  onClick={() => setShowQrProfileModal((prev) => !prev)}
                   className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 col-span-2"
                 >
-                  Open Fullscreen QR Card
+                  {showQrProfileModal ? 'Hide QR Card Details' : 'Show QR Card Details'}
                 </button>
               </div>
             </div>
@@ -2145,9 +2404,9 @@ export default function AffiliateRecruitsDashboard({
               <div className="rounded-xl border border-black/20 p-2 bg-white">
                 <button
                   type="button"
-                  onClick={() => setShowQrProfileModal(true)}
+                  onClick={() => setShowQrProfileModal((prev) => !prev)}
                   className="rounded-md p-0.5 hover:bg-black/5"
-                  title="Open full screen QR card"
+                  title="Show QR card details"
                 >
                   <QRCodeSVG value={referralLink} size={92} includeMargin />
                 </button>
@@ -2159,10 +2418,10 @@ export default function AffiliateRecruitsDashboard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowQrProfileModal(true)}
+                  onClick={() => setShowQrProfileModal((prev) => !prev)}
                   className="w-full mt-1 px-2 py-1.5 rounded-md text-[11px] font-semibold border border-black/20 bg-white hover:bg-black/5"
                 >
-                  Fullscreen Card
+                  {showQrProfileModal ? 'Hide Card Details' : 'Show Card Details'}
                 </button>
               </div>
               <div className="text-center">
@@ -2178,52 +2437,86 @@ export default function AffiliateRecruitsDashboard({
         </div>
 
         {showQrProfileModal && (
-          <div className="fixed inset-0 z-[120] bg-white/95 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
-            <div className="w-full max-w-xl rounded-2xl border border-black/15 bg-white shadow-xl p-4 md:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-black/50">BullMoney</p>
-                  <h3 className="text-lg md:text-xl font-bold text-black">Affiliate QR Card</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowQrProfileModal(false)}
-                  className="p-2 rounded-lg border border-black/20 bg-white hover:bg-black/5"
-                  title="Close QR card"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+          <div className="mb-6 rounded-2xl border border-black/15 bg-white shadow-lg max-h-[85vh] overflow-y-auto">
+            <div className="p-4 md:p-6 sticky top-0 bg-white border-b border-black/10 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-black/50">BullMoney</p>
+                <h3 className="text-lg md:text-xl font-bold text-black">Affiliate QR Card</h3>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowQrProfileModal(false)}
+                className="p-2 rounded-lg border border-black/20 bg-white hover:bg-black/5 shrink-0"
+                title="Close QR card"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-              <div className="rounded-xl border border-black/15 bg-white p-5 md:p-6 text-center">
+            <div className="p-4 md:p-6">
+              <div className="rounded-xl border border-black/15 bg-black/2 p-5 md:p-6 text-center mb-4">
                 <p className="text-2xl font-black text-black mb-1">BullMoney</p>
                 <p className="text-sm font-semibold text-black">{affiliateDisplayName}</p>
                 <p className="text-xs text-black/60 mb-4">
                   Code: {(myTrackingCode && myTrackingCode !== 'Loading...' && myTrackingCode !== 'No Code Found') ? myTrackingCode : 'PARTNER'}
                 </p>
 
-                <div className="inline-flex rounded-xl border border-black/20 bg-white p-2">
+                <button
+                  type="button"
+                  onClick={handleAutoSaveQrProfileImages}
+                  className="inline-flex rounded-xl border border-black/20 bg-white p-2 hover:bg-black/5 transition-colors"
+                  title="Tap to auto-save PNG and JPEG"
+                >
                   <QRCodeSVG value={referralLink} size={210} includeMargin />
-                </div>
+                </button>
+
+                <p className="mt-2 text-[11px] font-medium text-black/55">Tap QR to auto-save PNG + JPEG</p>
 
                 <p className="mt-4 text-sm font-semibold text-black break-all">{shortReferralDisplay}</p>
                 <p className="mt-1 text-xs text-black/55">{bullMoneyShortInfo}</p>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2">
-                <button type="button" onClick={() => handleDownloadQrProfileImage('png')} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">PNG</button>
-                <button type="button" onClick={() => handleDownloadQrProfileImage('jpeg')} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">JPEG</button>
-                <button type="button" onClick={handleDownloadQrProfileSvg} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">SVG</button>
-                <button type="button" onClick={() => handleDownloadQrProfileDataFile('csv')} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">Excel (CSV)</button>
-                <button type="button" onClick={() => handleDownloadQrProfileDataFile('doc')} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">Word (DOC)</button>
-                <button type="button" onClick={() => handleDownloadQrProfileDataFile('txt')} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">Text File</button>
+              <div className="space-y-3">
+                <div className="rounded-xl border border-black/15 bg-black/2 p-3">
+                  <p className="text-xs font-semibold text-black uppercase tracking-wide mb-2">Email this QR card</p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="email"
+                      value={qrEmailInput}
+                      onChange={(e) => setQrEmailInput(e.target.value)}
+                      placeholder="yourname@gmail.com"
+                      className="flex-1 px-3 py-2.5 rounded-lg text-sm border border-black/20 bg-white text-black placeholder:text-black/40 focus:outline-none focus:ring-2 focus:ring-black/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendQrCardToGmail}
+                      disabled={qrEmailSending}
+                      className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors disabled:opacity-60"
+                    >
+                      {qrEmailSending ? 'Sending...' : 'Send to Gmail'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-xs font-semibold text-black/60 uppercase tracking-wide">Download Options</div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <button type="button" onClick={() => handleDownloadQrProfileImage('png')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">PNG</button>
+                  <button type="button" onClick={() => handleDownloadQrProfileImage('jpeg')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">JPEG</button>
+                  <button type="button" onClick={handleDownloadQrProfileSvg} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">SVG</button>
+                  <button type="button" onClick={() => handleDownloadQrProfileDataFile('csv')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Excel</button>
+                  <button type="button" onClick={() => handleDownloadQrProfileDataFile('doc')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Word</button>
+                  <button type="button" onClick={() => handleDownloadQrProfileDataFile('txt')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Text</button>
+                </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
-                <button type="button" onClick={handleShareQrCard} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">Share</button>
-                <button type="button" onClick={() => handleOpenSocialShare('instagram')} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">Instagram Story</button>
-                <button type="button" onClick={() => handleOpenSocialShare('facebook')} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">Facebook</button>
-                <button type="button" onClick={() => handleOpenSocialShare('whatsapp')} className="px-3 py-2 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5">WhatsApp Status</button>
+              <div className="mt-4 pt-4 border-t border-black/10">
+                <div className="text-xs font-semibold text-black/60 uppercase tracking-wide mb-3">Share On Social</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <button type="button" onClick={handleShareQrCard} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Share</button>
+                  <button type="button" onClick={() => handleOpenSocialShare('instagram')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Instagram</button>
+                  <button type="button" onClick={() => handleOpenSocialShare('facebook')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Facebook</button>
+                  <button type="button" onClick={() => handleOpenSocialShare('whatsapp')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">WhatsApp</button>
+                </div>
               </div>
             </div>
           </div>

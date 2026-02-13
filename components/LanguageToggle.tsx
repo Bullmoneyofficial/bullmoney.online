@@ -293,9 +293,9 @@ export const LanguageToggle = memo(({
                   <button
                     onClick={() => { setCurrencyCategory('forex'); setSearch(''); }}
                     className="flex-1 py-1 rounded-md text-[9px] font-semibold uppercase tracking-wide transition-colors"
-                    style={currencyCategory === 'forex'
+                    style={{ ...(currencyCategory === 'forex'
                       ? { background: 'rgba(16,185,129,0.12)', color: 'rgb(16,185,129)', border: '1px solid rgba(16,185,129,0.25)' }
-                      : { color: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,0,0,0.08)' }
+                      : { color: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,0,0,0.08)' }), touchAction: 'manipulation' as const }
                     }
                   >
                     💱 Forex
@@ -303,9 +303,9 @@ export const LanguageToggle = memo(({
                   <button
                     onClick={() => { setCurrencyCategory('crypto'); setSearch(''); }}
                     className="flex-1 py-1 rounded-md text-[9px] font-semibold uppercase tracking-wide transition-colors"
-                    style={currencyCategory === 'crypto'
+                    style={{ ...(currencyCategory === 'crypto'
                       ? { background: 'rgba(245,158,11,0.12)', color: 'rgb(245,158,11)', border: '1px solid rgba(245,158,11,0.25)' }
-                      : { color: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,0,0,0.08)' }
+                      : { color: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,0,0,0.08)' }), touchAction: 'manipulation' as const }
                     }
                   >
                     ₿ Crypto

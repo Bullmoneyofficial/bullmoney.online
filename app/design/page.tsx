@@ -1,6 +1,5 @@
 'use client';
 
-import type { Metadata } from "next";
 import DesignStudioPage from "@/components/studio/DesignStudioPage";
 import DesignSections from "@/components/studio/DesignSections";
 import DesignPrintSections from "./DesignPrintSections";

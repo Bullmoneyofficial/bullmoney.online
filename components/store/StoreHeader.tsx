@@ -148,7 +148,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const { open: openProductsModal, isOpen: isProductsModalOpen } = useProductsModalUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
   const { setAudioWidgetOpen } = useAudioWidgetUI();
-  const { setIsOpen: setLiveStreamModalOpen } = useLiveStreamModalUI();
+  const { isOpen: isLiveStreamModalOpen, setIsOpen: setLiveStreamModalOpen } = useLiveStreamModalUI();
   const itemCount = getItemCount();
   const router = useRouter();
   const pathname = usePathname();
@@ -1518,7 +1518,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       {isProductsModalOpen && <ProductsModal />}
 
       {/* Live Stream Modal - Rendered once, controlled by context */}
-      <LiveStreamModal />
+      {isLiveStreamModalOpen && <LiveStreamModal />}
 
       {/* Affiliate Modal - Using Lazy System */}
       <LazyAffiliateModal

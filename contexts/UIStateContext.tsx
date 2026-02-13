@@ -228,6 +228,9 @@ interface UIStateContextType {
 
   // Signal that something is overlaying the floating player (for z-index management)
   hasOverlayingUI: boolean;
+
+  // Performance hint for effect-heavy UI on mobile/reduced-motion devices
+  shouldSkipHeavyEffects: boolean;
 }
 
 const UIStateContext = createContext<UIStateContextType | undefined>(undefined);
@@ -273,6 +276,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isWelcomeScreenActive, setIsWelcomeScreenActiveState] = useState(false);
   // Mobile navbar hidden on scroll - UltimateHub pill expands to full width
   const [isMobileNavbarHidden, setIsMobileNavbarHiddenState] = useState(false);
+  const [shouldSkipHeavyEffects, setShouldSkipHeavyEffectsState] = useState(false);
   // Track if user has started audio in pagemode flow - persists through loader transition
   // Only resets when content loads (V2 unlocked)
   const [hasStartedPagemodeAudio, setHasStartedPagemodeAudioState] = useState(false);
@@ -317,6 +321,39 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   // NOTE: ChartNews is explicitly included in isAnyModalOpen, so audio widget will minimize when ChartNews opens
   // Ultimate Hub overlays a large portion of the screen on mobile, so only minimize there
   const shouldMinimizeAudioWidget = (isAnyModalOpen && !shouldNotMinimizeForThisModal) || (!isDesktopViewport && isUltimateHubOpen);
+
+  // Shared performance flag for animation/effect-heavy UI.
+  // Skip heavy effects on mobile and for users who prefer reduced motion.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const syncValue = () => {
+      setShouldSkipHeavyEffectsState(mobileQuery.matches || reducedMotionQuery.matches);
+    };
+
+    syncValue();
+
+    if (mobileQuery.addEventListener) {
+      mobileQuery.addEventListener('change', syncValue);
+      reducedMotionQuery.addEventListener('change', syncValue);
+    } else {
+      mobileQuery.addListener(syncValue);
+      reducedMotionQuery.addListener(syncValue);
+    }
+
+    return () => {
+      if (mobileQuery.removeEventListener) {
+        mobileQuery.removeEventListener('change', syncValue);
+        reducedMotionQuery.removeEventListener('change', syncValue);
+      } else {
+        mobileQuery.removeListener(syncValue);
+        reducedMotionQuery.removeListener(syncValue);
+      }
+    };
+  }, []);
 
   // Derived state: is there UI overlaying the floating player area?
   // Mobile menu, Ultimate Hub, and Ultimate Panel don't overlay audio widget - they coexist
@@ -1082,6 +1119,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     activeComponent,
     shouldMinimizeAudioWidget,
     hasOverlayingUI,
+    shouldSkipHeavyEffects,
 
     // Setters
     setMobileMenuOpen,
@@ -1343,8 +1381,13 @@ export function useAnalysisModalUI() {
 }
 
 export function useLiveStreamModalUI() {
-  const { isLiveStreamModalOpen, setLiveStreamModalOpen, openLiveStreamModal } = useUIState();
-  return { isOpen: isLiveStreamModalOpen, setIsOpen: setLiveStreamModalOpen, open: openLiveStreamModal };
+  const { isLiveStreamModalOpen, setLiveStreamModalOpen, openLiveStreamModal, shouldSkipHeavyEffects } = useUIState();
+  return {
+    isOpen: isLiveStreamModalOpen,
+    setIsOpen: setLiveStreamModalOpen,
+    open: openLiveStreamModal,
+    shouldSkipHeavyEffects,
+  };
 }
 
 export function useProductsModalUI() {

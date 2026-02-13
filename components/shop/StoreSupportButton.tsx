@@ -37,7 +37,7 @@ interface SupportButtonProps {
 export function SupportButton({ position = 'right' }: SupportButtonProps) {
   const { isOpen, setIsOpen } = useSupportDrawerUI();
   const { isMobileMenuOpen: isStoreMobileMenuOpen, isDesktopMenuOpen: isStoreDesktopMenuOpen, isDropdownMenuOpen: isStoreDropdownMenuOpen } = useStoreMenuUI();
-  const { isUltimateHubOpen } = useUIState();
+  const { isUltimateHubOpen, shouldSkipHeavyEffects } = useUIState();
   const [hasUnread, setHasUnread] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [toastIdx, setToastIdx] = useState(0);
@@ -103,23 +103,37 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
           boxShadow: isOpen ? '0 2px 20px rgba(0,0,0,0.4)' : '0 4px 30px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.1)',
           transition: 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.92 }}
+        whileHover={shouldSkipHeavyEffects ? undefined : { scale: 1.06 }}
+        whileTap={shouldSkipHeavyEffects ? undefined : { scale: 0.92 }}
         aria-label={isOpen ? 'Close support' : 'Open support'}
       >
         <AnimatePresence mode="wait">
           {isOpen ? (
-            <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
+            <motion.div
+              key="x"
+              initial={shouldSkipHeavyEffects ? false : { rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={shouldSkipHeavyEffects ? undefined : { rotate: 90, opacity: 0 }}
+              transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.15 }}
+            >
               <X className="w-4 h-4 md:w-5 md:h-5 text-white/70" />
             </motion.div>
           ) : (
-            <motion.div key="h" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }}>
+            <motion.div
+              key="h"
+              initial={shouldSkipHeavyEffects ? false : { scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={shouldSkipHeavyEffects ? undefined : { scale: 0.5, opacity: 0 }}
+              transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.15 }}
+            >
               <Heart className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </motion.div>
           )}
         </AnimatePresence>
         {hasUnread && !isOpen && (
-          <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
+          <motion.span
+            initial={shouldSkipHeavyEffects ? false : { scale: 0 }}
+            animate={{ scale: 1 }}
             className={`absolute -top-0.5 ${isLeft ? '-left-0.5' : '-right-0.5'} w-2 h-2 md:w-2.5 md:h-2.5 rounded-full`}
             style={{ background: 'rgb(255, 255, 255)', boxShadow: '0 0 8px rgba(255,255,255,0.5)' }} />
         )}
@@ -130,10 +144,10 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
         {toastMsg && !isOpen && (
           <motion.div
             key={toastMsg}
-            initial={{ opacity: 0, y: 8, scale: 0.92 }}
+            initial={shouldSkipHeavyEffects ? false : { opacity: 0, y: 8, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.95 }}
-            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+            exit={shouldSkipHeavyEffects ? undefined : { opacity: 0, y: -4, scale: 0.95 }}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
             onClick={handleOpen}
             className={`fixed bottom-16 md:bottom-40 ${side} z-[2147483647] cursor-pointer max-w-48 md:max-w-55`}
             style={{

@@ -655,8 +655,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
             {/* Content */}
             <div
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y scroll-smooth p-4 md:p-6 pb-4 md:pb-6"
-              style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
+              className="flex-1 min-h-0 overflow-y-auto overscroll-none touch-pan-y scroll-smooth p-4 md:p-6 pb-4 md:pb-6"
+              style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth', overscrollBehavior: 'none' }}
             >
               <AffiliateModalContent isOpen={isOpen} onClose={onClose} />
             </div>

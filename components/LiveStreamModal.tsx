@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
+import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Radio, Loader2, LogIn, LogOut, User, Tv, ExternalLink, RefreshCw } from 'lucide-react';
@@ -9,7 +10,11 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop } from '@/components/ShopContext';
 import { createSupabaseClient } from '@/lib/supabase';
 import { useLiveStreamModalUI } from '@/contexts/UIStateContext';
-import YouTube from 'react-youtube';
+
+const YouTube = dynamic(() => import('react-youtube'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black/20" />,
+});
 
 const YOUTUBE_CLIENT_ID = process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID || '';
 const YOUTUBE_SCOPES = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
@@ -62,7 +67,7 @@ const useModalState = () => {
 
 // Main Modal Component
 export const LiveStreamModal = memo(() => {
-  const { isOpen, setIsOpen } = useLiveStreamModalUI();
+  const { isOpen, setIsOpen, shouldSkipHeavyEffects } = useLiveStreamModalUI();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -86,7 +91,7 @@ export const LiveStreamModal = memo(() => {
     <ModalContext.Provider value={{ isOpen, setIsOpen }}>
       {createPortal(
         <AnimatePresence>
-          {isOpen && <LiveStreamContent />}
+          {isOpen && <LiveStreamContent shouldSkipHeavyEffects={shouldSkipHeavyEffects} />}
         </AnimatePresence>,
         document.body
       )}
@@ -108,7 +113,7 @@ const YT_PLAYER_OPTS = {
 };
 
 // Main Content
-const LiveStreamContent = memo(() => {
+const LiveStreamContent = memo(({ shouldSkipHeavyEffects }: { shouldSkipHeavyEffects: boolean }) => {
   const { setIsOpen } = useModalState();
   const { state } = useShop();
 
@@ -147,6 +152,8 @@ const LiveStreamContent = memo(() => {
       }
     };
   }, []);
+
+  const shouldSkipEffects = shouldSkipHeavyEffects || !isDesktop;
 
   // Load YouTube auth from localStorage
   useEffect(() => {
@@ -406,10 +413,10 @@ const LiveStreamContent = memo(() => {
     <AnimatePresence>
       {/* Backdrop */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={shouldSkipEffects ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.12 }}
+        exit={shouldSkipEffects ? undefined : { opacity: 0 }}
+        transition={shouldSkipEffects ? { duration: 0 } : { duration: 0.12 }}
         onClick={handleClose}
         onTouchEnd={handleBackdropTouch}
         className="fixed inset-0"
@@ -418,10 +425,10 @@ const LiveStreamContent = memo(() => {
 
       {/* Modal */}
       <motion.div
-        initial={isDesktop ? { y: '-100%' } : { y: '100%' }}
+        initial={shouldSkipEffects ? false : (isDesktop ? { y: '-100%' } : { y: '100%' })}
         animate={isDesktop ? { y: 0 } : { y: 0 }}
-        exit={isDesktop ? { y: '-100%' } : { y: '100%' }}
-        transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+        exit={shouldSkipEffects ? undefined : (isDesktop ? { y: '-100%' } : { y: '100%' })}
+        transition={shouldSkipEffects ? { duration: 0 } : { type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
         onClick={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
         onWheel={(e) => e.stopPropagation()}
@@ -436,8 +443,8 @@ const LiveStreamContent = memo(() => {
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">
           <motion.button
             onClick={handleClose}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={shouldSkipEffects ? undefined : { scale: 1.05 }}
+            whileTap={shouldSkipEffects ? undefined : { scale: 0.95 }}
             className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -455,8 +462,8 @@ const LiveStreamContent = memo(() => {
 
           <motion.button
             onClick={handleClose}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={shouldSkipEffects ? undefined : { scale: 1.05 }}
+            whileTap={shouldSkipEffects ? undefined : { scale: 0.95 }}
             className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
           >
             <X className="w-4 h-4 md:w-5 md:h-5" />
@@ -475,8 +482,8 @@ const LiveStreamContent = memo(() => {
                 SoundEffects.click();
                 setActiveTab(key);
               }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={shouldSkipEffects ? undefined : { scale: 1.02 }}
+              whileTap={shouldSkipEffects ? undefined : { scale: 0.98 }}
               className={`flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 rounded-lg whitespace-nowrap text-xs md:text-sm font-medium transition-all ${
                 activeTab === key
                   ? 'bg-black text-white'
@@ -519,8 +526,8 @@ const LiveStreamContent = memo(() => {
                         fetchDiscoverVideos(true);
                       }}
                       disabled={discoverLoading}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={shouldSkipEffects ? undefined : { scale: 1.1 }}
+                      whileTap={shouldSkipEffects ? undefined : { scale: 0.9 }}
                       className="h-7 w-7 rounded-lg bg-black/5 flex items-center justify-center hover:bg-black/10 transition-colors disabled:opacity-40"
                       title="Get new videos"
                     >
@@ -537,15 +544,21 @@ const LiveStreamContent = memo(() => {
                 ) : discoverVideoId ? (
                   <motion.div
                     key={discoverVideoId}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={shouldSkipEffects ? false : { opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
+                    transition={shouldSkipEffects ? { duration: 0 } : { delay: 0.1 }}
                     className="space-y-3"
                   >
                     <div className="aspect-video relative rounded-xl overflow-hidden bg-black border border-black/10">
                       <YouTube
                         videoId={discoverVideoId}
-                        opts={YT_PLAYER_OPTS}
+                        opts={{
+                          ...YT_PLAYER_OPTS,
+                          playerVars: {
+                            ...YT_PLAYER_OPTS.playerVars,
+                            autoplay: shouldSkipEffects ? 0 : 1,
+                          },
+                        }}
                         onReady={(e) => { playerRef.current = e.target; }}
                         className="w-full h-full"
                         iframeClassName="w-full h-full absolute inset-0"
@@ -593,7 +606,7 @@ const LiveStreamContent = memo(() => {
                                   SoundEffects.click();
                                   setDiscoverVideoId(video.videoId);
                                 }}
-                                whileHover={{ scale: 1.01 }}
+                                whileHover={shouldSkipEffects ? undefined : { scale: 1.01 }}
                                 className={`w-full text-left p-2.5 rounded-lg border transition-all flex items-center gap-3 ${
                                   discoverVideoId === video.videoId
                                     ? 'bg-black border-black/30'
@@ -627,7 +640,7 @@ const LiveStreamContent = memo(() => {
             {/* ===== PERSONAL YOUTUBE TAB ===== */}
             {activeTab === 'personal' && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={shouldSkipEffects ? false : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-4"
               >
@@ -653,8 +666,8 @@ const LiveStreamContent = memo(() => {
                       </div>
                       <motion.button
                         onClick={handleDisconnect}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={shouldSkipEffects ? undefined : { scale: 1.05 }}
+                        whileTap={shouldSkipEffects ? undefined : { scale: 0.95 }}
                         className="shrink-0 h-8 px-3 rounded-lg bg-black/5 text-black/60 text-xs font-medium hover:bg-black/10 transition-colors flex items-center gap-1"
                       >
                         <LogOut className="w-3.5 h-3.5" />
@@ -666,7 +679,7 @@ const LiveStreamContent = memo(() => {
                     {personalVideoId && (
                       <motion.div
                         key={personalVideoId}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={shouldSkipEffects ? false : { opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="aspect-video relative rounded-xl overflow-hidden bg-black border border-black/10"
                       >
@@ -699,7 +712,7 @@ const LiveStreamContent = memo(() => {
                                   SoundEffects.click();
                                   setPersonalVideoId(videoId);
                                 }}
-                                whileHover={{ scale: 1.01 }}
+                                whileHover={shouldSkipEffects ? undefined : { scale: 1.01 }}
                                 className={`w-full text-left p-3 rounded-lg border transition-all flex items-center gap-3 ${
                                   personalVideoId === videoId
                                     ? 'bg-black border-black/30'
@@ -756,8 +769,8 @@ const LiveStreamContent = memo(() => {
                               fetchLatestMarketNewsVideo();
                             }}
                             disabled={marketNewsLoading}
-                            whileHover={{ scale: 1.06 }}
-                            whileTap={{ scale: 0.94 }}
+                            whileHover={shouldSkipEffects ? undefined : { scale: 1.06 }}
+                            whileTap={shouldSkipEffects ? undefined : { scale: 0.94 }}
                             className="h-7 w-7 rounded-lg bg-black/5 flex items-center justify-center hover:bg-black/10 transition-colors disabled:opacity-40"
                             title="Refresh latest market news"
                           >
@@ -774,7 +787,7 @@ const LiveStreamContent = memo(() => {
                                   ...YT_PLAYER_OPTS,
                                   playerVars: {
                                     ...YT_PLAYER_OPTS.playerVars,
-                                    autoplay: 1,
+                                    autoplay: shouldSkipEffects ? 0 : 1,
                                   },
                                 }}
                                 className="w-full h-full"
@@ -817,8 +830,8 @@ const LiveStreamContent = memo(() => {
                         <motion.button
                           onClick={handleConnectYouTube}
                           disabled={ytAuthLoading}
-                          whileHover={{ scale: ytAuthLoading ? 1 : 1.02 }}
-                          whileTap={{ scale: ytAuthLoading ? 1 : 0.98 }}
+                          whileHover={shouldSkipEffects ? undefined : { scale: ytAuthLoading ? 1 : 1.02 }}
+                          whileTap={shouldSkipEffects ? undefined : { scale: ytAuthLoading ? 1 : 0.98 }}
                           className="flex-1 px-4 py-3 rounded-lg bg-white text-black font-medium border border-black/20 hover:bg-black/5 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-60"
                         >
                           {ytAuthLoading ? (
@@ -841,8 +854,8 @@ const LiveStreamContent = memo(() => {
                             SoundEffects.click();
                             setActiveTab('bullmoney');
                           }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={shouldSkipEffects ? undefined : { scale: 1.02 }}
+                          whileTap={shouldSkipEffects ? undefined : { scale: 0.98 }}
                           className="sm:w-auto px-4 py-3 rounded-lg bg-black text-white font-medium hover:bg-black/90 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                           <Radio className="w-4 h-4" />

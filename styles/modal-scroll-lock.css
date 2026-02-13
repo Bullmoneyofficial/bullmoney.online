@@ -19,6 +19,16 @@ body[data-active-ui="supportDrawer"][data-modal-open="true"] {
   height: auto !important;
 }
 
+/* Affiliate modal hard lock (beats global/store overflow:auto !important rules) */
+html[data-affiliate-open="true"],
+html[data-affiliate-open="true"] body,
+body[data-affiliate-open="true"] {
+  overflow: hidden !important;
+  overflow-y: hidden !important;
+  overscroll-behavior: none !important;
+  -webkit-overflow-scrolling: auto !important;
+}
+
 /* Preserve scroll position when locking */
 body.modal-open {
   top: var(--scroll-position, 0);
