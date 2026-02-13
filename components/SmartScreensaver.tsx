@@ -9,6 +9,7 @@ import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 import { useUIState } from "@/contexts/UIStateContext";
+import { clearVolatileMemoryStorage, triggerMemoryBoost } from "@/lib/memory";
 
 // ============================================================================
 // SMART SCREENSAVER CONTEXT
@@ -95,31 +96,10 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     
     // Level 1: Light cleanup (first 10 seconds idle)
     if (cleanupLevel >= 0) {
-      // Clear volatile localStorage
-      try {
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && (
-            key.includes('_temp') || 
-            key.includes('_volatile') ||
-            key.includes('scroll_') ||
-            key.includes('hover_') ||
-            key.includes('_preview')
-          )) {
-            keysToRemove.push(key);
-          }
-        }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-        if (keysToRemove.length > 0) {
-          console.log(`[BULLMONEY] Cleared ${keysToRemove.length} temp items`);
-        }
-      } catch (e) {}
-      
-      // Clear sessionStorage non-essentials
-      ['animation_state', 'scroll_position_cache', 'hover_states', 'modal_history', 'tooltip_cache'].forEach(key => {
-        try { sessionStorage.removeItem(key); } catch (e) {}
-      });
+      const { localRemoved, sessionRemoved } = clearVolatileMemoryStorage(cleanupLevel);
+      if (localRemoved + sessionRemoved > 0) {
+        console.log(`[BULLMONEY] Cleared ${localRemoved} local + ${sessionRemoved} session volatile items`);
+      }
     }
     
     // Level 2: Medium cleanup (20+ seconds idle)
@@ -204,6 +184,12 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
     window.dispatchEvent(new CustomEvent('bullmoney-idle-cleanup', {
       detail: { level: cleanupLevel, timestamp: Date.now() }
     }));
+
+    triggerMemoryBoost({
+      source: 'idle-cleanup',
+      level: cleanupLevel,
+      path: window.location.pathname,
+    });
     
     console.log(`[BULLMONEY] ⚡ Idle cleanup level ${cleanupLevel} complete`);
     
