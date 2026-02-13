@@ -4,7 +4,7 @@ services:
     name: bullmoney-casino
     env: node
     plan: free
-    rootDir: next
+    rootDir: .
     buildCommand: npm ci && npm run build
     startCommand: npm run start
     envVars:
