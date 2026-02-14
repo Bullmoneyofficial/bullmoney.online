@@ -3,11 +3,18 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { trackServerEvent } from '@/lib/analytics';
 
-// 1. Connect to MongoDB
-const MONGODB_URI = process.env.MONGODB_URI || "YOUR_MONGODB_CONNECTION_STRING";
+const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!mongoose.connections[0]?.readyState) {
-  mongoose.connect(MONGODB_URI);
+async function ensureMongoConnection() {
+  if (mongoose.connections[0]?.readyState) {
+    return;
+  }
+
+  if (!MONGODB_URI || !/^mongodb(\+srv)?:\/\//.test(MONGODB_URI)) {
+    throw new Error('MONGODB_URI is missing or invalid');
+  }
+
+  await mongoose.connect(MONGODB_URI);
 }
 
 // 2. Define Schema (Matches your Screenshot)
@@ -31,6 +38,7 @@ export async function GET(request: Request) {
   if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
 
   try {
+    await ensureMongoConnection();
     let user = await Affiliate.findOne({ userEmail: email });
     
     // If no affiliate data exists for this user, return default/zero data
@@ -63,6 +71,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    await ensureMongoConnection();
     // Upsert: Update if exists, Create if not
     const updatedUser = await Affiliate.findOneAndUpdate(
       { userEmail: targetEmail },
