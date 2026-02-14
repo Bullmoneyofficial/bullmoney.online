@@ -30,6 +30,7 @@ const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ d
 const LazyMotionUl = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.ul })), { ssr: false });
 const LazyMotionLi = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.li })), { ssr: false });
 const LazyMotionButton = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.button })), { ssr: false });
+const LazyMotionA = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.a })), { ssr: false });
 
 // Lazy load modals - same as main navbar
 const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
@@ -57,7 +58,7 @@ const LiveStreamModal = dynamic(() => import('@/components/LiveStreamModal'), { 
 const STORE_NAV_ITEMS = [
   { href: '/', label: 'Home', category: '' },
   { href: '/design', label: 'Design', category: '' },
-  { href: '#action:games', label: 'Games', category: '' },
+  { href: '/games', label: 'Games', category: '' },
   { href: '#action:products', label: 'BULLMONEY VIP+', category: '' },
   { href: '#action:livestream', label: 'Live Stream', category: '' },
   { href: '#action:faq', label: 'FAQ', category: '' },
@@ -557,8 +558,24 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setDesktopMenuOpen(false);
     setManualDropdownOpen(false);
     setSiteSearchOpen(false);
+    if (typeof window !== 'undefined') {
+      window.location.assign('/games');
+      return;
+    }
     navigateWithFallback('/games');
   }, [pathname, navigateWithFallback, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen, setSiteSearchOpen]);
+
+  const navigateToStore = useCallback((target: string) => {
+    setMobileMenuOpen(false);
+    setDesktopMenuOpen(false);
+    setManualDropdownOpen(false);
+    setSiteSearchOpen(false);
+    if (typeof window !== 'undefined') {
+      window.location.assign(target);
+      return;
+    }
+    navigateWithFallback(target);
+  }, [navigateWithFallback, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen, setSiteSearchOpen]);
 
   const desktopLinks = useMemo(() => {
     const links = [
@@ -855,14 +872,17 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
             </div>
 
             {/* Shop Button - Mobile (first) */}
-            <Link
+            <a
               href="/store"
-              onClick={handleCloseMobileMenu}
+              onClick={(event) => {
+                event.preventDefault();
+                navigateToStore('/store');
+              }}
               className="mb-3 block text-left text-base font-semibold tracking-tight transition-colors"
               style={{ color: 'rgba(0,0,0,0.95)' }}
             >
               Shop
-            </Link>
+            </a>
 
             <div className="mb-3 border-b border-black/10 pb-2">
               <details className="group">
@@ -1092,8 +1112,11 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   </LazyMotionButton>
                 </LazyMotionLi>
                 <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
-                  <LazyMotionButton
-                    onClick={() => {
+                  <LazyMotionA
+                    href="/games"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      handleCloseMobileMenu();
                       navigateToGames();
                     }}
                     className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
@@ -1109,7 +1132,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     whileTap={{ scale: 0.98 }}
                   >
                     Games
-                  </LazyMotionButton>
+                  </LazyMotionA>
                 </LazyMotionLi>
               </LazyMotionUl>
             </div>
@@ -1240,15 +1263,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>Shop</p>
               <div className="mt-5 space-y-3">
                 {STORE_CATEGORIES.map(cat => (
-                  <Link
+                  <a
                     key={cat.value}
                     href={cat.href}
-                    onClick={() => setDesktopMenuOpen(false)}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigateToStore(cat.href);
+                    }}
                     className="block text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded"
                     style={{ color: '#000000' }}
                   >
                     {cat.label}
-                  </Link>
+                  </a>
                 ))}
               </div>
             </div>
