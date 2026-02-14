@@ -40,7 +40,11 @@ const GamesManualModal = dynamic(() => import('@/components/GamesManualModal').t
 // Import lazy modal system from navbar (same as main site)
 import { LazyAffiliateModal, LazyFaqModal } from '@/components/navbar/LazyModalSystem';
 // Heavy UI chunks — dynamic to keep StoreHeader light
-const StorePillNav = dynamic(() => import('./StorePillNav').then(m => ({ default: m.StorePillNav })), { ssr: false, loading: () => null });
+// Pill nav is the *visible* header; SSR it so the store header appears immediately.
+const StorePillNav = dynamic(
+  () => import('./StorePillNav').then(m => ({ default: m.StorePillNav })),
+  { loading: () => null }
+);
 const LanguageToggle = dynamic(() => import('@/components/LanguageToggle').then(m => ({ default: m.LanguageToggle })), { ssr: false, loading: () => null });
 const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false, loading: () => null });
 const ProductsModal = dynamic(() => import('@/components/ProductsModal').then(m => ({ default: m.ProductsModal })), { ssr: false, loading: () => null });
