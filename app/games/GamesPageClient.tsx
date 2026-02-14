@@ -643,6 +643,10 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                   prefetch={true}
                   className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/30 active:border-white/40 transition-all duration-200 text-left w-full active:scale-[0.97] cursor-pointer select-none"
                   style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    window.location.assign(`/games/${game.slug}`);
+                  }}
                 >
                   <div className="relative w-full aspect-4/3">
                     <img
@@ -824,6 +828,10 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                     textDecoration: 'none',
                     touchAction: 'pan-y pan-x',
                     WebkitTapHighlightColor: 'transparent',
+                  }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    window.location.assign(`/games/${game.slug}`);
                   }}
                   aria-label={`Play ${game.title}`}
                 />

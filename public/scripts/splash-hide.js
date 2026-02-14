@@ -7,6 +7,7 @@
   var raf = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(cb){ return setTimeout(cb, 16); };
   var caf = window.cancelAnimationFrame ? window.cancelAnimationFrame.bind(window) : function(id){ clearTimeout(id); };
   var hardFailTimer = null;
+  var visibilityWatchdog = null;
 
   function forceHide() {
     if (!splash || splash.classList.contains('hide')) return;
@@ -377,43 +378,53 @@
     var maxChecks = constrainedSplash ? 60 : 150; // 3s vs 7.5s max
     
     function check() {
-      checks++;
-      var hydrated = false;
+      try {
+        checks++;
+        var hydrated = false;
 
-      // Signal 1: body has meaningful rendered content beyond splash + scripts
-      var bodyChildren = document.body.children;
-      var hasContent = false;
-      for (var i = 0; i < bodyChildren.length; i++) {
-        var child = bodyChildren[i];
-        if (child.id === 'bm-splash' || child.tagName === 'SCRIPT') continue;
-        if (child.children && child.children.length > 0) {
-          hasContent = true;
-          break;
+        if (!document.body) {
+          if (checks >= maxChecks) cb();
+          else setTimeout(check, 50);
+          return;
         }
-      }
 
-      // Signal 2: React root with content
-      var reactRoot = document.querySelector('[data-reactroot]') || document.getElementById('__next');
-      if (reactRoot && reactRoot.children && reactRoot.children.length > 0) hydrated = true;
-
-      // Signal 3: __NEXT_DATA__ + content
-      var nextData = document.getElementById('__NEXT_DATA__');
-      if (hasContent && nextData) hydrated = true;
-
-      // Signal 4: Custom event
-      if (window.__BM_HYDRATED__) hydrated = true;
-
-      if (hydrated || checks >= maxChecks) {
-        cb();
-      } else {
-        if (constrainedSplash && visualProgress >= 85) {
-          var elapsed = Date.now() - splashStartAt;
-          if (elapsed > maxSplashMs - 1500) {
-            targetPct = 100;
+        // Signal 1: body has meaningful rendered content beyond splash + scripts
+        var bodyChildren = document.body.children;
+        var hasContent = false;
+        for (var i = 0; i < bodyChildren.length; i++) {
+          var child = bodyChildren[i];
+          if (child.id === 'bm-splash' || child.tagName === 'SCRIPT') continue;
+          if (child.children && child.children.length > 0) {
+            hasContent = true;
+            break;
           }
         }
-        if (targetPct < 90) targetPct += 0.6;
-        setTimeout(check, 50);
+
+        // Signal 2: React root with content
+        var reactRoot = document.querySelector('[data-reactroot]') || document.getElementById('__next');
+        if (reactRoot && reactRoot.children && reactRoot.children.length > 0) hydrated = true;
+
+        // Signal 3: __NEXT_DATA__ + content
+        var nextData = document.getElementById('__NEXT_DATA__');
+        if (hasContent && nextData) hydrated = true;
+
+        // Signal 4: Custom event
+        if (window.__BM_HYDRATED__) hydrated = true;
+
+        if (hydrated || checks >= maxChecks) {
+          cb();
+        } else {
+          if (constrainedSplash && visualProgress >= 85) {
+            var elapsed = Date.now() - splashStartAt;
+            if (elapsed > maxSplashMs - 1500) {
+              targetPct = 100;
+            }
+          }
+          if (targetPct < 90) targetPct += 0.6;
+          setTimeout(check, 50);
+        }
+      } catch (e) {
+        cb();
       }
     }
     check();
@@ -433,6 +444,11 @@
     if (hardFailTimer) {
       clearTimeout(hardFailTimer);
       hardFailTimer = null;
+    }
+    if (visibilityWatchdog) {
+      window.removeEventListener('visibilitychange', visibilityWatchdog);
+      window.removeEventListener('pageshow', visibilityWatchdog);
+      visibilityWatchdog = null;
     }
     caf(animFrame);
     clearInterval(stallWatchdog);
@@ -463,6 +479,14 @@
     } else {
       onDomReady();
     }
+
+    visibilityWatchdog = function() {
+      if (!splash || splash.classList.contains('hide')) return;
+      var elapsed = Date.now() - splashStartAt;
+      if (elapsed > maxSplashMs) forceHide();
+    };
+    window.addEventListener('visibilitychange', visibilityWatchdog, { passive: true });
+    window.addEventListener('pageshow', visibilityWatchdog, { passive: true });
 
     // Safety net: ensure exit even in constrained webviews
     setTimeout(function() {

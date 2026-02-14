@@ -34,12 +34,15 @@ export function GamesModalProvider() {
       if (!rawHref || rawHref.startsWith('#')) return;
 
       let pathname = rawHref;
+      let targetUrl = rawHref;
       try {
         const resolved = new URL(rawHref, window.location.href);
         if (resolved.origin !== window.location.origin) return;
         pathname = resolved.pathname;
+        targetUrl = resolved.href;
       } catch {
         pathname = rawHref.split('?')[0].split('#')[0];
+        targetUrl = rawHref;
       }
 
       const match = pathname.match(GAME_PATH_RE);
@@ -52,7 +55,8 @@ export function GamesModalProvider() {
       if (typeof (event as any).stopImmediatePropagation === 'function') {
         (event as any).stopImmediatePropagation();
       }
-      setActiveGame(slug);
+      window.location.assign(targetUrl);
+      return;
     };
 
     document.addEventListener('click', onClick, true);

@@ -35,7 +35,7 @@ function CasinoGameInner({
   useCasinoGlobals(game);
 
   return (
-    <>
+    <div style={{ backgroundColor: '#000000', minHeight: '100dvh' }}>
       <link rel="stylesheet" href="/assets/css/style.css" />
       <link rel="stylesheet" href="/assets/css/notifyme.css" />
       {game === 'flappybird' && (
@@ -43,6 +43,6 @@ function CasinoGameInner({
       )}
       <style dangerouslySetInnerHTML={{ __html: GAME_STYLES }} />
       {content}
-    </>
+    </div>
   );
 }
