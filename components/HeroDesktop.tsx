@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo, useCallback, useState, memo } from 'react';
 import { Renderer, Program, Mesh, Color as OglColor, Triangle } from 'ogl';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { shaderMaterial, useTrailTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { createSupabaseClient } from '@/lib/supabase';

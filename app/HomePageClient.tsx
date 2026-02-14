@@ -53,10 +53,7 @@ import { useUIState } from "@/contexts/UIStateHook";
 // ✅ LAZY: forceEnableScrolling (342 lines) loaded via import() in useEffect below
 import type { HeroMode } from "@/hooks/useHeroMode";
 
-// Features skeleton fallback (inline for faster load)
-const FeaturesSkeleton = () => (
-  <div className="w-full h-100 bg-linear-to-b from-black to-zinc-900/50 animate-pulse rounded-xl" />
-);
+
 
 const HERO_MODE_CACHE_KEY = "hero_main_mode_v1";
 const HERO_MODE_CACHE_TTL = 1000 * 60 * 60 * 24;
@@ -141,28 +138,7 @@ const TelegramUnlockScreen = dynamic(
 );
 
 
-import type { RemoteSplineMeta } from "@/components/SplineModals";
-
-// Lazy load individual modal components
-const RemoteSceneModal = dynamic(
-  () => import("@/components/SplineModals").then(mod => ({ default: mod.RemoteSceneModal })),
-  { ssr: false }
-);
-
-const SplitSceneModal = dynamic(
-  () => import("@/components/SplineModals").then(mod => ({ default: mod.SplitSceneModal })),
-  { ssr: false }
-);
-
-const AllScenesModal = dynamic(
-  () => import("@/components/SplineModals").then(mod => ({ default: mod.AllScenesModal })),
-  { ssr: false }
-);
-
-const OrbSplineLauncher = dynamic(
-  () => import("@/components/SplineModals").then(mod => ({ default: mod.OrbSplineLauncher })),
-  { ssr: false }
-);
+// ✅ CLEANED: SplineModals (RemoteSceneModal, SplitSceneModal, AllScenesModal, OrbSplineLauncher) removed — never rendered
 
 
 // ═══════════════════════════════════════════════════════════════════
@@ -394,9 +370,6 @@ function HomeContent() {
   const { shouldRender: allowMobileLazyRender } = useMobileLazyRender(240);
   const { masterMuted } = useAudioSettings();
   const [isMuted, setIsMuted] = useState(false);
-  const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
-  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
-  const [isAllScenesModalOpen, setIsAllScenesModalOpen] = useState(false);
   const [featuredVideos, setFeaturedVideos] = useState<any[]>([]);
   const [allRemoteSplines, setAllRemoteSplines] = useState<any[]>([]);
   const splinePreloadRanRef = useRef(false);
@@ -670,23 +643,6 @@ function HomeContent() {
     setLoaderv2Open(currentView === 'loader');
     return () => setLoaderv2Open(false);
   }, [currentView, setLoaderv2Open]);
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    // Only apply overflow hidden on desktop to prevent mobile scroll issues
-    // Mobile devices handle modal scrolling differently and overflow hidden breaks page scroll
-    const isCurrentlyMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const hasModal = !!(activeRemoteScene || isSplitModalOpen || isAllScenesModalOpen);
-    if (!isCurrentlyMobile && hasModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      // Always reset on cleanup - use empty string to remove inline style completely
-      document.body.style.overflow = '';
-    };
-  }, [activeRemoteScene, isSplitModalOpen, isAllScenesModalOpen]);
 
   // Load muted preference
   useEffect(() => {

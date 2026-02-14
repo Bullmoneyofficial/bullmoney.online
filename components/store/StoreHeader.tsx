@@ -8,11 +8,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import X from 'lucide-react/dist/esm/icons/x';
 import User from 'lucide-react/dist/esm/icons/user';
 import Home from 'lucide-react/dist/esm/icons/home';
-import LogOut from 'lucide-react/dist/esm/icons/log-out';
+
 import Users from 'lucide-react/dist/esm/icons/users';
-import HelpCircle from 'lucide-react/dist/esm/icons/help-circle';
+
 import Calendar from 'lucide-react/dist/esm/icons/calendar';
-import Settings from 'lucide-react/dist/esm/icons/settings';
+
 import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
 import { useCartStore } from '@/stores/cart-store';

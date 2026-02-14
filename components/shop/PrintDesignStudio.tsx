@@ -13,7 +13,7 @@
  * - Scrollable top-to-bottom inside modal
  */
 
-import { useState, useEffect, useCallback, useRef, type ReactNode, type CSSProperties, Component } from 'react';
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createClient } from '@supabase/supabase-js';

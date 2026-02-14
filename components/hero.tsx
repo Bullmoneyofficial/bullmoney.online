@@ -11,7 +11,6 @@ import {
   MotionValue,
   AnimatePresence,
   useWillChange,
-  useAnimation
 } from "framer-motion";
 import Image from "next/image";
 import { clsx, type ClassValue } from "clsx";
@@ -19,11 +18,7 @@ import { twMerge } from "tailwind-merge";
 import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide-react";
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
-// ✅ MOBILE DETECTION - For conditional lazy loading
-import { isMobileDevice } from '@/lib/mobileDetection';
 
-// ✅ LOADING FALLBACKS - Mobile optimized
-import { MinimalFallback, ContentSkeleton } from '@/components/MobileLazyLoadingFallback';
 
 // ✅ SPLINE PRELOADER - Optimize scene load times
 import { useSplinePreload, useEnsureSplineViewer } from '@/hooks/useSplinePreload';

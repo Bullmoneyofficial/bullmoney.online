@@ -1,7 +1,7 @@
 "use client";
 
  
-import { useRef, useMemo, useState, useCallback, useEffect, Suspense } from "react";
+import { useRef, useMemo, useState, useCallback, useEffect } from "react";
 import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Stars, Html, Preload, Trail, MeshDistortMaterial, Sparkles } from "@react-three/drei";
 import * as THREE from "three";

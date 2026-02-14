@@ -2,10 +2,10 @@
 
 import React, { useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IconHandFinger, IconArrowLeft, IconArrowRight, IconPlayerPlay, IconInfoCircle, IconVolume, IconChevronUp, IconMusic, IconTrophy, IconFlame, IconBolt, IconZzz, IconPlayerPause, IconPlayerStop, IconX } from "@tabler/icons-react";
+import { IconHandFinger, IconArrowLeft, IconArrowRight, IconPlayerPlay, IconInfoCircle, IconVolume, IconChevronUp, IconMusic, IconTrophy, IconFlame, IconBolt, IconZzz, IconPlayerStop, IconX } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { ShimmerLine } from "@/components/ui/UnifiedShimmer";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+
 
 // Game color palette - BLUE ONLY (per design requirement)
 const GAME_COLORS = {

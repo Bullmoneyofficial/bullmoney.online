@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useMemo, useCallback, memo, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, ArrowRight, Zap, Star, TrendingUp, TrendingDown, Copy, Check, X, Gift, Box, Palette } from 'lucide-react';
+import { ShoppingBag, TrendingUp, TrendingDown, Copy, Check, X, Gift, Box, Palette } from 'lucide-react';
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 import { useProductsModalUI } from '@/contexts/UIStateContext';

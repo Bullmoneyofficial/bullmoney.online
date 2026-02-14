@@ -5,19 +5,16 @@ import {
   motion,
   AnimatePresence,
   useSpring,
-  useMotionValue,
-  useTransform,
+
 } from "framer-motion";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { 
-  Lock, 
   Unlock, 
   TrendingUp, 
   Zap, 
   Target, 
   Timer, 
-  BarChart3,
   ArrowUpRight,
   ChevronUp,
   Fingerprint,
@@ -41,7 +38,6 @@ import {
   Move,
   RotateCw,
   Maximize2,
-  Minimize2,
   Hand,
   Gauge,
   Radio,
@@ -59,7 +55,6 @@ import {
   GripHorizontal,
   ZoomIn,
   Footprints,
-  Sun as Brightness,
   Layers,
   type LucideIcon
 } from "lucide-react";

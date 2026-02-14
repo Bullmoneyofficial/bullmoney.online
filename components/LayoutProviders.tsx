@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, ReactNode, useEffect, useState, useCallback, useRef } from "react";
+import { Suspense, ReactNode, useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
@@ -85,11 +85,6 @@ const UltimateHub = dynamic(
 
 const AppSupportButton = dynamic(
   () => import("@/components/shop/StoreSupportButton").then(mod => ({ default: mod.AppSupportButton })),
-  { ssr: false }
-);
-
-const StoreSupportButton = dynamic(
-  () => import("@/components/shop/StoreSupportButton").then(mod => ({ default: mod.StoreSupportButton })),
   { ssr: false }
 );
 
@@ -224,6 +219,9 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     } else {
       setTimeout(() => setMountStage(3), 300);
     }
+    
+    // ✅ PERF: Initialize resource preloading during idle time
+    import('@/lib/resourcePreloading').then(mod => mod.initResourcePreloading());
   }, []);  
 
   useEffect(() => {

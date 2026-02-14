@@ -484,12 +484,12 @@
       logoWrap.style.zIndex = '100000';
       logoWrap.style.width = '280px';
       logoWrap.style.height = '280px';
-      logoWrap.style.transform = 'scale(1)';
+      logoWrap.style.transform = 'scale(1) translateX(-15px)';
       // Force reflow
       void logoWrap.offsetHeight;
       // Slow grow across the 85→100 loading window (~1.5s)
       logoWrap.style.transition = 'transform 1.5s cubic-bezier(.22,1,.36,1)';
-      logoWrap.style.transform = 'scale(1.75)';
+      logoWrap.style.transform = 'scale(1.75) translateX(-15px)';
     }
   }
 

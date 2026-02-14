@@ -16,7 +16,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence, PanInfo, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { trackEvent, trackClick } from '@/lib/analytics';
 import { useUIState as useUIStateContext } from '@/contexts/UIStateContext';
 import {
@@ -29,7 +29,6 @@ import {
   MapPin,
   User,
   RefreshCw,
-  ChevronUp,
   ChevronDown,
   Smartphone,
   Zap,

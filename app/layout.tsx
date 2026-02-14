@@ -701,7 +701,7 @@ export default function RootLayout({
 
       /* === Splash Finale: logo grows to playing-card size, all else disappears === */
       #bm-splash.bm-splash-finale{justify-content:center;align-items:center;}
-      #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:auto!important;}
+      #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:auto!important;transform:translateX(-15px)!important;}
       #bm-splash.bm-splash-finale .bm-title,
       #bm-splash.bm-splash-finale .bm-subtitle,
       #bm-splash.bm-splash-finale .bm-progress-wrap{animation:bm-finale-fadeout .35s cubic-bezier(.4,0,.2,1) forwards!important;pointer-events:none;}

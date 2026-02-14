@@ -18,7 +18,7 @@ const getIsMobileOrInAppBrowser = () => {
   const isInAppBrowser = /FBAN|FBAV|Instagram|Twitter|Line|Snapchat|TikTok|WebView|wv/i.test(ua);
   return isMobile || isInAppBrowser;
 };
-import { ArrowUpRight, LockOpen, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CheckCircle2, CircleDollarSign, BarChart3, Activity } from "lucide-react";
+import { ArrowUpRight, LockOpen, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CircleDollarSign, BarChart3, Activity } from "lucide-react";
 import Image from "next/image";
 import { trackEvent } from "@/lib/analytics";
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';

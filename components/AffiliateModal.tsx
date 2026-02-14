@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { 
   X, Check, Mail, Hash, Lock, ArrowRight, ChevronLeft, ExternalLink, AlertCircle, 
-  Copy, Eye, EyeOff, Loader2, User, DollarSign, Users, TrendingUp, Award, 
-  Zap, Target, Gift, Calendar, ChevronRight, Info, Star, Sparkles, 
-  Share2, MessageCircle, Clock, BarChart3, Percent, Coins, Trophy, ChevronDown,
+  Copy, Eye, EyeOff, Loader2, User, DollarSign, Users, Award, 
+  Target, Gift, Calendar, Info, Star, Sparkles, 
+  MessageCircle, Clock, BarChart3, Percent, Coins, Trophy, ChevronDown,
   Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";

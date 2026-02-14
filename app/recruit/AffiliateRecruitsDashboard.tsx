@@ -5,13 +5,13 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   Users, Search, Calendar, CheckCircle2, 
   ArrowLeft, RefreshCw, Download, 
-  Shield, TrendingUp, Lock, AlertTriangle, Tag, AtSign,
-  X, Copy, Activity, DollarSign, ChevronLeft, ChevronRight, CreditCard,
+  Shield, TrendingUp, Lock, AlertTriangle, Tag,
+  X, Copy, Activity, DollarSign, ChevronLeft, ChevronRight,
   Zap, Target, Award, Star, Trophy, Sparkles, 
   BarChart3, Clock, Wallet, ExternalLink, Share2,
   ArrowUpRight, ArrowDownRight, Eye, PieChart,
-  Banknote, TrendingDown, Filter, LayoutGrid, List,
-  Crown, Gift, Link2, MessageSquare, Bell, Settings
+  Filter, LayoutGrid, List,
+  Gift, Link2, MessageSquare, Bell, Settings
 } from 'lucide-react';
 import { cn } from "@/lib/utils"; 
 import { motion, AnimatePresence } from "framer-motion";

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useCallback, memo, useEffect, useRef, createContext, useContext, Suspense } from "react";
+import { useState, useCallback, memo, useEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { useDashboardPreferences } from "@/hooks/useDashboardPreferences";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 import { 
-  TradingViewDashboard,
   MetaTraderQuotes,
   BreakingNewsTicker,
   BullMoneyCommunity 
@@ -14,8 +13,8 @@ import {
   TrendingUp, Users, BarChart3, Radio, 
   Maximize2, Minimize2, Settings, RefreshCw, 
   ChevronDown, X, Bell, BellOff, 
-  Eye, EyeOff, Filter, LayoutGrid, List,
-  Zap, Moon, Sun, Volume2, VolumeX,
+  Eye, Filter, LayoutGrid,
+  Zap, Volume2, VolumeX,
   ExternalLink, Copy, Share2, Bookmark, BookmarkCheck,
   Check, Star, Plus, Trash2, MoreVertical, Timer, Clock,
   type LucideIcon 
