@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const PLACEHOLDER_URL = 'https://placeholder.supabase.co';
+const PLACEHOLDER_KEY = 'placeholder-key';
 
 // Server-side Supabase client for casino API routes
-export const casinoDb = createClient(supabaseUrl, supabaseServiceKey);
+export const casinoDb = createClient(
+  supabaseUrl || PLACEHOLDER_URL,
+  supabaseServiceKey || PLACEHOLDER_KEY,
+);
 
 // ============================================
 // Casino User helpers
