@@ -1,7 +1,6 @@
 'use client';
 
 import { memo } from 'react';
-import Link from 'next/link';
 import { X, Gamepad2, AlertTriangle, Gift, HelpCircle } from 'lucide-react';
 
 interface GamesManualModalProps {
@@ -158,12 +157,12 @@ export const GamesManualModal = memo(function GamesManualModal({ isOpen, onClose
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-gray-700 mb-3">For questions, technical issues, or feedback:</p>
                 <div className="space-y-2 text-sm">
-                  <Link href="/games" prefetch={true} className="block text-purple-600 hover:text-purple-700 font-medium">
+                  <a href="/games" className="block text-purple-600 hover:text-purple-700 font-medium">
                     → Browse Games
-                  </Link>
-                  <Link href="/" prefetch={true} className="block text-purple-600 hover:text-purple-700 font-medium">
+                  </a>
+                  <a href="/" className="block text-purple-600 hover:text-purple-700 font-medium">
                     → Back to Main Site
-                  </Link>
+                  </a>
                 </div>
               </div>
             </section>

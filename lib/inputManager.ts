@@ -69,10 +69,9 @@ class InputManager {
     const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
 
     // Input capabilities
-    const hasTouch = 'ontouchstart' in window ||
+    const hasTouch: boolean = 'ontouchstart' in window ||
                      navigator.maxTouchPoints > 0 ||
-                     // @ts-ignore
-                     (window.DocumentTouch && document instanceof DocumentTouch);
+                     !!(window.DocumentTouch && document instanceof window.DocumentTouch);
 
     const hasPointer = 'PointerEvent' in window;
     const hasMouse = window.matchMedia('(pointer: fine)').matches;

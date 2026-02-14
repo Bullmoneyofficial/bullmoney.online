@@ -1,16 +1,5 @@
 import CasinoGamePage from './GamePageClient';
-
-/** All known game slugs — pre-rendered at build time for instant navigation */
-const VALID_GAMES = [
-  'dice',
-  'mines',
-  'plinko',
-  'wheel',
-  'jackpot',
-  'crash',
-  'slots',
-  'flappybird',
-] as const;
+import { VALID_GAMES } from './games/valid-games';
 
 export function generateStaticParams() {
   return VALID_GAMES.map((game) => ({ game }));

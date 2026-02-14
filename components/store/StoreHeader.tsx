@@ -56,7 +56,7 @@ const LiveStreamModal = dynamic(() => import('@/components/LiveStreamModal'), { 
 // Items with action: 'modal-*' are intercepted by handleCategoryClick to open modals instead of navigating
 const STORE_NAV_ITEMS = [
   { href: '/', label: 'Home', category: '' },
-  { href: '#action:design', label: 'Design', category: '' },
+  { href: '/design', label: 'Design', category: '' },
   { href: '#action:games', label: 'Games', category: '' },
   { href: '#action:products', label: 'BULLMONEY VIP+', category: '' },
   { href: '#action:livestream', label: 'Live Stream', category: '' },
@@ -525,20 +525,6 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     });
   }, []);
 
-  const navigateToDesign = useCallback(() => {
-    if (pathname?.startsWith('/design')) return;
-    setMobileMenuOpen(false);
-    setDesktopMenuOpen(false);
-    setManualDropdownOpen(false);
-    setSiteSearchOpen(false);
-    router.push('/design');
-    window.setTimeout(() => {
-      if (!window.location.pathname.startsWith('/design')) {
-        window.location.assign('/design');
-      }
-    }, 500);
-  }, [pathname, router, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
-
   const navigateToGames = useCallback(() => {
     if (pathname?.startsWith('/games')) return;
     setMobileMenuOpen(false);
@@ -710,10 +696,6 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       openProductsModal();
       return;
     }
-    if (href === '#action:design' || href === '/design') {
-      navigateToDesign();
-      return;
-    }
     if (href === '#action:games' || href === '/games') {
       navigateToGames();
       return;
@@ -745,7 +727,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         }
       }, 100);
     }
-  }, [router, startPagemodeLogin, navigateToDesign, navigateToGames, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
+  }, [router, startPagemodeLogin, navigateToGames, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
 
 
   const handleOpenMobileMenu = useCallback(() => {
@@ -779,10 +761,15 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, [applyThemePickerToggle]);
 
   const handleHeroModeChange = useCallback((mode: HeroMode) => {
-    // Navigation is handled by the hero mode Links in StorePillNav.
-    // Keep this handler focused on persisting shared mode state.
     setHeroMode(mode);
-  }, [setHeroMode]);
+    if (mode === 'design') {
+      router.push('/design');
+    } else if (mode === 'trader') {
+      router.push('/'); // Redirect to app page (homepage)
+    } else if (mode === 'store') {
+      router.push('/store'); // Redirect to store page
+    }
+  }, [router, setHeroMode]);
 
   const mobileMenuContent = (
     <LazyAnimatePresence>
@@ -891,7 +878,10 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     Live Stream
                   </button>
                   <button
-                    onClick={() => navigateToDesign()}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleHeroModeChange('design');
+                    }}
                     className="block w-full py-1.5 text-left text-sm"
                     style={{ color: 'rgba(0,0,0,0.85)' }}
                   >
@@ -1281,7 +1271,10 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   Games
                 </button>
                 <button
-                  onClick={() => navigateToDesign()}
+                  onClick={() => {
+                    setDesktopMenuOpen(false);
+                    handleHeroModeChange('design');
+                  }}
                   className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
                   style={{ color: '#000000' }}
                 >

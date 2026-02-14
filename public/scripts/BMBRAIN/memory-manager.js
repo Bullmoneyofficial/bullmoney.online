@@ -23,6 +23,10 @@ var isIOS=/iphone|ipad|ipod/i.test(ua)||(/macintosh/i.test(ua)&&n.maxTouchPoints
 var isAndroid=/android/i.test(ua);
 var isInApp=!!(B.inApp&&B.inApp.active);
 var dpr=Math.min(w.devicePixelRatio||1,3);
+var path=(w.location&&w.location.pathname)||'';
+var isGamesRoute=/^\/games(\/|$)/.test(path);
+var disableDomPrune=!!w.__BM_DISABLE_DOM_PRUNE__;
+function isGamesPath(p){return /^\/games(\/|$)/.test(String(p||''));}
 
 // Tier: 'ultra-low' (≤1GB), 'low' (≤2GB), 'mid' (≤4GB), 'high' (>4GB)
 // Safari doesn't expose deviceMemory, so use heuristics for iOS
@@ -288,7 +292,16 @@ function pauseOffscreenVideos(){
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function pruneDetachedNodes(){
+  if(disableDomPrune||isGamesRoute) return 0;
   var count=0;
+
+  function isElementVisible(el){
+    if(!el||el.nodeType!==1) return false;
+    var style=w.getComputedStyle?getComputedStyle(el):null;
+    if(style&&(style.display==='none'||style.visibility==='hidden'||style.opacity==='0')) return false;
+    var rect=el.getBoundingClientRect();
+    return !!(rect.width||rect.height||el.getClientRects().length);
+  }
 
   // 1. Orphaned Radix portals/popper wrappers
   var radix=d.querySelectorAll(
@@ -301,16 +314,22 @@ function pruneDetachedNodes(){
   }
 
   // 2. Stale tooltips, toasts, dropdowns
+  var tippy=d.querySelectorAll('.tippy-box');
+  for(var j=0;j<tippy.length;j++){
+    var tip=tippy[j];
+    if(!isElementVisible(tip)){
+      try{tip.parentNode&&tip.parentNode.removeChild(tip);count++;}catch(e){}
+    }
+  }
   var stale=d.querySelectorAll(
-    '.tippy-box:not(:visible),'+
     '[role="tooltip"]:empty,'+
     '.toast-container:empty,'+
     '[data-dismissed="true"],'+
     '[data-sonner-toast][data-removed="true"],'+
     '[data-sonner-toast][data-dismissing="true"]'
   );
-  for(var j=0;j<stale.length;j++){
-    try{stale[j].parentNode&&stale[j].parentNode.removeChild(stale[j]);count++;}catch(e){}
+  for(var k=0;k<stale.length;k++){
+    try{stale[k].parentNode&&stale[k].parentNode.removeChild(stale[k]);count++;}catch(e){}
   }
 
   // 3. Orphaned modal backdrops (custom modals without Radix — common in this codebase)
@@ -417,8 +436,10 @@ var lastPathname=w.location.pathname;
 function checkRouteChange(){
   var current=w.location.pathname;
   if(current===lastPathname) return;
+  var prev=lastPathname;
   lastPathname=current;
   log('Route change detected →',current);
+  if(isGamesPath(current)||isGamesPath(prev)) return;
   // Aggressive cleanup on route change
   _origSetTimeout.call(w,function(){
     pruneDetachedNodes();

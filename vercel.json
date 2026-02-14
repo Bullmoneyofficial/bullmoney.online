@@ -31,16 +31,6 @@
           "value": "(?:www\\.)?bullmoney\\.shop"
         }
       ]
-    },
-    {
-      "source": "/",
-      "destination": "/store",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?:www\\.)?bullmoney\\.online"
-        }
-      ]
     }
   ],
   "headers": [

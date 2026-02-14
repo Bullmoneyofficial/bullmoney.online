@@ -15,6 +15,7 @@ import { AppProviders } from "@/components/AppProviders";
 
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
 import { LayoutProviders } from "@/components/LayoutProviders";
+import { GamesModalProvider } from "@/components/GamesModalProvider";
 
 
 
@@ -808,13 +809,6 @@ export default function RootLayout({
         failedLoads++;
         console.error('[CacheBuster] Asset failed to load:', src);
 
-        // Skip auto-reload on /games pages — let the React error boundary handle it
-        var path = window.location.pathname || '';
-        if (path === '/games' || path.startsWith('/games/')) {
-          console.log('[CacheBuster] On games page, skipping reload — error boundary will handle');
-          return;
-        }
-
         // If we haven't already reloaded this session and we have failures (reduced threshold for Safari)
         var isSafari = document.documentElement.classList.contains('is-safari');
         var threshold = isSafari ? 1 : 2;
@@ -1076,6 +1070,7 @@ export default function RootLayout({
         <AppProviders>
           <LayoutProviders modal={modal}>
             {children}
+            <GamesModalProvider />
           </LayoutProviders>
         </AppProviders>
 

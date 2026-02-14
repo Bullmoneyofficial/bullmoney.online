@@ -69,6 +69,11 @@ html.bm-drunk-scroll body > * {
   pointer-events: auto; /* Re-enable pointer events on children */
 }
 
+/* Ensure modal overlays are centered even if body transforms are active */
+html.bm-modal-open body {
+  transform: none !important;
+}
+
 /* Showcase perf mode: temporarily disable heavy render effects globally */
 html[data-showcase-running="true"] *,
 html[data-showcase-running="true"] *::before,

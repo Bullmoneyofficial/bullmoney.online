@@ -205,7 +205,7 @@ export function ClientProviders({ children, modal, splashFinished = false }: Cli
   // Result: store renders in < 1s instead of 5-10s.
   // ====================================================================
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const isStorePage = pathname.startsWith('/store') || pathname.startsWith('/games');
+  const isStorePage = pathname.startsWith('/store');
 
   // Global media mute handler (applies to any stray audio/video tags on page/layout)
   useEffect(() => {

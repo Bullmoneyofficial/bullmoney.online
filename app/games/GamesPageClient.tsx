@@ -20,10 +20,6 @@ import {
 import { DonationFundSection } from '@/components/games/DonationFundSection';
 import { forceEnableScrolling } from '@/lib/forceScrollEnabler';
 import { useShowcaseScroll } from '@/hooks/useShowcaseScroll';
-const BullcasinoShell = dynamic(
-  () => import('./components/BullcasinoShell'),
-  { ssr: false, loading: () => <div className="min-h-[40vh] w-full" /> }
-);
 const StoreHeader = dynamic(
   () => import('@/components/store/StoreHeader').then(mod => ({ default: mod.StoreHeader })),
   { ssr: false }
@@ -532,18 +528,27 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             <Link
               href="/store"
               prefetch={true}
-              className="group inline-flex items-center gap-2 rounded-full bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.06em] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]"
+              className="group inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold uppercase tracking-[0.06em] transition-transform duration-200 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(120deg, rgba(45,212,191,0.95), rgba(56,189,248,0.95))',
+                color: '#0b1324',
+                boxShadow: '0 12px 30px rgba(56,189,248,0.2)',
+              }}
             >
               Visit Store
             </Link>
-            <Link
-              href="/games"
-              prefetch={true}
-              className="group inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.06em] text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10"
+            <a
+              href="#games-iframe"
+              className="group inline-flex items-center gap-2 rounded-full border-2 px-6 py-3 text-sm font-semibold uppercase tracking-[0.06em] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5"
+              style={{
+                borderColor: 'rgba(45,212,191,0.5)',
+                background: 'rgba(15, 23, 42, 0.45)',
+                color: 'rgba(226, 253, 245, 0.9)',
+              }}
             >
               <Play className="w-4 h-4 transition-transform group-hover:scale-110" />
               Browse Games
-            </Link>
+            </a>
           </div>
 
           <div className="mt-10 flex flex-wrap gap-2">
@@ -661,7 +666,12 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             <Link
               href="/games"
               prefetch={true}
-              className="inline-flex items-center gap-2 rounded-full bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.06em] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]"
+              className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold uppercase tracking-[0.06em] transition-all duration-200 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(120deg, rgba(251,191,36,0.95), rgba(251,113,133,0.95))',
+                color: '#1f0f1a',
+                boxShadow: '0 14px 32px rgba(251,113,133,0.18)',
+              }}
             >
               <Play className="w-4 h-4" />
               Browse All Games
@@ -674,8 +684,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
       )}
 
       {embedMode ? (
-        <BullcasinoShell>
-          <div style={{ position: 'relative', zIndex: 2, isolation: 'isolate' }}>
+        <div style={{ position: 'relative', zIndex: 2, isolation: 'isolate' }}>
           <section className="games__container" style={{ padding: 'clamp(24px, 4vw, 48px) clamp(16px, 3vw, 24px) clamp(16px, 2vw, 24px)', position: 'relative', zIndex: 2 }}>
           <div
             style={{
@@ -825,159 +834,11 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           </div>
           </section>
           </div>
-        </BullcasinoShell>
       ) : (
         <DeferredMount fallback={<div className="min-h-[40vh] w-full bg-[#0b1120]" />}>
-          <BullcasinoShell>
-            <section className="games__container" style={{ padding: 'clamp(24px, 4vw, 48px) clamp(16px, 3vw, 24px) clamp(16px, 2vw, 24px)' }}>
-              <div
-                style={{
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 'clamp(16px, 3vw, 28px)',
-                  padding: 'clamp(20px, 4vw, 40px) clamp(16px, 3vw, 36px)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 20 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ 
-                      width: 6, 
-                      height: 6, 
-                      borderRadius: '50%', 
-                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                      boxShadow: '0 0 8px rgba(34, 197, 94, 0.5)'
-                    }} />
-                    <span style={{ 
-                      fontSize: 11, 
-                      fontWeight: 500,
-                      letterSpacing: '0.1em', 
-                      textTransform: 'uppercase', 
-                      color: 'rgba(255,255,255,0.5)'
-                    }}>
-                      Demo Mode Active
-                    </span>
-                  </div>
-                  <h2 style={{ 
-                    fontSize: 'clamp(28px, 5vw, 44px)', 
-                    fontWeight: 600,
-                    margin: 0, 
-                    color: '#ffffff',
-                    letterSpacing: '-0.025em',
-                    lineHeight: 1.1
-                  }}>
-                    Choose your game
-                  </h2>
-                  <p style={{ 
-                    maxWidth: 440,
-                    margin: 0,
-                    fontSize: 15, 
-                    color: 'rgba(255,255,255,0.55)', 
-                    lineHeight: 1.6,
-                    fontWeight: 400
-                  }}>
-                    Explore the full collection below. No account needed, no deposits — just tap and play.
-                  </p>
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: 8, 
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
-                    marginTop: 4
-                  }}>
-                    {[
-                      { label: 'Free to play', icon: '✦' },
-                      { label: 'Instant start', icon: '⚡' },
-                      { label: 'Virtual chips', icon: '🎰' }
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        style={{
-                          padding: '8px 14px',
-                          borderRadius: 100,
-                          background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          color: 'rgba(255,255,255,0.7)',
-                          fontSize: 12,
-                          fontWeight: 500,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <span style={{ fontSize: 10 }}>{item.icon}</span>
-                        {item.label}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
+          <div>
 
-            <section className="games__container" style={{ padding: 'clamp(8px, 2vw, 16px) clamp(12px, 3vw, 32px) clamp(24px, 4vw, 48px)', position: 'relative', zIndex: 1 }}>
-              <div
-                className="shell-games-grid"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: 'clamp(10px, 2vw, 20px)',
-                  width: '100%',
-                  boxSizing: 'border-box',
-                }}
-              >
-                {games.map((game) => (
-                  <div
-                    key={game.slug}
-                    className="shell-game-card"
-                    style={{
-                      textDecoration: 'none',
-                      borderRadius: 'clamp(12px, 2vw, 20px)',
-                      border: '1px solid #1f2937',
-                      background: game.accent,
-                      padding: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 0,
-                      minHeight: 0,
-                      color: '#e2e8f0',
-                      boxShadow: '0 8px 30px rgba(2, 6, 23, 0.4)',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Link
-                      href={`/games/${game.slug}`}
-                      prefetch={true}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        zIndex: 1,
-                        textDecoration: 'none',
-                        touchAction: 'pan-y pan-x',
-                        WebkitTapHighlightColor: 'transparent',
-                      }}
-                      aria-label={`Play ${game.title}`}
-                    />
-                    <div className="shell-game-image" style={{ aspectRatio: '16/10', width: '100%' }}>
-                      <img src={game.image} alt={game.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    </div>
-                    <div className="shell-game-title" style={{ padding: 'clamp(8px, 1.5vw, 16px) clamp(10px, 2vw, 18px) 0' }}>{game.title}</div>
-                    <div className="shell-game-desc" style={{ padding: '4px clamp(10px, 2vw, 18px) 0' }}>{game.description}</div>
-                    <div className="shell-game-footer" style={{ padding: 'clamp(8px, 1.5vw, 16px) clamp(10px, 2vw, 18px)' }}>
-                      <span className="shell-game-hint">Open demo</span>
-                      <span className="shell-game-cta">Play</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </BullcasinoShell>
+          </div>
         </DeferredMount>
       )}
     </>
