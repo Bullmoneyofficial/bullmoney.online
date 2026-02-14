@@ -3,20 +3,13 @@
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 const ASSET_BASE = '/assets';
 
 export default function BullcasinoShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isGameDetailPage = /^\/games\/[^/]+$/.test(pathname || '');
-  const [origin, setOrigin] = useState('');
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    setOrigin(window.location.origin);
-  }, []);
-
-  const absoluteHref = (path: string) => (origin ? `${origin}${path}` : path);
 
   return (
     <main
@@ -291,22 +284,22 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
       {!isGameDetailPage && (
         <div className="mobile_menu">
           <div className="mobile_menu__content">
-            <a href={absoluteHref('/games')} className="mobile_menu__link">
+            <Link href="/games" className="mobile_menu__link" prefetch={true}>
               <i className='bx bxs-home'></i>
               Home
-            </a>
-            <a href={absoluteHref('/games/terms')} className="mobile_menu__link">
+            </Link>
+            <Link href="/games/terms" className="mobile_menu__link" prefetch={true}>
               <i className='bx bxs-file'></i>
               Terms
-            </a>
-            <a href={absoluteHref('/games')} className="mobile_menu__link">
-              <i className='bx bxs-user-plus'></i>
+            </Link>
+            <Link href="/games" className="mobile_menu__link" prefetch={true}>
+              <i className='bx bxs-gamepad-alt'></i>
               Games
-            </a>
-            <a href={absoluteHref('/contact')} className="mobile_menu__link">
-              <i className='bx bxs-user-circle'></i>
-              Support
-            </a>
+            </Link>
+            <Link href="/community" className="mobile_menu__link" prefetch={true}>
+              <i className='bx bxs-chat'></i>
+              Community
+            </Link>
           </div>
         </div>
       )}
@@ -317,10 +310,10 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
         <footer className="footer" style={{ marginTop: 'auto' }}>
           <div className="footer__header">
             <div className="footer__logo">
-              <a href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+              <Link href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
                 <img src={`${ASSET_BASE}/images/IMG_2921.PNG`} alt="BullMoney" style={{ height: 32, width: 32, objectFit: 'contain', borderRadius: 6 }} />
                 <span className="bull-logo">Bull<span className="accent">Money</span></span>
-              </a>
+              </Link>
               <strong className="footer_security">© 2026 BullMoney. Demo environment only.</strong>
             </div>
             <div className="footer__warn">
@@ -331,8 +324,8 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="footer__bottom">
-            <a href={absoluteHref('/games/terms')} className="footer__rules">Terms of Use</a>
-            <a href={absoluteHref('/privacy')} className="footer__privacy">Privacy Policy</a>
+            <Link href="/games/terms" className="footer__rules">Terms of Use</Link>
+            <Link href="/privacy" className="footer__privacy">Privacy Policy</Link>
           </div>
         </footer>
       </div>

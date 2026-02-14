@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import BullcasinoShell from '../components/BullcasinoShell';
+import Link from 'next/link';
 
 /* ───────────────────────────────────────────
    Inline game-specific CSS (animations, etc.)
@@ -2339,7 +2340,7 @@ export default function CasinoGamePage({ game }: { game: string }) {
     return (
       <BullcasinoShell>
         <div style={{ padding: 24, textAlign: 'center', color: '#7a8a9a' }}>
-          Game not found. <a href="/games" style={{ color: '#00e701' }}>Return to Games</a>
+          Game not found. <Link href="/games" prefetch={true} style={{ color: '#00e701', textDecoration: 'underline' }}>Return to Games</Link>
         </div>
       </BullcasinoShell>
     );

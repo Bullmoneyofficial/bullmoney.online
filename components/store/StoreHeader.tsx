@@ -526,18 +526,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, []);
 
   const navigateToGames = useCallback(() => {
-    if (pathname?.startsWith('/games')) return;
+    // Already on the games index — do nothing
+    if (pathname === '/games') return;
     setMobileMenuOpen(false);
     setDesktopMenuOpen(false);
     setManualDropdownOpen(false);
     setSiteSearchOpen(false);
-    router.push('/games');
-    window.setTimeout(() => {
-      if (!window.location.pathname.startsWith('/games')) {
-        window.location.assign('/games');
-      }
-    }, 500);
-  }, [pathname, router, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
+    // Use direct navigation — router.push can silently fail on first click
+    // because the RSC payload for /games hasn't been fetched yet
+    window.location.href = '/games';
+  }, [pathname, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
 
   const desktopLinks = useMemo(() => {
     const links = [

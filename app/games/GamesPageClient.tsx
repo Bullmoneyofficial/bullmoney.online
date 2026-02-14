@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Activity,
   ArrowDown,
@@ -162,19 +162,10 @@ type GamesPageClientProps = {
 };
 
 export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
-  const router = useRouter();
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   const [activeGameCategory, setActiveGameCategory] = useState('all');
 
-  // Prefetch all game routes on mount for instant navigation
-  useEffect(() => {
-    if (embedMode) return;
-    const slugs = LANDING_GAMES.map((g) => g.slug);
-    // Stagger prefetches to avoid network contention
-    slugs.forEach((slug, i) => {
-      setTimeout(() => router.prefetch(`/games/${slug}`), 200 + i * 100);
-    });
-  }, [embedMode, router]);
+  // Prefetching is handled automatically by <Link prefetch={true}> on each game card
 
   useEffect(() => {
     if (embedMode) return;
@@ -459,7 +450,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
         <div className="w-full pb-0" style={{ paddingTop: embedMode ? 0 : undefined }}>
           {!embedMode && <div className="pt-4 lg:pt-2" />}
           <section
-        className={`relative w-full bg-black text-white ${embedMode ? '' : 'overflow-x-hidden'}`}
+        className="relative w-full bg-black text-white"
         style={{
             minHeight: embedMode ? 'auto' : 'min(80svh, 700px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -505,8 +496,8 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
         )}
 
         <div
-          className={`games-hero-content relative z-10 mx-auto flex w-full flex-col justify-center px-4 sm:px-6 ${embedMode ? 'pt-6 pb-6' : 'max-w-6xl lg:px-10 pt-10 pb-10 lg:pt-20'}`}
-          style={{ minHeight: embedMode ? 'auto' : 'min(80svh, 700px)' }}
+          className={`games-hero-content relative z-10 mx-auto flex w-full flex-col px-4 sm:px-6 ${embedMode ? 'pt-6 pb-6' : 'max-w-6xl lg:px-10 pt-16 pb-20 sm:pt-20 sm:pb-24 lg:pt-28 lg:pb-28'}`}
+          style={{ touchAction: 'pan-y pan-x' }}
         >
           <div className="flex items-center gap-3 mb-6">
             <img
@@ -538,12 +529,13 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-            <a
+            <Link
               href="/store"
+              prefetch={true}
               className="group inline-flex items-center gap-2 rounded-full bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.06em] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]"
             >
               Visit Store
-            </a>
+            </Link>
             <a
               href="#games-iframe"
               className="group inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.06em] text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10"
@@ -575,7 +567,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
         </div>
 
         {!embedMode && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-white/30">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-white/30 pointer-events-none">
           <span className="text-[10px] uppercase tracking-[0.3em] font-medium">Scroll</span>
           <ArrowDown className="w-4 h-4 animate-bounce" />
         </div>
@@ -584,7 +576,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
 
         <DonationFundSection />
 
-        <section id="games-iframe" className={`relative bg-black text-white ${embedMode ? '' : 'overflow-x-hidden'}`} style={{ touchAction: 'pan-y pan-x' }}>
+        <section id="games-iframe" className="relative bg-black text-white" style={{ touchAction: 'pan-y pan-x' }}>
         <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
           <img
             src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=3840&q=80&auto=format&fit=crop"
@@ -632,9 +624,10 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             {visibleGames.map((game) => {
               const GameIcon = game.icon;
               return (
-                <a
+                <Link
                   key={game.name}
                   href={`/games/${game.slug}`}
+                  prefetch={true}
                   className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/30 active:border-white/40 transition-all duration-200 text-left w-full active:scale-[0.97] cursor-pointer select-none"
                   style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                 >
@@ -658,19 +651,20 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                     </div>
                     <p className="text-[11px] sm:text-xs text-white/40 mt-1">{game.desc}</p>
                   </div>
-                </a>
+                </Link>
               );
             })}
           </div>
 
           <div className="text-center mt-10">
-            <a
+            <Link
               href="/games"
+              prefetch={true}
               className="inline-flex items-center gap-2 rounded-full bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.06em] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]"
             >
               <Play className="w-4 h-4" />
               Browse All Games
-            </a>
+            </Link>
           </div>
         </div>
         </section>
@@ -800,8 +794,9 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                   overflow: 'hidden',
                 }}
               >
-                <a
+                <Link
                   href={`/games/${game.slug}`}
+                  prefetch={true}
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -952,8 +947,9 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                       overflow: 'hidden',
                     }}
                   >
-                    <a
+                    <Link
                       href={`/games/${game.slug}`}
+                      prefetch={true}
                       style={{
                         position: 'absolute',
                         top: 0,

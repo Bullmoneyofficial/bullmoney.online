@@ -1,29 +1,6 @@
 (function(){
   var splash = document.getElementById('bm-splash');
   if (!splash) return;
-  var swayTarget = splash.querySelector('.bm-sway-content') || splash;
-  var SPLASH_SWAY_ANIMATION = 'bm-splash-drunk-sway 3.2s cubic-bezier(.37,.01,.63,1) infinite';
-
-  function resetSplashSwayAnimation() {
-    if (!splash || splash.classList.contains('hide')) return;
-    swayTarget.style.animation = 'none';
-    void swayTarget.offsetHeight;
-    swayTarget.style.animation = SPLASH_SWAY_ANIMATION;
-    swayTarget.style.animationPlayState = 'running';
-  }
-
-  function scheduleSplashSwayReset() {
-    requestAnimationFrame(function() {
-      resetSplashSwayAnimation();
-    });
-  }
-
-  // Ensure sway animation reliably runs with the same start state on reload/open
-  scheduleSplashSwayReset();
-  window.addEventListener('pageshow', function() {
-    scheduleSplashSwayReset();
-  }, { passive: true });
-
   // --- Loading state machine ---
   var STEPS = ['LOADING CORE','CONNECTING SERVICES','HYDRATING UI','READY'];
   var CHARS = 'ABCDEF0123456789!@#$%^&*';
@@ -300,7 +277,6 @@
 
   // Document ready = core loaded
   function onDomReady() {
-    resetSplashSwayAnimation();
     targetPct = 50;
     setStep(1);
 
@@ -420,43 +396,7 @@
   }
 
   function triggerFinishEffects() {
-    try {
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        return;
-      }
-    } catch (e) {}
-
-    var ua = (navigator && navigator.userAgent) || '';
-    var isInAppBrowser = /Instagram|FBAN|FBAV|TikTok|musical_ly|Twitter|GSA|Line\//i.test(ua);
-    var isWebView = /\bwv\b|WebView|; wv\)/i.test(ua);
-
-    // Only sway for in-app browsers (Instagram, Facebook, TikTok, etc.)
-    // Skip sway entirely for normal browsers (Safari, Chrome, Firefox, etc.)
-    if (!isInAppBrowser && !isWebView) return;
-
-    var root = document.documentElement;
-    var body = document.body;
-    if (root) {
-      var swayClass = 'bm-sway-safe';
-      var swayDuration = 900;
-
-      root.classList.remove('bm-sway', 'bm-sway-safe');
-      if (body) body.classList.remove('bm-sway', 'bm-sway-safe');
-
-      requestAnimationFrame(function() {
-        root.classList.add(swayClass);
-        if (body) body.classList.add(swayClass);
-      });
-
-      setTimeout(function() {
-        root.classList.remove('bm-sway', 'bm-sway-safe');
-        if (body) body.classList.remove('bm-sway', 'bm-sway-safe');
-      }, swayDuration);
-    }
-
-    if (navigator.vibrate) {
-      navigator.vibrate([20, 40, 20, 60, 20]);
-    }
+    // finish effects removed (no sway)
   }
 
   // Start the flow

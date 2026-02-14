@@ -1334,11 +1334,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   return (
         <div className={cn(
         "register-container font-sans",
-        isWelcomeScreen ? "bg-black p-0" : "bg-white px-4 py-6 md:p-4",
+        isWelcomeScreen ? "bg-transparent p-0" : "bg-white px-4 py-6 md:p-4",
         !isWelcomeScreen && "md:overflow-hidden md:h-screen",
         isIOSInAppShield && "pagemode-ios-shield"
          )}
-          style={{ position: 'relative', minHeight: 'calc(var(--pagemode-vh, 1vh) * 100)' }}>
+          style={{ 
+            position: 'relative', 
+            minHeight: 'calc(var(--pagemode-vh, 1vh) * 100)',
+            backgroundColor: isWelcomeScreen ? 'transparent' : '#fff',
+          }}>
       <GlobalStyles />
 
       {/* Shared Spline background for welcome/guest to survive resizes */}
@@ -1391,10 +1395,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
       {/* HEADER - BULLMONEY FREE TITLE */}
       {!loading && step !== -1 && step !== -2 && (
-        <div className="w-full md:fixed md:top-6 lg:top-8 md:left-0 md:right-0 flex flex-col items-center pt-6 md:pt-8 pb-4 md:pb-6 bg-white/95 backdrop-blur-md mb-8 md:mb-0 z-50 border-b border-black/[0.08]" style={{ zIndex: 100 }}>
+        <div className="w-full md:fixed md:top-6 lg:top-8 md:left-0 md:right-0 flex flex-col items-center pt-6 md:pt-8 pb-4 md:pb-6 bg-white/95 backdrop-blur-md mb-8 md:mb-0 z-50 border-b border-black/[0.08]" style={{ zIndex: 100, backgroundColor: 'rgba(255,255,255,0.95)' }}>
           <div className="mb-3 md:mb-4 text-center w-full">
-             <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-white" style={{ animation: 'apple-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-              BULLMONEY <span className="text-white" style={{ fontWeight: 900 }}>FREE</span>
+             <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-black" style={{ animation: 'apple-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+              BULLMONEY <span className="text-black" style={{ fontWeight: 900 }}>FREE</span>
             </h1>
           </div>
           <div className="w-full max-w-xl h-1 bg-black/[0.08] opacity-70 transition-all duration-500 rounded-full" />
@@ -1406,7 +1410,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         // Opacity transition for a smooth reveal after loading is done
         "transition-opacity duration-500 w-full max-w-xl mx-auto flex flex-col items-center md:pt-32 lg:pt-36",
         loading ? "opacity-0 pointer-events-none" : "opacity-100"
-      )} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      )} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: isWelcomeScreen ? 'transparent' : '#fff' }}>
 
         {/* Existing background elements */}
         <div className={cn("absolute bottom-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel -z-10", isXM ? "bg-red-900/10" : "bg-white/10")} />
@@ -1610,6 +1614,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 height: 'calc(var(--pagemode-vh, 1vh) * 100)',
                 pointerEvents: 'none', // Allow Spline interaction, UI elements override
                 zIndex: UI_Z_INDEX.PAGEMODE,
+                backgroundColor: 'transparent',
                 ...(iosInAppShieldStyle ?? {}),
               }}
             >
@@ -1711,7 +1716,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="fixed inset-0 bg-white flex flex-col items-center justify-center z-[99999998] apple-card"
-            style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', ...(iosInAppShieldStyle ?? {}) }}
+            style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', backgroundColor: '#fff', ...(iosInAppShieldStyle ?? {}) }}
           >
              {/* Back Button - Apple Style */}
              <button 
@@ -1827,7 +1832,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                   className="fixed inset-0 bg-white flex flex-col items-center justify-center z-[99999998] apple-card"
-                  style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', ...(iosInAppShieldStyle ?? {}) }}
+                  style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', backgroundColor: '#fff', ...(iosInAppShieldStyle ?? {}) }}
                  >
                    {/* Back Button - Apple Style */}
                    <button 
