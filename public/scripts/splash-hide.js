@@ -197,7 +197,8 @@
     if (targetDisplay < lastVisualProgress) targetDisplay = lastVisualProgress;
 
     var now = Date.now();
-    if (targetDisplay > visualProgress && now - lastVisualTick >= minDigitMs) {
+    var digitMs = progress >= 85 ? 12 : minDigitMs;
+    if (targetDisplay > visualProgress && now - lastVisualTick >= digitMs) {
       visualProgress += 1;
       lastVisualTick = now;
     }
@@ -282,9 +283,13 @@
       var remaining = targetPct - progress;
       var delta;
 
-      if (progress >= 90) {
-        // 90-100%: slow linear tick so every digit is visible (~250ms each)
-        delta = 0.06 * dt;
+      if (progress >= 85) {
+        // 85-100%: accelerate to feel snappier near the end
+        var boost = progress >= 95 ? 0.35 : 0.22;
+        delta = remaining * boost * dt;
+        var fastMin = 0.18;
+        var fastMax = progress >= 95 ? 1.2 : 0.8;
+        delta = Math.min(Math.max(delta, fastMin * dt), fastMax);
       } else {
         // Front-loaded easing: rush through early %, slow near end for perceived speed
         var easing;
