@@ -1,6 +1,9 @@
 (function(){
-  var splash = document.getElementById('bm-splash');
-  if (!splash) return;
+  function run() {
+    var splash = document.getElementById('bm-splash');
+    if (!splash) return false;
+    if (window.__BM_SPLASH_STARTED__) return true;
+    window.__BM_SPLASH_STARTED__ = true;
   var raf = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(cb){ return setTimeout(cb, 16); };
   var caf = window.cancelAnimationFrame ? window.cancelAnimationFrame.bind(window) : function(id){ clearTimeout(id); };
   var hardFailTimer = null;
@@ -31,11 +34,18 @@
   var statusEl = document.getElementById('bm-splash-status');
   var stepsEl = document.getElementById('bm-splash-steps');
   var stepEls = stepsEl ? stepsEl.querySelectorAll('.bm-step') : [];
-  var lastVisualProgress = -1;
+  var lastVisualProgress = 0;
   var lastVisualTick = Date.now();
+  var visualProgress = 0;
+  var minDigitMs = 25;
+  var ninetyStallStart = null;
   var splashStartAt = Date.now();
   var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
   var minVisibleMs = isInAppBrowser ? 800 : 400;
+  var mem = (navigator && navigator.deviceMemory) ? navigator.deviceMemory : 0;
+  var lowMemory = mem > 0 && mem <= 4;
+  var constrainedSplash = isInAppBrowser || lowMemory;
+  var maxSplashMs = constrainedSplash ? 6500 : 12000;
   var loadAudio = null;
   var interactionBound = false;
   var lifecycleBound = false;
@@ -181,19 +191,35 @@
   // Update progress display (safe — these elements have suppressHydrationWarning)
   function updateProgress(pct) {
     progress = Math.max(0, Math.min(pct, 100));
-    var displayNum = Math.floor(progress + 0.35);
-    if (progress < 100 && displayNum > 99) displayNum = 99;
-    if (displayNum < lastVisualProgress) displayNum = lastVisualProgress;
-    var display = displayNum.toString();
-    if (display.length < 2) display = '0' + display;
-    if (displayNum !== lastVisualProgress) {
-      lastVisualProgress = displayNum;
-      lastVisualTick = Date.now();
-    }
-    if (progressEl) progressEl.textContent = display + '%';
-    if (barEl) barEl.style.width = progress + '%';
+    var targetDisplay = Math.floor(progress + 0.35);
+    if (progress < 100 && targetDisplay > 99) targetDisplay = 99;
+    if (targetDisplay < lastVisualProgress) targetDisplay = lastVisualProgress;
 
-    if (readyAt95Armed && !readyShownAt95 && progress >= 95) {
+    var now = Date.now();
+    if (targetDisplay > visualProgress && now - lastVisualTick >= minDigitMs) {
+      visualProgress += 1;
+      lastVisualTick = now;
+    }
+
+    if (visualProgress !== lastVisualProgress) {
+      lastVisualProgress = visualProgress;
+    }
+
+    var display = visualProgress.toString();
+    if (display.length < 2) display = '0' + display;
+    if (progressEl) progressEl.textContent = display + '%';
+    if (barEl) barEl.style.width = visualProgress + '%';
+
+    if (visualProgress >= 90) {
+      if (!ninetyStallStart) ninetyStallStart = Date.now();
+      if (Date.now() - ninetyStallStart > 1600) {
+        targetPct = 100;
+      }
+    } else {
+      ninetyStallStart = null;
+    }
+
+    if (readyAt95Armed && !readyShownAt95 && visualProgress >= 95) {
       readyShownAt95 = true;
       setStep(3);
     }
@@ -204,7 +230,7 @@
   function syncStepClassesByProgress() {
     if (!stepEls || !stepEls.length) return;
 
-    var completedSteps = Math.floor(progress / 20);
+    var completedSteps = Math.floor(visualProgress / 20);
     if (completedSteps < 0) completedSteps = 0;
     if (completedSteps > stepEls.length) completedSteps = stepEls.length;
 
@@ -275,10 +301,12 @@
 
       delta = Math.min(remaining, delta);
       updateProgress(progress + delta);
+    } else {
+      // Keep digits advancing even if progress is paused at a target.
+      updateProgress(progress);
     }
-    if (progress < 100) {
-      animFrame = requestAnimationFrame(animateProgress);
-    }
+    if (!splash || splash.classList.contains('hide')) return;
+    animFrame = raf(animateProgress);
   }
   animFrame = raf(animateProgress);
 
@@ -324,11 +352,11 @@
       // Wait for progress to actually reach 95 before going to 100
       // so each digit 90-100 is visible
       function waitForNinetyFive() {
-        if (progress >= 94.5) {
+        if (visualProgress >= 95) {
           targetPct = 100;
           // Let animation naturally tick to 100 — no forced jumps
           function waitForHundred() {
-            if (progress >= 99.5) {
+            if (visualProgress >= 100) {
               updateProgress(100);
               setTimeout(hide, 150);
             } else {
@@ -346,7 +374,7 @@
 
   function waitForHydration(cb) {
     var checks = 0;
-    var maxChecks = 150; // 7.5s max
+    var maxChecks = constrainedSplash ? 60 : 150; // 3s vs 7.5s max
     
     function check() {
       checks++;
@@ -378,6 +406,12 @@
       if (hydrated || checks >= maxChecks) {
         cb();
       } else {
+        if (constrainedSplash && visualProgress >= 85) {
+          var elapsed = Date.now() - splashStartAt;
+          if (elapsed > maxSplashMs - 1500) {
+            targetPct = 100;
+          }
+        }
         if (targetPct < 90) targetPct += 0.6;
         setTimeout(check, 50);
       }
@@ -430,14 +464,33 @@
       onDomReady();
     }
 
-    // Safety net: 8s max
+    // Safety net: ensure exit even in constrained webviews
     setTimeout(function() {
       if (splash && !splash.classList.contains('hide')) hide();
-    }, 8000);
+    }, constrainedSplash ? 7000 : 8000);
 
     // Hard fail-safe in case of runtime errors or missing APIs
-    hardFailTimer = setTimeout(forceHide, 12000);
+    hardFailTimer = setTimeout(forceHide, maxSplashMs);
   } catch (e) {
     forceHide();
+  }
+  return true;
+  }
+
+  if (run()) return;
+
+  var tries = 0;
+  var maxTries = 80;
+  var timer = setInterval(function() {
+    tries += 1;
+    if (run() || tries >= maxTries) clearInterval(timer);
+  }, 50);
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      if (run()) clearInterval(timer);
+    }, { once: true });
+  } else {
+    if (run()) clearInterval(timer);
   }
 })();

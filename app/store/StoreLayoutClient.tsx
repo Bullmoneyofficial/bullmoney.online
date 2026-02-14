@@ -395,6 +395,7 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           contain-intrinsic-size: auto 90vh;
           contain: style paint;
           touch-action: pan-y;
+          content-visibility: visible;
         }
         /* Products grid can be large */
         [data-section-id="products"] {

@@ -171,16 +171,6 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     }
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      (window as any).__BM_HYDRATED__ = true;
-      window.dispatchEvent(new Event("bm-hydrated"));
-    } catch {
-      // noop
-    }
-  }, []);
-
   // Only run mount stage progression ONCE on initial load, not on every pathname change.
   // Re-running on every navigation causes flicker as components gated on mountStage re-render.
   const mountStageInitialized = useRef(false);
@@ -245,26 +235,6 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       if (observer) observer.disconnect();
       if (pollTimer) clearInterval(pollTimer);
     };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const hardTimeout = window.setTimeout(() => {
-      const splashEl = document.getElementById("bm-splash");
-      if (!splashEl || splashEl.classList.contains("hide")) return;
-      splashEl.classList.add("hide");
-      document.documentElement.classList.add("bm-splash-done");
-      window.setTimeout(() => {
-        if (splashEl.parentNode) splashEl.parentNode.removeChild(splashEl);
-      }, 450);
-      (window as any).__BM_SPLASH_FINISHED__ = true;
-      try {
-        window.dispatchEvent(new Event("bm-splash-finished"));
-      } catch {
-        // noop
-      }
-    }, 12000);
-    return () => window.clearTimeout(hardTimeout);
   }, []);
 
   const canShowNavbar = mountStage >= 1;

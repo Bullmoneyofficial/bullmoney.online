@@ -1008,6 +1008,30 @@ export default function RootLayout({
           }}
         />
 
+        <Script
+          id="splash-failsafe"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                try {
+                  window.setTimeout(function(){
+                    var splash = document.getElementById('bm-splash');
+                    if (!splash || splash.classList.contains('hide')) return;
+                    splash.classList.add('hide');
+                    document.documentElement.classList.add('bm-splash-done');
+                    window.__BM_SPLASH_FINISHED__ = true;
+                    try { window.dispatchEvent(new Event('bm-splash-finished')); } catch (e) {}
+                    window.setTimeout(function(){
+                      if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+                    }, 450);
+                  }, 15000);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+
         {/* NON-CRITICAL SCRIPTS - lazyOnload (defer until after everything else) */}
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />
         <Script id="perf-monitor" src="/scripts/perf-monitor.js" strategy="lazyOnload" />
@@ -1065,7 +1089,7 @@ export default function RootLayout({
           </div>
           </div>
         </div>
-        <script src="/scripts/splash-hide.js" />
+        <Script id="splash-hide" src="/scripts/splash-hide.js" strategy="beforeInteractive" />
         {/* All providers consolidated into AppProviders (heavy ones dynamically imported) */}
         <AppProviders>
           <LayoutProviders modal={modal}>

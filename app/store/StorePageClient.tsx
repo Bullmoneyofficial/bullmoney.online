@@ -285,6 +285,12 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const { heroMode, setHeroMode: setSharedHeroMode } = useHeroMode();
   const showProducts = showProductSections && heroMode === 'store';
 
+  useEffect(() => {
+    if (heroMode !== 'store') {
+      setSharedHeroMode('store');
+    }
+  }, [heroMode, setSharedHeroMode]);
+
   // Force enable scrolling for all devices
   useEffect(() => {
     const cleanup = forceEnableScrolling();

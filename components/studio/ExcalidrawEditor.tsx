@@ -71,6 +71,7 @@ export default function ExcalidrawEditor({ onExport }: ExcalidrawEditorProps) {
           <div style={{ width: '100%', height: '100%' }}>
             <iframe 
               src="https://excalidraw.com"
+              className="excalidraw-embed"
               style={{ 
                 width: '100%', 
                 height: '100%', 
