@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { SEO_DOMAINS } from '@/lib/seo-domains';
 
 /**
  * STORE SITEMAP — Separate sitemap for BullMoney Store (e-commerce)
@@ -8,9 +9,8 @@ import { MetadataRoute } from 'next';
  * - Store Products (/products)
  * - Product Detail Pages (/store/product/[slug]) — dynamically fetched
  * - Gift Cards (/store/gift-cards)
- * - Checkout (/store/checkout)
- * - Account (/store/account)
- * - Order Success (/store/success)
+ * 
+ * NOTE: Checkout/account/success pages are noindex and are NOT included.
  * 
  * MULTILINGUAL: Every page has 36 language alternates for global SEO.
  * DOMAINS: Primary (bullmoney.shop) + Secondary (bullmoney.online)
@@ -45,14 +45,6 @@ const STORE_PAGES = [
   { path: '/products',           changeFrequency: 'daily' as const,   priority: 0.95 },
   // Gift Cards
   { path: '/store/gift-cards',   changeFrequency: 'weekly' as const,  priority: 0.8 },
-  // Checkout
-  { path: '/store/checkout',     changeFrequency: 'weekly' as const,  priority: 0.7 },
-  // Customer Account
-  { path: '/store/account',      changeFrequency: 'weekly' as const,  priority: 0.6 },
-  // Order Success
-  { path: '/store/success',      changeFrequency: 'weekly' as const,  priority: 0.5 },
-  // Socials / social links
-  { path: '/socials',            changeFrequency: 'weekly' as const,  priority: 0.75 },
 ];
 
 // ============================================================================
@@ -78,56 +70,41 @@ async function getProductSlugs(): Promise<string[]> {
 }
 
 export default async function storeSitemap(): Promise<MetadataRoute.Sitemap> {
-  const primaryDomain = 'https://www.bullmoney.shop';
-  const secondaryDomain = 'https://www.bullmoney.online';
+  const domains = SEO_DOMAINS;
   const currentDate = new Date().toISOString();
 
   const entries: MetadataRoute.Sitemap = [];
 
   // ── Static store pages on both domains ──
   for (const page of STORE_PAGES) {
-    entries.push({
-      url: `${primaryDomain}${page.path}`,
-      lastModified: currentDate,
-      changeFrequency: page.changeFrequency,
-      priority: page.priority,
-      alternates: {
-        languages: makeLanguages(primaryDomain, page.path),
-      },
-    });
-    entries.push({
-      url: `${secondaryDomain}${page.path}`,
-      lastModified: currentDate,
-      changeFrequency: page.changeFrequency,
-      priority: page.priority,
-      alternates: {
-        languages: makeLanguages(secondaryDomain, page.path),
-      },
-    });
+    for (const domain of domains) {
+      entries.push({
+        url: `${domain}${page.path}`,
+        lastModified: currentDate,
+        changeFrequency: page.changeFrequency,
+        priority: page.priority,
+        alternates: {
+          languages: makeLanguages(domain, page.path),
+        },
+      });
+    }
   }
 
   // ── Dynamic product detail pages ──
   const slugs = await getProductSlugs();
   for (const slug of slugs) {
     const path = `/store/product/${slug}`;
-    entries.push({
-      url: `${primaryDomain}${path}`,
-      lastModified: currentDate,
-      changeFrequency: 'daily' as const,
-      priority: 0.85,
-      alternates: {
-        languages: makeLanguages(primaryDomain, path),
-      },
-    });
-    entries.push({
-      url: `${secondaryDomain}${path}`,
-      lastModified: currentDate,
-      changeFrequency: 'daily' as const,
-      priority: 0.85,
-      alternates: {
-        languages: makeLanguages(secondaryDomain, path),
-      },
-    });
+    for (const domain of domains) {
+      entries.push({
+        url: `${domain}${path}`,
+        lastModified: currentDate,
+        changeFrequency: 'daily' as const,
+        priority: 0.85,
+        alternates: {
+          languages: makeLanguages(domain, path),
+        },
+      });
+    }
   }
 
   return entries;
