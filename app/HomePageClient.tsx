@@ -53,9 +53,10 @@ const ShimmerRadialGlow = ({ color = "white", intensity = "low" }: { color?: str
   <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle, ${color}${intensity === 'low' ? '0a' : '1a'} 0%, transparent 70%)` }} />
 );
 
-import { useUnifiedPerformance } from "@/lib/UnifiedPerformanceSystem";
-import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
-import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
+// ✅ PERF: Heavy systems lazy-loaded — not needed for compile or first paint
+// UnifiedPerformanceSystem (1,641 lines), CrashTracker (1,008 lines), bigDeviceScrollOptimizer (212 lines)
+// = 2,861 fewer lines in the critical compile chain
+import { useLazyUnifiedPerformance, useLazyComponentTracking, useLazyCrashTracker, useLazyBigDeviceScrollOptimizer } from "@/lib/lazyPerformanceHooks";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
@@ -359,7 +360,7 @@ function WhiteboardCanvas({ isMobile }: { isMobile: boolean }) {
 // Legacy flag placeholder to satisfy stale client bundles that may reference it during Fast Refresh.
 
 function HomeContent() {
-  const { optimizeSection } = useBigDeviceScrollOptimizer();
+  const { optimizeSection } = useLazyBigDeviceScrollOptimizer();
   
   // Start uninitialized - useEffect will check localStorage on client mount
   // This ensures SSR hydration works correctly in production
@@ -523,7 +524,7 @@ function HomeContent() {
     };
   }, []);
 
-  // Use unified performance for tracking
+  // Use unified performance for tracking (lazy-loaded to avoid 2,861 lines at compile time)
   const { 
     deviceTier, 
     registerComponent, 
@@ -532,11 +533,11 @@ function HomeContent() {
     shimmerQuality,
     preloadQueue,
     unloadQueue 
-  } = useUnifiedPerformance();
+  } = useLazyUnifiedPerformance();
   
   // Crash tracking for the main page
-  const { trackClick, trackError, trackCustom } = useComponentTracking('page');
-  const { trackPerformanceWarning } = useCrashTracker();
+  const { trackClick, trackError, trackCustom } = useLazyComponentTracking('page');
+  const { trackPerformanceWarning } = useLazyCrashTracker();
 
   // Use global theme context
   const { activeThemeId, activeTheme, setAppLoading } = useGlobalTheme();

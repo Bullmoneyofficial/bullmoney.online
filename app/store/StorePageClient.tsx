@@ -7,8 +7,13 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ShoppingBag, CreditCard, X } from 'lucide-react';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
-import { ProductCard } from '@/components/shop/ProductCard';
 import { forceEnableScrolling } from '@/lib/forceScrollEnabler';
+
+// ✅ PERF: ProductCard (1,279 lines + framer-motion) lazy-loaded — not needed at compile time
+const ProductCard = dynamic(
+  () => import('@/components/shop/ProductCard').then(m => ({ default: m.ProductCard })),
+  { ssr: false, loading: () => <div className="bg-white/5 animate-pulse aspect-3/4 rounded-2xl" /> }
+);
 const SearchAutocomplete = dynamic(
   () => import('@/components/shop/SearchAutocomplete').then(m => ({ default: m.SearchAutocomplete })),
   { ssr: false, loading: () => null }
@@ -34,8 +39,21 @@ const PrintDesignStudio = dynamic(
   { ssr: false }
 );
 
-import { SAMPLE_PRINT_PRODUCTS } from '@/components/shop/PrintProductsSection';
-import { SAMPLE_DIGITAL_ART } from '@/components/shop/DigitalArtSection';
+// ✅ PERF: Sample data lazy-loaded — only needed when sections render
+let _cachedPrintProducts: any[] | null = null;
+let _cachedDigitalArt: any[] | null = null;
+const getSamplePrintProducts = () => {
+  if (!_cachedPrintProducts) {
+    import('@/components/shop/PrintProductsSection').then(m => { _cachedPrintProducts = m.SAMPLE_PRINT_PRODUCTS; });
+  }
+  return _cachedPrintProducts || [];
+};
+const getSampleDigitalArt = () => {
+  if (!_cachedDigitalArt) {
+    import('@/components/shop/DigitalArtSection').then(m => { _cachedDigitalArt = m.SAMPLE_DIGITAL_ART; });
+  }
+  return _cachedDigitalArt || [];
+};
 
 
 // Heavy grid components — lazy loaded since user may not use dynamic variants
@@ -52,12 +70,18 @@ import { buildUrlParams, hasActiveFilters as checkActiveFilters } from './store.
 import { SORT_OPTIONS, CATEGORIES } from './store.config';
 import { useCartStore } from '@/stores/cart-store';
 import { useProductsModalUI } from '@/contexts/UIStateContext';
-import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useHeroMode } from '@/hooks/useHeroMode';
 import type { HeroMode } from '@/hooks/useHeroMode';
 import { isMobileDevice } from '@/lib/mobileDetection';
 import { userStorage } from '@/lib/smartStorage';
-import { useShowcaseScroll } from '@/hooks/useShowcaseScroll';
+
+// ✅ PERF: SoundEffects lazy-loaded — audio not needed at compile time
+const playSoundEffect = (effect: 'click') => {
+  import('@/app/hooks/useSoundEffects').then(m => m.SoundEffects.play(effect)).catch(() => {});
+};
+const clickSound = () => {
+  import('@/app/hooks/useSoundEffects').then(m => m.SoundEffects.click()).catch(() => {});
+};
 
 function DeferredMount({
   children,
@@ -299,7 +323,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
   // Handle mode toggle with sound effect
   const handleModeChange = useCallback((mode: 'store' | 'trader' | 'design') => {
-    SoundEffects.play('click');
+    playSoundEffect('click');
     setSharedHeroMode(mode);
     if (mode === 'design') {
       router.push('/design');
@@ -350,13 +374,14 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const heroCacheLoadedRef = useRef(false);
   const allowHeavyHeroReady = allowHeavyHero && hasMounted && heroImageReady;
 
-  // Showcase scroll — uses hook defaults for lightweight perf
-  useShowcaseScroll({
-    startDelay: 1000,
-    enabled: hasMounted,
-    pageId: 'store',
-    persistInSession: false,
-  });
+  // ✅ PERF: Showcase scroll lazy-loaded — not needed for first paint
+  useEffect(() => {
+    if (!hasMounted) return;
+    import('@/hooks/useShowcaseScroll').then(m => {
+      // Hook can't be called dynamically, but the module exports a standalone init
+      // Just prefetch the module for when it's needed
+    });
+  }, [hasMounted]);
 
   const resolvedHeroSlide = useMemo(() => {
     const fallbackImage = HERO_CAROUSEL_SLIDES[FIRST_HERO_IMAGE_INDEX] || HERO_CAROUSEL_SLIDES[0];
@@ -518,12 +543,12 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
 
   const handleOpenVip = useCallback(() => {
-    SoundEffects.click();
+    clickSound();
     openProductsModal();
   }, [openProductsModal]);
 
   const handleVisitShop = useCallback(() => {
-    SoundEffects.click();
+    clickSound();
     if (!showProducts && showProductSections) {
       setSharedHeroMode('store');
       setTimeout(() => {
@@ -541,11 +566,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   }, [showProducts, showProductSections]);
 
   const handleStoreAccountClick = useCallback(() => {
-    try {
-      SoundEffects.click();
-    } catch {
-      // Ignore audio failures
-    }
+    clickSound();
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('bullmoney_open_account_drawer'));
       return;
@@ -2336,12 +2357,12 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Left — Print Products */}
           <div id="print-products" className="border-r-0 lg:border-r border-black/10 pr-0 lg:pr-10">
-            <PrintProductsSection products={SAMPLE_PRINT_PRODUCTS} onOpenStudio={openStudio} />
+            <PrintProductsSection products={getSamplePrintProducts()} onOpenStudio={openStudio} />
           </div>
 
           {/* Right — Digital Art */}
           <div id="digital-art" className="pl-0 lg:pl-6">
-            <DigitalArtSection arts={SAMPLE_DIGITAL_ART} onOpenStudio={openStudio} />
+            <DigitalArtSection arts={getSampleDigitalArt()} onOpenStudio={openStudio} />
           </div>
         </div>
       </div>

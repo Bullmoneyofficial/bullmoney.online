@@ -1,10 +1,15 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import {
-  ShimmerSpinner,
-  ShimmerRadialGlow,
-} from "@/components/ui/UnifiedShimmer";
+
+// ✅ PERF: Inline shimmer components instead of importing UnifiedShimmer (1,561 lines)
+// Only ShimmerSpinner and ShimmerRadialGlow were used — inline them to save compile time
+const ShimmerSpinner = ({ size = 48, color = "white" }: { size?: number; color?: string }) => (
+  <div style={{ width: size, height: size, border: `2px solid ${color}33`, borderTop: `2px solid ${color}`, borderRadius: '50%', animation: 'bm-spin 0.8s linear infinite' }} />
+);
+const ShimmerRadialGlow = ({ color = "white", intensity = "low" }: { color?: string; intensity?: string }) => (
+  <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle, ${color}${intensity === 'low' ? '0a' : '1a'} 0%, transparent 70%)` }} />
+);
 
 // ============================================================================
 // ✅ PRODUCTION OPTIMIZED DYNAMIC IMPORTS - Priority-based loading
