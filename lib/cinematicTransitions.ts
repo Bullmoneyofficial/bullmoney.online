@@ -4,21 +4,57 @@
  */
 
 // Haptic feedback (works on mobile)
+let lastHapticAt = 0;
+const HAPTIC_COOLDOWN_MS = 80;
+
+const canUseHaptics = () => {
+  if (typeof window === 'undefined') return false;
+  if (!('navigator' in window)) return false;
+  if (typeof navigator.vibrate !== 'function') return false;
+  if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return false;
+  }
+  return true;
+};
+
+const runHaptic = (pattern: number | number[]) => {
+  if (!canUseHaptics()) return false;
+
+  const now = Date.now();
+  if (now - lastHapticAt < HAPTIC_COOLDOWN_MS) return false;
+  lastHapticAt = now;
+
+  try {
+    return navigator.vibrate(pattern);
+  } catch {
+    return false;
+  }
+};
+
 export const haptic = {
+  isSupported: () => canUseHaptics(),
   light: () => {
-    if (navigator.vibrate) navigator.vibrate(10);
+    return runHaptic(8);
   },
   medium: () => {
-    if (navigator.vibrate) navigator.vibrate(15);
+    return runHaptic(14);
   },
   heavy: () => {
-    if (navigator.vibrate) navigator.vibrate([15, 5, 15]);
+    return runHaptic([18, 12, 18]);
   },
   success: () => {
-    if (navigator.vibrate) navigator.vibrate([10, 50, 10, 50, 10]);
+    return runHaptic([10, 30, 10]);
   },
   error: () => {
-    if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+    return runHaptic([22, 40, 22]);
+  },
+  selection: () => {
+    return runHaptic(6);
+  },
+  notification: (type: 'success' | 'error' | 'info' = 'info') => {
+    if (type === 'success') return runHaptic([10, 28, 10]);
+    if (type === 'error') return runHaptic([25, 45, 25]);
+    return runHaptic(10);
   },
 };
 

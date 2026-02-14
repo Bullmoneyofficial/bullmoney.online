@@ -40,6 +40,18 @@
                 button.parents("." + notify + "-notification").addClass("" + notify + "-hide")
             }, 25);
         },
+        runHaptic = function(type) {
+            if (!win.navigator || typeof win.navigator.vibrate !== "function") return;
+            try {
+                if (type === "success") {
+                    win.navigator.vibrate([10, 30, 10]);
+                } else if (type === "error") {
+                    win.navigator.vibrate([25, 45, 25]);
+                } else {
+                    win.navigator.vibrate(10);
+                }
+            } catch (e) {}
+        },
         initialize = function(set) {
             var main = doc.createElement("div"),
                 wrapper = doc.createElement("div"),
@@ -62,6 +74,7 @@
             wrapper.appendChild(icon);
             wrapper.appendChild(text);
             text.innerHTML = set.message;
+            runHaptic(set.type);
             if (set.autohide == true) {
                 setTimeout(function() {
                     closeNotify($(close));

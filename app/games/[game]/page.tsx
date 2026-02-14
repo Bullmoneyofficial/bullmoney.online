@@ -19,10 +19,11 @@ export function generateStaticParams() {
 /** Allow runtime handling so routes never 404 due to missing static output */
 export const dynamicParams = true;
 
-export default function GamePage({
+export default async function GamePage({
   params,
 }: {
-  params: { game: string };
+  params: Promise<{ game: string }>;
 }) {
-  return <CasinoGamePage game={params.game} />;
+  const { game } = await params;
+  return <CasinoGamePage game={game} />;
 }

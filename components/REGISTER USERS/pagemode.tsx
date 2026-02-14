@@ -245,14 +245,81 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const showFallback = hasError || (!isLoaded && loadTimeout);
 
   return (
-    <div 
+    <div
       className="absolute inset-0 w-full h-full overflow-hidden"
-      style={{ 
+      style={{
         zIndex: 0,
-        touchAction: 'pan-y pinch-zoom', // Allow scrolling but let Spline handle other gestures
-        backgroundColor: 'transparent',
+        touchAction: 'pan-y pinch-zoom',
+        backgroundColor: '#000',
       }}
     >
+      {/* CSS animated background — visible while Spline loads/retries, fades when Spline is ready */}
+      <style>{`
+        @keyframes welcomeBgDrift {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(2%, -3%) scale(1.05); }
+          66% { transform: translate(-2%, 2%) scale(1.02); }
+        }
+        @keyframes welcomeBgPulse {
+          0%, 100% { opacity: 0.35; }
+          50% { opacity: 0.55; }
+        }
+        @keyframes welcomeBgSweep {
+          0% { transform: translateX(-100%) rotate(-15deg); }
+          100% { transform: translateX(200%) rotate(-15deg); }
+        }
+      `}</style>
+      {/* Layered ambient gradients */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 80% 60% at 40% 30%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 50%, transparent 80%)',
+          opacity: isLoaded ? 0.15 : 1,
+          transition: 'opacity 600ms ease-out',
+          animation: 'welcomeBgDrift 12s ease-in-out infinite',
+          willChange: 'transform',
+        }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 70% 50% at 70% 75%, rgba(255,255,255,0.12) 0%, transparent 60%)',
+          opacity: isLoaded ? 0.1 : 1,
+          transition: 'opacity 600ms ease-out',
+          animation: 'welcomeBgDrift 16s ease-in-out infinite reverse',
+        }}
+      />
+      {/* Animated glow pulse */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.2) 0%, transparent 55%)',
+          animation: 'welcomeBgPulse 5s ease-in-out infinite',
+          opacity: isLoaded ? 0 : 1,
+          transition: 'opacity 600ms ease-out',
+        }}
+      />
+      {/* Light sweep — visible while Spline is loading or failed */}
+      {(showFallback || !isLoaded) && (
+        <div
+          className="absolute inset-0 pointer-events-none overflow-hidden"
+          style={{ opacity: 0.08 }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '60%',
+              height: '200%',
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
+              animation: 'welcomeBgSweep 8s ease-in-out infinite',
+            }}
+          />
+        </div>
+      )}
+
+      {/* Spline — always rendered on all devices including low-memory */}
       {!useSafeSplineFilters && (
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>
           <defs>
@@ -267,29 +334,6 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           </defs>
         </svg>
       )}
-
-      {/* Animated gradient fallback - always visible as base layer */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 40%), transparent',
-          opacity: showFallback || !isLoaded ? 1 : 0.2,
-          transition: 'opacity 500ms ease-out',
-        }}
-      >
-        {/* Subtle animated glow for visual interest when no Spline */}
-        {showFallback && !runtimeProfile.isLowMemory && (
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%)',
-              animation: 'pulse 4s ease-in-out infinite',
-            }}
-          />
-        )}
-      </div>
-
-      {/* Spline container with forced black & white - works in all browsers including in-app */}
       <div
         className="absolute inset-0 welcome-spline-canvas-host"
         style={{
@@ -304,7 +348,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         <Spline
           key={`welcome-spline-${retryKey}`}
           scene={scene}
-          renderOnDemand={runtimeProfile.isLowMemory}
+          renderOnDemand={false}
           onLoad={handleLoad}
           onError={handleError}
           style={{
@@ -1289,8 +1333,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: MAIN INTERFACE ---
   return (
         <div className={cn(
-        "register-container px-4 py-6 md:p-4 md:overflow-hidden md:h-screen font-sans",
-        isWelcomeScreen ? "bg-transparent" : "bg-white",
+        "register-container font-sans",
+        isWelcomeScreen ? "bg-black p-0" : "bg-white px-4 py-6 md:p-4",
+        !isWelcomeScreen && "md:overflow-hidden md:h-screen",
         isIOSInAppShield && "pagemode-ios-shield"
          )}
           style={{ position: 'relative', minHeight: 'calc(var(--pagemode-vh, 1vh) * 100)' }}>
@@ -1394,13 +1439,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="fixed inset-0 flex flex-col"
-                style={{ 
-                  minHeight: '100dvh', 
-                  width: '100vw', 
+                style={{
+                  minHeight: '100dvh',
+                  width: '100vw',
                   height: 'calc(var(--pagemode-vh, 1vh) * 100)',
                   pointerEvents: 'none',
                   zIndex: UI_Z_INDEX.PAGEMODE,
-                  ...(iosInAppShieldStyle ?? {}),
+                  backgroundColor: 'transparent',
+                  // No iosInAppShieldStyle scale on welcome screen — it creates visible
+                  // edges around the content. The Spline bg fills the viewport independently.
                 }}
               >
                 {/* Minimalistic Branding Header - Clean Apple-style */}

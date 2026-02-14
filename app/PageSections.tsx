@@ -21,6 +21,7 @@ import {
   type LucideIcon 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { haptic } from "@/lib/cinematicTransitions";
 
 // ─── TOAST NOTIFICATION SYSTEM ─────────────────────────────────
 interface Toast {
@@ -40,6 +41,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   
   const showToast = useCallback((message: string, type: Toast['type'] = 'success', icon?: LucideIcon) => {
     const id = Math.random().toString(36).slice(2);
+    haptic.notification(type);
     setToasts(prev => [...prev, { id, message, type, icon }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));

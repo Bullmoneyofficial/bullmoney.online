@@ -68,15 +68,14 @@ const isLowMemoryDevice = (): boolean => {
 
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (DESKTOP) ---
 // Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
+// Spline always renders on ALL devices (including low-memory). CSS fallback shows while loading.
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
   const splineRef = useRef<any>(null);
-  
+  const isLowMem = typeof window !== 'undefined' && isLowMemoryDevice();
+
   // Always use scene1 for fastest cold start and reliable reloads
-  const [scene] = useState(() => {
-    if (typeof window === 'undefined') return SPLINE_SCENES[0];
-    return SPLINE_SCENES[0];
-  });
+  const [scene] = useState(() => SPLINE_SCENES[0]);
 
   // Preload Spline runtime + scene for faster first paint and reliable reloads
   useEffect(() => {
@@ -108,44 +107,96 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     setIsLoaded(false);
   }, []);
 
+  // Use simpler CSS filters on constrained browsers to avoid GPU crashes
+  const useSafeFilters = isLowMem;
+
   return (
-    <div 
+    <div
       className="absolute inset-0 w-full h-full overflow-hidden"
-      style={{ 
+      style={{
         zIndex: 0,
-        backgroundColor: 'transparent',
+        backgroundColor: '#000',
       }}
     >
-      {/* SVG Filter for maximum in-app browser compatibility (Facebook, Instagram, TikTok, etc.) */}
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-        <defs>
-          <filter id="grayscale-filter">
-            <feColorMatrix type="saturate" values="0" />
-            <feComponentTransfer>
-              <feFuncR type="linear" slope="1.1" />
-              <feFuncG type="linear" slope="1.1" />
-              <feFuncB type="linear" slope="1.1" />
-            </feComponentTransfer>
-          </filter>
-        </defs>
-      </svg>
-
-      {/* Animated gradient fallback - always visible as base layer */}
+      {/* CSS animated background — visible while Spline loads, fades when Spline is ready */}
+      <style>{`
+        @keyframes welcomeDeskDrift {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(2%, -3%) scale(1.05); }
+          66% { transform: translate(-2%, 2%) scale(1.02); }
+        }
+        @keyframes welcomeDeskPulse {
+          0%, 100% { opacity: 0.35; }
+          50% { opacity: 0.55; }
+        }
+        @keyframes welcomeDeskSweep {
+          0% { transform: translateX(-100%) rotate(-15deg); }
+          100% { transform: translateX(200%) rotate(-15deg); }
+        }
+      `}</style>
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 40% 30%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 35%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 45%), transparent',
-          opacity: !isLoaded ? 1 : 0.2,
+          background: 'radial-gradient(ellipse 80% 60% at 40% 30%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 50%, transparent 80%)',
+          opacity: isLoaded ? 0.15 : 1,
+          transition: 'opacity 600ms ease-out',
+          animation: 'welcomeDeskDrift 12s ease-in-out infinite',
+          willChange: 'transform',
+        }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 70% 50% at 70% 75%, rgba(255,255,255,0.12) 0%, transparent 60%)',
+          opacity: isLoaded ? 0.1 : 1,
+          transition: 'opacity 600ms ease-out',
+          animation: 'welcomeDeskDrift 16s ease-in-out infinite reverse',
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.2) 0%, transparent 55%)',
+          animation: 'welcomeDeskPulse 5s ease-in-out infinite',
+          opacity: isLoaded ? 0 : 1,
           transition: 'opacity 600ms ease-out',
         }}
       />
+      {!isLoaded && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: 0.08 }}>
+          <div style={{
+            position: 'absolute', top: 0, left: 0, width: '60%', height: '200%',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
+            animation: 'welcomeDeskSweep 8s ease-in-out infinite',
+          }} />
+        </div>
+      )}
 
-      {/* Spline container with forced black & white - works in all browsers including in-app */}
+      {/* Spline — always rendered on all devices */}
+      {!useSafeFilters && (
+        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+          <defs>
+            <filter id="grayscale-filter">
+              <feColorMatrix type="saturate" values="0" />
+              <feComponentTransfer>
+                <feFuncR type="linear" slope="1.1" />
+                <feFuncG type="linear" slope="1.1" />
+                <feFuncB type="linear" slope="1.1" />
+              </feComponentTransfer>
+            </filter>
+          </defs>
+        </svg>
+      )}
+
       <div
         className="absolute inset-0"
         style={{
-          filter: 'url(#grayscale-filter) grayscale(100%) saturate(0) contrast(1.1)',
-          WebkitFilter: 'grayscale(100%) saturate(0) contrast(1.1)',
+          filter: useSafeFilters
+            ? 'grayscale(100%) saturate(0)'
+            : 'url(#grayscale-filter) grayscale(100%) saturate(0) contrast(1.1)',
+          WebkitFilter: useSafeFilters
+            ? 'grayscale(100%) saturate(0)'
+            : 'grayscale(100%) saturate(0) contrast(1.1)',
         } as React.CSSProperties}
       >
         <Spline
@@ -165,27 +216,36 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         />
       </div>
 
-      {/* Color-kill overlay - mix-blend-mode: color with gray removes ALL remaining color */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          zIndex: 1,
-          backgroundColor: '#808080',
-          mixBlendMode: 'color',
-          WebkitMixBlendMode: 'color',
-        } as React.CSSProperties}
-      />
-
-      {/* Extra fallback: semi-transparent grayscale overlay for stubborn in-app browsers */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          zIndex: 1,
-          backgroundColor: 'rgba(128, 128, 128, 0.3)',
-          mixBlendMode: 'saturation',
-          WebkitMixBlendMode: 'saturation',
-        } as React.CSSProperties}
-      />
+      {!useSafeFilters ? (
+        <>
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              zIndex: 1,
+              backgroundColor: '#808080',
+              mixBlendMode: 'color',
+              WebkitMixBlendMode: 'color',
+            } as React.CSSProperties}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              zIndex: 1,
+              backgroundColor: 'rgba(128, 128, 128, 0.3)',
+              mixBlendMode: 'saturation',
+              WebkitMixBlendMode: 'saturation',
+            } as React.CSSProperties}
+          />
+        </>
+      ) : (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            zIndex: 1,
+            backgroundColor: 'rgba(110, 110, 110, 0.16)',
+          }}
+        />
+      )}
     </div>
   );
 });
