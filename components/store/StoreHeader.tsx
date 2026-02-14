@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import X from 'lucide-react/dist/esm/icons/x';
@@ -119,6 +120,7 @@ type StoreHeaderProps = {
 };
 
 export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: StoreHeaderProps) {
+  const [isMounted, setIsMounted] = useState(false);
   // Store menus managed via centralized UIState for proper mutual exclusion and back-nav reset
   const {
     isMobileMenuOpen: mobileMenuOpen,
@@ -166,6 +168,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   // Show home button on non-home pages (store, games, etc.) so users can navigate back
   const showHomeButton = !isHomePage;
   const storeHeaderScrollYRef = useRef(0);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const PAGEMODE_FORCE_LOGIN_KEY = 'bullmoney_pagemode_force_login';
   const PAGEMODE_LOGIN_VIEW_KEY = 'bullmoney_pagemode_login_view';
@@ -362,6 +367,17 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       body.setAttribute('data-storeheader-scroll-lock', 'true');
       html.setAttribute('data-storeheader-scroll-lock', 'true');
 
+      if (mobileMenuOpen) {
+        html.style.overflow = 'hidden';
+        body.style.overflow = 'hidden';
+        body.style.position = '';
+        body.style.top = '';
+        body.style.left = '';
+        body.style.right = '';
+        body.style.width = '';
+        return;
+      }
+
       body.style.position = 'fixed';
       body.style.top = `-${storeHeaderScrollYRef.current}px`;
       body.style.left = '0';
@@ -381,6 +397,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       body.style.right = '';
       body.style.width = '';
       body.style.overflow = '';
+      html.style.overflow = '';
 
       window.scrollTo(0, storeHeaderScrollYRef.current);
     }
@@ -753,6 +770,350 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       router.push('/store'); // Redirect to store page
     }
   }, [router, setHeroMode]);
+
+  const mobileMenuContent = (
+    <LazyAnimatePresence>
+      {mobileMenuOpen && (
+        <>
+          <LazyMotionDiv
+            initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.1 }}
+            onClick={handleCloseMobileMenu}
+            className="fixed inset-0 z-[1200]"
+            style={{ background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.18)', willChange: 'opacity' }}
+          />
+          <LazyMotionDiv
+            initial={shouldSkipHeavyEffects ? false : { x: '100%' }}
+            animate={{ x: 0 }}
+            exit={shouldSkipHeavyEffects ? undefined : { x: '100%' }}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: 'tween', duration: 0.14, ease: [0.25, 1, 0.5, 1] }}
+            className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto overscroll-contain touch-pan-y"
+            style={{
+              background: 'rgb(255,255,255)',
+              backgroundColor: '#ffffff',
+              colorScheme: 'light' as const,
+              borderLeft: '1px solid rgba(0,0,0,0.1)',
+              willChange: 'transform',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehaviorY: 'none',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-2xl font-medium" style={{ color: 'rgb(0,0,0)' }}>Menu</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (isAuthenticated && recruit) {
+                      openAccountDrawer();
+                      return;
+                    }
+                    if (typeof window !== 'undefined') {
+                      try {
+                        localStorage.setItem(ACCOUNT_DRAWER_PENDING_KEY, 'true');
+                      } catch {
+                        // Ignore storage errors
+                      }
+                    }
+                    startPagemodeLogin('/store');
+                  }}
+                  className="h-8 w-8 flex items-center justify-center rounded-lg"
+                  style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
+                  title={isAuthenticated ? 'Account' : 'Sign In / Register'}
+                  aria-label={isAuthenticated ? 'Open account' : 'Sign in or register'}
+                >
+                  <User className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleCloseMobileMenu}
+                  className="h-8 w-8 flex items-center justify-center rounded-lg"
+                  style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
+                  aria-label="Close mobile menu"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Shop Button - Mobile (first) */}
+            <Link
+              href="/store"
+              onClick={handleCloseMobileMenu}
+              className="mb-3 block text-left text-base font-semibold tracking-tight transition-colors"
+              style={{ color: 'rgba(0,0,0,0.95)' }}
+            >
+              Shop
+            </Link>
+
+            <div className="mb-3 border-b border-black/10 pb-2">
+              <details className="group">
+                <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
+                  <span className="flex items-center justify-between">
+                    <span>Shop Pages</span>
+                    <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
+                  </span>
+                </summary>
+                <div className="space-y-1 pb-1 pl-2">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openProductsModal();
+                    }}
+                    className="block w-full py-1.5 text-left text-sm"
+                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                  >
+                    BULLMONEY VIP+
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setLiveStreamModalOpen(true);
+                    }}
+                    className="block w-full py-1.5 text-left text-sm"
+                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                  >
+                    Live Stream
+                  </button>
+                  <Link
+                    href="/design"
+                    onClick={handleCloseMobileMenu}
+                    className="block py-1.5 text-sm"
+                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                  >
+                    Design Page
+                  </Link>
+                </div>
+              </details>
+            </div>
+
+            <div className="mb-3 border-b border-black/10 pb-2">
+              <details className="group">
+                <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
+                  <span className="flex items-center justify-between">
+                    <span>About Us</span>
+                    <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
+                  </span>
+                </summary>
+                <div className="space-y-1 pb-1 pl-2">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setFaqModalOpen(true);
+                    }}
+                    className="block w-full py-1.5 text-left text-sm"
+                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                  >
+                    FAQ
+                  </button>
+                  <Link
+                    href="/"
+                    onClick={handleCloseMobileMenu}
+                    className="block py-1.5 text-sm"
+                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                  >
+                    Back to Home
+                  </Link>
+                </div>
+              </details>
+            </div>
+
+            {isAuthenticated && recruit && (
+              <div className="mb-3 border-b border-black/10 pb-2">
+                <details className="group">
+                  <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
+                    <span className="flex items-center justify-between">
+                      <span>Account</span>
+                      <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
+                    </span>
+                  </summary>
+                  <div className="space-y-1 pb-1 pl-2">
+                    <button
+                      onClick={openAccountDrawer}
+                      className="block w-full py-1.5 text-left text-sm"
+                      style={{ color: 'rgba(0,0,0,0.85)' }}
+                    >
+                      Profile
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full py-1.5 text-left text-sm"
+                      style={{ color: 'rgba(0,0,0,0.85)' }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </details>
+              </div>
+            )}
+
+            {/* Admin Button - Mobile, dev only */}
+            {effectiveAdmin && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setAdminModalOpen(true);
+                }}
+                className="mb-3 text-left text-sm font-medium tracking-tight transition-colors"
+                style={{ color: 'rgba(113,46,165,0.95)' }}
+              >
+                Admin Panel
+              </button>
+            )}
+
+            {/* Toggles Section - Mobile */}
+            <div className="space-y-3 mb-4 border-b border-black/10 pb-3">
+              <button
+                onClick={toggleThemePicker}
+                className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
+                style={{ color: 'rgba(0,0,0,0.95)' }}
+                role="switch"
+                aria-checked={showThemePicker}
+              >
+                <span>Themes</span>
+                <span
+                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                  style={{ background: showThemePicker ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 rounded-full transition-transform ${showThemePicker ? 'translate-x-5' : 'translate-x-1'}`}
+                    style={{ background: showThemePicker ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                  />
+                </span>
+              </button>
+
+              <button
+                onClick={toggleUltimateHub}
+                className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
+                style={{ color: 'rgba(0,0,0,0.95)' }}
+                role="switch"
+                aria-checked={showUltimateHub}
+              >
+                <span>Hub</span>
+                <span
+                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                  style={{ background: showUltimateHub ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 rounded-full transition-transform ${showUltimateHub ? 'translate-x-5' : 'translate-x-1'}`}
+                    style={{ background: showUltimateHub ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                  />
+                </span>
+              </button>
+
+              <button
+                onClick={toggleAudioWidget}
+                className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
+                style={{ color: 'rgba(0,0,0,0.95)' }}
+                role="switch"
+                aria-checked={showAudioWidget}
+              >
+                <span>Audio</span>
+                <span
+                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                  style={{ background: showAudioWidget ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 rounded-full transition-transform ${showAudioWidget ? 'translate-x-5' : 'translate-x-1'}`}
+                    style={{ background: showAudioWidget ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                  />
+                </span>
+              </button>
+
+              {isDesignPage && (
+                <button
+                  onClick={toggleDesignSections}
+                  className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
+                  role="switch"
+                  aria-checked={showDesignSections}
+                >
+                  <span>Sections</span>
+                  <span
+                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    style={{ background: showDesignSections ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full transition-transform ${showDesignSections ? 'translate-x-5' : 'translate-x-1'}`}
+                      style={{ background: showDesignSections ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                    />
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* More - Mobile (animated list) */}
+            <div className="mb-4 border-b border-black/10 pb-3">
+              <LazyMotionUl
+                initial="hidden"
+                animate="show"
+                variants={MOBILE_MENU_LIST_VARIANTS}
+                className="space-y-1"
+              >
+                <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
+                  <LazyMotionButton
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setAffiliateModalOpen(true);
+                    }}
+                    className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
+                    style={{
+                      backgroundImage: 'linear-gradient(110deg, rgb(10,25,63) 15%, rgb(18,53,116) 40%, rgb(30,84,186) 50%, rgb(18,53,116) 60%, rgb(10,25,63) 85%)',
+                      backgroundSize: '240% 100%',
+                      boxShadow: '0 0 0 1px rgba(30,84,186,0.35), 0 5px 14px rgba(10,25,63,0.28)',
+                    }}
+                    animate={{
+                      backgroundPosition: ['0% 50%', '100% 50%'],
+                    }}
+                    transition={{ duration: 2.4, repeat: Infinity, repeatType: 'loop', ease: 'linear' }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Affiliates
+                  </LazyMotionButton>
+                </LazyMotionLi>
+                <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
+                  <LazyMotionButton
+                    onClick={() => {
+                      navigateToGames();
+                    }}
+                    className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
+                    style={{
+                      backgroundImage: 'linear-gradient(110deg, rgb(8,22,56) 15%, rgb(14,44,102) 40%, rgb(25,74,170) 50%, rgb(14,44,102) 60%, rgb(8,22,56) 85%)',
+                      backgroundSize: '240% 100%',
+                      boxShadow: '0 0 0 1px rgba(25,74,170,0.35), 0 5px 14px rgba(8,22,56,0.28)',
+                    }}
+                    animate={{
+                      backgroundPosition: ['0% 50%', '100% 50%'],
+                    }}
+                    transition={{ duration: 2.6, repeat: Infinity, repeatType: 'loop', ease: 'linear', delay: 0.16 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Games
+                  </LazyMotionButton>
+                </LazyMotionLi>
+              </LazyMotionUl>
+            </div>
+
+            <div className="mt-3 pt-2">
+              <div className="border-t border-black/10 pt-3 pb-2">
+                <LanguageToggle
+                  variant="row"
+                  dropDirection="up"
+                  dropAlign="left"
+                  rowDropdown="inline"
+                  tone="light"
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+          </LazyMotionDiv>
+        </>
+      )}
+    </LazyAnimatePresence>
+  );
 
   return (
     <>
@@ -1232,347 +1593,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       )}
 
       {/* Mobile Menu */}
-      <LazyAnimatePresence>
-        {mobileMenuOpen && (
-          <>
-            <LazyMotionDiv
-              initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
-              transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.1 }}
-              onClick={handleCloseMobileMenu}
-              className="fixed inset-0 z-[1200]"
-              style={{ background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.18)', willChange: 'opacity' }}
-            />
-            <LazyMotionDiv
-              initial={shouldSkipHeavyEffects ? false : { x: '100%' }}
-              animate={{ x: 0 }}
-              exit={shouldSkipHeavyEffects ? undefined : { x: '100%' }}
-              transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: 'tween', duration: 0.14, ease: [0.25, 1, 0.5, 1] }}
-              className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto overscroll-contain touch-pan-y"
-              style={{
-                background: 'rgb(255,255,255)',
-                backgroundColor: '#ffffff',
-                colorScheme: 'light' as const,
-                borderLeft: '1px solid rgba(0,0,0,0.1)',
-                willChange: 'transform',
-                WebkitOverflowScrolling: 'touch',
-                overscrollBehaviorY: 'none',
-                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
-              }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-2xl font-medium" style={{ color: 'rgb(0,0,0)' }}>Menu</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      if (isAuthenticated && recruit) {
-                        openAccountDrawer();
-                        return;
-                      }
-                      if (typeof window !== 'undefined') {
-                        try {
-                          localStorage.setItem(ACCOUNT_DRAWER_PENDING_KEY, 'true');
-                        } catch {
-                          // Ignore storage errors
-                        }
-                      }
-                      startPagemodeLogin('/store');
-                    }}
-                    className="h-8 w-8 flex items-center justify-center rounded-lg"
-                    style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
-                    title={isAuthenticated ? 'Account' : 'Sign In / Register'}
-                    aria-label={isAuthenticated ? 'Open account' : 'Sign in or register'}
-                  >
-                    <User className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={handleCloseMobileMenu}
-                    className="h-8 w-8 flex items-center justify-center rounded-lg"
-                    style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
-                    aria-label="Close mobile menu"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Shop Button - Mobile (first) */}
-              <Link
-                href="/store"
-                onClick={handleCloseMobileMenu}
-                className="mb-3 block text-left text-base font-semibold tracking-tight transition-colors"
-                style={{ color: 'rgba(0,0,0,0.95)' }}
-              >
-                Shop
-              </Link>
-
-              <div className="mb-3 border-b border-black/10 pb-2">
-                <details className="group">
-                  <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
-                    <span className="flex items-center justify-between">
-                      <span>Shop Pages</span>
-                      <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
-                    </span>
-                  </summary>
-                  <div className="space-y-1 pb-1 pl-2">
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        openProductsModal();
-                      }}
-                      className="block w-full py-1.5 text-left text-sm"
-                      style={{ color: 'rgba(0,0,0,0.85)' }}
-                    >
-                      BULLMONEY VIP+
-                    </button>
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setLiveStreamModalOpen(true);
-                      }}
-                      className="block w-full py-1.5 text-left text-sm"
-                      style={{ color: 'rgba(0,0,0,0.85)' }}
-                    >
-                      Live Stream
-                    </button>
-                    <Link
-                      href="/design"
-                      onClick={handleCloseMobileMenu}
-                      className="block py-1.5 text-sm"
-                      style={{ color: 'rgba(0,0,0,0.85)' }}
-                    >
-                      Design Page
-                    </Link>
-                  </div>
-                </details>
-              </div>
-
-              <div className="mb-3 border-b border-black/10 pb-2">
-                <details className="group">
-                  <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
-                    <span className="flex items-center justify-between">
-                      <span>About Us</span>
-                      <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
-                    </span>
-                  </summary>
-                  <div className="space-y-1 pb-1 pl-2">
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setFaqModalOpen(true);
-                      }}
-                      className="block w-full py-1.5 text-left text-sm"
-                      style={{ color: 'rgba(0,0,0,0.85)' }}
-                    >
-                      FAQ
-                    </button>
-                    <Link
-                      href="/"
-                      onClick={handleCloseMobileMenu}
-                      className="block py-1.5 text-sm"
-                      style={{ color: 'rgba(0,0,0,0.85)' }}
-                    >
-                      Back to Home
-                    </Link>
-                  </div>
-                </details>
-              </div>
-
-              {isAuthenticated && recruit && (
-                <div className="mb-3 border-b border-black/10 pb-2">
-                  <details className="group">
-                    <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
-                      <span className="flex items-center justify-between">
-                        <span>Account</span>
-                        <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
-                      </span>
-                    </summary>
-                    <div className="space-y-1 pb-1 pl-2">
-                      <button
-                        onClick={openAccountDrawer}
-                        className="block w-full py-1.5 text-left text-sm"
-                        style={{ color: 'rgba(0,0,0,0.85)' }}
-                      >
-                        Profile
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full py-1.5 text-left text-sm"
-                        style={{ color: 'rgba(0,0,0,0.85)' }}
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  </details>
-                </div>
-              )}
-              
-              {/* Admin Button - Mobile, dev only */}
-              {effectiveAdmin && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setAdminModalOpen(true);
-                  }}
-                  className="mb-3 text-left text-sm font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(113,46,165,0.95)' }}
-                >
-                  Admin Panel
-                </button>
-              )}
-              
-              {/* Toggles Section - Mobile */}
-              <div className="space-y-3 mb-4 border-b border-black/10 pb-3">
-                <button
-                  onClick={toggleThemePicker}
-                  className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
-                  role="switch"
-                  aria-checked={showThemePicker}
-                >
-                  <span>Themes</span>
-                  <span
-                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                    style={{ background: showThemePicker ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 rounded-full transition-transform ${showThemePicker ? 'translate-x-5' : 'translate-x-1'}`}
-                      style={{ background: showThemePicker ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
-                    />
-                  </span>
-                </button>
-
-                <button
-                  onClick={toggleUltimateHub}
-                  className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
-                  role="switch"
-                  aria-checked={showUltimateHub}
-                >
-                  <span>Hub</span>
-                  <span
-                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                    style={{ background: showUltimateHub ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 rounded-full transition-transform ${showUltimateHub ? 'translate-x-5' : 'translate-x-1'}`}
-                      style={{ background: showUltimateHub ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
-                    />
-                  </span>
-                </button>
-
-                <button
-                  onClick={toggleAudioWidget}
-                  className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
-                  role="switch"
-                  aria-checked={showAudioWidget}
-                >
-                  <span>Audio</span>
-                  <span
-                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                    style={{ background: showAudioWidget ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 rounded-full transition-transform ${showAudioWidget ? 'translate-x-5' : 'translate-x-1'}`}
-                      style={{ background: showAudioWidget ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
-                    />
-                  </span>
-                </button>
-
-                {isDesignPage && (
-                  <button
-                    onClick={toggleDesignSections}
-                    className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
-                    style={{ color: 'rgba(0,0,0,0.95)' }}
-                    role="switch"
-                    aria-checked={showDesignSections}
-                  >
-                    <span>Sections</span>
-                    <span
-                      className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                      style={{ background: showDesignSections ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
-                    >
-                      <span
-                        className={`inline-block h-5 w-5 rounded-full transition-transform ${showDesignSections ? 'translate-x-5' : 'translate-x-1'}`}
-                        style={{ background: showDesignSections ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
-                      />
-                    </span>
-                  </button>
-                )}
-              </div>
-              
-              {/* More - Mobile (animated list) */}
-              <div className="mb-4 border-b border-black/10 pb-3">
-                <LazyMotionUl
-                  initial="hidden"
-                  animate="show"
-                  variants={MOBILE_MENU_LIST_VARIANTS}
-                  className="space-y-1"
-                >
-                  <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
-                    <LazyMotionButton
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setAffiliateModalOpen(true);
-                      }}
-                      className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
-                      style={{
-                        backgroundImage: 'linear-gradient(110deg, rgb(10,25,63) 15%, rgb(18,53,116) 40%, rgb(30,84,186) 50%, rgb(18,53,116) 60%, rgb(10,25,63) 85%)',
-                        backgroundSize: '240% 100%',
-                        boxShadow: '0 0 0 1px rgba(30,84,186,0.35), 0 5px 14px rgba(10,25,63,0.28)',
-                      }}
-                      animate={{
-                        backgroundPosition: ['0% 50%', '100% 50%'],
-                      }}
-                      transition={{ duration: 2.4, repeat: Infinity, repeatType: 'loop', ease: 'linear' }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      Affiliates
-                    </LazyMotionButton>
-                  </LazyMotionLi>
-                  <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
-                    <LazyMotionButton
-                      onClick={() => {
-                        navigateToGames();
-                      }}
-                      className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
-                      style={{
-                        backgroundImage: 'linear-gradient(110deg, rgb(8,22,56) 15%, rgb(14,44,102) 40%, rgb(25,74,170) 50%, rgb(14,44,102) 60%, rgb(8,22,56) 85%)',
-                        backgroundSize: '240% 100%',
-                        boxShadow: '0 0 0 1px rgba(25,74,170,0.35), 0 5px 14px rgba(8,22,56,0.28)',
-                      }}
-                      animate={{
-                        backgroundPosition: ['0% 50%', '100% 50%'],
-                      }}
-                      transition={{ duration: 2.6, repeat: Infinity, repeatType: 'loop', ease: 'linear', delay: 0.16 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      Games
-                    </LazyMotionButton>
-                  </LazyMotionLi>
-                </LazyMotionUl>
-              </div>
-
-              <div className="mt-3 pt-2">
-                <div className="border-t border-black/10 pt-3 pb-2">
-                  <LanguageToggle
-                    variant="row"
-                    dropDirection="up"
-                    dropAlign="left"
-                    rowDropdown="inline"
-                    tone="light"
-                    className="w-full"
-                  />
-                </div>
-              </div>
-
-            </LazyMotionDiv>
-          </>
-        )}
-      </LazyAnimatePresence>
+      {isMounted && typeof document !== 'undefined'
+        ? createPortal(mobileMenuContent, document.documentElement)
+        : mobileMenuContent}
       
       {/* All Modals - Rendered globally so they work on every page */}
       
