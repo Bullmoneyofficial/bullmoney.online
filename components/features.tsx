@@ -294,7 +294,7 @@ export function Features() {
   );
 
   return (
-    <div className="w-full bg-black py-12 md:py-20 px-4 md:px-8">
+    <div className="w-full py-12 md:py-20 px-4 md:px-8" style={{ backgroundColor: '#000000' }}>
       {/* Header with TrueFocus Effect */}
       <header className="max-w-7xl mx-auto text-center mb-8 md:mb-16">
         <motion.div

@@ -41,6 +41,7 @@
   var minDigitMs = 25;
   var ninetyStallStart = null;
   var splashStartAt = Date.now();
+  var finaleStarted = false;
   var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
   var minVisibleMs = isInAppBrowser ? 800 : 400;
   var mem = (navigator && navigator.deviceMemory) ? navigator.deviceMemory : 0;
@@ -197,7 +198,7 @@
     if (targetDisplay < lastVisualProgress) targetDisplay = lastVisualProgress;
 
     var now = Date.now();
-    var digitMs = progress >= 85 ? 12 : minDigitMs;
+    var digitMs = progress >= 85 ? 60 : minDigitMs;
     if (targetDisplay > visualProgress && now - lastVisualTick >= digitMs) {
       visualProgress += 1;
       lastVisualTick = now;
@@ -211,6 +212,11 @@
     if (display.length < 2) display = '0' + display;
     if (progressEl) progressEl.textContent = display + '%';
     if (barEl) barEl.style.width = visualProgress + '%';
+
+    // Trigger finale at 85%
+    if (visualProgress >= 85 && !finaleStarted) {
+      startFinale();
+    }
 
     if (visualProgress >= 90) {
       if (!ninetyStallStart) ninetyStallStart = Date.now();
@@ -355,26 +361,17 @@
         setStep(3);
       }
       
-      // Wait for progress to actually reach 95 before going to 100
-      // so each digit 90-100 is visible
-      function waitForNinetyFive() {
-        if (visualProgress >= 95) {
-          targetPct = 100;
-          // Let animation naturally tick to 100 — no forced jumps
-          function waitForHundred() {
-            if (visualProgress >= 100) {
-              updateProgress(100);
-              setTimeout(hide, 150);
-            } else {
-              raf(waitForHundred);
-            }
-          }
-          waitForHundred();
+      // Start finale at 85% (triggered from updateProgress)
+      // Just wait for 100 to actually finish, then hide
+      function waitForHundred() {
+        if (visualProgress >= 100) {
+          updateProgress(100);
+          setTimeout(hide, 400);
         } else {
-          raf(waitForNinetyFive);
+          raf(waitForHundred);
         }
       }
-      waitForNinetyFive();
+      waitForHundred();
     });
   }
 
@@ -440,6 +437,62 @@
     window.__BM_HYDRATED__ = true;
   });
 
+  // --- Splash finale: logo grows to playing-card size, everything else fades ---
+  function startFinale() {
+    if (finaleStarted) return;
+    finaleStarted = true;
+    targetPct = 100;
+    if (!splash || splash.classList.contains('hide')) { hide(); return; }
+    
+    // Add finale class for CSS animations
+    splash.classList.add('bm-splash-finale');
+    
+    var logoWrap = splash.querySelector('.bm-logo-wrap');
+    var title = splash.querySelector('.bm-title');
+    var subtitle = splash.querySelector('.bm-subtitle');
+    var progressWrap = splash.querySelector('.bm-progress-wrap');
+    var orbs = splash.querySelectorAll('.bm-orb');
+    
+    // Fade out title, subtitle, progress over the 85→100 window
+    [title, subtitle, progressWrap].forEach(function(el) {
+      if (!el) return;
+      el.style.transition = 'opacity .6s ease, transform .6s ease';
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0.92)';
+      el.style.pointerEvents = 'none';
+    });
+    
+    // Fade out orbs
+    for (var i = 0; i < orbs.length; i++) {
+      orbs[i].style.transition = 'opacity .4s ease';
+      orbs[i].style.opacity = '0';
+    }
+    
+    // Grow logo from its current size to 1.75x, centered on screen
+    if (logoWrap) {
+      // Kill any running animation that would override our transform
+      logoWrap.style.animation = 'none';
+      logoWrap.style.willChange = 'auto';
+      // Center with inset:0 + margin:auto (bulletproof, no translate needed)
+      logoWrap.style.position = 'absolute';
+      logoWrap.style.top = '0';
+      logoWrap.style.left = '0';
+      logoWrap.style.right = '0';
+      logoWrap.style.bottom = '0';
+      logoWrap.style.margin = 'auto';
+      logoWrap.style.padding = '0';
+      logoWrap.style.zIndex = '100000';
+      logoWrap.style.width = '280px';
+      logoWrap.style.height = '280px';
+      logoWrap.style.transform = 'scale(1)';
+      // Force reflow
+      void logoWrap.offsetHeight;
+      // Slow grow across the 85→100 loading window (~1.5s)
+      logoWrap.style.transition = 'transform 1.5s cubic-bezier(.22,1,.36,1)';
+      logoWrap.style.transform = 'scale(1.75)';
+    }
+  }
+
   function hide() {
     var elapsed = Date.now() - splashStartAt;
     if (elapsed < minVisibleMs) {
@@ -495,7 +548,7 @@
 
     // Safety net: ensure exit even in constrained webviews
     setTimeout(function() {
-      if (splash && !splash.classList.contains('hide')) hide();
+      if (splash && !splash.classList.contains('hide')) startFinale();
     }, constrainedSplash ? 7000 : 8000);
 
     // Hard fail-safe in case of runtime errors or missing APIs
