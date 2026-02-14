@@ -536,13 +536,14 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             >
               Visit Store
             </Link>
-            <a
-              href="#games-iframe"
+            <Link
+              href="/games"
+              prefetch={true}
               className="group inline-flex items-center gap-2 rounded-full border-2 border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.06em] text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10"
             >
               <Play className="w-4 h-4 transition-transform group-hover:scale-110" />
               Browse Games
-            </a>
+            </Link>
           </div>
 
           <div className="mt-10 flex flex-wrap gap-2">
