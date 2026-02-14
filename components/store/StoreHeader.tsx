@@ -577,6 +577,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     navigateWithFallback(target);
   }, [navigateWithFallback, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen, setSiteSearchOpen]);
 
+  const navigateToHome = useCallback(() => {
+    setMobileMenuOpen(false);
+    setDesktopMenuOpen(false);
+    setManualDropdownOpen(false);
+    setSiteSearchOpen(false);
+    if (typeof window !== 'undefined') {
+      window.location.assign('/');
+      return;
+    }
+    navigateWithFallback('/');
+  }, [navigateWithFallback, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen, setSiteSearchOpen]);
+
   const desktopLinks = useMemo(() => {
     const links = [
       { label: 'Games', onClick: navigateToGames, variant: 'link' as const },
@@ -755,6 +767,11 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       return;
     }
     
+    if (href === '/') {
+      navigateToHome();
+      return;
+    }
+
     navigateWithFallback(href);
     // Only scroll to products grid for store category links
     if (href.startsWith('/store')) {
@@ -765,7 +782,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         }
       }, 100);
     }
-  }, [navigateWithFallback, startPagemodeLogin, navigateToGames, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
+  }, [navigateWithFallback, startPagemodeLogin, navigateToGames, navigateToHome, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
 
 
   const handleOpenMobileMenu = useCallback(() => {
@@ -790,8 +807,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
   const handleHomeClick = useCallback(() => {
     SoundEffects.click();
-    navigateWithFallback('/');
-  }, [navigateWithFallback]);
+    navigateToHome();
+  }, [navigateToHome]);
 
   const handleThemeButtonClick = useCallback(() => {
     SoundEffects.click();
@@ -801,8 +818,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const handleHeroModeChange = useCallback((mode: HeroMode) => {
     setHeroMode(mode);
     const target = mode === 'design' ? '/design' : mode === 'trader' ? '/' : '/store';
+    if (target === '/') {
+      navigateToHome();
+      return;
+    }
     navigateWithFallback(target);
-  }, [navigateWithFallback, setHeroMode]);
+  }, [navigateToHome, navigateWithFallback, setHeroMode]);
 
   const mobileMenuContent = (
     <LazyAnimatePresence>
@@ -946,14 +967,17 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   >
                     FAQ
                   </button>
-                  <Link
+                  <a
                     href="/"
-                    onClick={handleCloseMobileMenu}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigateToHome();
+                    }}
                     className="block py-1.5 text-sm"
                     style={{ color: 'rgba(0,0,0,0.85)' }}
                   >
                     Back to Home
-                  </Link>
+                  </a>
                 </div>
               </details>
             </div>
@@ -1355,14 +1379,17 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     Sign In
                   </button>
                 )}
-                <Link
+                <a
                   href="/"
-                  onClick={() => setDesktopMenuOpen(false)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigateToHome();
+                  }}
                   className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded"
                   style={{ color: '#000000' }}
                 >
                   Back to Home
-                </Link>
+                </a>
               </div>
             </div>
 
