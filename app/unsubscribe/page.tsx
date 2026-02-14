@@ -413,7 +413,7 @@ ktop                 <div className="absolute inset-0 bg-linear-to-br from-white
             <div className="text-center py-6">
               <XCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-white text-lg font-medium mb-2">Email Not Found</h3>
-              <p className="text-gray-400 mb-4">We couldn&apos;t find a subscription for this email address.</p>
+              <p className="text-gray-400 mb-4">We couldn't find a subscription for this email address.</p>
               <Link href="/store">
                 <motion.button
                   whileHover={{ scale: 1.02 }}

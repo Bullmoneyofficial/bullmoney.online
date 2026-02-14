@@ -483,7 +483,7 @@ export function SupportDrawer() {
                         <DiscordIcon className="w-4 h-4" style={{ color: 'rgba(0,0,0,0.5)' }} />
                         <div className="flex-1 min-w-0 text-left">
                           <p className="text-[13px] font-medium" style={{ color: '#1d1d1f' }}>Open Discord Widget</p>
-                          <p className="text-[10px]" style={{ color: 'rgba(0,0,0,0.3)' }}>See who&apos;s online & join</p>
+                          <p className="text-[10px]" style={{ color: 'rgba(0,0,0,0.3)' }}>See who's online & join</p>
                         </div>
                         <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(52,199,89,0.1)', color: 'rgba(52,199,89,0.7)', border: '1px solid rgba(52,199,89,0.15)' }}>LIVE</span>
                       </Row>
@@ -572,7 +572,7 @@ export function SupportDrawer() {
                       </div>
                     </div>
                     <p className="text-[10px] text-center leading-relaxed" style={{ color: 'rgba(0,0,0,0.25)' }}>
-                      See who&apos;s online &middot; Join to open a support ticket<br />Average reply: ~1-6 hours
+                      See who's online &middot; Join to open a support ticket<br />Average reply: ~1-6 hours
                     </p>
                   </motion.div>
                 )}

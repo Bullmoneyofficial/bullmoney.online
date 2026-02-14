@@ -79,7 +79,7 @@ export default function CryptoGuideMobile() {
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-white">How to Pay with Crypto</h1>
-                <p className="text-white/50 text-sm">A complete beginner&apos;s guide</p>
+                <p className="text-white/50 text-sm">A complete beginner's guide</p>
               </div>
             </div>
 
@@ -158,7 +158,7 @@ export default function CryptoGuideMobile() {
               />
             </div>
 
-            <p className="text-white/70 leading-relaxed">Here&apos;s what real crypto addresses look like:</p>
+            <p className="text-white/70 leading-relaxed">Here's what real crypto addresses look like:</p>
 
             <div className="space-y-2">
               <div className="p-3 rounded-lg bg-white/5 border border-white/10">
@@ -189,7 +189,7 @@ export default function CryptoGuideMobile() {
 
             <p className="text-white/70 leading-relaxed">
               Think of crypto networks like <strong className="text-white">different train systems in different countries</strong>.
-              A train ticket for the London Underground won&apos;t work on the New York Subway.
+              A train ticket for the London Underground won't work on the New York Subway.
             </p>
 
             <h4 className="text-white font-semibold mt-4">Here are the networks we accept:</h4>
@@ -227,7 +227,7 @@ export default function CryptoGuideMobile() {
         <Accordion title="📤 How to Send Crypto (Step-by-Step)">
           <div className="space-y-6">
             <p className="text-white/70 leading-relaxed">
-              Once you have crypto in your wallet or exchange, here&apos;s how to send it to us:
+              Once you have crypto in your wallet or exchange, here's how to send it to us:
             </p>
 
             <Step number={1} title="Pick the coin you want to pay with">
@@ -324,7 +324,7 @@ export default function CryptoGuideMobile() {
             </Step>
 
             <Step number={3} title="Click 'Submit Payment'">
-              <p>Hit the button. We&apos;ll verify your transaction and process your order!</p>
+              <p>Hit the button. We'll verify your transaction and process your order!</p>
             </Step>
           </div>
         </Accordion>
@@ -410,7 +410,7 @@ export default function CryptoGuideMobile() {
             Go to Store & Pay with Crypto
           </Link>
           <p className="text-white/30 text-xs mt-3">
-            Questions? Contact us and we&apos;ll help you out.
+            Questions? Contact us and we'll help you out.
           </p>
         </div>
       </div>

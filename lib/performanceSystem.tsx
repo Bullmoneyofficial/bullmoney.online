@@ -722,12 +722,38 @@ export const PerformanceProvider = memo(({ children, showFPS = false }: Performa
         }
         
         html.desktop-optimized::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.4);
+          background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.25) 0%,
+            rgba(255, 255, 255, 0.55) 45%,
+            rgba(255, 255, 255, 0.3) 100%
+          );
+          background-size: 100% 200%;
           border-radius: 4px;
+          transition: background-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+          animation: bm-scrollbar-glow 3.2s ease-in-out infinite;
         }
         
         html.desktop-optimized::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.6);
+        }
+
+        html.desktop-optimized::-webkit-scrollbar-thumb:active {
+          background: rgba(255, 255, 255, 0.85);
+          box-shadow: 0 0 12px rgba(255, 255, 255, 0.65);
+          filter: brightness(1.15);
+        }
+      }
+
+      @keyframes bm-scrollbar-glow {
+        0% {
+          background-position: 50% 0%;
+        }
+        50% {
+          background-position: 50% 100%;
+        }
+        100% {
+          background-position: 50% 0%;
         }
       }
       

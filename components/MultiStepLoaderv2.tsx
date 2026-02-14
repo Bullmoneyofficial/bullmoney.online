@@ -1840,7 +1840,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.2, repeat: Infinity }}>
                           <Zap className="w-4 h-4" />
                         </motion.div>
-                        <span className="flex items-center gap-1">Don&apos;t let go! <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.5, repeat: Infinity }}><Diamond className="w-4 h-4 text-white" /></motion.span></span>
+                        <span className="flex items-center gap-1">Don't let go! <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.5, repeat: Infinity }}><Diamond className="w-4 h-4 text-white" /></motion.span></span>
                       </motion.div>
                     ) : null}
                   </AnimatePresence>

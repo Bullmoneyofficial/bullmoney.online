@@ -330,7 +330,7 @@ export function MusicEmbedModal({
                   )}
 
                   <p className="text-xs sm:text-sm text-white/40 leading-relaxed">
-                    Playback via Spotify&apos;s official embed. Premium may be required for full playback.
+                    Playback via Spotify's official embed. Premium may be required for full playback.
                   </p>
                 </div>
               )}
@@ -387,7 +387,7 @@ export function MusicEmbedModal({
                   )}
 
                   <p className="text-xs sm:text-sm text-white/40 leading-relaxed">
-                    Playback via Apple Music&apos;s official embed. Sign in via the embed or open Apple Music to connect your account. Subscription may be required for full playback.
+                    Playback via Apple Music's official embed. Sign in via the embed or open Apple Music to connect your account. Subscription may be required for full playback.
                   </p>
                 </div>
               )}
@@ -447,7 +447,7 @@ export function MusicEmbedModal({
                   )}
 
                   <p className="text-xs sm:text-sm text-white/40 leading-relaxed">
-                    Playback via YouTube&apos;s official embed with autoplay and loop enabled. Sign in via YouTube for personalized recommendations. Music continues seamlessly in the background.
+                    Playback via YouTube's official embed with autoplay and loop enabled. Sign in via YouTube for personalized recommendations. Music continues seamlessly in the background.
                   </p>
                 </div>
               )}

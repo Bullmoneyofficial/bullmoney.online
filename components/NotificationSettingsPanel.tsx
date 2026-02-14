@@ -414,7 +414,7 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
           onClick={onClose}
           className="w-full py-1.5 text-[9px] text-zinc-500 hover:text-zinc-400 transition-colors"
         >
-          I&apos;ll do this later
+          I'll do this later
         </button>
       </div>
     </motion.div>

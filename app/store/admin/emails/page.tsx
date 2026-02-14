@@ -485,7 +485,7 @@ export default function AdminEmailTemplates() {
                 </button>
               </div>
               <p className="text-sm text-white/50 mb-4">
-                Send a preview of &apo;{selectedTemplate?.name}&apos; with sample data filled in.
+                Send a preview of '{selectedTemplate?.name}' with sample data filled in.
               </p>
               <input
                 type="email"

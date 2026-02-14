@@ -434,7 +434,7 @@ export function Features() {
               />
             </div>
             <p className="text-white/70 text-sm leading-relaxed">
-              Prove your skills. Get funded by the world&apos;s top prop firm.
+              Prove your skills. Get funded by the world's top prop firm.
             </p>
           </div>
           <a
@@ -679,7 +679,7 @@ export function Features() {
             </div>
 
             <p className="text-white/70 text-sm md:text-lg leading-relaxed">
-              Prove your skills. Get funded by the world&apos;s top prop firm.
+              Prove your skills. Get funded by the world's top prop firm.
             </p>
           </div>
 
@@ -720,7 +720,7 @@ export function Features() {
             </div>
 
             <p className="text-white/70 text-sm md:text-lg leading-relaxed mb-4 md:mb-6">
-              Ultra-low spreads. Our traders&apos; go-to broker. Code: <span className="font-mono font-semibold text-white">BULLMONEY</span>
+              Ultra-low spreads. Our traders' go-to broker. Code: <span className="font-mono font-semibold text-white">BULLMONEY</span>
             </p>
           </div>
 

@@ -141,7 +141,7 @@ export default function RecruitPage() {
                         BULLMONEY VIP
                       </h2>
                       <p className="mt-3 text-neutral-400 text-sm sm:text-base">
-                        Join us for exclusive trading tips, live analysis, and real-time market updates. Don&apos;t miss out!
+                        Join us for exclusive trading tips, live analysis, and real-time market updates. Don't miss out!
                       </p>
                     </div>
 

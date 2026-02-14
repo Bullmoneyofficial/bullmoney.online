@@ -193,7 +193,7 @@ export function CartDrawer() {
                   </div>
                   <h3 className="text-lg font-medium mb-2">Your cart is empty</h3>
                   <p className="text-sm mb-6 max-w-[240px]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                    Looks like you haven&apos;t added anything yet. Explore our collection!
+                    Looks like you haven't added anything yet. Explore our collection!
                   </p>
                   <button
                     onClick={handleContinueShopping}

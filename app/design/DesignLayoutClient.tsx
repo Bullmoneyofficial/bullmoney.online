@@ -24,41 +24,30 @@ export function DesignLayoutClient({ children }: { children: React.ReactNode }) 
     window.scrollTo(0, 0);
 
     // Guard against focus-scroll from Fabric.js canvas init.
-    // Only blocks non-user-initiated scroll jumps (no touch/wheel active).
-    let userScrolling = false;
-    let guardActive = true;
+    // Only corrects the initial jump if the user has not interacted yet.
+    let userInteracted = false;
+    const markInteracted = () => { userInteracted = true; };
+    window.addEventListener('pointerdown', markInteracted, { passive: true });
+    window.addEventListener('touchstart', markInteracted, { passive: true });
+    window.addEventListener('wheel', markInteracted, { passive: true });
+    window.addEventListener('keydown', markInteracted, { passive: true });
 
-    const onTouchStart = () => { userScrolling = true; };
-    const onTouchEnd = () => { setTimeout(() => { userScrolling = false; }, 300); };
-    const onWheel = () => { userScrolling = true; setTimeout(() => { userScrolling = false; }, 300); };
-
-    const scrollGuard = () => {
-      if (guardActive && !userScrolling && window.scrollY > 80) {
+    const guardOnce = () => {
+      if (!userInteracted && window.scrollY > 80) {
         window.scrollTo(0, 0);
       }
     };
 
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
-    window.addEventListener('wheel', onWheel, { passive: true });
-    window.addEventListener('scroll', scrollGuard, { passive: true });
-
-    // Disable guard after 4 seconds — canvas should be done initializing by then
-    const timer = setTimeout(() => {
-      guardActive = false;
-      window.removeEventListener('scroll', scrollGuard);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('wheel', onWheel);
-    }, 4000);
+    const timer = setTimeout(guardOnce, 250);
+    const timer2 = setTimeout(guardOnce, 900);
 
     return () => {
-      guardActive = false;
       clearTimeout(timer);
-      window.removeEventListener('scroll', scrollGuard);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('wheel', onWheel);
+      clearTimeout(timer2);
+      window.removeEventListener('pointerdown', markInteracted);
+      window.removeEventListener('touchstart', markInteracted);
+      window.removeEventListener('wheel', markInteracted);
+      window.removeEventListener('keydown', markInteracted);
       window.history.scrollRestoration = prev;
     };
   }, []);

@@ -1790,7 +1790,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                 <div className="mt-6 text-center border-t border-black/[0.06] pt-6"> 
                   <button onClick={toggleViewMode} className="text-sm transition-colors cursor-target text-black/50 hover:text-black/70 font-normal">
-                    Don&apos;t have an account? <span className="text-black">Create one</span>
+                    Don't have an account? <span className="text-black">Create one</span>
                   </button>
                 </div>
              </div>
@@ -1999,7 +1999,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   >
                     <div className="space-y-3 md:space-y-4 pt-2">
                       <div className="flex items-center justify-between">
-                          <p className="text-black/60 text-sm">After opening your account, you&apos;ll receive an email with your trading ID (MT5 ID).</p>
+                          <p className="text-black/60 text-sm">After opening your account, you'll receive an email with your trading ID (MT5 ID).</p>
                       </div>
                       
                       <div className="relative group">
@@ -2069,7 +2069,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             style={{ color: 'rgb(0, 0, 0)' }}
                           />
                         </div>
-                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">We&apos;ll send your login details here.</p>
+                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">We'll send your login details here.</p>
                       </div>
 
                       <div>
@@ -2107,7 +2107,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             style={{ color: 'rgb(0, 0, 0)' }}
                           />
                         </div>
-                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">Leave blank if you don&apos;t have one.</p>
+                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">Leave blank if you don't have one.</p>
                       </div>
 
                         <div

@@ -2,10 +2,9 @@
   background: #000000;
   min-height: 100vh;
   /* CRITICAL: Ensure scrolling works on all devices */
-  overflow-y: auto !important;
+  overflow-y: visible !important;
   overflow-x: hidden !important;
   touch-action: pan-y pan-x !important;
-  -webkit-overflow-scrolling: touch !important;
   position: relative !important;
 }
 
@@ -14,10 +13,9 @@
   .design-page-root,
   html[data-design-page],
   body[data-design-page] {
-    overflow-y: auto !important;
+    overflow-y: visible !important;
     overflow-x: hidden !important;
     touch-action: pan-y pan-x !important;
-    -webkit-overflow-scrolling: touch !important;
     transform: none !important;
     height: auto !important;
     position: relative !important;
@@ -31,9 +29,8 @@ html.inapp-browser[data-design-page],
 html.instagram-browser[data-design-page],
 html.facebook-browser[data-design-page],
 html.google-browser[data-design-page] {
-  overflow-y: auto !important;
+  overflow-y: visible !important;
   touch-action: pan-y pan-x !important;
-  -webkit-overflow-scrolling: touch !important;
   transform: none !important;
 }
 

@@ -404,7 +404,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             <Check className="w-6 h-6 text-black/70" strokeWidth={2} />
           </motion.div>
           <h3 className="text-[22px] font-semibold text-black text-center tracking-tight mb-1.5">All Set</h3>
-          <p className="text-[13px] text-black/50 text-center tracking-wide font-normal">You&apos;ll receive instant trade alerts</p>
+          <p className="text-[13px] text-black/50 text-center tracking-wide font-normal">You'll receive instant trade alerts</p>
         </motion.div>
       )}
 

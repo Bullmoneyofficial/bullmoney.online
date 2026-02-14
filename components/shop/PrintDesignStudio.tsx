@@ -1237,7 +1237,7 @@ function ArtDetailPage({
 
             {/* What's included */}
             <div className="mb-6 bg-white rounded-xl border border-black/5 p-4 space-y-2.5">
-              <p className="text-[10px] uppercase tracking-widest text-black/40 font-semibold mb-1">What&apos;s Included</p>
+              <p className="text-[10px] uppercase tracking-widest text-black/40 font-semibold mb-1">What's Included</p>
               <div className="flex items-center gap-3 text-xs text-black/60">
                 <Check className="h-4 w-4 text-green-600 shrink-0" />All file formats ({art.fileFormats.join(', ')})
               </div>

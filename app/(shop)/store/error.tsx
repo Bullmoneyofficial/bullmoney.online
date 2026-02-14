@@ -185,7 +185,7 @@ export default function StoreError({
           transition={{ delay: 0.5 }}
           className="text-gray-400 text-lg mb-8 leading-relaxed"
         >
-          Something went wrong while loading the store. Don&apos;t worry, your cart is safe.
+          Something went wrong while loading the store. Don't worry, your cart is safe.
         </motion.p>
 
         {/* Action Buttons */}

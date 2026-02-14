@@ -213,7 +213,7 @@ export default function SuccessPage() {
             <div>
               <h3 className="text-white font-semibold mb-1">Confirmation Email</h3>
               <p className="text-white/60 text-sm">
-                We&apos;ve sent a confirmation email with your order details and receipt.
+                We've sent a confirmation email with your order details and receipt.
               </p>
             </div>
           </div>

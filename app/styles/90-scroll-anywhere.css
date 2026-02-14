@@ -18,6 +18,26 @@ html[data-app-page] body * {
   touch-action: pan-y pan-x !important;
 }
 
+/* Design page: allow scroll-anywhere while preserving interactive controls */
+html[data-design-page] .design-page-root,
+html[data-design-page] .design-content-wrap,
+html[data-design-page] .design-root,
+html[data-design-page] .design-sections {
+  touch-action: pan-y pan-x !important;
+  pointer-events: auto !important;
+}
+
+html[data-design-page] a,
+html[data-design-page] button,
+html[data-design-page] [role="button"],
+html[data-design-page] input,
+html[data-design-page] select,
+html[data-design-page] textarea,
+html[data-design-page] [contenteditable="true"] {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
 /* Game iframes must handle ALL touch gestures internally (tap, swipe, pinch etc.)
    Specificity must beat html.store-active body * (0,1,2) — prefix with html.store-active
    ALSO must break the ancestor touch-action chain (browsers intersect ancestor values)
@@ -93,6 +113,18 @@ html[data-app-page] canvas,
 html[data-app-page] spline-viewer {
   pointer-events: none !important;
   touch-action: pan-y pan-x !important;
+}
+
+/* Design Studio must capture drag/touch interactions (do not disable canvas events) */
+html[data-design-page] .studio-canvas-wrap,
+html[data-design-page] .studio-canvas-stage,
+html[data-design-page] .studio-canvas-el,
+html[data-design-page] .studio-canvas-wrap canvas,
+html[data-design-page] .studio-fallback-wrapper,
+html[data-design-page] .studio-fallback-wrapper canvas,
+html[data-design-page] .studio-fallback-wrapper [role="application"] {
+  pointer-events: auto !important;
+  touch-action: none !important;
 }
 
 /* Hero section elements must NEVER block scroll on ANY device or viewport */

@@ -97,7 +97,7 @@ export const BoredPopup = React.memo(function BoredPopup({
               <IconZzz className="w-6 h-6 text-sky-200" />
             </motion.div>
             <div>
-              <p className="text-[11px] font-bold text-white">I&apos;m bored... catch me!</p>
+              <p className="text-[11px] font-bold text-white">I'm bored... catch me!</p>
               <p className="text-[9px] text-sky-100/80">This is a mini-game! Chase me around</p>
             </div>
             <button

@@ -201,7 +201,7 @@ function UnsubscribeContent() {
                   </motion.div>
                   <h1 className="text-2xl font-bold text-white mb-2">Unsubscribe</h1>
                   <p className="text-gray-400 text-sm">
-                    We&apos;re sorry to see you go. Tell us why you&apos;re leaving?
+                    We're sorry to see you go. Tell us why you're leaving?
                   </p>
                 </div>
 
@@ -304,9 +304,9 @@ function UnsubscribeContent() {
                 >
                   <CheckCircle className="w-10 h-10 text-black" />
                 </motion.div>
-                <h2 className="text-2xl font-bold text-white mb-3">You&apos;ve been unsubscribed</h2>
+                <h2 className="text-2xl font-bold text-white mb-3">You've been unsubscribed</h2>
                 <p className="text-gray-400 mb-8">
-                  You won&apos;t receive any more marketing emails from us. 
+                  You won't receive any more marketing emails from us. 
                   You can always re-subscribe if you change your mind.
                 </p>
                 

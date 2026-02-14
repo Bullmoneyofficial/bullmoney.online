@@ -644,7 +644,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             </div>
           </div>
           
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You&apos;re In 🚀</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You're In 🚀</h2>
           <p className="text-white/70 mb-8 text-sm md:text-base">
             Your free BullMoney access is now active.<br/>
           </p>
@@ -816,7 +816,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                 <div className="mt-6 text-center border-t border-white/20 pt-4">
                   <button onClick={toggleViewMode} className="text-sm text-white/60 hover:text-white transition-colors cursor-target">
-                    Don&apos;t have a password? <span className="underline text-white">Register Now</span>
+                    Don't have a password? <span className="underline text-white">Register Now</span>
                   </button>
                 </div>
              </div>
@@ -1086,7 +1086,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className="w-full bg-black/60 border-2 border-white/30 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-white/60 focus:shadow-[0_0_15px_rgba(255, 255, 255,0.3)] transition-all cursor-target text-base"
                           />
                         </div>
-                        <p className="text-[10px] text-white/40 mt-1 ml-1">We&apos;ll send your login details here.</p>
+                        <p className="text-[10px] text-white/40 mt-1 ml-1">We'll send your login details here.</p>
                       </div>
 
                       <div>
@@ -1124,7 +1124,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className="w-full bg-black/60 border-2 border-white/30 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-white/60 focus:shadow-[0_0_15px_rgba(255, 255, 255,0.3)] transition-all cursor-target text-base"
                           />
                         </div>
-                        <p className="text-[10px] text-white/40 mt-1 ml-1">Leave blank if you don&apos;t have one.</p>
+                        <p className="text-[10px] text-white/40 mt-1 ml-1">Leave blank if you don't have one.</p>
                       </div>
 
                         <div 

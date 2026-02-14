@@ -224,7 +224,7 @@ function ResubscribeContent() {
                   </motion.div>
                   <h1 className="text-2xl font-bold text-white mb-2">Welcome Back!</h1>
                   <p className="text-gray-400 text-sm">
-                    We missed you! Choose what you&apos;d like to hear about.
+                    We missed you! Choose what you'd like to hear about.
                   </p>
                 </div>
 
@@ -342,7 +342,7 @@ function ResubscribeContent() {
                   <Loader2 className="w-16 h-16 text-white/60" />
                 </motion.div>
                 <h2 className="text-xl font-bold text-white mb-2">Setting up your preferences...</h2>
-                <p className="text-gray-400">This won&apos;t take long</p>
+                <p className="text-gray-400">This won't take long</p>
               </motion.div>
             )}
 
@@ -362,9 +362,9 @@ function ResubscribeContent() {
                 >
                   <CheckCircle className="w-10 h-10 text-black" />
                 </motion.div>
-                <h2 className="text-2xl font-bold text-white mb-3">You&apos;re back!</h2>
+                <h2 className="text-2xl font-bold text-white mb-3">You're back!</h2>
                 <p className="text-gray-400 mb-8">
-                  We&apos;re thrilled to have you back. You&apos;ll start receiving emails based on your preferences.
+                  We're thrilled to have you back. You'll start receiving emails based on your preferences.
                 </p>
                 
                 <Link href="/store" className="block">

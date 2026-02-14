@@ -762,12 +762,20 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
   const handleHeroModeChange = useCallback((mode: HeroMode) => {
     setHeroMode(mode);
-    if (mode === 'design') {
-      router.push('/design');
-    } else if (mode === 'trader') {
-      router.push('/'); // Redirect to app page (homepage)
-    } else if (mode === 'store') {
-      router.push('/store'); // Redirect to store page
+    const target = mode === 'design' ? '/design' : mode === 'trader' ? '/' : '/store';
+    router.push(target);
+
+    // Fallback: if client-side navigation stalls, force a full reload to target.
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        try {
+          if (window.location.pathname !== target) {
+            window.location.assign(target);
+          }
+        } catch {
+          // Ignore navigation fallback failures
+        }
+      }, 600);
     }
   }, [router, setHeroMode]);
 

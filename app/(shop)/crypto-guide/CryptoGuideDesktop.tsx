@@ -183,7 +183,7 @@ export default function CryptoGuideDesktop() {
             Go to Store & Pay with Crypto
           </Link>
           <p className="text-white/30 text-xs mt-3">
-            Questions? Contact us and we&apos;ll help you out.
+            Questions? Contact us and we'll help you out.
           </p>
         </div>
       </div>

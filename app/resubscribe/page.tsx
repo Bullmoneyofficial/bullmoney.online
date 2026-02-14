@@ -297,7 +297,7 @@ export default function ResubscribeEmailsPage() {
                     <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                       <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
                         <Gift className="w-5 h-5" />
-                        What You&apos;ll Get Back
+                        What You'll Get Back
                       </h3>
                       
                       <div className="grid grid-cols-1 gap-3">
@@ -471,7 +471,7 @@ export default function ResubscribeEmailsPage() {
                   Welcome Back to Bullmoney!
                 </h3>
                 <p className="text-gray-300 mb-2">
-                  You&apos;re all set! We&apos;ve sent you a special welcome back email.
+                  You're all set! We've sent you a special welcome back email.
                 </p>
                 <p className="text-gray-500 text-sm mb-6 flex items-center justify-center gap-1">
                   <Gift className="w-4 h-4" />
@@ -511,7 +511,7 @@ export default function ResubscribeEmailsPage() {
               >
                 <XCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-white text-lg font-medium mb-2">Email Not Found</h3>
-                <p className="text-gray-400 mb-4">This email wasn&apos;t in our system. Want to join fresh?</p>
+                <p className="text-gray-400 mb-4">This email wasn't in our system. Want to join fresh?</p>
                 <Link href="/store">
                   <motion.button
                     whileHover={{ scale: 1.02 }}

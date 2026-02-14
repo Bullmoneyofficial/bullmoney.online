@@ -169,7 +169,7 @@ export function Pricing() {
 
         <div className="mt-3 flex flex-col items-center justify-center gap-3">
           <p className="text-bmPurple text-sm md:text-base text-center mt-3 max-w-2xl mx-auto">
-  Can&apos;t afford VIP yet? You can still plug into BullMoney Free Access with limited features and benifits when you open an account.
+  Can't afford VIP yet? You can still plug into BullMoney Free Access with limited features and benifits when you open an account.
 </p>
 
         </div>
@@ -287,7 +287,7 @@ export function Pricing() {
     <span className="font-semibold text-white">
       full indicators, Live stream lessons, and more.
     </span>{" "}
-    Free Access is a lighter version built for traders who aren&apos;t ready for VIP yet.
+    Free Access is a lighter version built for traders who aren't ready for VIP yet.
   </p>
 </div>
 

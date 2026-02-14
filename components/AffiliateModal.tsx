@@ -1464,7 +1464,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
           Verify Your Setup
         </h2>
         <p className="text-[15px] mb-6" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
-          Please confirm you&apos;ve completed the broker registration properly.
+          Please confirm you've completed the broker registration properly.
         </p>
         
         {/* Critical Reminder */}
@@ -1508,14 +1508,14 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
             style={{ background: 'rgba(180, 120, 0, 0.08)' }}
           >
             <p className="text-sm" style={{ color: 'rgba(120, 80, 0, 0.8)' }}>
-              If your clients don&apos;t use your broker code when signing up, you will not receive any commission from their trades.
+              If your clients don't use your broker code when signing up, you will not receive any commission from their trades.
             </p>
           </div>
         </CollapsibleSection>
         
         {/* Confirm Button */}
         <NeonButton onClick={handleNext} variant="primary" size="large" className="w-full">
-          Yes, I&apos;ve Completed All Steps
+          Yes, I've Completed All Steps
           <ArrowRight className="w-4 h-4 ml-2" />
         </NeonButton>
       </NeonCard>
@@ -1623,7 +1623,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
           className="text-xs mt-4 text-center"
           style={{ color: 'rgba(0, 0, 0, 0.35)' }}
         >
-          You&apos;ll enter your Skrill email in your dashboard later
+          You'll enter your Skrill email in your dashboard later
         </p>
       </NeonCard>
       
@@ -1849,7 +1849,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
                 icon={User}
               />
               <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>
-                Leave blank if you don&apos;t have one.
+                Leave blank if you don't have one.
               </p>
             </div>
           )}
@@ -1979,7 +1979,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         </div>
         
         <h2 className="text-2xl sm:text-3xl font-semibold mb-3 tracking-tight" style={{ color: '#000000' }}>
-          You&apos;re In!
+          You're In!
         </h2>
         <p className="text-[15px] mb-8" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
           Your affiliate account is now active. Start recruiting traders and earning commissions.

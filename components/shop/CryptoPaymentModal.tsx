@@ -386,7 +386,7 @@ export function CryptoPaymentModal({
                         All transactions are verified on-chain. Your payment will be confirmed within minutes after network confirmation.
                       </p>
                       <a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline mt-1 inline-block">
-                        New to crypto? Read our beginner&apos;s guide →
+                        New to crypto? Read our beginner's guide →
                       </a>
                     </div>
                   </div>
@@ -596,7 +596,7 @@ export function CryptoPaymentModal({
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20"
                     />
                     <p className="text-xs text-white/30">
-                      You&apos;ll receive your invoice and payment status updates here.
+                      You'll receive your invoice and payment status updates here.
                     </p>
                   </div>
 
@@ -613,7 +613,7 @@ export function CryptoPaymentModal({
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 font-mono"
                     />
                     <p className="text-xs text-white/30">
-                      Find this in your wallet&apos;s transaction history after sending.
+                      Find this in your wallet's transaction history after sending.
                       {' '}<a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Need help? Read our full crypto guide →</a>
                     </p>
                   </div>
@@ -663,8 +663,8 @@ export function CryptoPaymentModal({
                   <div>
                     <h3 className="text-2xl font-bold text-white">Payment Submitted!</h3>
                     <p className="text-white/60 mt-2 text-sm max-w-sm mx-auto">
-                      We&apos;re verifying your transaction on the {selectedWallet?.network || 'blockchain'}. 
-                      You&apos;ll receive a confirmation email once verified.
+                      We're verifying your transaction on the {selectedWallet?.network || 'blockchain'}. 
+                      You'll receive a confirmation email once verified.
                     </p>
                   </div>
 
@@ -750,7 +750,7 @@ export function CryptoPaymentModal({
                   className="space-y-4"
                 >
                   <p className="text-white/60 text-sm mb-2">
-                    Don&apos;t have crypto? Buy it instantly with your card, then send it to complete your purchase.
+                    Don't have crypto? Buy it instantly with your card, then send it to complete your purchase.
                   </p>
 
                   {ONRAMP_PROVIDERS.map((provider) => (

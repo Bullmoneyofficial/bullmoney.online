@@ -204,7 +204,7 @@ export function ShippingReturnsModal({ isOpen, onClose }: ShippingReturnsModalPr
                   </div>
 
                   <div className="space-y-3">
-                    <h3 className="text-white font-medium">What&apos;s Covered</h3>
+                    <h3 className="text-white font-medium">What's Covered</h3>
                     <ul className="text-sm text-white/60 space-y-2 list-disc pl-5">
                       <li>Manufacturing defects in materials or workmanship</li>
                       <li>Seam failures under normal usage</li>
@@ -215,7 +215,7 @@ export function ShippingReturnsModal({ isOpen, onClose }: ShippingReturnsModalPr
                   </div>
 
                   <div className="space-y-3">
-                    <h3 className="text-white font-medium">What&apos;s Not Covered</h3>
+                    <h3 className="text-white font-medium">What's Not Covered</h3>
                     <ul className="text-sm text-white/60 space-y-2 list-disc pl-5">
                       <li>Normal wear and tear, fading, or pilling</li>
                       <li>Damage caused by improper care, washing, or storage</li>
@@ -229,7 +229,7 @@ export function ShippingReturnsModal({ isOpen, onClose }: ShippingReturnsModalPr
                     <p>
                       Bullmoney provides this warranty in addition to statutory consumer rights applicable in your jurisdiction.
                       This warranty does not affect your legal rights. The warranty is non-transferable and applies only to the
-                      original purchaser. Bullmoney&apos;s liability under this warranty is limited to the purchase price of the product.
+                      original purchaser. Bullmoney's liability under this warranty is limited to the purchase price of the product.
                       All product descriptions and specifications are provided for informational purposes. While we strive for accuracy,
                       colors may appear differently on screens than in person. By making a purchase, you agree to these terms.
                     </p>

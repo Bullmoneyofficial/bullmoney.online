@@ -855,7 +855,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             </div>
           </div>
 
-          <h2 className="text-2xl md:text-3xl font-bold text-[#1d1d1f] mb-2 tracking-tight">You&apos;re In</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-[#1d1d1f] mb-2 tracking-tight">You're In</h2>
           <p className="text-[#86868b] mb-10 text-sm md:text-base">
             Your free BullMoney access is now active.
           </p>
@@ -987,7 +987,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
               <div className="mt-8 text-center pt-6 border-t border-[#e5e5ea]">
                 <button onClick={toggleViewMode} className="text-sm text-[#86868b] hover:text-[#1d1d1f] transition-colors cursor-target">
-                  Don&apos;t have an account? <span className="font-semibold text-[#1d1d1f]">Register</span>
+                  Don't have an account? <span className="font-semibold text-[#1d1d1f]">Register</span>
                 </button>
               </div>
             </div>
@@ -1179,7 +1179,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   >
                     <div className="space-y-4 pt-1">
                       <p className="text-[#86868b] text-sm leading-relaxed">
-                        After opening your account, you&apos;ll receive an email with your trading ID (MT5 ID).
+                        After opening your account, you'll receive an email with your trading ID (MT5 ID).
                       </p>
 
                       <div className="relative group">
@@ -1246,7 +1246,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-4 py-3.5 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
                           />
                         </div>
-                        <p className="text-[10px] text-[#aeaeb2] mt-1.5 ml-1">We&apos;ll send your login details here.</p>
+                        <p className="text-[10px] text-[#aeaeb2] mt-1.5 ml-1">We'll send your login details here.</p>
                       </div>
 
                       <div>
@@ -1284,7 +1284,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-4 py-3.5 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
                           />
                         </div>
-                        <p className="text-[10px] text-[#aeaeb2] mt-1.5 ml-1">Leave blank if you don&apos;t have one.</p>
+                        <p className="text-[10px] text-[#aeaeb2] mt-1.5 ml-1">Leave blank if you don't have one.</p>
 
                         {referralAttribution.affiliateCode && (
                           <div className="mt-2.5 rounded-xl border border-[#e5e5ea] bg-[#f5f5f7] p-3">

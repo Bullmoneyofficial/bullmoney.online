@@ -709,7 +709,7 @@ export function CryptoCheckoutInline({
                     </div>
                     <div className="flex-1">
                       <h3 className="text-white font-semibold text-sm">
-                        Don&apos;t have crypto?
+                        Don't have crypto?
                       </h3>
                       <p className="text-white/40 text-xs">
                         Buy with card via MoonPay or Paybis
@@ -1212,7 +1212,7 @@ export function CryptoCheckoutInline({
                 )}
                 <p className="text-[10px] text-white/25 flex items-center gap-1">
                   <Lock className="w-3 h-3" />
-                  We&apos;ll send your receipt, invoice, and payment confirmation here
+                  We'll send your receipt, invoice, and payment confirmation here
                 </p>
               </div>
 
@@ -1242,7 +1242,7 @@ export function CryptoCheckoutInline({
                   </p>
                 )}
                 <p className="text-[10px] text-white/25">
-                  Find this in your wallet&apos;s transaction history after
+                  Find this in your wallet's transaction history after
                   sending.
                   {' '}<a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white/60 underline underline-offset-2">Need help? Read our full crypto guide →</a>
                 </p>
@@ -1316,8 +1316,8 @@ export function CryptoCheckoutInline({
                   Payment Submitted!
                 </h3>
                 <p className="text-white/50 mt-2 text-sm max-w-sm mx-auto">
-                  We&apos;re verifying your transaction on the{' '}
-                  {selectedWallet?.network || 'blockchain'}. You&apos;ll receive
+                  We're verifying your transaction on the{' '}
+                  {selectedWallet?.network || 'blockchain'}. You'll receive
                   a confirmation email once verified.
                 </p>
               </div>
@@ -1428,7 +1428,7 @@ export function CryptoCheckoutInline({
               className="space-y-4"
             >
               <p className="text-white/50 text-xs mb-3">
-                Don&apos;t have crypto? Buy instantly with your card, then send
+                Don't have crypto? Buy instantly with your card, then send
                 it to complete your purchase.
               </p>
 

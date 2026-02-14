@@ -218,7 +218,7 @@ export function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps) {
                   <p><strong className="text-white/80">Head:</strong> Wrap tape around the widest part of your head, above ears and eyebrows.</p>
                 </div>
                 <p className="text-xs text-white/40 mt-3">
-                  Tip: If you&apos;re between sizes, we recommend sizing up for a more relaxed fit.
+                  Tip: If you're between sizes, we recommend sizing up for a more relaxed fit.
                   Our apparel uses a &quot;streetwear-cut&quot; which is slightly oversized.
                 </p>
               </div>

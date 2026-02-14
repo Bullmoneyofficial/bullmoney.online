@@ -637,7 +637,7 @@ export default function TradingCourse() {
                 <BookOpen className="w-16 h-16 text-white/50 mx-auto mb-4" style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255,0.3))' }} />
                 <h3 className="text-xl font-bold text-white mb-2">No Course Levels Found</h3>
                 <p className="text-gray-400 mb-4">
-                  The trading course hasn&apos;t been set up yet. Please run the database schema to initialize the course structure.
+                  The trading course hasn't been set up yet. Please run the database schema to initialize the course structure.
                 </p>
                 <div className="bg-black/50 border border-white/20 rounded-lg p-4 text-left">
                   <p className="text-sm text-gray-300 mb-2 font-semibold">To set up the course:</p>
@@ -754,7 +754,7 @@ export default function TradingCourse() {
                   <div className="text-center py-8">
                     <BookOpen className="w-12 h-12 text-white/30 mx-auto mb-3" style={{ filter: 'drop-shadow(0 0 4px rgba(255, 255, 255,0.2))' }} />
                     <p className="text-sm text-gray-400 mb-2">No modules available</p>
-                    <p className="text-xs text-gray-500">This level hasn&apos;t been set up yet. Use the Admin Panel to add modules.</p>
+                    <p className="text-xs text-gray-500">This level hasn't been set up yet. Use the Admin Panel to add modules.</p>
                   </div>
                 ) : (
                 <div className="space-y-1.5 sm:space-y-2">

@@ -656,7 +656,7 @@ export function CheckoutWizard() {
                   )}
 
                   <p className="text-white/40 text-sm mb-8 max-w-md mx-auto">
-                    We&apos;ve sent a confirmation email with your order details and tracking information.
+                    We've sent a confirmation email with your order details and tracking information.
                   </p>
 
                   <Link

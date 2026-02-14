@@ -60,7 +60,7 @@ export function BackInStockButton({ productId, productName, variantName }: BackI
         className="flex items-center gap-2 p-4 bg-green-500/10 border border-green-500/20 rounded-xl"
       >
         <Check className="w-5 h-5 text-green-400" />
-        <span className="text-sm text-green-400">You&apos;ll be notified when back in stock</span>
+        <span className="text-sm text-green-400">You'll be notified when back in stock</span>
       </motion.div>
     );
   }

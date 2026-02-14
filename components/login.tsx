@@ -124,7 +124,7 @@ export function Login() {
 
           <div className="mt-6 text-center border-t border-white/5 pt-4">
             <Link href="/register/pagemode" className="text-sm text-slate-500 hover:text-white transition-colors">
-              Don&apos;t have a password? <span className="underline">Register Now</span>
+              Don't have a password? <span className="underline">Register Now</span>
             </Link>
           </div>
         </div>
