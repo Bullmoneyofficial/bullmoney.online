@@ -71,6 +71,8 @@ export type UIComponentType =
   | 'analysisModal'
   | 'liveStreamModal'
   | 'productsModal'
+  | 'courseDrawer'        // Trading Course drawer (CartDrawer-style)
+  | 'socialsDrawer'       // Social (Ultimate Hub community tab) drawer
   | 'servicesModal'
   | 'affiliateModal'
   | 'themeSelectorModal'
@@ -132,6 +134,8 @@ interface UIStateContextType {
   isStoreDropdownMenuOpen: boolean; // Store header manual dropdown (games)
   isSupportDrawerOpen: boolean;    // Support drawer (cart-style side panel)
   isGamesDrawerOpen: boolean;      // Games drawer (cart-style side panel)
+  isCourseDrawerOpen: boolean;     // Trading Course drawer (cart-style side panel)
+  isSocialsDrawerOpen: boolean;    // Social drawer (cart-style side panel)
   isV2Unlocked: boolean;
   devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
   isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
@@ -180,6 +184,8 @@ interface UIStateContextType {
   setStoreDropdownMenuOpen: (open: boolean) => void;
   setSupportDrawerOpen: (open: boolean) => void;
   setGamesDrawerOpen: (open: boolean) => void;
+  setCourseDrawerOpen: (open: boolean) => void;
+  setSocialsDrawerOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
   setDevSkipPageModeAndLoader: (skip: boolean) => void;
   setWelcomeScreenActive: (active: boolean) => void;
@@ -211,6 +217,8 @@ interface UIStateContextType {
   openStoreDropdownMenu: () => void;
   openSupportDrawer: () => void;
   openGamesDrawer: () => void;
+  openCourseDrawer: () => void;
+  openSocialsDrawer: () => void;
   closeNavbarModal: () => void;
 
   // Close all UI components
@@ -269,6 +277,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isStoreDropdownMenuOpen, setIsStoreDropdownMenuOpenState] = useState(false);
   const [isSupportDrawerOpen, setIsSupportDrawerOpenState] = useState(false);
   const [isGamesDrawerOpen, setIsGamesDrawerOpenState] = useState(false);
+  const [isCourseDrawerOpen, setIsCourseDrawerOpenState] = useState(false);
+  const [isSocialsDrawerOpen, setIsSocialsDrawerOpenState] = useState(false);
   const [isV2Unlocked, setIsV2UnlockedState] = useState(
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
   );
@@ -297,7 +307,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen ||
     isAccountManagerModalOpen || isBgPickerModalOpen || isColorPickerModalOpen || isSplinePanelModalOpen ||
     isStoreMobileMenuOpen || isStoreDesktopMenuOpen || isStoreDropdownMenuOpen ||
-    isSupportDrawerOpen || isGamesDrawerOpen;
+    isSupportDrawerOpen || isGamesDrawerOpen || isCourseDrawerOpen || isSocialsDrawerOpen;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isUltimateHubOpen || isAnyModalOpen;
@@ -372,6 +382,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAnalysisModalOpen ? 'analysisModal' :
     isLiveStreamModalOpen ? 'liveStreamModal' :
     isProductsModalOpen ? 'productsModal' :
+    isCourseDrawerOpen ? 'courseDrawer' :
+    isSocialsDrawerOpen ? 'socialsDrawer' :
     isServicesModalOpen ? 'servicesModal' :
     isAffiliateModalOpen ? 'affiliateModal' :
     isThemeSelectorModalOpen ? 'themeSelectorModal' :
@@ -429,6 +441,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'storeDropdownMenu') setIsStoreDropdownMenuOpenState(false);
     if (except !== 'supportDrawer') setIsSupportDrawerOpenState(false);
     if (except !== 'gamesDrawer') setIsGamesDrawerOpenState(false);
+    if (except !== 'courseDrawer') setIsCourseDrawerOpenState(false);
+    if (except !== 'socialsDrawer') setIsSocialsDrawerOpenState(false);
   }, []);
 
   // Closes all modals but preserves floating elements state
@@ -461,6 +475,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsStoreDropdownMenuOpenState(false);
     setIsSupportDrawerOpenState(false);
     setIsGamesDrawerOpenState(false);
+    setIsCourseDrawerOpenState(false);
+    setIsSocialsDrawerOpenState(false);
   }, []);
 
   // Closes all components
@@ -930,6 +946,36 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsGamesDrawerOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
 
+  const setCourseDrawerOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+
+    if (open) {
+      closeOthers('courseDrawer');
+      trackUIStateChange('courseDrawer', 'open');
+      SoundEffects.open();
+    } else {
+      trackUIStateChange('courseDrawer', 'close');
+      SoundEffects.close();
+    }
+    setIsCourseDrawerOpenState(open);
+  }, [closeOthers, isUltimateHubOpen]);
+
+  const setSocialsDrawerOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+
+    if (open) {
+      closeOthers('socialsDrawer');
+      trackUIStateChange('socialsDrawer', 'open');
+      SoundEffects.open();
+    } else {
+      trackUIStateChange('socialsDrawer', 'close');
+      SoundEffects.close();
+    }
+    setIsSocialsDrawerOpenState(open);
+  }, [closeOthers, isUltimateHubOpen]);
+
   const setV2Unlocked = useCallback((unlocked: boolean) => {
     setIsV2UnlockedState(unlocked);
     if (typeof window !== 'undefined') {
@@ -1004,6 +1050,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openStoreDropdownMenu = useCallback(() => setStoreDropdownMenuOpen(true), [setStoreDropdownMenuOpen]);
   const openSupportDrawer = useCallback(() => setSupportDrawerOpen(true), [setSupportDrawerOpen]);
   const openGamesDrawer = useCallback(() => setGamesDrawerOpen(true), [setGamesDrawerOpen]);
+  const openCourseDrawer = useCallback(() => setCourseDrawerOpen(true), [setCourseDrawerOpen]);
+  const openSocialsDrawer = useCallback(() => setSocialsDrawerOpen(true), [setSocialsDrawerOpen]);
   const closeNavbarModal = useCallback(() => {
     setIsAdminModalOpenState(false);
     setIsFaqModalOpenState(false);
@@ -1108,6 +1156,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isStoreDropdownMenuOpen,
     isSupportDrawerOpen,
     isGamesDrawerOpen,
+    isCourseDrawerOpen,
+    isSocialsDrawerOpen,
     isV2Unlocked,
     devSkipPageModeAndLoader,
     isWelcomeScreenActive,
@@ -1154,6 +1204,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setStoreDropdownMenuOpen,
     setSupportDrawerOpen,
     setGamesDrawerOpen,
+    setCourseDrawerOpen,
+    setSocialsDrawerOpen,
     setV2Unlocked,
     setDevSkipPageModeAndLoader,
     setWelcomeScreenActive: setIsWelcomeScreenActiveState,
@@ -1183,6 +1235,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openStoreDropdownMenu,
     openSupportDrawer,
     openGamesDrawer,
+    openCourseDrawer,
+    openSocialsDrawer,
     closeNavbarModal,
     closeAll,
     closeAllModals,
@@ -1526,4 +1580,16 @@ export function useSupportDrawerUI() {
 export function useGamesDrawerUI() {
   const { isGamesDrawerOpen, setGamesDrawerOpen, openGamesDrawer } = useUIState();
   return { isOpen: isGamesDrawerOpen, setIsOpen: setGamesDrawerOpen, open: openGamesDrawer };
+}
+
+// Course drawer hook - for Trading Course drawer
+export function useCourseDrawerUI() {
+  const { isCourseDrawerOpen, setCourseDrawerOpen, openCourseDrawer } = useUIState();
+  return { isOpen: isCourseDrawerOpen, setIsOpen: setCourseDrawerOpen, open: openCourseDrawer };
+}
+
+// Socials drawer hook - for Social (Ultimate Hub community) drawer
+export function useSocialsDrawerUI() {
+  const { isSocialsDrawerOpen, setSocialsDrawerOpen, openSocialsDrawer } = useUIState();
+  return { isOpen: isSocialsDrawerOpen, setIsOpen: setSocialsDrawerOpen, open: openSocialsDrawer };
 }

@@ -17,6 +17,8 @@ import { AppProviders } from "@/components/AppProviders";
 import { LayoutProviders } from "@/components/LayoutProviders";
 import { GamesModalProvider } from "@/components/GamesModalProvider";
 
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+
 
 
 // Use system font stack with Inter as preference - avoids network dependency during build
@@ -77,11 +79,12 @@ export const metadata: Metadata = {
   // ============================================
   icons: {
     icon: [
-      { url: "/ONcc2l601.svg", type: "image/svg+xml" },
+      { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512x512.png", type: "image/png", sizes: "512x512" },
     ],
-    shortcut: "/ONcc2l601.svg",
+    shortcut: "/icon-192x192.png",
     apple: [
-      { url: "/ONcc2l601.svg", type: "image/svg+xml" },
+      { url: "/icon-180x180.png", type: "image/png", sizes: "180x180" },
     ],
   },
   
@@ -96,7 +99,7 @@ export const metadata: Metadata = {
     siteName: "BullMoney Trading Community",
     images: [
       {
-        url: "/ONcc2l601.svg",
+        url: "/IMG_2921.PNG",
         width: 1200,
         height: 630,
         alt: "BullMoney - Free Trading Community for Crypto, Gold & Forex",
@@ -121,7 +124,7 @@ export const metadata: Metadata = {
     title: "BullMoney | Free Trading Community & Setups",
     description:
       "Join 10,000+ traders. FREE crypto setups, gold analysis, forex setups & live mentorship. Start trading profitably today!",
-    images: ["/ONcc2l601.svg"],
+    images: ["/IMG_2921.PNG"],
     creator: "@BullMoney",
     site: "@BullMoney",
   },
@@ -906,6 +909,10 @@ export default function RootLayout({
 
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
+
+        {/* Cross-domain SEO: explicitly reference both live domains */}
+        <link rel="alternate" href="https://www.bullmoney.shop" />
+        <link rel="alternate" href="https://www.bullmoney.online" />
         
         {/* iOS PWA - Standalone App Mode */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -932,15 +939,19 @@ export default function RootLayout({
         {/* Apple Touch Icon - 180x180 is all modern iOS needs */}
         <link rel="apple-touch-icon" sizes="180x180" href="/icon-180x180.png" />
 
+        {/* Android/Chrome homescreen icons */}
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
+
         {/* Splash Screens for iOS - top 3 most common sizes only */}
         <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
         <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
         <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
 
         {/* Favicon for various platforms */}
-        <link rel="icon" type="image/svg+xml" href="/ONcc2l601.svg" />
-        <link rel="shortcut icon" href="/ONcc2l601.svg" />
-        <link rel="apple-touch-icon" href="/ONcc2l601.svg" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/icon-192x192.png" />
 
         {/* Service Worker & Touch  tiny inline shim sets globals, bulk logic in static file */}
         <Script
@@ -1095,6 +1106,7 @@ export default function RootLayout({
           <LayoutProviders modal={modal}>
             {children}
             <GamesModalProvider />
+            <PWAInstallPrompt />
           </LayoutProviders>
         </AppProviders>
 

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, Smartphone, Zap } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface PWAInstallPromptProps {
   onInstall?: () => void;
@@ -20,15 +21,74 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isInstallable, setIsInstallable] = useState(false);
   const [hasBeenDismissed, setHasBeenDismissed] = useState(false);
+  const [showIOSHelp, setShowIOSHelp] = useState(false);
+  const [showOpenInBrowserHelp, setShowOpenInBrowserHelp] = useState(false);
+  const [showAndroidHelp, setShowAndroidHelp] = useState(false);
+  const [showDesktopHelp, setShowDesktopHelp] = useState(false);
+  const [desktopHelpText, setDesktopHelpText] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
+
+  const platform = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return {
+        isIOS: false,
+        isSafari: false,
+        isAndroid: false,
+        isInAppBrowser: false,
+        isMac: false,
+        isWindows: false,
+        isEdge: false,
+        isChrome: false,
+        isSafariDesktop: false,
+      };
+    }
+    const ua = String(window.navigator.userAgent || '').toLowerCase();
+    const maxTouchPoints = Number((window.navigator as any).maxTouchPoints || 0);
+    const isIOS = /iphone|ipad|ipod/.test(ua) || (/macintosh/.test(ua) && maxTouchPoints > 1);
+    const isSafari = /safari/.test(ua) && !/crios|fxios|edgios|opios|chrome|android/.test(ua);
+    const isAndroid = /android/.test(ua);
+    const isWindows = /windows/.test(ua);
+    const isMac = /macintosh|mac os x/.test(ua) && !isIOS;
+    const isEdge = /edg\//.test(ua);
+    const isChrome = /chrome\//.test(ua) && !isEdge && !/crios/.test(ua);
+    const isSafariDesktop = isMac && /safari/.test(ua) && !isChrome && !isEdge;
+    const isInAppBrowser =
+      /instagram|fban|fbav|fb_iab|facebook|tiktok|bytedance|musical_ly|snapchat|twitter|linkedinapp|line\//.test(ua) ||
+      /wv\b|\bwebview\b|gsa\//.test(ua);
+
+    return {
+      isIOS,
+      isSafari,
+      isAndroid,
+      isInAppBrowser,
+      isMac,
+      isWindows,
+      isEdge,
+      isChrome,
+      isSafariDesktop,
+    };
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isStandalone = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes('android-app://')
+      );
+    } catch {
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     // Check if already installed
     if (typeof window !== 'undefined') {
-      const isStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone ||
-        document.referrer.includes('android-app://');
-
       if (isStandalone) {
         return; // Already installed, don't show
       }
@@ -44,120 +104,336 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
         }
       }
 
-      // Listen for install prompt
-      const handleBeforeInstallPrompt = () => {
+      // Android/Chromium: install prompt availability (forwarded by perf-monitor.js)
+      const handleInstallAvailable = () => {
         setIsInstallable(true);
         if (autoShow && !hasBeenDismissed) {
-          setTimeout(() => {
-            setIsVisible(true);
-          }, delay);
+          setTimeout(() => setIsVisible(true), delay);
         }
       };
 
-      window.addEventListener('pwa-install-available', handleBeforeInstallPrompt);
+      // Mobile fallback: some browsers don't emit beforeinstallprompt reliably.
+      // Keep this conservative: only on touch/mobile and only if not standalone.
+      const fallbackTimer = window.setTimeout(() => {
+        if (isStandalone) return;
+        const isTouch =
+          (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+          (navigator.maxTouchPoints || 0) > 0;
+        const isSmall = (window.innerWidth || 0) > 0 && (window.innerWidth || 0) < 768;
+        if (!platform.isInAppBrowser && (platform.isIOS || platform.isAndroid || isTouch || isSmall)) {
+          setIsInstallable(true);
+          if (autoShow && !hasBeenDismissed) {
+            setIsVisible(true);
+          }
+        }
+      }, Math.max(1800, delay));
+
+      // iOS Safari: no beforeinstallprompt. Still allow A2HS instructions.
+      if (platform.isIOS && platform.isSafari) {
+        setIsInstallable(true);
+        if (autoShow && !hasBeenDismissed) {
+          setTimeout(() => setIsVisible(true), delay);
+        }
+      }
+
+      // In-app browsers: can't reliably trigger PWA install. Show "Open in browser" instead.
+      if (platform.isInAppBrowser) {
+        setIsInstallable(true);
+        if (autoShow && !hasBeenDismissed) {
+          setTimeout(() => setIsVisible(true), delay);
+        }
+      }
+
+      window.addEventListener('pwa-install-available', handleInstallAvailable);
 
       return () => {
-        window.removeEventListener('pwa-install-available', handleBeforeInstallPrompt);
+        window.removeEventListener('pwa-install-available', handleInstallAvailable);
+        window.clearTimeout(fallbackTimer);
       };
     }
     return () => {};
-  }, [autoShow, delay, hasBeenDismissed]);
+  }, [autoShow, delay, hasBeenDismissed, isStandalone, platform.isIOS, platform.isSafari, platform.isInAppBrowser]);
+
+  const tryOpenInBrowser = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const url = window.location.href;
+
+    // Android: try an intent URL that opens Chrome.
+    if (platform.isAndroid) {
+      try {
+        const withoutScheme = url.replace(/^https?:\/\//i, '');
+        const intentUrl = `intent://${withoutScheme}#Intent;scheme=https;package=com.android.chrome;end`;
+        window.location.href = intentUrl;
+        return;
+      } catch {
+        // fall through
+      }
+    }
+
+    // Generic fallback: open a new tab/window.
+    try {
+      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      if (opened) return;
+    } catch {
+      // ignore
+    }
+
+    // If we can't open a new tab, show help text.
+    setShowOpenInBrowserHelp(true);
+  }, [platform.isAndroid]);
 
   const handleInstall = useCallback(async () => {
+    // In-app browser: the "install" action should route users to a real browser.
+    if (platform.isInAppBrowser) {
+      tryOpenInBrowser();
+      return;
+    }
+
     if (typeof window !== 'undefined' && (window as any).showInstallPrompt) {
       (window as any).showInstallPrompt();
       setIsVisible(false);
+      setShowIOSHelp(false);
+      setShowOpenInBrowserHelp(false);
+      setShowAndroidHelp(false);
+      setShowDesktopHelp(false);
+      setDesktopHelpText('');
       onInstall?.();
+      return;
     }
-  }, [onInstall]);
+
+    // iOS Safari fallback: show instructions
+    if (platform.isIOS && platform.isSafari) {
+      setShowIOSHelp(true);
+      return;
+    }
+
+    // Android fallback: show A2HS instructions
+    if (platform.isAndroid) {
+      setShowAndroidHelp(true);
+      return;
+    }
+
+    // Desktop fallback: show platform/browser-specific instructions
+    if (platform.isWindows) {
+      setDesktopHelpText('Windows: in Chrome/Edge open the menu (⋯) and choose “Install app” (or “Apps → Install this site as an app”).');
+      setShowDesktopHelp(true);
+      return;
+    }
+
+    if (platform.isMac) {
+      if (platform.isSafariDesktop) {
+        setDesktopHelpText('Mac: in Safari use Share (or File) → “Add to Dock”.');
+      } else {
+        setDesktopHelpText('Mac: in Chrome/Edge open the menu (⋯) and choose “Install” (or “Create shortcut”).');
+      }
+      setShowDesktopHelp(true);
+      return;
+    }
+  }, [
+    onInstall,
+    platform.isAndroid,
+    platform.isIOS,
+    platform.isSafari,
+    platform.isInAppBrowser,
+    platform.isWindows,
+    platform.isMac,
+    platform.isSafariDesktop,
+    tryOpenInBrowser,
+  ]);
 
   const handleDismiss = useCallback(() => {
     setIsVisible(false);
     setHasBeenDismissed(true);
+    setShowIOSHelp(false);
+    setShowOpenInBrowserHelp(false);
+    setShowAndroidHelp(false);
+    setShowDesktopHelp(false);
+    setDesktopHelpText('');
     localStorage.setItem('pwa-install-dismissed', Date.now().toString());
     onDismiss?.();
   }, [onDismiss]);
 
-  if (!isInstallable || !isVisible) {
+  if (!mounted || !isInstallable || !isVisible) {
     return null;
   }
 
-  return (
+  const primaryLabel = platform.isInAppBrowser
+    ? 'Open'
+    : (platform.isIOS && platform.isSafari ? 'Add' : 'Install');
+
+  const titleText = platform.isInAppBrowser
+    ? 'Open in browser'
+    : 'Install BullMoney';
+
+  const bodyText = platform.isInAppBrowser
+    ? 'To install, open this site in Safari or Chrome.'
+    : 'Add to your home screen for the full app experience.';
+
+  return createPortal(
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 50 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-safe left-4 right-4 z-[999999] pointer-events-auto"
+          initial={{ y: '-100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: '-100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 320 }}
           style={{
-            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 2147483646,
+            display: 'flex',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            padding: '0 8px',
           }}
         >
-          <div className="max-w-md mx-auto bg-linear-to-r from-white to-white rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
-            {/* Close Button */}
-            <button
-              onClick={handleDismiss}
-              className="absolute top-3 right-3 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10 min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation"
-              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
-              aria-label="Dismiss install prompt"
-            >
-              <X size={18} className="text-white" />
-            </button>
-
-            {/* Content */}
-            <div className="p-5 pr-12">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Download size={28} className="text-white" strokeWidth={2.5} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white mb-1">
-                    Install BullMoney
-                  </h3>
-                  <p className="text-sm text-white/90 mb-3 leading-relaxed">
-                    Get instant access with app-like experience. Works offline, loads faster!
-                  </p>
-
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-full">
-                      <Zap size={12} className="text-yellow-300" />
-                      <span className="text-xs font-medium text-white">Faster</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-full">
-                      <Smartphone size={12} className="text-white" />
-                      <span className="text-xs font-medium text-white">App-like</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-full">
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-xs font-medium text-white">Offline</span>
-                    </div>
-                  </div>
-
-                  {/* Install Button */}
-                  <motion.button
-                    onClick={handleInstall}
-                    whileTap={{ scale: 0.97 }}
-                    className="w-full py-3 px-4 bg-white text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 min-h-[52px] touch-manipulation"
-                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 420,
+              background: 'rgba(255,255,255,0.98)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              borderRadius: '0 0 16px 16px',
+              border: '1px solid rgba(0,0,0,0.08)',
+              borderTop: 'none',
+              pointerEvents: 'auto',
+              overflow: 'hidden',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+            }}
+          >
+            <div style={{ padding: '14px 14px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  <img
+                    src="/IMG_2921.PNG"
+                    width={18}
+                    height={18}
+                    alt="BullMoney"
+                    style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+                    loading="eager"
+                    decoding="async"
+                  />
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: '#1d1d1f',
+                      letterSpacing: '-0.01em',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
                   >
-                    Install Now
-                  </motion.button>
+                    {titleText}
+                  </span>
+                </div>
 
-                  <p className="text-[10px] text-white/60 mt-2 text-center">
-                    Free • No app store • Instant access
-                  </p>
+                <button
+                  onClick={handleDismiss}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'rgba(0,0,0,0.35)',
+                    cursor: 'pointer',
+                    padding: 6,
+                    lineHeight: 1,
+                    borderRadius: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  aria-label="Dismiss"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <p
+                style={{
+                  fontSize: 11,
+                  color: 'rgba(0,0,0,0.45)',
+                  marginTop: 4,
+                  lineHeight: 1.45,
+                  margin: '4px 0 0',
+                }}
+              >
+                {bodyText}
+              </p>
+
+              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <button
+                    onClick={handleDismiss}
+                    style={{
+                      width: '100%',
+                      padding: '8px 0',
+                      borderRadius: 8,
+                      border: '1px solid rgba(0,0,0,0.18)',
+                      background: 'transparent',
+                      color: '#1d1d1f',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    Not now
+                  </button>
+                </div>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <button
+                    onClick={handleInstall}
+                    style={{
+                      width: '100%',
+                      padding: '8px 0',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: '#000000',
+                      color: '#ffffff',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      letterSpacing: '-0.01em',
+                    }}
+                    aria-label={primaryLabel}
+                  >
+                    {primaryLabel}
+                  </button>
                 </div>
               </div>
+
+              {platform.isIOS && platform.isSafari && showIOSHelp && (
+                <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.35)', marginTop: 8, lineHeight: 1.35 }}>
+                  iPhone/iPad: tap Share, then “Add to Home Screen”.
+                </div>
+              )}
+
+              {platform.isAndroid && showAndroidHelp && (
+                <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.35)', marginTop: 8, lineHeight: 1.35 }}>
+                  Android: tap the menu (⋮), then “Add to Home screen”.
+                </div>
+              )}
+
+              {showDesktopHelp && desktopHelpText && (
+                <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.35)', marginTop: 8, lineHeight: 1.35 }}>
+                  {desktopHelpText}
+                </div>
+              )}
+
+              {platform.isInAppBrowser && showOpenInBrowserHelp && (
+                <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.35)', marginTop: 8, lineHeight: 1.35 }}>
+                  If “Open” doesn’t work, use the app’s menu (⋯) and choose “Open in Browser”.
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

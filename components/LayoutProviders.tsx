@@ -95,6 +95,12 @@ const Navbar = dynamic(
   { ssr: false, loading: () => <NavbarSkeleton /> }
 );
 
+// ✅ StoreHeader - Used for standalone (installed) home screen app navigation
+const StoreHeader = dynamic(
+  () => import("@/components/store/StoreHeader").then(mod => ({ default: mod.StoreHeader })),
+  { ssr: false }
+);
+
 
 // 🔔 NOTIFICATION PERMISSION MODAL - Shows IMMEDIATELY on first load asking for push notifications
 // Using eager loading to ensure it appears before anything else
@@ -134,6 +140,35 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   const isGamesPage = pathname.startsWith('/games');
   const isDesktopPage = pathname === '/desktop';
   const isAppPage = pathname === '/';
+
+  // When launched from the home screen (standalone), prefer StoreHeader across the app.
+  const [isStandaloneApp, setIsStandaloneApp] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const compute = () => {
+      try {
+        const standalone =
+          window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as any).standalone === true;
+        setIsStandaloneApp(Boolean(standalone));
+      } catch {
+        setIsStandaloneApp(false);
+      }
+    };
+    compute();
+    try {
+      const mq = window.matchMedia('(display-mode: standalone)');
+      const onChange = () => compute();
+      if (typeof mq.addEventListener === 'function') mq.addEventListener('change', onChange);
+      else if (typeof (mq as any).addListener === 'function') (mq as any).addListener(onChange);
+      return () => {
+        if (typeof mq.removeEventListener === 'function') mq.removeEventListener('change', onChange);
+        else if (typeof (mq as any).removeListener === 'function') (mq as any).removeListener(onChange);
+      };
+    } catch {
+      return;
+    }
+  }, []);
   
   // Global Ultimate Hub visibility - controlled by toggle in navbar & store header
   // Default OFF to prevent heavy component from loading and blocking page render
@@ -310,7 +345,11 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       {/* Cache Manager - Handles version-based cache invalidation */}
       <CacheManagerProvider>
         {/* Navbar rendered outside ClientProviders for fixed positioning - HIDDEN on store, desktop & app pages */}
-        {canShowNavbar && !isStorePage && !isDesktopPage && !isAppPage && (allowMobileLazy || !isMobileViewport) && <Navbar />}
+        {canShowNavbar && (allowMobileLazy || !isMobileViewport) && (
+          isStandaloneApp
+            ? (!isStorePage && !isDesktopPage && !isAppPage && <StoreHeader />)
+            : (!isStorePage && !isDesktopPage && !isAppPage && <Navbar />)
+        )}
         
         {/* ✅ ULTIMATE HUB - All-in-one unified component - Controlled by toggle
             - Left side: Trading pill (prices), Community pill (Telegram), TV pill

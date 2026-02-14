@@ -1415,7 +1415,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     className="h-full bg-white overflow-hidden"
                     style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
-                    <TradingCourse />
+                    <TradingCourse appearance="drawer" />
                   </motion.div>
                 )}
                 

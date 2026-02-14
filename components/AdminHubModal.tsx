@@ -249,9 +249,15 @@ const CollapsiblePreview: React.FC<{ label: string; children: React.ReactNode }>
 export function AdminHubModal({
   isOpen,
   onClose,
+  embedded = false,
+  showHeader = true,
+  bwMode = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  embedded?: boolean;
+  showHeader?: boolean;
+  bwMode?: boolean;
 }) {
   // Performance optimization – always skip heavy render effects in admin panel on ALL devices
   const { isMobile } = useMobilePerformance();
@@ -259,11 +265,18 @@ export function AdminHubModal({
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
+  const normalizeEmail = (value: unknown) =>
+    String(value ?? '')
+      .trim()
+      .replace(/^['"]|['"]$/g, '')
+      .trim()
+      .toLowerCase();
+  const adminEmailEnv = normalizeEmail(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [activeTab, setActiveTab] = useState<
     "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store" | "crypto" | "crypto_refunds"
   >("products");
+  const [tabsListOpen, setTabsListOpen] = useState(false);
   const [affiliateView, setAffiliateView] = useState<"calculator" | "admin">("calculator");
   const [storeView, setStoreView] = useState<"analytics" | "promos" | "rewards" | "messages">("analytics");
   const [busy, setBusy] = useState(false);
@@ -416,7 +429,7 @@ export function AdminHubModal({
     const adminEmail = adminEmailEnv;
     const evaluate = (email?: string | null) => {
       if (!mounted) return;
-      setAuthorized(Boolean(adminEmail) && email?.toLowerCase() === adminEmail);
+      setAuthorized(Boolean(adminEmail) && normalizeEmail(email) === adminEmail);
     };
     const run = async () => {
       if (!adminEmail) {
@@ -456,7 +469,7 @@ export function AdminHubModal({
           return;
         }
         const parsed = JSON.parse(raw);
-        const email = (parsed?.email || "").toLowerCase();
+        const email = normalizeEmail(parsed?.email);
         const isAdminFlag = Boolean(parsed?.isAdmin);
         setPagemodeAuthorized(Boolean(adminEmailEnv) && (isAdminFlag || email === adminEmailEnv));
         setPagemodeChecked(true);
@@ -1846,124 +1859,141 @@ export function AdminHubModal({
   // -----------------------------------------------------------------------
   // MAIN RENDER
   // -----------------------------------------------------------------------
-  return isOpen ? (
-        <div
-          className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl"
-          onClick={onClose}
+  const chromeHeader = (
+    <div className="flex items-center justify-between px-4 py-3 border-b border-white/30 bg-white/10">
+      <div className="flex items-center gap-2 text-white font-bold">
+        <Shield className="w-5 h-5 text-white" /> Admin Control Panel
+        {(!supabaseUrl || !supabaseAnon) && (
+          <span className="text-[11px] text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-400/40">
+            Supabase env missing
+          </span>
+        )}
+        {busy ? (
+          <span className="text-[11px] text-slate-300 flex items-center gap-1">
+            <RefreshCw className="w-3 h-3" /> syncing
+          </span>
+        ) : null}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={loadAll}
+          className="px-3 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700 flex items-center gap-1"
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-y-auto border border-white/10 bg-linear-to-b from-slate-950 via-slate-900 to-black flex flex-col"
+          <Database className="w-4 h-4" /> Sync
+        </button>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+
+  const TAB_DEFS: Array<{ key: typeof activeTab; label: string; icon: React.ReactNode }> = [
+    { key: 'products', label: 'Products', icon: <Package className="w-4 h-4" /> },
+    { key: 'services', label: 'Services', icon: <ClipboardList className="w-4 h-4" /> },
+    { key: 'livestream', label: 'Livestream', icon: <Video className="w-4 h-4" /> },
+    { key: 'analysis', label: 'Analysis', icon: <BarChart3 className="w-4 h-4" /> },
+    { key: 'recruits', label: 'VIP / Recruits', icon: <Crown className="w-4 h-4" /> },
+    { key: 'course', label: 'Trading Course', icon: <GraduationCap className="w-4 h-4" /> },
+    { key: 'affiliate', label: 'Affiliate Admin', icon: <Users className="w-4 h-4" /> },
+    { key: 'email', label: 'Emails', icon: <Mail className="w-4 h-4" /> },
+    { key: 'store', label: 'Store Analytics', icon: <ShoppingBag className="w-4 h-4" /> },
+    { key: 'crypto', label: 'Crypto Payments', icon: <Coins className="w-4 h-4" /> },
+    { key: 'crypto_refunds', label: 'Crypto Refunds', icon: <RotateCcw className="w-4 h-4" /> },
+    { key: 'faq', label: 'FAQ Editor', icon: <HelpCircle className="w-4 h-4" /> },
+  ];
+
+  const activeTabLabel = TAB_DEFS.find(t => t.key === activeTab)?.label || 'Sections';
+
+  const tabsAndContent = (
+    <>
+      {/* Sections list (no horizontal scrolling) */}
+      <div
+        className="px-3 sm:px-4 py-2 border-b relative z-10"
+        style={
+          bwMode
+            ? { background: '#ffffff', borderColor: 'rgba(0,0,0,0.10)' }
+            : { background: 'rgba(15,23,42,0.60)', borderColor: 'rgba(30,41,59,1)' }
+        }
+      >
+        <button
+          type="button"
+          onClick={() => setTabsListOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border"
+          style={
+            bwMode
+              ? {
+                  background: '#ffffff',
+                  borderColor: 'rgba(0,0,0,0.12)',
+                  color: '#111111',
+                }
+              : {
+                  background: 'rgba(2,6,23,0.40)',
+                  borderColor: 'rgba(30,41,59,1)',
+                  color: 'rgb(226,232,240)',
+                }
+          }
+          aria-expanded={tabsListOpen}
+        >
+          <span className="text-sm font-semibold">Sections: {activeTabLabel}</span>
+          <span
+            className="text-xs"
+            style={bwMode ? { color: 'rgba(0,0,0,0.45)' } : { color: 'rgba(148,163,184,1)' }}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/30 bg-white/10">
-              <div className="flex items-center gap-2 text-white font-bold">
-                <Shield className="w-5 h-5 text-white" /> Admin Control Panel
-                {(!supabaseUrl || !supabaseAnon) && (
-                  <span className="text-[11px] text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-400/40">
-                    Supabase env missing
-                  </span>
-                )}
-                {busy ? (
-                  <span className="text-[11px] text-slate-300 flex items-center gap-1">
-                    <RefreshCw className="w-3 h-3" /> syncing
-                  </span>
-                ) : null}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={loadAll}
-                  className="px-3 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700 flex items-center gap-1"
-                >
-                  <Database className="w-4 h-4" /> Sync
-                </button>
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            {tabsListOpen ? '▲' : '▼'}
+          </span>
+        </button>
 
-              <div 
-                className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto overflow-y-hidden border-b border-slate-800 bg-slate-900/60 scrollbar-none [-webkit-overflow-scrolling:touch] overscroll-x-contain [scroll-snap-type:x_mandatory] relative z-10" 
-                style={{ touchAction: 'pan-x pinch-zoom', WebkitOverflowScrolling: 'touch' }}
-              >
-              <TabButton
-                label="Products"
-                icon={<Package className="w-4 h-4" />}
-                active={activeTab === "products"}
-                onClick={() => setActiveTab("products")}
-              />
-              <TabButton
-                label="Services"
-                icon={<ClipboardList className="w-4 h-4" />}
-                active={activeTab === "services"}
-                onClick={() => setActiveTab("services")}
-              />
-              <TabButton
-                label="Livestream"
-                icon={<Video className="w-4 h-4" />}
-                active={activeTab === "livestream"}
-                onClick={() => setActiveTab("livestream")}
-              />
-              <TabButton
-                label="Analysis"
-                icon={<BarChart3 className="w-4 h-4" />}
-                active={activeTab === "analysis"}
-                onClick={() => setActiveTab("analysis")}
-              />
-              <TabButton
-                label="VIP / Recruits"
-                icon={<Crown className="w-4 h-4" />}
-                active={activeTab === "recruits"}
-                onClick={() => setActiveTab("recruits")}
-              />
-              <TabButton
-                label="Trading Course"
-                icon={<GraduationCap className="w-4 h-4" />}
-                active={activeTab === "course"}
-                onClick={() => setActiveTab("course")}
-              />
-              <TabButton
-                label="Affiliate Admin"
-                icon={<Users className="w-4 h-4" />}
-                active={activeTab === "affiliate"}
-                onClick={() => setActiveTab("affiliate")}
-              />
-              <TabButton
-                label="Emails"
-                icon={<Mail className="w-4 h-4" />}
-                active={activeTab === "email"}
-                onClick={() => setActiveTab("email")}
-              />
-              <TabButton
-                label="Store Analytics"
-                icon={<ShoppingBag className="w-4 h-4" />}
-                active={activeTab === "store"}
-                onClick={() => setActiveTab("store")}
-              />
-              <TabButton
-                label="Crypto Payments"
-                icon={<Coins className="w-4 h-4" />}
-                active={activeTab === "crypto"}
-                onClick={() => setActiveTab("crypto")}
-              />
-              <TabButton
-                label="Crypto Refunds"
-                icon={<RotateCcw className="w-4 h-4" />}
-                active={activeTab === "crypto_refunds"}
-                onClick={() => setActiveTab("crypto_refunds")}
-              />
-              <TabButton
-                label="FAQ Editor"
-                icon={<HelpCircle className="w-4 h-4" />}
-                active={activeTab === "faq"}
-                onClick={() => setActiveTab("faq")}
-              />
-            </div>
+        {tabsListOpen ? (
+          <div className="mt-2 grid gap-1">
+            {TAB_DEFS.map((tab) => {
+              const isActive = tab.key === activeTab;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(tab.key);
+                    setTabsListOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-colors"
+                  style={
+                    bwMode
+                      ? {
+                          background: isActive ? 'rgba(0,0,0,0.06)' : '#ffffff',
+                          borderColor: isActive ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.12)',
+                          color: '#111111',
+                        }
+                      : undefined
+                  }
+                >
+                  <span className="shrink-0">{tab.icon}</span>
+                  <span className="text-sm font-medium">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
 
-              <div className="p-3 sm:p-4 bg-slate-950/70 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-900/30 hover:scrollbar-thumb-slate-500 relative z-0">
+      <div
+        className="p-3 sm:p-4 flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative z-0"
+        style={
+          bwMode
+            ? {
+                background: '#ffffff',
+                color: '#111111',
+                WebkitOverflowScrolling: 'touch',
+              }
+            : {
+                background: 'rgba(2,6,23,0.70)',
+                WebkitOverflowScrolling: 'touch',
+              }
+        }
+      >
                 {!accessCheckComplete ? (
                   <div className="flex items-center justify-center gap-2 py-12 text-slate-300 text-sm">
                     <RefreshCw className="w-4 h-4" /> Checking admin access...
@@ -2091,16 +2121,73 @@ export function AdminHubModal({
                     </div>
                   </div>
                 )}
-              </div>
+      </div>
 
-            {toast ? (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-slate-800/90 text-white px-3 py-2 text-sm border border-white/40">
-                {toast}
-              </div>
-            ) : null}
-          </div>
+      {toast ? (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-slate-800/90 text-white px-3 py-2 text-sm border border-white/40">
+          {toast}
         </div>
-  ) : null;
+      ) : null}
+    </>
+  );
+
+  const embeddedBody = (
+    <div
+      className="flex flex-col min-h-0 h-full w-full relative"
+      data-adminhub-embedded={embedded ? 'true' : 'false'}
+      data-adminhub-bw={bwMode ? 'true' : 'false'}
+      style={bwMode ? { background: '#ffffff', color: '#111111' } : undefined}
+    >
+      {bwMode ? (
+        <style
+          // Scoped BW overrides (inline) — keeps Admin Hub black/white inside the drawer.
+          // This intentionally overrides legacy slate/gradient utility classes used across subpanels.
+          dangerouslySetInnerHTML={{
+            __html: `
+              [data-adminhub-bw="true"] { color: #111111; background: #ffffff; }
+              [data-adminhub-bw="true"] * { color: inherit; }
+              [data-adminhub-bw="true"] [class*="bg-"] { background: #ffffff !important; background-image: none !important; }
+              [data-adminhub-bw="true"] [class*="from-"][class*="to-"] { background-image: none !important; }
+              [data-adminhub-bw="true"] [class*="text-"] { color: #111111 !important; }
+              [data-adminhub-bw="true"] [class*="border-"] { border-color: rgba(0,0,0,0.12) !important; }
+              [data-adminhub-bw="true"] a { color: #111111 !important; }
+              [data-adminhub-bw="true"] input,
+              [data-adminhub-bw="true"] textarea,
+              [data-adminhub-bw="true"] select {
+                background: #ffffff !important;
+                color: #111111 !important;
+                border-color: rgba(0,0,0,0.18) !important;
+              }
+              [data-adminhub-bw="true"] button { color: #111111 !important; }
+              [data-adminhub-bw="true"] svg { color: currentColor !important; }
+            `,
+          }}
+        />
+      ) : null}
+      {showHeader ? chromeHeader : null}
+      {tabsAndContent}
+    </div>
+  );
+
+  if (!isOpen) return null;
+
+  if (embedded) {
+    return embeddedBody;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-y-auto border border-white/10 bg-linear-to-b from-slate-950 via-slate-900 to-black flex flex-col"
+      >
+        {embeddedBody}
+      </div>
+    </div>
+  );
 }
 
 // Small inline settings icon to avoid extra lucide import weight

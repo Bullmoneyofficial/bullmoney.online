@@ -8,7 +8,7 @@ export const GAME_STYLES = `
 .bc-btn-row{display:flex;gap:4px;margin-top:4px}
 .bc-btn-row button{flex:1;background:#0f212e;border:none;color:#b1bad3;font-size:12px;font-weight:600;padding:6px 0;border-radius:6px;cursor:pointer;transition:all .15s}
 .bc-btn-row button:hover{color:#00e701;background:rgba(0,231,1,.08)}
-.bc-play-btn{width:100%;padding:12px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;transition:all .2s}
+.bc-play-btn{width:100%;padding:12px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;transition:all .2s;position:relative;z-index:2147483647}
 .bc-play-btn.green{background:#00e701;color:#000}.bc-play-btn.green:hover{opacity:.88;transform:scale(1.02)}
 .bc-play-btn.red{background:#ed4245;color:#fff}.bc-play-btn.red:hover{opacity:.88}
 .bc-game-field{flex:1;min-height:clamp(320px,58dvh,760px);max-height:calc(100dvh - 130px);width:100%;background:rgba(15,23,42,.95);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-sizing:border-box}

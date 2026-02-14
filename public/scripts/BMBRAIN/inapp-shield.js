@@ -208,46 +208,8 @@ if(crashes>0){
 try{sessionStorage.setItem(crashKey,String(crashes+1));}catch(e){}
 w.addEventListener('load',function(){setTimeout(function(){try{sessionStorage.setItem(crashKey,'0');}catch(e){}},2500);},{once:true});
 
-if(S.browser==='instagram'||S.browser==='tiktok'||S.browser==='facebook'||S.browser==='snapchat'||S.browser==='whatsapp'){
-  w.addEventListener('load',function(){
-    setTimeout(function(){
-      if(d.getElementById('bm-open-browser')||!d.body)return;
-      var bar=d.createElement('div');
-      bar.id='bm-open-browser';
-      bar.innerHTML='<span class="bm-open-browser__text">Open in browser for best performance</span>'+
-        '<div class="bm-open-browser__actions">'+
-        '<button type="button" class="bm-open-browser__dismiss">Dismiss</button>'+
-        '<a href="'+w.location.href+'" target="_blank" class="bm-open-browser__open">Open</a>'+
-        '</div>';
-      d.body.appendChild(bar);
-
-      function setBannerOffset(){
-        if(!bar||!bar.parentNode)return;
-        var h=Math.ceil(bar.getBoundingClientRect().height||0);
-        root.style.setProperty('--bm-open-browser-h',h+'px');
-        d.body.classList.add('bm-open-browser-visible');
-      }
-
-      function clearBannerOffset(){
-        root.style.removeProperty('--bm-open-browser-h');
-        d.body.classList.remove('bm-open-browser-visible');
-      }
-
-      var dismissBtn=bar.querySelector('.bm-open-browser__dismiss');
-      if(dismissBtn){
-        dismissBtn.addEventListener('click',function(){
-          clearBannerOffset();
-          if(bar&&bar.parentNode)bar.parentNode.removeChild(bar);
-        },{once:true});
-      }
-
-      setTimeout(setBannerOffset,0);
-      w.addEventListener('resize',setBannerOffset,{passive:true});
-      w.addEventListener('orientationchange',setBannerOffset,{passive:true});
-    },1800);
-  },{once:true});
-  S.fixes.push('open-banner');
-}
+// Legacy injected "Open in browser" banner disabled.
+// A React banner (styled like CookieConsent) now handles this UX.
 
 if(w.location.hostname==='localhost'){
   console.log('[INAPP] browser=',S.browser,'fixes=',S.fixes.join(', '));

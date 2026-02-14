@@ -72,7 +72,10 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     html.style.overflowX = 'hidden';
     html.style.height = 'auto';
     html.style.scrollBehavior = 'auto';
-    body.style.overflow = 'visible';
+    // Android/Samsung browsers can get "stuck" when body overflow is forced to visible.
+    // Prefer a normal scrolling document.
+    body.style.overflow = 'auto';
+    body.style.overflowY = 'auto';
     body.style.overflowX = 'hidden';
     body.style.height = 'auto';
     body.style.scrollBehavior = 'auto';

@@ -9,7 +9,7 @@
 
 import { spawn } from 'child_process';
 import { resolve } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 
 // ─── ANSI HELPERS ──────────────────────────────────────────────
 const esc       = (code) => `\x1b[${code}m`;
@@ -557,6 +557,61 @@ const args = process.argv.slice(2);
 const localNext = resolve('node_modules', '.bin', 'next');
 const nextBin = existsSync(localNext) ? localNext : 'next';
 
+// Prevent multiple dev servers from writing to `.next/dev` at the same time.
+// This is especially important with Turbopack persistence, which can corrupt
+// the dev output if two instances overlap.
+const lockDir = resolve('.next');
+const lockPath = resolve(lockDir, 'dev-server.lock.json');
+
+function pidIsRunning(pid) {
+  if (!pid || typeof pid !== 'number') return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function acquireLock() {
+  mkdirSync(lockDir, { recursive: true });
+
+  if (existsSync(lockPath)) {
+    try {
+      const raw = readFileSync(lockPath, 'utf8');
+      const parsed = JSON.parse(raw);
+      const lockedPid = parsed?.pid;
+      if (pidIsRunning(lockedPid)) {
+        const startedAt = parsed?.startedAt ? new Date(parsed.startedAt).toLocaleString() : 'unknown time';
+        process.stdout.write(
+          `\n${RED}${B}✖${X}  ${CORAL}Another dev server is already running (pid ${lockedPid}, started ${startedAt}).${X}\n` +
+          `  ${PEACH}Stop the existing process (or close the old VS Code task) before starting a new one.${X}\n\n`
+        );
+        process.exit(1);
+      }
+    } catch {
+      // Ignore unreadable/invalid lock; we'll overwrite it.
+    }
+  }
+
+  const payload = {
+    pid: process.pid,
+    startedAt: new Date().toISOString(),
+    args,
+  };
+  writeFileSync(lockPath, JSON.stringify(payload, null, 2));
+}
+
+function releaseLock() {
+  try {
+    if (existsSync(lockPath)) unlinkSync(lockPath);
+  } catch {
+    // Best-effort cleanup.
+  }
+}
+
+acquireLock();
+
 const child = spawn(nextBin, ['dev', ...args], {
   stdio: ['inherit', 'pipe', 'pipe'],
   env: { ...process.env, NEXT_TELEMETRY_DISABLED: '1', FORCE_COLOR: '1' },
@@ -583,8 +638,16 @@ child.on('close', (code) => {
   if (stdoutBuf.trim()) process.stdout.write(formatLine(stdoutBuf) + '\n');
   if (stderrBuf.trim()) process.stdout.write(formatLine(stderrBuf) + '\n');
   printSummary();
+  releaseLock();
   process.exit(code || 0);
 });
 
-process.on('SIGINT',  () => child.kill('SIGINT'));
-process.on('SIGTERM', () => child.kill('SIGTERM'));
+process.on('SIGINT',  () => {
+  releaseLock();
+  child.kill('SIGINT');
+});
+process.on('SIGTERM', () => {
+  releaseLock();
+  child.kill('SIGTERM');
+});
+process.on('exit', () => releaseLock());

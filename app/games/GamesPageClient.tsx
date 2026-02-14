@@ -25,6 +25,20 @@ const StoreHeader = dynamic(
   { ssr: false }
 );
 
+const HIGH_Z_GAME_SLUGS = new Set(['dice', 'mines', 'jackpot', 'slots', 'crash', 'wheel', 'plinko', 'flappybird']);
+
+function hardNavigate(path: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(path, window.location.origin);
+    url.searchParams.set('__hard', String(Date.now()));
+    window.location.assign(url.toString());
+  } catch {
+    const sep = path.includes('?') ? '&' : '?';
+    window.location.assign(`${path}${sep}__hard=${Date.now()}`);
+  }
+}
+
 function DeferredMount({
   children,
   rootMargin = '400px',
@@ -161,6 +175,31 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   const [activeGameCategory, setActiveGameCategory] = useState('all');
 
+  // Mobile browsers can occasionally swallow `click` after a tiny scroll/touch move.
+  // Track the last hard navigation to avoid double-nav when both pointer + click fire.
+  const lastHardNavRef = useRef<{ at: number; to: string } | null>(null);
+  const tapStartRef = useRef<{ x: number; y: number; at: number; pointerId: number } | null>(null);
+
+  const maybeHardNavigateFromTap = (to: string, clientX: number, clientY: number, pointerId?: number) => {
+    const start = tapStartRef.current;
+    if (!start) return;
+    if (typeof pointerId === 'number' && start.pointerId !== pointerId) return;
+
+    const dx = Math.abs(clientX - start.x);
+    const dy = Math.abs(clientY - start.y);
+    const dt = Date.now() - start.at;
+
+    // Treat as a tap if the finger didn’t move meaningfully.
+    if (dx <= 12 && dy <= 12 && dt <= 800) {
+      lastHardNavRef.current = { at: Date.now(), to };
+      hardNavigate(to);
+    }
+  };
+
+  const cancelTap = () => {
+    tapStartRef.current = null;
+  };
+
   // Prefetching is handled automatically by <Link prefetch={true}> on each game card
 
   useEffect(() => {
@@ -170,6 +209,26 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
     const preload = new Image();
     preload.src = firstHero.replace('w=3840', 'w=1920');
   }, [embedMode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const anchor = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!anchor) return;
+      try {
+        const url = new URL(anchor.href, window.location.href);
+        if (url.origin === window.location.origin && url.pathname === '/community') {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      } catch {
+        // Ignore malformed URLs
+      }
+    };
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, []);
 
   useEffect(() => {
     if (embedMode) return;
@@ -217,6 +276,17 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           }
           body {
             overflow-y: auto !important;
+          }
+
+          /* Remove any global overlay layers above games content */
+          html[data-games-page] #theme-global-overlay,
+          html[data-games-page] #theme-edge-glow,
+          html[data-games-page] #theme-filter-overlay {
+            display: none !important;
+          }
+          html[data-games-page][data-active-theme]::before,
+          html[data-games-page][data-active-theme]::after {
+            opacity: 0 !important;
           }
           
           /* CRITICAL: Ensure all decorative/background elements pass through touch */
@@ -452,7 +522,6 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           touchAction: 'pan-y pan-x',
           backgroundColor: '#000',
-          pointerEvents: 'none',
         }}
         >
         <div
@@ -499,7 +568,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
 
         <div
           className={`games-hero-content relative z-10 mx-auto flex w-full flex-col px-4 sm:px-6 ${embedMode ? 'pt-6 pb-6' : 'max-w-6xl lg:px-10 pt-16 pb-20 sm:pt-20 sm:pb-24 lg:pt-28 lg:pb-28'}`}
-          style={{ touchAction: 'pan-y pan-x', pointerEvents: 'none' }}
+          style={{ touchAction: 'pan-y pan-x' }}
         >
           <div className="flex items-center gap-3 mb-6">
             <img
@@ -644,16 +713,49 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 w-full">
             {visibleGames.map((game) => {
               const GameIcon = game.icon;
+              const to = `/games/${game.slug}`;
               return (
-                <Link
+                <a
                   key={game.name}
-                  href={`/games/${game.slug}`}
-                  prefetch={true}
+                  href={to}
                   className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/30 active:border-white/40 transition-all duration-200 text-left w-full active:scale-[0.97] cursor-pointer select-none"
-                  style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                  // High z-index inside `main` stacking context prevents invisible overlays from stealing taps.
+                  style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation', zIndex: 2147483647 }}
+                  onTouchStart={(event) => {
+                    const t = event.touches?.[0];
+                    if (!t) return;
+                    tapStartRef.current = { x: t.clientX, y: t.clientY, at: Date.now(), pointerId: -1 };
+                  }}
+                  onTouchCancel={cancelTap}
+                  onPointerDown={(event) => {
+                    // Only track touch taps; mouse click behavior is handled by onClick.
+                    if (event.pointerType !== 'touch') return;
+                    tapStartRef.current = {
+                      x: event.clientX,
+                      y: event.clientY,
+                      at: Date.now(),
+                      pointerId: event.pointerId,
+                    };
+                  }}
+                  onPointerUp={(event) => {
+                    if (event.pointerType !== 'touch') return;
+                    maybeHardNavigateFromTap(to, event.clientX, event.clientY, event.pointerId);
+                  }}
+                  onPointerCancel={cancelTap}
+                  onTouchEnd={(event) => {
+                    // Fallback for environments that don’t emit pointer events reliably.
+                    const t = event.changedTouches?.[0];
+                    if (!t) return;
+                    maybeHardNavigateFromTap(to, t.clientX, t.clientY);
+                  }}
                   onClick={(event) => {
+                    // Allow new tab/window behavior.
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
                     event.preventDefault();
-                    window.location.assign(`/games/${game.slug}`);
+                    const last = lastHardNavRef.current;
+                    if (last && last.to === to && Date.now() - last.at < 1500) return;
+                    lastHardNavRef.current = { at: Date.now(), to };
+                    hardNavigate(to);
                   }}
                 >
                   <div className="relative w-full aspect-4/3">
@@ -676,7 +778,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                     </div>
                     <p className="text-[11px] sm:text-xs text-white/40 mt-1">{game.desc}</p>
                   </div>
-                </Link>
+                </a>
               );
             })}
           </div>
@@ -820,26 +922,58 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                   color: '#e2e8f0',
                   boxShadow: '0 8px 30px rgba(2, 6, 23, 0.4)',
                   position: 'relative',
+                  zIndex: HIGH_Z_GAME_SLUGS.has(game.slug) ? 2147483647 : undefined,
                   overflow: 'hidden',
                 }}
               >
-                <Link
+                <a
                   href={`/games/${game.slug}`}
-                  prefetch={true}
                   style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    zIndex: 1,
+                    zIndex: 2147483647,
                     textDecoration: 'none',
                     touchAction: 'pan-y pan-x',
                     WebkitTapHighlightColor: 'transparent',
                   }}
+                  onTouchStart={(event) => {
+                    const t = event.touches?.[0];
+                    if (!t) return;
+                    tapStartRef.current = { x: t.clientX, y: t.clientY, at: Date.now(), pointerId: -1 };
+                  }}
+                  onTouchCancel={cancelTap}
+                  onPointerDown={(event) => {
+                    if (event.pointerType !== 'touch') return;
+                    tapStartRef.current = {
+                      x: event.clientX,
+                      y: event.clientY,
+                      at: Date.now(),
+                      pointerId: event.pointerId,
+                    };
+                  }}
+                  onPointerUp={(event) => {
+                    if (event.pointerType !== 'touch') return;
+                    const to = `/games/${game.slug}`;
+                    maybeHardNavigateFromTap(to, event.clientX, event.clientY, event.pointerId);
+                  }}
+                  onPointerCancel={cancelTap}
+                  onTouchEnd={(event) => {
+                    const t = event.changedTouches?.[0];
+                    if (!t) return;
+                    const to = `/games/${game.slug}`;
+                    maybeHardNavigateFromTap(to, t.clientX, t.clientY);
+                  }}
                   onClick={(event) => {
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
                     event.preventDefault();
-                    window.location.assign(`/games/${game.slug}`);
+                    const to = `/games/${game.slug}`;
+                    const last = lastHardNavRef.current;
+                    if (last && last.to === to && Date.now() - last.at < 1500) return;
+                    lastHardNavRef.current = { at: Date.now(), to };
+                    hardNavigate(to);
                   }}
                   aria-label={`Play ${game.title}`}
                 />

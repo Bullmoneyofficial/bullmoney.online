@@ -46,6 +46,13 @@ export function forceEnableScrolling() {
     const html = document.documentElement;
     const body = document.body;
 
+    // Detect StoreHeader scroll-lock (mobile menu, cart, etc). This lock is not a modal.
+    // If lock UI is actually present, do NOT fight it. If the attribute is stale, clear it.
+    const storeHeaderLockAttr =
+      body.getAttribute('data-storeheader-scroll-lock') === 'true' ||
+      html.getAttribute('data-storeheader-scroll-lock') === 'true';
+    const hasStoreHeaderLockUi = Boolean(document.querySelector('[data-storeheader-lock-ui="true"]'));
+
     // CRITICAL: Remove drunk scroll effects that block scrolling
     // BUT: Skip if showcase scroll is actively running (has overlay)
     const showcaseOverlay = document.getElementById('_sc_overlay');
@@ -65,22 +72,59 @@ export function forceEnableScrolling() {
     const hasOpenModal = document.querySelector('[role="dialog"]:not([data-state="closed"])');
     const hasOpenAffiliate = document.querySelector('[data-affiliate-modal]:not([data-state="closed"])');
     
-    if (hasOpenModal || hasOpenAffiliate) {
+    if (hasOpenModal || hasOpenAffiliate || (storeHeaderLockAttr && hasStoreHeaderLockUi)) {
       // Skip scroll enablement when modals are genuinely open
       return;
     }
 
-    // Force overflow to auto (CRITICAL for all browsers)
-    if (html.style.overflow === 'hidden' || html.style.overflowY === 'hidden') {
+    // If StoreHeader left the page in a locked state (common on some Android/Samsung browsers),
+    // unlock it and restore the scroll position.
+    if (storeHeaderLockAttr && !hasStoreHeaderLockUi) {
+      try {
+        body.removeAttribute('data-storeheader-scroll-lock');
+        html.removeAttribute('data-storeheader-scroll-lock');
+      } catch {
+        // Ignore
+      }
+
+      const top = body.style.top;
+      const lockedY = top && top.startsWith('-') ? Math.abs(parseInt(top, 10)) : null;
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
       html.style.overflow = '';
-      html.style.overflowY = 'auto';
-      html.style.overflowX = 'hidden';
+
+      if (typeof lockedY === 'number' && !Number.isNaN(lockedY)) {
+        try {
+          window.scrollTo(0, lockedY);
+        } catch {
+          // Ignore
+        }
+      }
     }
 
-    if (body.style.overflow === 'hidden' || body.style.overflowY === 'hidden') {
-      body.style.overflow = '';
+    // Force overflow to auto (CRITICAL for all browsers)
+    // On Samsung/Android, be more aggressive because scroll can get stuck even when overflow isn't exactly "hidden".
+    if (isSamsungDevice) {
+      html.style.overflowY = 'auto';
+      html.style.overflowX = 'hidden';
       body.style.overflowY = 'auto';
       body.style.overflowX = 'hidden';
+    } else {
+      if (html.style.overflow === 'hidden' || html.style.overflowY === 'hidden') {
+        html.style.overflow = '';
+        html.style.overflowY = 'auto';
+        html.style.overflowX = 'hidden';
+      }
+
+      if (body.style.overflow === 'hidden' || body.style.overflowY === 'hidden') {
+        body.style.overflow = '';
+        body.style.overflowY = 'auto';
+        body.style.overflowX = 'hidden';
+      }
     }
 
     // Force touch-action to enable scrolling (CRITICAL for touch devices)
@@ -105,6 +149,10 @@ export function forceEnableScrolling() {
     }
     if (body.style.position === 'fixed') {
       body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
     }
 
     // Remove modal-open class if no modal is actually open

@@ -14,7 +14,13 @@ export function useAdminAuth() {
   const { userProfile } = state;
   
   // Admin visibility based on Supabase session email matching env
-  const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
+  const normalizeEmail = (value: unknown) =>
+    String(value ?? '')
+      .trim()
+      .replace(/^['"]|['"]$/g, '')
+      .trim()
+      .toLowerCase();
+  const adminEmailEnv = normalizeEmail(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [adminAuthorized, setAdminAuthorized] = useState(false);
   const [adminChecked, setAdminChecked] = useState(false);
@@ -27,7 +33,7 @@ export function useAdminAuth() {
       const raw = localStorage.getItem("bullmoney_session");
       if (!raw) return false;
       const parsed = JSON.parse(raw);
-      const email = (parsed?.email || "").toLowerCase();
+      const email = normalizeEmail(parsed?.email);
       const isAdminFlag = Boolean(parsed?.isAdmin);
       if (isAdminFlag) return true;
       return Boolean(adminEmailEnv) && email === adminEmailEnv;
@@ -43,7 +49,7 @@ export function useAdminAuth() {
     let mounted = true;
     const evaluate = (email?: string | null) => {
       if (!mounted) return;
-      setAdminAuthorized(Boolean(adminEmailEnv) && email?.toLowerCase() === adminEmailEnv);
+      setAdminAuthorized(Boolean(adminEmailEnv) && normalizeEmail(email) === adminEmailEnv);
     };
     const run = async () => {
       if (!adminEmailEnv) {
@@ -89,7 +95,7 @@ export function useAdminAuth() {
 
   const profileMatchesAdmin = useMemo(() => {
     if (!adminEmailEnv || !userProfile?.email) return false;
-    return userProfile.email.toLowerCase() === adminEmailEnv;
+    return normalizeEmail(userProfile.email) === adminEmailEnv;
   }, [adminEmailEnv, userProfile?.email]);
 
   const isAdmin = state.isAdmin || profileMatchesAdmin || pagemodeAdminAuthorized || (adminChecked && adminAuthorized);

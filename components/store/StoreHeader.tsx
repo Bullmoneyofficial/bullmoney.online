@@ -18,7 +18,7 @@ import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useUIState, useAudioWidgetUI, useLiveStreamModalUI } from '@/contexts/UIStateContext';
+import { useCourseDrawerUI, useSocialsDrawerUI, useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useUIState, useAudioWidgetUI, useLiveStreamModalUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useHeroMode } from '@/hooks/useHeroMode';
@@ -32,8 +32,8 @@ const LazyMotionLi = dynamic(() => import('framer-motion').then(m => ({ default:
 const LazyMotionButton = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.button })), { ssr: false });
 const LazyMotionA = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.a })), { ssr: false });
 
-// Lazy load modals - same as main navbar
-const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
+// Lazy load modals/drawers - same as main navbar
+const AdminHubDrawer = dynamic(() => import('@/components/admin/AdminHubDrawer').then(m => ({ default: m.AdminHubDrawer })), { ssr: false });
 const SiteSearchOverlay = dynamic(() => import('@/components/SiteSearchOverlay'), { ssr: false });
 const GamesManualModal = dynamic(() => import('@/components/GamesManualModal').then(m => ({ default: m.GamesManualModal })), { ssr: false });
 
@@ -45,6 +45,8 @@ const LanguageToggle = dynamic(() => import('@/components/LanguageToggle').then(
 const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false, loading: () => null });
 const ProductsModal = dynamic(() => import('@/components/ProductsModal').then(m => ({ default: m.ProductsModal })), { ssr: false, loading: () => null });
 const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer').then(m => ({ default: m.CartDrawer })), { ssr: false, loading: () => null });
+const CourseDrawer = dynamic(() => import('@/components/course/CourseDrawer').then(m => ({ default: m.CourseDrawer })), { ssr: false, loading: () => null });
+const SocialsDrawer = dynamic(() => import('@/components/socials/SocialsDrawer').then(m => ({ default: m.SocialsDrawer })), { ssr: false, loading: () => null });
 const StoreAccountDrawer = dynamic(() => import('@/components/store/StoreAccountDrawer').then(m => ({ default: m.StoreAccountDrawer })), { ssr: false, loading: () => null });
 const LiveStreamModal = dynamic(() => import('@/components/LiveStreamModal'), { ssr: false, loading: () => null });
 
@@ -60,6 +62,8 @@ const STORE_NAV_ITEMS = [
   { href: '/design', label: 'Design', category: '' },
   { href: '/games', label: 'Games', category: '' },
   { href: '#action:products', label: 'BULLMONEY VIP+', category: '' },
+  { href: '#action:socials', label: 'Social', category: '' },
+  { href: '#action:course', label: 'Course', category: '' },
   { href: '#action:livestream', label: 'Live Stream', category: '' },
   { href: '#action:faq', label: 'FAQ', category: '' },
   { href: '#action:themes', label: 'Themes', category: '' },
@@ -150,12 +154,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const { isAdmin } = useAdminAuth();
   const isDev = process.env.NODE_ENV === 'development';
   const [devAdminEnabled, setDevAdminEnabled] = useState(true);
-  const effectiveAdmin = isDev && isAdmin && devAdminEnabled;
+  // Admin Hub should be available for:
+  // - real admins (Supabase profile or pagemode local session)
+  // - dev (local development bypass)
+  // Dev-only toggle allows viewing the store as a non-admin.
+  const canOpenAdminHub = (isAdmin || isDev) && (!isDev || devAdminEnabled);
   const canUseDevAdminShortcut = isDev;
   const { open: openProductsModal, isOpen: isProductsModalOpen } = useProductsModalUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
   const { setAudioWidgetOpen } = useAudioWidgetUI();
   const { isOpen: isLiveStreamModalOpen, setIsOpen: setLiveStreamModalOpen } = useLiveStreamModalUI();
+  const { open: openCourseDrawer } = useCourseDrawerUI();
+  const { open: openSocialsDrawer } = useSocialsDrawerUI();
   const itemCount = getItemCount();
   const router = useRouter();
   const pathname = usePathname();
@@ -594,6 +604,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       { label: 'Games', onClick: navigateToGames, variant: 'link' as const },
       { label: 'Affiliates', onClick: () => setAffiliateModalOpen(true), variant: 'link' as const },
       { label: 'BULLMONEY VIP+', onClick: () => openProductsModal(), variant: 'link' as const },
+      { label: 'Social', onClick: () => openSocialsDrawer(), variant: 'link' as const },
+      { label: 'Course', onClick: () => openCourseDrawer(), variant: 'link' as const },
       { label: 'FAQ', onClick: () => setFaqModalOpen(true), variant: 'link' as const },
       { label: 'Themes', onClick: toggleThemePicker, isActive: showThemePicker, variant: 'toggle' as const },
       { label: 'Hub', onClick: toggleUltimateHub, isActive: showUltimateHub, variant: 'toggle' as const },
@@ -602,7 +614,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     ];
 
     return links;
-  }, [navigateToGames, openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, showAudioWidget, toggleThemePicker, toggleUltimateHub, toggleAudioWidget, isDesignPage, showDesignSections, toggleDesignSections]);
+  }, [navigateToGames, openProductsModal, openSocialsDrawer, openCourseDrawer, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, showAudioWidget, toggleThemePicker, toggleUltimateHub, toggleAudioWidget, isDesignPage, showDesignSections, toggleDesignSections]);
 
   // Check if there's a canvas section in the viewport (below header)
   const isOverCanvasSection = useCallback(() => {
@@ -704,7 +716,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, []);
 
   useEffect(() => {
-    if (!canUseDevAdminShortcut || isCasinoPage) return;
+    // Dev-only shortcut to open Admin Hub (works even on games pages in dev)
+    if (!canUseDevAdminShortcut) return;
 
     const handleAdminHubShortcut = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
@@ -715,7 +728,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
     window.addEventListener('keydown', handleAdminHubShortcut);
     return () => window.removeEventListener('keydown', handleAdminHubShortcut);
-  }, [canUseDevAdminShortcut, isCasinoPage]);
+  }, [canUseDevAdminShortcut]);
 
   const handleRewardsClick = useCallback(() => {
     if (isAuthenticated && recruit) {
@@ -744,6 +757,14 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     // Intercept action hrefs for modals/toggles
     if (href === '#action:products') {
       openProductsModal();
+      return;
+    }
+    if (href === '#action:socials') {
+      openSocialsDrawer();
+      return;
+    }
+    if (href === '#action:course') {
+      openCourseDrawer();
       return;
     }
     if (href === '#action:games' || href === '/games') {
@@ -782,7 +803,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         }
       }, 100);
     }
-  }, [navigateWithFallback, startPagemodeLogin, navigateToGames, navigateToHome, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
+  }, [navigateWithFallback, startPagemodeLogin, navigateToGames, navigateToHome, openProductsModal, openSocialsDrawer, openCourseDrawer, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
 
 
   const handleOpenMobileMenu = useCallback(() => {
@@ -836,6 +857,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
             transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.1 }}
             onClick={handleCloseMobileMenu}
             className="fixed inset-0 z-[1200]"
+            data-storeheader-lock-ui="true"
             style={{ background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.18)', willChange: 'opacity' }}
           />
           <LazyMotionDiv
@@ -844,6 +866,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
             exit={shouldSkipHeavyEffects ? undefined : { x: '100%' }}
             transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: 'tween', duration: 0.14, ease: [0.25, 1, 0.5, 1] }}
             className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto overscroll-contain touch-pan-y"
+            data-storeheader-lock-ui="true"
             style={{
               background: 'rgb(255,255,255)',
               backgroundColor: '#ffffff',
@@ -1011,8 +1034,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               </div>
             )}
 
-            {/* Admin Button - Mobile, dev only */}
-            {effectiveAdmin && (
+            {/* Admin Hub - Mobile */}
+            {canOpenAdminHub && (
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -1021,7 +1044,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 className="mb-3 text-left text-sm font-medium tracking-tight transition-colors"
                 style={{ color: 'rgba(113,46,165,0.95)' }}
               >
-                Admin Panel
+                Admin Hub
               </button>
             )}
 
@@ -1114,6 +1137,48 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 variants={MOBILE_MENU_LIST_VARIANTS}
                 className="space-y-1"
               >
+                <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
+                  <LazyMotionButton
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openSocialsDrawer();
+                    }}
+                    className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
+                    style={{
+                      backgroundImage: 'linear-gradient(110deg, rgb(10,25,63) 15%, rgb(18,53,116) 40%, rgb(30,84,186) 50%, rgb(18,53,116) 60%, rgb(10,25,63) 85%)',
+                      backgroundSize: '240% 100%',
+                      boxShadow: '0 0 0 1px rgba(30,84,186,0.35), 0 5px 14px rgba(10,25,63,0.28)',
+                    }}
+                    animate={{
+                      backgroundPosition: ['0% 50%', '100% 50%'],
+                    }}
+                    transition={{ duration: 2.4, repeat: Infinity, repeatType: 'loop', ease: 'linear' }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Social
+                  </LazyMotionButton>
+                </LazyMotionLi>
+                <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
+                  <LazyMotionButton
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openCourseDrawer();
+                    }}
+                    className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
+                    style={{
+                      backgroundImage: 'linear-gradient(110deg, rgb(10,25,63) 15%, rgb(18,53,116) 40%, rgb(30,84,186) 50%, rgb(18,53,116) 60%, rgb(10,25,63) 85%)',
+                      backgroundSize: '240% 100%',
+                      boxShadow: '0 0 0 1px rgba(30,84,186,0.35), 0 5px 14px rgba(10,25,63,0.28)',
+                    }}
+                    animate={{
+                      backgroundPosition: ['0% 50%', '100% 50%'],
+                    }}
+                    transition={{ duration: 2.4, repeat: Infinity, repeatType: 'loop', ease: 'linear' }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Course
+                  </LazyMotionButton>
+                </LazyMotionLi>
                 <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
                   <LazyMotionButton
                     onClick={() => {
@@ -1329,6 +1394,26 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 <button
                   onClick={() => {
                     setDesktopMenuOpen(false);
+                    openSocialsDrawer();
+                  }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                  style={{ color: '#000000' }}
+                >
+                  Social
+                </button>
+                <button
+                  onClick={() => {
+                    setDesktopMenuOpen(false);
+                    openCourseDrawer();
+                  }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                  style={{ color: '#000000' }}
+                >
+                  Course
+                </button>
+                <button
+                  onClick={() => {
+                    setDesktopMenuOpen(false);
                     navigateToGames();
                   }}
                   className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
@@ -1448,7 +1533,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     Design Sections {showDesignSections ? 'On' : 'Off'}
                   </button>
                 )}
-                {effectiveAdmin && (
+                {canOpenAdminHub && (
                   <button
                     onClick={() => {
                       setDesktopMenuOpen(false);
@@ -1457,7 +1542,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     className="block text-left text-lg font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
                     style={{ color: '#000000' }}
                   >
-                    Admin Panel
+                    Admin Hub
                   </button>
                 )}
               </div>
@@ -1554,14 +1639,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>Support & Links</p>
                   <div className="mt-5 space-y-3">
                     <p className="text-sm" style={{ color: '#000000' }}>Your donations help us obtain gaming licenses and keep games free.</p>
-                    <Link
-                      href="/community"
-                      onClick={() => setManualDropdownOpen(false)}
-                      className="block text-lg font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-2 py-1 rounded"
-                      style={{ color: '#000000' }}
-                    >
-                      → Community Page
-                    </Link>
+                    {!isCasinoPage && (
+                      <Link
+                        href="/community"
+                        onClick={() => setManualDropdownOpen(false)}
+                        className="block text-lg font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-2 py-1 rounded"
+                        style={{ color: '#000000' }}
+                      >
+                        → Community Page
+                      </Link>
+                    )}
                     <Link
                       href="/"
                       onClick={() => setManualDropdownOpen(false)}
@@ -1637,14 +1724,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
                 {/* Quick Links */}
                 <div>
-                  <Link
-                    href="/community"
-                    onClick={() => setManualDropdownOpen(false)}
-                    className="block text-base font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-3 py-2 rounded mb-2"
-                    style={{ color: '#000000' }}
-                  >
-                    → Community Page
-                  </Link>
+                  {!isCasinoPage && (
+                    <Link
+                      href="/community"
+                      onClick={() => setManualDropdownOpen(false)}
+                      className="block text-base font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-3 py-2 rounded mb-2"
+                      style={{ color: '#000000' }}
+                    >
+                      → Community Page
+                    </Link>
+                  )}
                   <Link
                     href="/"
                     onClick={() => setManualDropdownOpen(false)}
@@ -1707,14 +1796,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       {/* Cart Drawer - Always available wherever StoreHeader is rendered */}
       <CartDrawer />
 
-      {/* Admin Hub Modal - dev only, store/home pages only */}
-      {!isCasinoPage && (effectiveAdmin || canUseDevAdminShortcut) && adminModalOpen && (
-        <div style={{ zIndex: 800 }}>
-          <AdminHubModal
-            isOpen={adminModalOpen}
-            onClose={() => setAdminModalOpen(false)}
-          />
-        </div>
+      {/* Course Drawer - CartDrawer-style, controlled by context */}
+      <CourseDrawer />
+
+      {/* Socials Drawer - CartDrawer-style, controlled by context */}
+      <SocialsDrawer />
+
+      {/* Admin Hub Drawer - blocked on games pages in prod; allowed in dev */}
+      {canOpenAdminHub && adminModalOpen && (!isCasinoPage || isDev) && (
+        <AdminHubDrawer
+          isOpen={adminModalOpen}
+          onClose={() => setAdminModalOpen(false)}
+        />
       )}
 
       {/* Games Manual Modal - Only for casino pages */}

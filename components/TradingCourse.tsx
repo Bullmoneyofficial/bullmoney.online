@@ -137,7 +137,31 @@ function extractYouTubeId(url: string): string | null {
   return null;
 }
 
-export default function TradingCourse() {
+const COURSE_CAROUSEL_IMAGES = [
+  {
+    src: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=60',
+    alt: 'Trading charts on a screen',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=1400&q=60',
+    alt: 'Candlestick chart close-up',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1559526324-593bc073d938?auto=format&fit=crop&w=1400&q=60',
+    alt: 'Financial analysis workspace',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1640340434855-6084b1f4901c?auto=format&fit=crop&w=1400&q=60',
+    alt: 'Crypto market data visuals',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1569025690938-a00729c9e1f9?auto=format&fit=crop&w=1400&q=60',
+    alt: 'Stocks and finance concept',
+  },
+] as const;
+
+export default function TradingCourse({ appearance = 'hub' }: { appearance?: 'hub' | 'drawer' }) {
+  const isDrawer = appearance === 'drawer';
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [levels, setLevels] = useState<CourseLevel[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -564,6 +588,13 @@ export default function TradingCourse() {
   };
 
   if (loading) {
+    if (isDrawer) {
+      return (
+        <div className="flex items-center justify-center py-12 bg-white">
+          <div className="text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>Loading course…</div>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-white text-sm" style={{ textShadow: '0 0 8px #ffffff' }}>Loading course...</div>
@@ -573,6 +604,21 @@ export default function TradingCourse() {
 
   // Show message if no levels exist
   if (levels.length === 0) {
+    if (isDrawer) {
+      return (
+        <div className="w-full">
+          <div className="rounded-2xl border border-black/10 bg-white p-6 md:p-8 text-center" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+            <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-black/5 flex items-center justify-center">
+              <BookOpen className="w-6 h-6" style={{ color: 'rgba(0,0,0,0.35)' }} />
+            </div>
+            <h3 className="text-lg md:text-xl font-light text-black">Course coming soon</h3>
+            <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>
+              The trading course content hasn’t been published yet.
+            </p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="h-full flex flex-col bg-black text-white overflow-hidden">
         <div className="flex-shrink-0 border-b border-white/20 bg-black/80 backdrop-blur-sm px-3 py-3">
@@ -592,6 +638,409 @@ export default function TradingCourse() {
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // ========================================================================
+  // DRAWER APPEARANCE (StoreHeader CourseDrawer)
+  // Matches ProductsModal / CartDrawer typography, sizing, rounded corners.
+  // ========================================================================
+  if (isDrawer) {
+    return (
+      <div className="w-full bg-white">
+        {!selectedLevel ? (
+          <div className="space-y-4">
+            <div className="text-center">
+              <h2 className="text-xl md:text-2xl font-light text-black">Choose your journey</h2>
+              <p className="mt-1 text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>Select your trading level to begin.</p>
+            </div>
+
+            {/* Image carousel (Unsplash) */}
+            <div className="rounded-2xl border border-black/10 bg-white overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+              <div
+                className="flex gap-3 overflow-x-auto overscroll-contain touch-pan-x p-3 scrollbar-none snap-x snap-mandatory"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                {COURSE_CAROUSEL_IMAGES.map((img) => (
+                  <div key={img.src} className="relative h-36 md:h-40 w-[78%] md:w-[70%] shrink-0 rounded-2xl overflow-hidden bg-black/5 snap-start border border-black/10">
+                    <img
+                      src={img.src}
+                      alt={img.alt}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      draggable={false}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              {levels.map((level, index) => (
+                <button
+                  key={level.id}
+                  onClick={() => {
+                    ensureCourseStarted(level.id);
+                    setLocalState(prev => ({ ...prev, startedLevelId: level.id }));
+                    setSelectedLevel(level.id);
+                    setSelectedModule(null);
+                    setSelectedLesson(null);
+                  }}
+                  className="w-full text-left rounded-2xl border border-black/10 bg-white p-4 md:p-5 hover:bg-black/5 active:scale-[0.99] transition-all"
+                  style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-base md:text-lg font-medium text-black truncate">{level.display_name}</div>
+                      <div className="mt-1 text-sm line-clamp-2" style={{ color: 'rgba(0,0,0,0.55)' }}>{level.description}</div>
+                    </div>
+                    <div className="shrink-0 text-xs px-2 py-1 rounded-xl bg-black/5" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                      Level {index + 1}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Image carousel (Unsplash) */}
+            <div className="rounded-2xl border border-black/10 bg-white overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+              <div
+                className="flex gap-3 overflow-x-auto overscroll-contain touch-pan-x p-3 scrollbar-none snap-x snap-mandatory"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                {COURSE_CAROUSEL_IMAGES.map((img) => (
+                  <div key={img.src} className="relative h-32 md:h-36 w-[78%] md:w-[70%] shrink-0 rounded-2xl overflow-hidden bg-black/5 snap-start border border-black/10">
+                    <img
+                      src={img.src}
+                      alt={img.alt}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      draggable={false}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={() => {
+                  setSelectedLevel(null);
+                  setSelectedModule(null);
+                  setSelectedLesson(null);
+                }}
+                className="h-10 px-4 rounded-xl bg-black/5 hover:bg-black/10 active:scale-95 transition-all text-sm font-medium flex items-center gap-2"
+                style={{ color: '#1d1d1f' }}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to levels
+              </button>
+
+              {(() => {
+                const p = getTotalLevelProgress();
+                const minutes = getTotalTimeSpentMinutes();
+                return (
+                  <div className="text-xs md:text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                    <span className="font-medium text-black">{p.percent}%</span> complete · {p.completed}/{p.total} lessons · {minutes}m
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="grid md:grid-cols-12 gap-4 md:gap-6">
+              {/* Modules */}
+              <div className="md:col-span-5">
+                <div className="rounded-2xl border border-black/10 bg-white overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                  <div className="px-4 py-3 border-b border-black/10 flex items-center justify-between">
+                    <div className="text-sm font-medium text-black flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" />
+                      Modules
+                    </div>
+                    {!user && (
+                      <div className="text-xs" style={{ color: 'rgba(0,0,0,0.45)' }}>Local progress (login to sync)</div>
+                    )}
+                  </div>
+
+                  <div className="p-2">
+                    {modules.length === 0 ? (
+                      <div className="p-6 text-center">
+                        <div className="mx-auto mb-3 h-12 w-12 rounded-2xl bg-black/5 flex items-center justify-center">
+                          <BookOpen className="w-6 h-6" style={{ color: 'rgba(0,0,0,0.35)' }} />
+                        </div>
+                        <div className="text-sm font-medium text-black">No modules available</div>
+                        <div className="mt-1 text-xs" style={{ color: 'rgba(0,0,0,0.55)' }}>This level hasn’t been set up yet.</div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {modules.map((module) => (
+                          <div key={module.id} className="rounded-2xl border border-black/10 overflow-hidden">
+                            <button
+                              onClick={() => setSelectedModule(module.id)}
+                              className="w-full text-left px-3 py-3 hover:bg-black/5 transition-colors"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-medium text-black line-clamp-1">{module.title}</div>
+                                  <div className="mt-0.5 text-xs line-clamp-1" style={{ color: 'rgba(0,0,0,0.55)' }}>{module.description}</div>
+                                </div>
+                                <div className="shrink-0 text-xs px-2 py-1 rounded-xl bg-black/5" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                                  {getModuleProgress(module.id)}%
+                                </div>
+                              </div>
+                            </button>
+
+                            {selectedModule === module.id && (
+                              <div className="border-t border-black/10 p-2 bg-white">
+                                <div className="space-y-1">
+                                  {(lessonsByModule[module.id] || []).map((lesson, idx) => {
+                                    const progress = getEffectiveLessonProgress(lesson.id);
+                                    const isCompleted = progress?.completed;
+                                    return (
+                                      <button
+                                        key={lesson.id}
+                                        onClick={() => {
+                                          ensureCourseStarted(selectedLevel ?? undefined);
+                                          setSelectedLesson(lesson);
+                                        }}
+                                        className={
+                                          'w-full text-left rounded-xl border px-3 py-2 transition-colors flex items-center gap-2 ' +
+                                          (selectedLesson?.id === lesson.id
+                                            ? 'border-black/20 bg-black/5'
+                                            : 'border-black/10 hover:bg-black/5')
+                                        }
+                                      >
+                                        <div className="h-8 w-8 rounded-xl bg-black/5 flex items-center justify-center shrink-0">
+                                          {isCompleted ? (
+                                            <Check className="w-4 h-4" />
+                                          ) : lesson.is_free ? (
+                                            <Play className="w-4 h-4" />
+                                          ) : (
+                                            <Lock className="w-4 h-4" />
+                                          )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="text-sm font-medium text-black truncate">{idx + 1}. {lesson.title}</div>
+                                          <div className="mt-0.5 flex items-center gap-2 text-xs" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                                            {lesson.duration_minutes ? (
+                                              <span className="inline-flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {lesson.duration_minutes}m
+                                              </span>
+                                            ) : null}
+                                            <span className="inline-flex items-center gap-1">
+                                              {lesson.content_type === 'video' ? <Video className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+                                              {lesson.content_type === 'video' ? 'Video' : 'Article'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lesson */}
+              <div className="md:col-span-7">
+                {!selectedLesson ? (
+                  <div className="rounded-2xl border border-black/10 bg-white p-8 text-center" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                    <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-black/5 flex items-center justify-center">
+                      <Play className="w-6 h-6" style={{ color: 'rgba(0,0,0,0.35)' }} />
+                    </div>
+                    <div className="text-base font-medium text-black">Select a lesson</div>
+                    <div className="mt-1 text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>Pick a module and choose a lesson to start.</div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-black/10 bg-white overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                    <div className="p-4 border-b border-black/10">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-base md:text-lg font-medium text-black line-clamp-2">{selectedLesson.title}</div>
+                          <div className="mt-1 text-sm line-clamp-2" style={{ color: 'rgba(0,0,0,0.55)' }}>{selectedLesson.description}</div>
+                          <div className="mt-2 flex items-center gap-3 text-xs" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                            {selectedLesson.duration_minutes ? (
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {selectedLesson.duration_minutes}m
+                              </span>
+                            ) : null}
+                            <span className="inline-flex items-center gap-1">
+                              {selectedLesson.content_type === 'video' ? <Video className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+                              {selectedLesson.content_type === 'video' ? 'Video' : 'Article'}
+                            </span>
+                            {!selectedLesson.is_free ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/5">
+                                <Lock className="w-3 h-3" />
+                                Locked
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/5">
+                                Free
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {getEffectiveLessonProgress(selectedLesson.id)?.completed && (
+                          <div className="shrink-0 text-xs px-2 py-1 rounded-xl bg-black/5 text-black inline-flex items-center gap-1">
+                            <Award className="w-3 h-3" />
+                            Done
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      {!lessonStarted ? (
+                        <div className="py-8 text-center">
+                          <div className="mx-auto mb-4 h-14 w-14 rounded-2xl bg-black/5 flex items-center justify-center">
+                            {selectedLesson.content_type === 'video' ? (
+                              <Video className="w-7 h-7" style={{ color: 'rgba(0,0,0,0.45)' }} />
+                            ) : (
+                              <FileText className="w-7 h-7" style={{ color: 'rgba(0,0,0,0.45)' }} />
+                            )}
+                          </div>
+                          <div className="text-base font-medium text-black">Ready to learn?</div>
+                          <div className="mt-1 text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                            {selectedLesson.content_type === 'video'
+                              ? 'Watch this lesson and expand your trading knowledge.'
+                              : 'Read through this lesson to master the concepts.'}
+                          </div>
+                          <button
+                            onClick={() => setLessonStarted(true)}
+                            className="mt-5 px-6 py-3 rounded-xl text-sm font-medium active:scale-95 transition-all inline-flex items-center gap-2"
+                            style={{ background: '#111111', color: '#ffffff' }}
+                          >
+                            <Play className="w-4 h-4" />
+                            Start Lesson
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Video */}
+                          {selectedLesson.content_type === 'video' && selectedLesson.video_url && (() => {
+                            const youtubeId = extractYouTubeId(selectedLesson.video_url);
+                            const embedUrl = youtubeId
+                              ? `https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&controls=1&showinfo=0`
+                              : selectedLesson.video_url;
+                            return (
+                              <div className="rounded-2xl overflow-hidden border border-black/10 bg-black/5">
+                                <div className="relative w-full pt-[56.25%]">
+                                  <iframe
+                                    className="absolute top-0 left-0 w-full h-full"
+                                    src={embedUrl}
+                                    title={selectedLesson.title}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                    style={{ border: 'none' }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })()}
+
+                          {/* Article */}
+                          {selectedLesson.content_type !== 'video' && selectedLesson.article_content && (
+                            <div
+                              className="rounded-2xl border border-black/10 bg-white p-4 prose prose-sm max-w-none"
+                              style={{ color: '#1d1d1f' }}
+                              dangerouslySetInnerHTML={{ __html: selectedLesson.article_content }}
+                            />
+                          )}
+
+                          {/* Resources */}
+                          {(selectedLesson && (resourcesByLesson[selectedLesson.id] || []).length > 0) && (
+                            <div className="rounded-2xl border border-black/10 bg-white p-4">
+                              <div className="text-sm font-medium text-black mb-2">Downloads</div>
+                              <div className="space-y-2">
+                                {(resourcesByLesson[selectedLesson.id] || []).map((r) => (
+                                  <a
+                                    key={r.id}
+                                    href={r.file_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block rounded-xl border border-black/10 bg-white hover:bg-black/5 transition-colors p-3"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="min-w-0">
+                                        <div className="text-sm font-medium text-black truncate">{r.title}</div>
+                                        {r.description ? (
+                                          <div className="mt-0.5 text-xs" style={{ color: 'rgba(0,0,0,0.55)' }}>{r.description}</div>
+                                        ) : null}
+                                      </div>
+                                      <div className="shrink-0 text-xs px-2 py-1 rounded-xl bg-black/5" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                                        <Download className="w-3 h-3 inline-block mr-1" />
+                                        {r.resource_type?.toUpperCase?.() || 'FILE'}
+                                      </div>
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Quizzes */}
+                          {(selectedLesson && (quizzesByLesson[selectedLesson.id] || []).length > 0) && (
+                            <div className="rounded-2xl border border-black/10 bg-white p-4">
+                              <div className="text-sm font-medium text-black mb-2">Quiz</div>
+                              <div className="space-y-3">
+                                {(quizzesByLesson[selectedLesson.id] || []).map((q) => {
+                                  const attempt = localState.quizAttempts[q.id];
+                                  return (
+                                    <div key={q.id} className="rounded-xl border border-black/10 bg-white p-3">
+                                      <div className="text-sm font-medium text-black">{q.question}</div>
+                                      <div className="mt-2 grid gap-2">
+                                        {q.options.map((opt, idx) => {
+                                          const selected = attempt?.selectedAnswer === idx;
+                                          return (
+                                            <button
+                                              key={idx}
+                                              onClick={() => void saveQuizAttempt(q, idx)}
+                                              className={
+                                                'text-left px-3 py-2 rounded-xl border transition-colors ' +
+                                                (selected ? 'border-black/20 bg-black/5' : 'border-black/10 hover:bg-black/5')
+                                              }
+                                            >
+                                              <div className="text-sm" style={{ color: '#1d1d1f' }}>{opt}</div>
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                      {typeof attempt?.isCorrect === 'boolean' && (
+                                        <div className="mt-2 text-xs" style={{ color: attempt.isCorrect ? 'rgba(0,0,0,0.70)' : 'rgba(0,0,0,0.55)' }}>
+                                          {attempt.isCorrect ? 'Correct ✅' : 'Not quite — try again.'}
+                                        </div>
+                                      )}
+                                      {q.explanation && attempt?.isCorrect && (
+                                        <div className="mt-2 text-xs" style={{ color: 'rgba(0,0,0,0.55)' }}>{q.explanation}</div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

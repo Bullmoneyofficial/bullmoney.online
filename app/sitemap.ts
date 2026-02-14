@@ -79,13 +79,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   // Static assets (no language alternates needed)
   entries.push({
-    url: `${primaryDomain}/ONcc2l601.svg`,
+    url: `${primaryDomain}/IMG_2921.PNG`,
     lastModified: currentDate,
     changeFrequency: 'yearly',
     priority: 0.5,
   });
   entries.push({
-    url: `${secondaryDomain}/ONcc2l601.svg`,
+    url: `${secondaryDomain}/IMG_2921.PNG`,
     lastModified: currentDate,
     changeFrequency: 'yearly',
     priority: 0.5,
