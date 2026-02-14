@@ -1,6 +1,24 @@
 (function(){
   var splash = document.getElementById('bm-splash');
   if (!splash) return;
+  var raf = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(cb){ return setTimeout(cb, 16); };
+  var caf = window.cancelAnimationFrame ? window.cancelAnimationFrame.bind(window) : function(id){ clearTimeout(id); };
+  var hardFailTimer = null;
+
+  function forceHide() {
+    if (!splash || splash.classList.contains('hide')) return;
+    splash.classList.add('hide');
+    document.documentElement.classList.add('bm-splash-done');
+    setTimeout(function() {
+      if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+    }, 450);
+    window.__BM_SPLASH_FINISHED__ = true;
+    try {
+      window.dispatchEvent(new Event('bm-splash-finished'));
+    } catch (e) {
+      // noop
+    }
+  }
   // --- Loading state machine ---
   var STEPS = ['LOADING CORE','CONNECTING SERVICES','HYDRATING UI','READY'];
   var CHARS = 'ABCDEF0123456789!@#$%^&*';
@@ -27,6 +45,7 @@
   var readyShownAt95 = false;
 
   function playLoadSound(useMutedBootstrap) {
+    if (typeof Audio === 'undefined') return;
     if (loadSoundPlayed) return;
     if (!loadAudio) {
       loadAudio = new Audio('/modals.mp3');
@@ -261,7 +280,7 @@
       animFrame = requestAnimationFrame(animateProgress);
     }
   }
-  animFrame = requestAnimationFrame(animateProgress);
+  animFrame = raf(animateProgress);
 
   stallWatchdog = setInterval(function() {
     if (!splash || splash.classList.contains('hide')) return;
@@ -313,12 +332,12 @@
               updateProgress(100);
               setTimeout(hide, 150);
             } else {
-              requestAnimationFrame(waitForHundred);
+              raf(waitForHundred);
             }
           }
           waitForHundred();
         } else {
-          requestAnimationFrame(waitForNinetyFive);
+          raf(waitForNinetyFive);
         }
       }
       waitForNinetyFive();
@@ -377,7 +396,11 @@
       setTimeout(hide, minVisibleMs - elapsed);
       return;
     }
-    cancelAnimationFrame(animFrame);
+    if (hardFailTimer) {
+      clearTimeout(hardFailTimer);
+      hardFailTimer = null;
+    }
+    caf(animFrame);
     clearInterval(stallWatchdog);
     unbindInteractionSoundRetry();
     unbindLifecycleSoundRetry();
@@ -399,15 +422,22 @@
     // finish effects removed (no sway)
   }
 
-  // Start the flow
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onDomReady);
-  } else {
-    onDomReady();
-  }
+  try {
+    // Start the flow
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', onDomReady);
+    } else {
+      onDomReady();
+    }
 
-  // Safety net: 8s max
-  setTimeout(function() {
-    if (splash && !splash.classList.contains('hide')) hide();
-  }, 8000);
+    // Safety net: 8s max
+    setTimeout(function() {
+      if (splash && !splash.classList.contains('hide')) hide();
+    }, 8000);
+
+    // Hard fail-safe in case of runtime errors or missing APIs
+    hardFailTimer = setTimeout(forceHide, 12000);
+  } catch (e) {
+    forceHide();
+  }
 })();

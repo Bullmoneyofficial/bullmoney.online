@@ -525,19 +525,40 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     });
   }, []);
 
+  const navigateWithFallback = useCallback((target: string) => {
+    if (typeof window !== 'undefined') {
+      const resolvedTarget = new URL(target, window.location.origin).toString();
+
+      if (pathname?.startsWith('/games')) {
+        window.location.assign(resolvedTarget);
+        return;
+      }
+    }
+
+    router.push(target);
+
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        try {
+          const resolvedTarget = new URL(target, window.location.origin).toString();
+          if (window.location.href !== resolvedTarget) {
+            window.location.assign(resolvedTarget);
+          }
+        } catch {
+          // Ignore navigation fallback failures
+        }
+      }, 600);
+    }
+  }, [pathname, router]);
+
   const navigateToGames = useCallback(() => {
     if (pathname?.startsWith('/games')) return;
     setMobileMenuOpen(false);
     setDesktopMenuOpen(false);
     setManualDropdownOpen(false);
     setSiteSearchOpen(false);
-    router.push('/games');
-    window.setTimeout(() => {
-      if (!window.location.pathname.startsWith('/games')) {
-        window.location.assign('/games');
-      }
-    }, 500);
-  }, [pathname, router, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
+    navigateWithFallback('/games');
+  }, [pathname, navigateWithFallback, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen, setSiteSearchOpen]);
 
   const desktopLinks = useMemo(() => {
     const links = [
@@ -717,7 +738,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       return;
     }
     
-    router.push(href);
+    navigateWithFallback(href);
     // Only scroll to products grid for store category links
     if (href.startsWith('/store')) {
       setTimeout(() => {
@@ -727,7 +748,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         }
       }, 100);
     }
-  }, [router, startPagemodeLogin, navigateToGames, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
+  }, [navigateWithFallback, startPagemodeLogin, navigateToGames, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
 
 
   const handleOpenMobileMenu = useCallback(() => {
@@ -752,8 +773,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
   const handleHomeClick = useCallback(() => {
     SoundEffects.click();
-    router.push('/');
-  }, [router]);
+    navigateWithFallback('/');
+  }, [navigateWithFallback]);
 
   const handleThemeButtonClick = useCallback(() => {
     SoundEffects.click();
@@ -763,21 +784,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const handleHeroModeChange = useCallback((mode: HeroMode) => {
     setHeroMode(mode);
     const target = mode === 'design' ? '/design' : mode === 'trader' ? '/' : '/store';
-    router.push(target);
-
-    // Fallback: if client-side navigation stalls, force a full reload to target.
-    if (typeof window !== 'undefined') {
-      window.setTimeout(() => {
-        try {
-          if (window.location.pathname !== target) {
-            window.location.assign(target);
-          }
-        } catch {
-          // Ignore navigation fallback failures
-        }
-      }, 600);
-    }
-  }, [router, setHeroMode]);
+    navigateWithFallback(target);
+  }, [navigateWithFallback, setHeroMode]);
 
   const mobileMenuContent = (
     <LazyAnimatePresence>
