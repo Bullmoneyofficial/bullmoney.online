@@ -1257,6 +1257,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 borderLeft: '1px solid rgba(0,0,0,0.1)',
                 willChange: 'transform',
                 WebkitOverflowScrolling: 'touch',
+                overscrollBehaviorY: 'contain',
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
               }}
             >
               <div className="flex items-center justify-between mb-4">
@@ -1554,7 +1556,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 </LazyMotionUl>
               </div>
 
-              <div className="mt-auto pt-2">
+              <div className="mt-3 pt-2">
                 <div className="border-t border-black/10 pt-3 pb-2">
                   <LanguageToggle
                     variant="row"

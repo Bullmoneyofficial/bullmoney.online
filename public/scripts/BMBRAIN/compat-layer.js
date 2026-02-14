@@ -601,10 +601,7 @@ cssRules.push(
   '  .hover-scale:hover{transform:scale(1.02);}',
   '  .hover-glow:hover{box-shadow:0 0 20px rgba(255,255,255,0.1);}',
   '}',
-  '/* Hybrid devices (touch laptops): increase touch targets */',
-  'html.hybrid-device a,html.hybrid-device button,html.hybrid-device [role="button"]{',
-  '  min-height:44px;min-width:44px;',
-  '}'
+  '/* Hybrid devices (touch laptops): increase touch targets */'
 );
 
 // Enhanced touch/scroll for all devices
@@ -614,14 +611,6 @@ cssRules.push(
   'button,[role="button"],a,.no-select{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}',
   '/* Allow text selection on content areas */',
   'p,article,span,.selectable,[contenteditable]{-webkit-user-select:text;user-select:text;}',
-  '/* Touch target minimums (WCAG 2.5.5) */',
-  'html.touch-device a,html.touch-device button,html.touch-device [role="button"],html.touch-device input,html.touch-device select,html.touch-device textarea{',
-  '  min-height:44px;min-width:44px;',
-  '}',
-  '/* Store header: keep original button sizes on iOS/Safari */',
-  'html.is-ios-safari .store-main-nav a,html.is-ios-safari .store-main-nav button,html.is-ios-safari .store-main-nav [role="button"]{',
-  '  min-height:0;min-width:0;',
-  '}',
   '/* Smooth momentum scrolling everywhere */',
   '.scroll-container,[data-scroll],[role="listbox"],[role="menu"]{',
   '  -webkit-overflow-scrolling:touch;',
