@@ -761,15 +761,10 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, [applyThemePickerToggle]);
 
   const handleHeroModeChange = useCallback((mode: HeroMode) => {
+    // Navigation is handled by the hero mode Links in StorePillNav.
+    // Keep this handler focused on persisting shared mode state.
     setHeroMode(mode);
-    if (mode === 'design') {
-      router.push('/design');
-    } else if (mode === 'trader') {
-      router.push('/'); // Redirect to app page (homepage)
-    } else if (mode === 'store') {
-      router.push('/store'); // Redirect to store page
-    }
-  }, [router, setHeroMode]);
+  }, [setHeroMode]);
 
   const mobileMenuContent = (
     <LazyAnimatePresence>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, memo } from 'react';
+import React, { useCallback, memo } from 'react';
 import Link from 'next/link';
 import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
 import Search from 'lucide-react/dist/esm/icons/search';
@@ -105,13 +105,6 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   showThemeButton = false,
   onThemeClick,
 }) => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-
   const handleMobileMenuClick = useCallback(() => {
     onMobileMenuClick?.();
   }, [onMobileMenuClick]);
@@ -141,12 +134,11 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
     ? `fixed top-0 left-0 right-0 z-[1000] ${className}`
     : `relative w-full ${className}`;
 
-  // SSR fallback
-  if (!mounted) {
-    return (
-      <header className={headerClassName} style={{ background: 'rgb(255,255,255)' }} />
-    );
-  }
+  const hrefForMode = useCallback((mode: HeroMode) => {
+    if (mode === 'store') return '/store';
+    if (mode === 'trader') return '/';
+    return '/design';
+  }, []);
 
   return (
     <>
@@ -257,39 +249,38 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
             {/* Hero Mode Toggle - Store / Trader / Design */}
             {heroMode && onHeroModeChange && (
               <div className="hidden sm:flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
-                <button
-                  type="button"
-                  onClick={() => onHeroModeChange('store')}
-                  className={`px-3 h-full text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
-                    heroMode === 'store'
-                      ? 'bg-black text-white'
-                      : 'text-black/60 hover:text-black'
-                  }`}
-                >
-                  Store
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onHeroModeChange('trader')}
-                  className={`px-3 h-full text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
-                    heroMode === 'trader'
-                      ? 'bg-black text-white'
-                      : 'text-black/60 hover:text-black'
-                  }`}
-                >
-                  Trader
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onHeroModeChange('design')}
-                  className={`px-3 h-full text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
-                    heroMode === 'design'
-                      ? 'bg-black text-white'
-                      : 'text-black/60 hover:text-black'
-                  }`}
-                >
-                  Design
-                </button>
+                {(['store', 'trader', 'design'] as const).map((mode) => (
+                  <Link
+                    key={mode}
+                    href={hrefForMode(mode)}
+                    onClick={() => {
+                      onHeroModeChange(mode);
+
+                      // Fallback: if client-side navigation fails (stale chunk cache, slow hydration),
+                      // force a full navigation so the route still opens on the first click.
+                      if (typeof window !== 'undefined') {
+                        const target = hrefForMode(mode);
+                        window.setTimeout(() => {
+                          try {
+                            if (window.location.pathname !== target) {
+                              window.location.assign(target);
+                            }
+                          } catch {
+                            // ignore
+                          }
+                        }, 600);
+                      }
+                    }}
+                    className={`px-3 h-full inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
+                      heroMode === mode
+                        ? 'bg-black text-white'
+                        : 'text-black/60 hover:text-black'
+                    }`}
+                    aria-current={heroMode === mode ? 'page' : undefined}
+                  >
+                    {mode === 'store' ? 'Store' : mode === 'trader' ? 'Trader' : 'Design'}
+                  </Link>
+                ))}
               </div>
             )}
 

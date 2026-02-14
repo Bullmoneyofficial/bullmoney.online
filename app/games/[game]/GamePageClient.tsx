@@ -1,10 +1,106 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import React, { Component, useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import BullcasinoShell from '../components/BullcasinoShell';
 import Link from 'next/link';
+
+/* ───────────────────────────────────────────
+   Lazy-load Three.js / R3F — only pulled in
+   when a 3D game component actually mounts.
+   ─────────────────────────────────────────── */
+let Canvas: typeof import('@react-three/fiber').Canvas | null = null;
+let useFrame: typeof import('@react-three/fiber').useFrame | null = null;
+let THREE: typeof import('three') | null = null;
+let _r3fReady = false;
+
+function useR3F() {
+  const [ready, setReady] = useState(_r3fReady);
+  useEffect(() => {
+    if (_r3fReady) { setReady(true); return; }
+    let cancelled = false;
+    Promise.all([
+      import('@react-three/fiber'),
+      import('three'),
+    ]).then(([r3f, three]) => {
+      Canvas = r3f.Canvas;
+      useFrame = r3f.useFrame;
+      THREE = three;
+      _r3fReady = true;
+      if (!cancelled) setReady(true);
+    }).catch(err => {
+      console.error('[R3F] Failed to load Three.js', err);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  return ready;
+}
+
+/* ───────────────────────────────────────────
+   Client-side Error Boundary — catches any
+   render crash (WebGL, canvas, etc.) and
+   shows a retry button instead of white-screening.
+   ─────────────────────────────────────────── */
+class GameErrorBoundary extends Component<
+  { children: ReactNode; fallbackLabel?: string },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode; fallbackLabel?: string }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[GameErrorBoundary]', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>
+          <p style={{ marginBottom: 12 }}>
+            {this.props.fallbackLabel || 'This game component failed to load.'}
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            style={{
+              padding: '10px 24px',
+              background: '#00e701',
+              color: '#000',
+              border: 'none',
+              borderRadius: 8,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/* Safe Canvas wrapper — shows a simple fallback while R3F is loading
+   or if WebGL is unavailable */
+function SafeCanvas({ children, ...props }: React.ComponentProps<typeof import('@react-three/fiber').Canvas>) {
+  const ready = useR3F();
+  if (!ready || !Canvas) {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7a8a9a', fontSize: 13 }}>
+        Loading 3D…
+      </div>
+    );
+  }
+  const R3FCanvas = Canvas;
+  return (
+    <GameErrorBoundary fallbackLabel="3D renderer failed to initialise.">
+      <R3FCanvas {...props}>{children}</R3FCanvas>
+    </GameErrorBoundary>
+  );
+}
 
 /* ───────────────────────────────────────────
    Inline game-specific CSS (animations, etc.)
@@ -371,37 +467,6 @@ function BetSidebar({ inputClass, children }: { inputClass: string; children?: R
 }
 
 /* ───────────────────────────────────────────
-   Sequential Script Loader
-   ─────────────────────────────────────────── */
-function useSequentialScripts(srcs: string[]) {
-  const loaded = useRef(false);
-  useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
-    let cancelled = false;
-    function loadScript(src: string): Promise<void> {
-      return new Promise((resolve, reject) => {
-        if (cancelled) return reject('cancelled');
-        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-        const s = document.createElement('script');
-        s.src = src;
-        s.async = false;
-        s.onload = () => resolve();
-        s.onerror = () => reject(`Failed to load ${src}`);
-        document.body.appendChild(s);
-      });
-    }
-    (async () => {
-      for (const src of srcs) {
-        if (cancelled) break;
-        try { await loadScript(src); } catch (e) { if (e !== 'cancelled') console.warn(e); }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [srcs]);
-}
-
-/* ───────────────────────────────────────────
    Notification helper — top center toasts
    ─────────────────────────────────────────── */
 function showGameNotification(text: string, type: 'win' | 'lose' | 'info') {
@@ -445,7 +510,7 @@ function createNumberFaceTexture(text: string, bgColor: string) {
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return new THREE.CanvasTexture(canvas);
+  if (!ctx) return new THREE!.CanvasTexture(canvas);
 
   // Rounded background
   const r = 28;
@@ -467,8 +532,8 @@ function createNumberFaceTexture(text: string, bgColor: string) {
   ctx.font = `800 ${fontSize}px system-ui, -apple-system, sans-serif`;
   ctx.fillText(text, size / 2, size / 2);
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
+  const texture = new THREE!.CanvasTexture(canvas);
+  texture.colorSpace = THREE!.SRGBColorSpace;
   texture.needsUpdate = true;
   return texture;
 }
@@ -476,11 +541,11 @@ function createNumberFaceTexture(text: string, bgColor: string) {
 const FACE_COLORS = ['#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#10b981', '#ec4899'];
 
 function DiceMesh({ spinKey, face, displayValue }: { spinKey: number; face: number; displayValue: string }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const animRef = useRef<{ start: number; duration: number; from: THREE.Vector3; to: THREE.Vector3 } | null>(null);
-  const rotRef = useRef(new THREE.Vector3(0, 0, 0));
+  const meshRef = useRef<any>(null);
+  const animRef = useRef<{ start: number; duration: number; from: any; to: any } | null>(null);
+  const rotRef = useRef(new THREE!.Vector3(0, 0, 0));
   const turnRef = useRef({ x: 0, y: 0, z: 0 });
-  const materialsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+  const materialsRef = useRef<any[]>([]);
   const prevValueRef = useRef<string>('');
 
   // Rebuild face textures when the displayed roll value changes
@@ -490,7 +555,7 @@ function DiceMesh({ spinKey, face, displayValue }: { spinKey: number; face: numb
     materialsRef.current.forEach(m => { m.map?.dispose(); m.dispose(); });
     // All 6 faces show the same roll number with different accent colors
     materialsRef.current = FACE_COLORS.map(c =>
-      new THREE.MeshStandardMaterial({ map: createNumberFaceTexture(displayValue, c) })
+      new THREE!.MeshStandardMaterial({ map: createNumberFaceTexture(displayValue, c) })
     );
     if (meshRef.current) {
       (meshRef.current as any).material = materialsRef.current;
@@ -504,7 +569,7 @@ function DiceMesh({ spinKey, face, displayValue }: { spinKey: number; face: numb
       y: turnRef.current.y + 4,
       z: turnRef.current.z + 2,
     };
-    const to = new THREE.Vector3(
+    const to = new THREE!.Vector3(
       turnRef.current.x * Math.PI * 2 + base.x,
       turnRef.current.y * Math.PI * 2 + base.y,
       turnRef.current.z * Math.PI * 2,
@@ -517,14 +582,14 @@ function DiceMesh({ spinKey, face, displayValue }: { spinKey: number; face: numb
     };
   }, [spinKey, face]);
 
-  useFrame(() => {
+  useFrame!(() => {
     const mesh = meshRef.current;
     const anim = animRef.current;
     if (!mesh || !anim) return;
     const now = performance.now();
     const t = Math.min(1, (now - anim.start) / anim.duration);
     const eased = 1 - Math.pow(1 - t, 3);
-    const next = new THREE.Vector3(
+    const next = new THREE!.Vector3(
       anim.from.x + (anim.to.x - anim.from.x) * eased,
       anim.from.y + (anim.to.y - anim.from.y) * eased,
       anim.from.z + (anim.to.z - anim.from.z) * eased,
@@ -548,12 +613,12 @@ function DiceMesh({ spinKey, face, displayValue }: { spinKey: number; face: numb
 function Dice3DView({ spinKey, face, displayValue }: { spinKey: number; face: number; displayValue: string }) {
   return (
     <div className="dice-canvas-wrap">
-      <Canvas camera={{ position: [0, 0, 4], fov: 42 }} dpr={[1, 2]}>
+      <SafeCanvas camera={{ position: [0, 0, 4], fov: 42 }} dpr={[1, 2]}>
         <ambientLight intensity={0.8} />
         <directionalLight position={[2, 3, 4]} intensity={1.1} />
         <directionalLight position={[-3, -2, -2]} intensity={0.35} />
         <DiceMesh spinKey={spinKey} face={face} displayValue={displayValue} />
-      </Canvas>
+      </SafeCanvas>
     </div>
   );
 }
@@ -567,9 +632,9 @@ const CRASH_STARS = Array.from({ length: 30 }, (_, i) => ({
 function Crash3DView({ multiplier, gameState, cashedOut }: { multiplier: number; gameState: 'waiting' | 'running' | 'crashed'; cashedOut: boolean }) {
   return (
     <div className="game-canvas-wrap">
-      <Canvas camera={{ position: [0, 0, 7], fov: 45 }} dpr={[1, 2]}>
+      <SafeCanvas camera={{ position: [0, 0, 7], fov: 45 }} dpr={[1, 2]}>
         <Crash3DScene stars={CRASH_STARS} multiplier={multiplier} gameState={gameState} cashedOut={cashedOut} />
-      </Canvas>
+      </SafeCanvas>
     </div>
   );
 }
@@ -637,9 +702,9 @@ function Wheel3DView({ rotationDeg, spinning, resultType }: { rotationDeg: numbe
           {spinning ? '...' : resultType ? (resultType === 'win' ? 'WIN!' : 'MISS') : 'SPIN'}
         </div>
       </div>
-      <Canvas camera={{ position: [0, 0, 9.5], fov: 34 }} dpr={[1, 2]}>
+      <SafeCanvas camera={{ position: [0, 0, 9.5], fov: 34 }} dpr={[1, 2]}>
         <Wheel3DScene rotationDeg={rotationDeg} segments={segments} />
-      </Canvas>
+      </SafeCanvas>
     </div>
   );
 }
@@ -650,7 +715,7 @@ function createRouletteWheelTexture(segments: readonly ('black'|'yellow'|'red'|'
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return new THREE.CanvasTexture(canvas);
+  if (!ctx) return new THREE!.CanvasTexture(canvas);
 
   const cx = size / 2;
   const cy = size / 2;
@@ -694,8 +759,8 @@ function createRouletteWheelTexture(segments: readonly ('black'|'yellow'|'red'|'
   ctx.lineWidth = 6;
   ctx.stroke();
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
+  const texture = new THREE!.CanvasTexture(canvas);
+  texture.colorSpace = THREE!.SRGBColorSpace;
   texture.needsUpdate = true;
   return texture;
 }
@@ -717,7 +782,7 @@ function Wheel3DScene({
       <ambientLight intensity={0.62} />
       <directionalLight position={[4, 5, 6]} intensity={1.05} />
       <pointLight position={[0, 0, 3]} intensity={0.45} color="#fbbf24" />
-      <group rotation={[0, 0, THREE.MathUtils.degToRad(rotationDeg)]}>
+      <group rotation={[0, 0, THREE!.MathUtils.degToRad(rotationDeg)]}>
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.06]}>
           <cylinderGeometry args={[3.05, 3.05, 0.52, 96]} />
           <meshStandardMaterial map={wheelTexture ?? undefined} color="#ffffff" metalness={0.18} roughness={0.54} />
@@ -746,16 +811,16 @@ function Wheel3DScene({
 function Jackpot3DView({ pool, rolling }: { pool: number; rolling: boolean }) {
   return (
     <div className="game-canvas-wrap sm">
-      <Canvas camera={{ position: [0, 0.2, 6], fov: 45 }} dpr={[1, 2]}>
+      <SafeCanvas camera={{ position: [0, 0.2, 6], fov: 45 }} dpr={[1, 2]}>
         <Jackpot3DScene pool={pool} rolling={rolling} />
-      </Canvas>
+      </SafeCanvas>
     </div>
   );
 }
 
 function Jackpot3DScene({ pool, rolling }: { pool: number; rolling: boolean }) {
-  const cupRef = useRef<THREE.Group>(null);
-  useFrame((state) => {
+  const cupRef = useRef<any>(null);
+  useFrame!((state) => {
     if (!cupRef.current) return;
     cupRef.current.rotation.y = state.clock.elapsedTime * (rolling ? 1.8 : 0.7);
     cupRef.current.position.y = Math.sin(state.clock.elapsedTime * 2) * 0.08;
@@ -793,7 +858,7 @@ function Jackpot3DScene({ pool, rolling }: { pool: number; rolling: boolean }) {
 function Mines3DView({ board }: { board: ('hidden'|'gem'|'bomb')[] }) {
   return (
     <div className="game-canvas-wrap" style={{ maxWidth: '460px', height: '220px', margin: '0 auto 10px' }}>
-      <Canvas camera={{ position: [0, 0, 9], fov: 48 }} dpr={[1, 2]}>
+      <SafeCanvas camera={{ position: [0, 0, 9], fov: 48 }} dpr={[1, 2]}>
         <ambientLight intensity={0.7} />
         <directionalLight position={[3, 5, 4]} intensity={1.1} />
         {board.map((cell, i) => {
@@ -807,7 +872,7 @@ function Mines3DView({ board }: { board: ('hidden'|'gem'|'bomb')[] }) {
             </mesh>
           );
         })}
-      </Canvas>
+      </SafeCanvas>
     </div>
   );
 }
@@ -2349,7 +2414,9 @@ export default function CasinoGamePage({ game }: { game: string }) {
   const allScripts: string[] = getGameScripts(game);
 
   return (
-    <CasinoGameInner game={game} content={content} scripts={allScripts} casinoBase={casinoBase} casinoSocket={casinoSocket} />
+    <GameErrorBoundary fallbackLabel="Something went wrong loading this game.">
+      <CasinoGameInner game={game} content={content} scripts={allScripts} casinoBase={casinoBase} casinoSocket={casinoSocket} />
+    </GameErrorBoundary>
   );
 }
 
@@ -2372,13 +2439,12 @@ function CasinoGameInner({ game, content, scripts, casinoBase, casinoSocket }: {
     }
   }, [game, casinoBase, casinoSocket]);
 
-  useSequentialScripts(scripts);
-
   return (
     <BullcasinoShell>
-      {/* Game detail CSS — loaded here instead of head.tsx (not supported in App Router) */}
-      <link rel="stylesheet" href="/assets/css/style.css" />
-      <link rel="stylesheet" href="/assets/css/notifyme.css" />
+      {/* Legacy external CSS removed — style.css applied global * {margin:0;padding:0}
+          and body{height:100vh} which conflicts with the games layout. notifyme.css
+          imported Font Awesome 4 from CDN (blocking). All game styles are already
+          in the GAME_STYLES constant below. */}
       {game === 'flappybird' && (
         <link rel="stylesheet" href="/games/bullcasino/css/flappybird.css" />
       )}

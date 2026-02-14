@@ -296,9 +296,9 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
               <i className='bx bxs-gamepad-alt'></i>
               Games
             </Link>
-            <Link href="/community" className="mobile_menu__link" prefetch={true}>
-              <i className='bx bxs-chat'></i>
-              Community
+            <Link href="/store" className="mobile_menu__link" prefetch={true}>
+              <i className='bx bxs-store-alt'></i>
+              Store
             </Link>
           </div>
         </div>

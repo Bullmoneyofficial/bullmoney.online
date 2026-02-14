@@ -28,18 +28,79 @@ const STORE_SHORTCUT_PATHS = [
   '/admin',
 ];
 
+const ALWAYS_PASS_THROUGH_PREFIXES = [
+  // Design page should be reachable on all domains
+  '/design',
+  // Games & casino routes should never be rewritten to /store
+  '/games',
+  '/crypto-game',
+  '/casino-games',
+  '/dice',
+  '/mines',
+  '/plinko',
+  '/wheel',
+  '/jackpot',
+  '/crash',
+  '/slots',
+  '/flappybird',
+  // Casino API proxied via next.config rewrites
+  '/user',
+  '/wallet',
+  '/payment',
+  '/withdraw',
+  '/load',
+  '/bonus',
+  '/referrals',
+  '/auth',
+] as const;
+
+function isExactOrUnder(pathname: string, prefix: string) {
+  return pathname === prefix || pathname.startsWith(prefix + '/');
+}
+
 export function proxy(request: NextRequest) {
-  const host = (request.headers.get('host') || '').toLowerCase();
+  const rawHost =
+    request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const host = rawHost.split(',')[0].trim().toLowerCase();
   const { pathname, search } = request.nextUrl;
 
+  const isDev = process.env.NODE_ENV !== 'production';
+
+  const hostnameOnly = host
+    // drop port if present (e.g. 192.168.1.10:3000)
+    .replace(/:\d+$/, '')
+    // drop IPv6 brackets if present (e.g. [::1]:3000)
+    .replace(/^\[(.*)\]$/, '$1');
+
+  const isLocalDevHost = isDev
+    ? hostnameOnly === 'localhost' ||
+      hostnameOnly === '127.0.0.1' ||
+      hostnameOnly === '::1' ||
+      // private IPv4 ranges: 10/8, 192.168/16, 172.16/12
+      /^10\.(?:\d{1,3}\.){2}\d{1,3}$/.test(hostnameOnly) ||
+      /^192\.168\.(?:\d{1,3})\.(?:\d{1,3})$/.test(hostnameOnly) ||
+      /^172\.(?:1[6-9]|2\d|3[0-1])\.(?:\d{1,3})\.(?:\d{1,3})$/.test(hostnameOnly)
+    : false;
+
   const isBullmoneyShop =
-    host.includes('bullmoney.shop') || host.includes('bullmoneyshop');
+    host.includes('bullmoney.shop') ||
+    host.includes('bullmoney.online') ||
+    host.includes('bullmoneyshop') ||
+    isLocalDevHost;
 
   if (!isBullmoneyShop) {
     return NextResponse.next();
   }
 
   // --- bullmoney.shop domain routing ---
+
+  // Always allow certain routes to pass through unchanged on store domains.
+  // This ensures URLs like /design and /games keep working on bullmoney.shop and bullmoney.online.
+  for (const prefix of ALWAYS_PASS_THROUGH_PREFIXES) {
+    if (isExactOrUnder(pathname, prefix)) {
+      return NextResponse.next();
+    }
+  }
 
   // Root → /store (rewrite so URL stays as `/`)
   if (pathname === '/') {
@@ -60,34 +121,6 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/assets') ||
     pathname.startsWith('/sw.js')
-  ) {
-    return NextResponse.next();
-  }
-
-  // Games & casino routes — ALWAYS pass through, never rewrite to /store
-  // This covers /games/*, /crypto-game/*, /casino-games/* (front-end routes)
-  // AND /dice/*, /mines/*, /plinko/*, /wheel/*, /jackpot/*, /crash/*,
-  //     /slots/*, /flappybird/* (casino backend proxied via next.config rewrites)
-  if (
-    pathname.startsWith('/games') ||
-    pathname.startsWith('/crypto-game') ||
-    pathname.startsWith('/casino-games') ||
-    pathname.startsWith('/dice') ||
-    pathname.startsWith('/mines') ||
-    pathname.startsWith('/plinko') ||
-    pathname.startsWith('/wheel') ||
-    pathname.startsWith('/jackpot') ||
-    pathname.startsWith('/crash') ||
-    pathname.startsWith('/slots') ||
-    pathname.startsWith('/flappybird') ||
-    pathname.startsWith('/user') ||
-    pathname.startsWith('/wallet') ||
-    pathname.startsWith('/payment') ||
-    pathname.startsWith('/withdraw') ||
-    pathname.startsWith('/load') ||
-    pathname.startsWith('/bonus') ||
-    pathname.startsWith('/referrals') ||
-    pathname.startsWith('/auth')
   ) {
     return NextResponse.next();
   }
