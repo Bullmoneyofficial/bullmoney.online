@@ -509,11 +509,40 @@
   if (run()) return;
 
   var tries = 0;
-  var maxTries = 80;
+  var maxTries = 200;
   var timer = setInterval(function() {
     tries += 1;
     if (run() || tries >= maxTries) clearInterval(timer);
   }, 50);
+
+  var domObserver = null;
+  function observeSplashInsertion() {
+    if (domObserver || !('MutationObserver' in window)) return;
+    domObserver = new MutationObserver(function() {
+      if (run()) {
+        if (timer) clearInterval(timer);
+        domObserver.disconnect();
+        domObserver = null;
+      }
+    });
+    domObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+    setTimeout(function() {
+      if (!domObserver) return;
+      domObserver.disconnect();
+      domObserver = null;
+    }, 30000);
+  }
+
+  observeSplashInsertion();
+
+  window.addEventListener('pageshow', function() {
+    if (run() && timer) clearInterval(timer);
+  }, { once: true, passive: true });
+
+  window.addEventListener('load', function() {
+    if (run() && timer) clearInterval(timer);
+  }, { once: true, passive: true });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {

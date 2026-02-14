@@ -451,9 +451,15 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             minHeight: embedMode ? 'auto' : 'min(80svh, 700px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           touchAction: 'pan-y pan-x',
+          backgroundColor: '#000',
+          pointerEvents: 'none',
         }}
         >
-        <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          aria-hidden="true"
+          style={{ backgroundColor: '#000' }}
+        >
           {HERO_BG_IMAGES.map((img, idx) => (
             <img
               key={img.src}
@@ -493,7 +499,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
 
         <div
           className={`games-hero-content relative z-10 mx-auto flex w-full flex-col px-4 sm:px-6 ${embedMode ? 'pt-6 pb-6' : 'max-w-6xl lg:px-10 pt-16 pb-20 sm:pt-20 sm:pb-24 lg:pt-28 lg:pb-28'}`}
-          style={{ touchAction: 'pan-y pan-x' }}
+          style={{ touchAction: 'pan-y pan-x', pointerEvents: 'none' }}
         >
           <div className="flex items-center gap-3 mb-6">
             <img
@@ -533,6 +539,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                 background: 'linear-gradient(120deg, rgba(45,212,191,0.95), rgba(56,189,248,0.95))',
                 color: '#0b1324',
                 boxShadow: '0 12px 30px rgba(56,189,248,0.2)',
+                pointerEvents: 'auto',
               }}
             >
               Visit Store
@@ -544,6 +551,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                 borderColor: 'rgba(45,212,191,0.5)',
                 background: 'rgba(15, 23, 42, 0.45)',
                 color: 'rgba(226, 253, 245, 0.9)',
+                pointerEvents: 'auto',
               }}
             >
               <Play className="w-4 h-4 transition-transform group-hover:scale-110" />

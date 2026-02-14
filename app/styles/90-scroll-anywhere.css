@@ -127,13 +127,6 @@ html[data-design-page] .studio-fallback-wrapper [role="application"] {
   touch-action: none !important;
 }
 
-/* Excalidraw embed: allow full pointer/touch interaction inside iframe */
-html[data-design-page] .excalidraw-editor-wrapper,
-html[data-design-page] .excalidraw-editor-wrapper .excalidraw-embed {
-  pointer-events: auto !important;
-  touch-action: none !important;
-}
-
 /* Hero section elements must NEVER block scroll on ANY device or viewport */
 #hero canvas,
 #hero [data-spline],
