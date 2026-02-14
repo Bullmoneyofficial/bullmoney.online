@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-css-tags */
+
 import { type ReactNode } from 'react';
 import Link from 'next/link';
 import { getGameContent } from './games';
