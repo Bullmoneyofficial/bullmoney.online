@@ -1,8 +1,29 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
-import { trackUIStateChange, trackEvent, type AnalyticsEventData } from '@/lib/analytics';
-import { SoundEffects } from '@/app/hooks/useSoundEffects';
+// ✅ LAZY: analytics (443 lines) and SoundEffects (658 lines) loaded on-demand via import()
+// They're only used inside useCallback setters, never during initial render
+type AnalyticsEventData = { component: string; action: string; [key: string]: any };
+let _analytics: any = null;
+let _soundEffects: any = null;
+
+const getAnalytics = () => {
+  if (!_analytics) {
+    import('@/lib/analytics').then(mod => { _analytics = mod; });
+  }
+  return _analytics;
+};
+const getSoundEffects = () => {
+  if (!_soundEffects) {
+    import('@/app/hooks/useSoundEffects').then(mod => { _soundEffects = mod.SoundEffects; });
+  }
+  return _soundEffects;
+};
+// Import the shared context instance + types from the lightweight hook file
+import { UIStateContext, useUIState, type UIStateContextType, type UIComponentType, type NavbarModalType, UI_Z_INDEX } from './UIStateHook';
+// Re-export everything from the hook file so existing imports still work
+export { useUIState, UIStateContext, UI_Z_INDEX, useProductsModalUI, useMobileMenu } from './UIStateHook';
+export type { UIStateContextType, UIComponentType, NavbarModalType } from './UIStateHook';
 
 /**
  * UIStateContext - Centralized UI state management with mutual exclusion
@@ -30,218 +51,10 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
  * - This preserves audio playback across UI state changes.
  */
 
-// Z-Index hierarchy for all UI components (centralized for consistency)
-export const UI_Z_INDEX = {
-  // Base layers
-  CONTENT: 1,
-  FOOTER: 100,
+// Types, constants, and context are now defined in UIStateHook.ts
+// and imported at the top of this file. Re-exported for backwards compatibility.
 
-  // Floating elements
-  FLOATING_PLAYER_MINIMIZED: 2147483590, // Pull tab when minimized
-  FLOATING_PLAYER: 2147483610,           // Full floating player
-  ULTIMATE_PANEL: 2147483620,            // Control panel
-
-  // Modals (standard layer)
-  MODAL_BACKDROP: 99990,
-  MODAL_CONTENT: 99999,
-
-  // High priority modals
-  CHARTNEWS: 9999999,
-  AFFILIATE: 999999,
-  PAGEMODE: 99999998,
-
-  // Mobile menu - HIGHEST PRIORITY (appears on top of everything)
-  MOBILE_MENU: 999999999,
-  
-  // Legal Modal - Above pagemode but below mobile menu
-  LEGAL_MODAL: 9999999999,
-  
-  // Analysis Modal - Maximum z-index (same as LiveStreamModal)
-  ANALYSIS_MODAL: 2147483647,
-} as const;
-
-// Define all UI component types that participate in mutual exclusion
-export type UIComponentType =
-  | 'mobileMenu'
-  | 'audioWidget'
-  | 'ultimatePanel'
-  | 'ultimateHub'         // UltimateHub unified control center panel
-  | 'footer'
-  | 'chartnews'
-  | 'analysisModal'
-  | 'liveStreamModal'
-  | 'productsModal'
-  | 'courseDrawer'        // Trading Course drawer (CartDrawer-style)
-  | 'socialsDrawer'       // Social (Ultimate Hub community tab) drawer
-  | 'servicesModal'
-  | 'affiliateModal'
-  | 'themeSelectorModal'
-  | 'adminModal'
-  | 'faqModal'
-  | 'appsModal'           // Footer: Apps & Tools modal
-  | 'disclaimerModal'     // Footer: Legal Disclaimer modal
-  | 'pagemode'            // Registration/pagemode overlay
-  | 'loaderv2'            // Multi-step loader overlay
-  | 'authModal'           // Bull Feed: Auth/Login/Signup modal
-  | 'bullFeedModal'       // Bull Feed: Main feed modal
-  | 'postComposerModal'   // Bull Feed: Create post modal
-  | 'heroSceneModal'      // Hero scene selector modal
-  | 'discordStageModal'   // Discord Stage live stream modal
-  | 'accountManagerModal' // Account Manager modal
-  | 'bgPickerModal'        // Background picker modal (MobileDiscordHero)
-  | 'colorPickerModal'    // Color picker modal (MobileDiscordHero)
-  | 'splinePanelModal'    // Spline scene picker modal (MobileDiscordHero)
-  | 'storeMobileMenu'     // Store header mobile menu
-  | 'storeDesktopMenu'    // Store header desktop dropdown
-  | 'storeDropdownMenu'   // Store header manual dropdown (games page)
-  | 'supportDrawer'       // Support drawer (cart-style side panel)
-  | 'gamesDrawer';        // Games drawer (cart-style side panel)
-
-// Legacy type for backwards compatibility
-export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
-
-interface UIStateContextType {
-  // Current open states
-  isMobileMenuOpen: boolean;
-  isAudioWidgetOpen: boolean;
-  isUltimatePanelOpen: boolean;
-  isUltimateHubOpen: boolean;      // UltimateHub unified control center
-  isFooterOpen: boolean;
-  isChartNewsOpen: boolean;
-  isAnalysisModalOpen: boolean;
-  isLiveStreamModalOpen: boolean;
-  isProductsModalOpen: boolean;
-  isServicesModalOpen: boolean;
-  isAffiliateModalOpen: boolean;
-  isThemeSelectorModalOpen: boolean;
-  isAdminModalOpen: boolean;
-  isFaqModalOpen: boolean;
-  isAppsModalOpen: boolean;        // Footer: Apps & Tools modal
-  isDisclaimerModalOpen: boolean;  // Footer: Legal Disclaimer modal
-  isPagemodeOpen: boolean;         // Registration page overlay
-  isLoaderv2Open: boolean;         // Multi-step loader overlay
-  isAuthModalOpen: boolean;        // Bull Feed: Auth modal
-  isBullFeedModalOpen: boolean;    // Bull Feed: Main feed
-  isPostComposerModalOpen: boolean; // Bull Feed: Create post
-  isHeroSceneModalOpen: boolean;   // Hero scene picker modal
-  isDiscordStageModalOpen: boolean; // Discord Stage modal
-  isAccountManagerModalOpen: boolean; // Account Manager modal
-  isBgPickerModalOpen: boolean; // BG Picker modal
-  isColorPickerModalOpen: boolean; // Color picker modal
-  isSplinePanelModalOpen: boolean; // Spline scene picker modal
-  isStoreMobileMenuOpen: boolean;  // Store header mobile menu
-  isStoreDesktopMenuOpen: boolean; // Store header desktop dropdown
-  isStoreDropdownMenuOpen: boolean; // Store header manual dropdown (games)
-  isSupportDrawerOpen: boolean;    // Support drawer (cart-style side panel)
-  isGamesDrawerOpen: boolean;      // Games drawer (cart-style side panel)
-  isCourseDrawerOpen: boolean;     // Trading Course drawer (cart-style side panel)
-  isSocialsDrawerOpen: boolean;    // Social drawer (cart-style side panel)
-  isV2Unlocked: boolean;
-  devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
-  isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
-  hasStartedPagemodeAudio: boolean; // Track if user entered pagemode flow - audio persists until content loads
-  isMobileNavbarHidden: boolean;  // Mobile navbar hidden on scroll - for UltimateHub expansion
-
-  // Legacy: activeNavbarModal (maps to specific modal states)
-  activeNavbarModal: NavbarModalType;
-
-  // Check if any component is open
-  isAnyOpen: boolean;
-
-  // Check if any MODAL is open (excludes mobile menu, audio widget, ultimate panel)
-  isAnyModalOpen: boolean;
-
-  // Setters with mutual exclusion
-  setMobileMenuOpen: (open: boolean) => void;
-  setAudioWidgetOpen: (open: boolean) => void;
-  setUltimatePanelOpen: (open: boolean) => void;
-  setUltimateHubOpen: (open: boolean) => void;
-  setFooterOpen: (open: boolean) => void;
-  setChartNewsOpen: (open: boolean) => void;
-  setAnalysisModalOpen: (open: boolean) => void;
-  setLiveStreamModalOpen: (open: boolean) => void;
-  setProductsModalOpen: (open: boolean) => void;
-  setServicesModalOpen: (open: boolean) => void;
-  setAffiliateModalOpen: (open: boolean) => void;
-  setThemeSelectorModalOpen: (open: boolean) => void;
-  setAdminModalOpen: (open: boolean) => void;
-  setFaqModalOpen: (open: boolean) => void;
-  setAppsModalOpen: (open: boolean) => void;
-  setDisclaimerModalOpen: (open: boolean) => void;
-  setPagemodeOpen: (open: boolean) => void;
-  setLoaderv2Open: (open: boolean) => void;
-  setAuthModalOpen: (open: boolean) => void;
-  setBullFeedModalOpen: (open: boolean) => void;
-  setPostComposerModalOpen: (open: boolean) => void;
-  setHeroSceneModalOpen: (open: boolean) => void;
-  setDiscordStageModalOpen: (open: boolean) => void;
-  setAccountManagerModalOpen: (open: boolean) => void;
-  setBgPickerModalOpen: (open: boolean) => void;
-  setColorPickerModalOpen: (open: boolean) => void;
-  setSplinePanelModalOpen: (open: boolean) => void;
-  setStoreMobileMenuOpen: (open: boolean) => void;
-  setStoreDesktopMenuOpen: (open: boolean) => void;
-  setStoreDropdownMenuOpen: (open: boolean) => void;
-  setSupportDrawerOpen: (open: boolean) => void;
-  setGamesDrawerOpen: (open: boolean) => void;
-  setCourseDrawerOpen: (open: boolean) => void;
-  setSocialsDrawerOpen: (open: boolean) => void;
-  setV2Unlocked: (unlocked: boolean) => void;
-  setDevSkipPageModeAndLoader: (skip: boolean) => void;
-  setWelcomeScreenActive: (active: boolean) => void;
-  setMobileNavbarHidden: (hidden: boolean) => void;
-
-  // Legacy: setNavbarModal (for backwards compatibility)
-  setNavbarModal: (modal: NavbarModalType) => void;
-
-  // Convenience methods for opening specific modals
-  openAdminModal: () => void;
-  openFaqModal: () => void;
-  openAffiliateModal: () => void;
-  openThemeSelectorModal: () => void;
-  openAnalysisModal: () => void;
-  openLiveStreamModal: () => void;
-  openProductsModal: () => void;
-  openServicesModal: () => void;
-  openAuthModal: () => void;
-  openBullFeedModal: () => void;
-  openPostComposerModal: () => void;
-  openHeroSceneModal: () => void;
-  openDiscordStageModal: () => void;
-  openAccountManagerModal: () => void;
-  openBgPickerModal: () => void;
-  openColorPickerModal: () => void;
-  openSplinePanelModal: () => void;
-  openStoreMobileMenu: () => void;
-  openStoreDesktopMenu: () => void;
-  openStoreDropdownMenu: () => void;
-  openSupportDrawer: () => void;
-  openGamesDrawer: () => void;
-  openCourseDrawer: () => void;
-  openSocialsDrawer: () => void;
-  closeNavbarModal: () => void;
-
-  // Close all UI components
-  closeAll: () => void;
-
-  // Close all modals but keep floating elements (audio widget pull tab, etc.)
-  closeAllModals: () => void;
-
-  // Check which component is currently active
-  activeComponent: UIComponentType | null;
-
-  // Signal for audio widget to minimize (not close) when other UI opens
-  // This allows the iframe to stay alive behind the pull tab
-  shouldMinimizeAudioWidget: boolean;
-
-  // Signal that something is overlaying the floating player (for z-index management)
-  hasOverlayingUI: boolean;
-
-  // Performance hint for effect-heavy UI on mobile/reduced-motion devices
-  shouldSkipHeavyEffects: boolean;
-}
-
-const UIStateContext = createContext<UIStateContextType | undefined>(undefined);
+// Context is now created in UIStateHook.ts — shared across provider and consumers
 
 export function UIStateProvider({ children }: { children: ReactNode }) {
   // Core states - all UI components
@@ -490,11 +303,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       // Mobile menu has highest priority - closes everything else
       closeOthers('mobileMenu');
-      trackUIStateChange('mobileMenu', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('mobileMenu', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('mobileMenu', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('mobileMenu', 'close');
+      getSoundEffects()?.close();
     }
     setIsMobileMenuOpenState(open);
   }, [closeOthers]);
@@ -505,11 +318,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('audioWidget');
-      trackUIStateChange('audioWidget', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('audioWidget', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('audioWidget', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('audioWidget', 'close');
+      getSoundEffects()?.close();
     }
     setIsAudioWidgetOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -517,11 +330,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setUltimatePanelOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('ultimatePanel');
-      trackUIStateChange('ultimatePanel', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('ultimatePanel', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('ultimatePanel', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('ultimatePanel', 'close');
+      getSoundEffects()?.close();
     }
     setIsUltimatePanelOpenState(open);
   }, [closeOthers]);
@@ -529,11 +342,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setUltimateHubOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('ultimateHub');
-      trackUIStateChange('ultimateHub', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('ultimateHub', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('ultimateHub', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('ultimateHub', 'close');
+      getSoundEffects()?.close();
     }
     setIsUltimateHubOpenState(open);
   }, [closeOthers]);
@@ -544,11 +357,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('footer');
-      trackUIStateChange('footer', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('footer', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('footer', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('footer', 'close');
+      getSoundEffects()?.close();
     }
     setIsFooterOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -559,11 +372,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('chartnews');
-      trackUIStateChange('chartNews', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('chartNews', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('chartNews', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('chartNews', 'close');
+      getSoundEffects()?.close();
     }
     setIsChartNewsOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -575,11 +388,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('analysisModal');
-      trackUIStateChange('analysisModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('analysisModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('analysisModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('analysisModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsAnalysisModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -590,11 +403,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('liveStreamModal');
-      trackUIStateChange('liveStreamModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('liveStreamModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('liveStreamModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('liveStreamModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsLiveStreamModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -605,11 +418,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('productsModal');
-      trackUIStateChange('productsModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('productsModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('productsModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('productsModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsProductsModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -620,11 +433,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('servicesModal');
-      trackUIStateChange('servicesModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('servicesModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('servicesModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('servicesModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsServicesModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -635,11 +448,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('affiliateModal');
-      trackUIStateChange('affiliateModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('affiliateModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('affiliateModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('affiliateModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsAffiliateModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -650,11 +463,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('themeSelectorModal');
-      trackUIStateChange('themeSelectorModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('themeSelectorModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('themeSelectorModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('themeSelectorModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsThemeSelectorModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -665,11 +478,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('adminModal');
-      trackUIStateChange('adminModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('adminModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('adminModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('adminModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsAdminModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -680,11 +493,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('faqModal');
-      trackUIStateChange('faqModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('faqModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('faqModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('faqModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsFaqModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -695,11 +508,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('appsModal');
-      trackUIStateChange('appsModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('appsModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('appsModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('appsModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsAppsModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -710,11 +523,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('disclaimerModal');
-      trackUIStateChange('disclaimerModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('disclaimerModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('disclaimerModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('disclaimerModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsDisclaimerModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -722,11 +535,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setPagemodeOpen = useCallback((open: boolean) => {
     if (open) {
       closeOthers('pagemode');
-      trackUIStateChange('pagemode', 'open');
+      getAnalytics()?.trackUIStateChange('pagemode', 'open');
       // Mark that user has entered pagemode - audio should persist until content loads
       setHasStartedPagemodeAudioState(true);
     } else {
-      trackUIStateChange('pagemode', 'close');
+      getAnalytics()?.trackUIStateChange('pagemode', 'close');
     }
     setIsPagemodeOpenState(open);
   }, [closeOthers]);
@@ -734,9 +547,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const setLoaderv2Open = useCallback((open: boolean) => {
     if (open) {
       closeOthers('loaderv2');
-      trackUIStateChange('loaderV2', 'open');
+      getAnalytics()?.trackUIStateChange('loaderV2', 'open');
     } else {
-      trackUIStateChange('loaderV2', 'close');
+      getAnalytics()?.trackUIStateChange('loaderV2', 'close');
     }
     setIsLoaderv2OpenState(open);
   }, [closeOthers]);
@@ -747,11 +560,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('authModal');
-      trackUIStateChange('authModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('authModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('authModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('authModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsAuthModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -762,11 +575,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('bullFeedModal');
-      trackUIStateChange('bullFeedModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('bullFeedModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('bullFeedModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('bullFeedModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsBullFeedModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -777,11 +590,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('postComposerModal');
-      trackUIStateChange('postComposerModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('postComposerModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('postComposerModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('postComposerModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsPostComposerModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -792,11 +605,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('heroSceneModal');
-      trackUIStateChange('heroSceneModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('heroSceneModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('heroSceneModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('heroSceneModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsHeroSceneModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -807,11 +620,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('discordStageModal');
-      trackUIStateChange('discordStageModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('discordStageModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('discordStageModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('discordStageModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsDiscordStageModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -822,11 +635,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('accountManagerModal');
-      trackUIStateChange('accountManagerModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('accountManagerModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('accountManagerModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('accountManagerModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsAccountManagerModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -837,11 +650,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('bgPickerModal');
-      trackUIStateChange('bgPickerModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('bgPickerModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('bgPickerModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('bgPickerModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsBgPickerModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -852,11 +665,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('colorPickerModal');
-      trackUIStateChange('colorPickerModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('colorPickerModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('colorPickerModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('colorPickerModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsColorPickerModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -867,11 +680,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('splinePanelModal');
-      trackUIStateChange('splinePanelModal', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('splinePanelModal', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('splinePanelModal', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('splinePanelModal', 'close');
+      getSoundEffects()?.close();
     }
     setIsSplinePanelModalOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -882,10 +695,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('storeMobileMenu');
-      trackUIStateChange('storeMobileMenu', 'open');
+      getAnalytics()?.trackUIStateChange('storeMobileMenu', 'open');
       // Sound handled by StoreHeader with RAF timing
     } else {
-      trackUIStateChange('storeMobileMenu', 'close');
+      getAnalytics()?.trackUIStateChange('storeMobileMenu', 'close');
     }
     setIsStoreMobileMenuOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -896,9 +709,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('storeDesktopMenu');
-      trackUIStateChange('storeDesktopMenu', 'open');
+      getAnalytics()?.trackUIStateChange('storeDesktopMenu', 'open');
     } else {
-      trackUIStateChange('storeDesktopMenu', 'close');
+      getAnalytics()?.trackUIStateChange('storeDesktopMenu', 'close');
     }
     setIsStoreDesktopMenuOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -909,9 +722,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('storeDropdownMenu');
-      trackUIStateChange('storeDropdownMenu', 'open');
+      getAnalytics()?.trackUIStateChange('storeDropdownMenu', 'open');
     } else {
-      trackUIStateChange('storeDropdownMenu', 'close');
+      getAnalytics()?.trackUIStateChange('storeDropdownMenu', 'close');
     }
     setIsStoreDropdownMenuOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -922,11 +735,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('supportDrawer');
-      trackUIStateChange('supportDrawer', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('supportDrawer', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('supportDrawer', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('supportDrawer', 'close');
+      getSoundEffects()?.close();
     }
     setIsSupportDrawerOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -937,11 +750,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     
     if (open) {
       closeOthers('gamesDrawer');
-      trackUIStateChange('gamesDrawer', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('gamesDrawer', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('gamesDrawer', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('gamesDrawer', 'close');
+      getSoundEffects()?.close();
     }
     setIsGamesDrawerOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -952,11 +765,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
 
     if (open) {
       closeOthers('courseDrawer');
-      trackUIStateChange('courseDrawer', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('courseDrawer', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('courseDrawer', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('courseDrawer', 'close');
+      getSoundEffects()?.close();
     }
     setIsCourseDrawerOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -967,11 +780,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
 
     if (open) {
       closeOthers('socialsDrawer');
-      trackUIStateChange('socialsDrawer', 'open');
-      SoundEffects.open();
+      getAnalytics()?.trackUIStateChange('socialsDrawer', 'open');
+      getSoundEffects()?.open();
     } else {
-      trackUIStateChange('socialsDrawer', 'close');
-      SoundEffects.close();
+      getAnalytics()?.trackUIStateChange('socialsDrawer', 'close');
+      getSoundEffects()?.close();
     }
     setIsSocialsDrawerOpenState(open);
   }, [closeOthers, isUltimateHubOpen]);
@@ -1249,24 +1062,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Main hook to access the context
-export function useUIState() {
-  const context = useContext(UIStateContext);
-  if (!context) {
-    throw new Error('useUIState must be used within a UIStateProvider');
-  }
-  return context;
-}
+// useUIState, useMobileMenu, useProductsModalUI are now exported from UIStateHook.ts
+// and re-exported from this file at the top via `export { ... } from './UIStateHook'`
 
 // --- Convenience Hooks for Specific UI Components ---
-
-export function useMobileMenu() {
-  const { isMobileMenuOpen, setMobileMenuOpen } = useUIState();
-  return {
-    isMobileMenuOpen,
-    setIsMobileMenuOpen: setMobileMenuOpen
-  };
-}
+// NOTE: These remain here for backwards compatibility. They could be moved to UIStateHook.ts
+// if they appear in critical compile paths.
 
 export function useAudioWidgetUI() {
   const {
@@ -1444,10 +1245,7 @@ export function useLiveStreamModalUI() {
   };
 }
 
-export function useProductsModalUI() {
-  const { isProductsModalOpen, setProductsModalOpen, openProductsModal } = useUIState();
-  return { isOpen: isProductsModalOpen, setIsOpen: setProductsModalOpen, open: openProductsModal };
-}
+// useProductsModalUI is now in UIStateHook.ts and re-exported at the top
 
 export function useServicesModalUI() {
   const { isServicesModalOpen, setServicesModalOpen, openServicesModal } = useUIState();

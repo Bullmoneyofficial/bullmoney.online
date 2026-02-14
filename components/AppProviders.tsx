@@ -12,7 +12,6 @@ import dynamic from "next/dynamic";
 
 // ── LIGHT PROVIDERS (static imports — <300 lines each) ────────────────────
 import { ThemeProvider } from "@/context/providers";
-import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
 import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
 import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
@@ -26,6 +25,12 @@ const FPSCounter = dynamic(
 );
 
 // ── HEAVY PROVIDERS (dynamic imports — avoid pulling in large module graphs) ─
+// GlobalThemeProvider: 418 lines + theme-data (972 lines) + smartStorage (270 lines) = ~1,660 lines
+const GlobalThemeProvider = dynamic(
+  () => import("@/contexts/GlobalThemeProvider").then(m => ({ default: m.GlobalThemeProvider })),
+  { ssr: true }
+);
+
 // ThemesContext: 3,478 lines — deferred but SSR-safe (renders children immediately)
 const ThemesProvider = dynamic(
   () => import("@/contexts/ThemesContext").then(m => ({ default: m.ThemesProvider })),

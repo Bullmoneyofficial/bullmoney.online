@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ShoppingBag, CreditCard, X } from 'lucide-react';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
-import { forceEnableScrolling } from '@/lib/forceScrollEnabler';
+// ✅ LAZY: forceEnableScrolling (342 lines) loaded via import() in useEffect
 
 // ✅ PERF: ProductCard (1,279 lines + framer-motion) lazy-loaded — not needed at compile time
 const ProductCard = dynamic(
@@ -69,7 +69,7 @@ import { useStoreSection } from './StoreMemoryContext';
 import { buildUrlParams, hasActiveFilters as checkActiveFilters } from './store.utils';
 import { SORT_OPTIONS, CATEGORIES } from './store.config';
 import { useCartStore } from '@/stores/cart-store';
-import { useProductsModalUI } from '@/contexts/UIStateContext';
+import { useProductsModalUI } from '@/contexts/UIStateHook';
 import { useHeroMode } from '@/hooks/useHeroMode';
 import type { HeroMode } from '@/hooks/useHeroMode';
 import { isMobileDevice } from '@/lib/mobileDetection';
@@ -315,9 +315,12 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     }
   }, [heroMode, setSharedHeroMode]);
 
-  // Force enable scrolling for all devices
+  // Force enable scrolling for all devices (lazy-loaded: 342 lines)
   useEffect(() => {
-    const cleanup = forceEnableScrolling();
+    let cleanup: (() => void) | undefined;
+    import('@/lib/forceScrollEnabler').then(mod => {
+      cleanup = mod.forceEnableScrolling();
+    });
     return () => cleanup?.();
   }, []);
 

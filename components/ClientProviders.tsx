@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { ReactNode, Suspense, memo, useEffect, useState } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useUIState } from "@/contexts/UIStateContext";
+import { useUIState } from "@/contexts/UIStateHook";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { MobilePerformanceProvider } from "@/contexts/MobilePerformanceProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
@@ -13,8 +13,11 @@ import { SoundProvider } from "@/contexts/SoundContext";
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback } from "@/components/MobileLazyLoadingFallback";
 
-// ✅ PERFORMANCE PROVIDER - Monitors FPS and device tier with built-in FPS monitor
-import PerformanceProvider from "@/lib/performanceSystem";
+// ✅ PERFORMANCE PROVIDER - Lazy loaded (999 lines + device detection)
+const PerformanceProvider = dynamic(
+  () => import("@/lib/performanceSystem"),
+  { ssr: false }
+);
 
 // CRITICAL: Import FPS scroll optimizer for pause-during-scroll behavior
 const FpsScrollOptimizer = dynamic(

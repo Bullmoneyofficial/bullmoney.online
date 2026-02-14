@@ -5,7 +5,7 @@ import { Suspense, ReactNode, useEffect, useState, useCallback, useRef } from "r
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
-import { useUIState } from "@/contexts/UIStateContext";
+import { useUIState } from "@/contexts/UIStateHook";
 // ✅ LAZY-LOADED: SEO/analytics/audio deferred to avoid blocking first paint
 const ScrollSciFiAudio = dynamic(
   () => import("@/components/ScrollSciFiAudio").then(mod => ({ default: mod.ScrollSciFiAudio })),
@@ -42,7 +42,11 @@ const HreflangMeta = dynamic(
   { ssr: false }
 );
 
-import VercelAnalyticsWrapper from "@/components/VercelAnalyticsWrapper";
+// ✅ PERF: VercelAnalytics lazy-loaded to avoid compile-time weight
+const VercelAnalyticsWrapper = dynamic(
+  () => import("@/components/VercelAnalyticsWrapper"),
+  { ssr: false }
+);
 
 // ✅ OFF-SCREEN ANIMATION CONTROLLER - Pauses animations we can't see
 const OffscreenAnimationController = dynamic(

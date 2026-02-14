@@ -22,25 +22,14 @@ import {
 // ✅ PERFORMANCE OPTIMIZED: Centralized dynamic imports
 // ==========================================
 import {
-  Hero,
   HeroDesktop as DiscordDesktopHero,
   MetaTraderQuotes,
-  BullMoneyPromoScroll,
   Features,
-  TradingViewDashboard,
   BullMoneyCommunity,
   BreakingNewsTicker,
-  HeroScrollDemo,
-  SplineSkeleton,
-  LoadingSkeleton,
-  LiveMarketTicker,
-  TradingQuickAccess,
-  HiddenYoutubePlayer,
   FooterComponent,
   PageMode,
   TradingUnlockLoader,
-  DraggableSplit,
-  SplineScene,
   TestimonialsCarousel,
 } from "@/components/home/dynamicImports";
 
@@ -60,8 +49,8 @@ import { useLazyUnifiedPerformance, useLazyComponentTracking, useLazyCrashTracke
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
-import { useUIState } from "@/contexts/UIStateContext";
-import { forceEnableScrolling } from "@/lib/forceScrollEnabler";
+import { useUIState } from "@/contexts/UIStateHook";
+// ✅ LAZY: forceEnableScrolling (342 lines) loaded via import() in useEffect below
 import type { HeroMode } from "@/hooks/useHeroMode";
 
 // Features skeleton fallback (inline for faster load)
@@ -120,8 +109,21 @@ const safeSetSession = (key: string, value: string) => {
 const PAGEMODE_FORCE_LOGIN_KEY = "bullmoney_pagemode_force_login";
 const PAGEMODE_REDIRECT_PATH_KEY = "bullmoney_pagemode_redirect_path";
 
-import { useAudioEngine } from "@/app/hooks/useAudioEngine";
-import { useShowcaseScroll } from "@/hooks/useShowcaseScroll";
+// ✅ LAZY: useAudioEngine (359 lines) + useShowcaseScroll (461+134 lines) converted to lazy effect components
+// They are side-effect-only hooks (no return values used), so rendering as components defers their module resolution
+const LazyShowcaseScroll = dynamic(() => import("@/hooks/useShowcaseScroll").then(mod => ({
+  default: function ShowcaseScrollEffect(props: { startDelay: number; enabled: boolean; pageId: string; persistInSession: boolean }) {
+    mod.useShowcaseScroll(props);
+    return null;
+  }
+})), { ssr: false });
+
+const LazyAudioEngine = dynamic(() => import("@/app/hooks/useAudioEngine").then(mod => ({
+  default: function AudioEngineEffect({ enabled, mode }: { enabled: boolean; mode: 'MECHANICAL' | 'SOROS' | 'SCI-FI' | 'SILENT' }) {
+    mod.useAudioEngine(enabled, mode);
+    return null;
+  }
+})), { ssr: false });
 
 // Lazy load heavy components that aren't needed immediately
 const DiscordMobileHero = dynamic(
@@ -400,13 +402,8 @@ function HomeContent() {
   const splinePreloadRanRef = useRef(false);
   const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal, openAccountManagerModal } = useUIState();
 
-  // Showcase scroll — uses hook defaults for duration (lightweight)
-  useShowcaseScroll({
-    startDelay: currentView === 'content' ? 1200 : 99999,
-    enabled: currentView === 'content',
-    pageId: 'home',
-    persistInSession: false,
-  });
+  // Showcase scroll — lazy-loaded as effect component (461+134 lines deferred)
+  // Rendered as <LazyShowcaseScroll /> in JSX below
 
   // Defer analytics + prefetch — lazy-loaded to avoid compiling 170+309 lines up front
   useEffect(() => {
@@ -464,8 +461,11 @@ function HomeContent() {
     root.setAttribute('data-app-page', 'true');
     body.setAttribute('data-app-page', 'true');
     
-    // Force enable scrolling
-    const cleanup = forceEnableScrolling();
+    // Force enable scrolling (lazy-loaded: 342 lines)
+    let cleanup: (() => void) | undefined;
+    import("@/lib/forceScrollEnabler").then(mod => {
+      cleanup = mod.forceEnableScrolling();
+    });
     
     return () => {
       root.classList.remove('home-active');
@@ -554,7 +554,8 @@ function HomeContent() {
       setTheme(activeTheme);
     }
   }, [activeTheme, activeThemeId, theme]);
-  useAudioEngine(hasMounted && !isMuted, 'MECHANICAL');
+  // ✅ Audio engine rendered as lazy component below: <LazyAudioEngine />
+  const audioEngineEnabled = hasMounted && !isMuted;
   const canRenderMobileSections = !isMobile || allowMobileLazyRender;
   const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop && isDesktop;
   // Use single dynamic Features component for all devices
@@ -1032,6 +1033,15 @@ function HomeContent() {
   return (
     <>
       <style>{glassStyles}</style>
+      
+      {/* ✅ Lazy effect components — defers 1,296 lines from initial compile */}
+      <LazyShowcaseScroll
+        startDelay={currentView === 'content' ? 1200 : 99999}
+        enabled={currentView === 'content'}
+        pageId="home"
+        persistInSession={false}
+      />
+      <LazyAudioEngine enabled={audioEngineEnabled} mode="MECHANICAL" />
       
       {currentView === 'pagemode' && (
         <div className="fixed inset-0 z-99999 bg-black">
