@@ -916,6 +916,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
             </div>
 
             {/* Shop Button - Mobile (first) */}
+            {canOpenAdminHub && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setAdminModalOpen(true);
+                }}
+                className="mb-3 w-full rounded-xl px-4 py-3 text-left text-base font-semibold tracking-tight"
+                style={{ background: '#000000', color: '#ffffff' }}
+              >
+                Admin Hub
+              </button>
+            )}
             <a
               href="/store"
               onClick={(event) => {
