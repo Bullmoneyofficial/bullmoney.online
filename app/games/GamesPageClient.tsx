@@ -582,7 +582,11 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
 
         <DonationFundSection />
 
-        <section id="games-iframe" className="relative bg-black text-white" style={{ touchAction: 'pan-y pan-x' }}>
+        <section
+          id="games-iframe"
+          className="relative bg-black text-white"
+          style={{ touchAction: 'pan-y pan-x', backgroundColor: '#000000' }}
+        >
         <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
           <img
             src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=3840&q=80&auto=format&fit=crop"
@@ -595,7 +599,10 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           <div className="absolute inset-0 bg-linear-to-r from-black/40 via-transparent to-black/40 pointer-events-none" />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+        <div
+          className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24"
+          style={{ backgroundColor: '#000000' }}
+        >
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/40 mb-3">Explore</p>
             <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-[1.05]">Pick your game.</h2>
