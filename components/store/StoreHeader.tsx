@@ -526,16 +526,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, []);
 
   const navigateToGames = useCallback(() => {
-    // Already on the games index — do nothing
-    if (pathname === '/games') return;
+    if (pathname?.startsWith('/games')) return;
     setMobileMenuOpen(false);
     setDesktopMenuOpen(false);
     setManualDropdownOpen(false);
     setSiteSearchOpen(false);
-    // Use direct navigation — router.push can silently fail on first click
-    // because the RSC payload for /games hasn't been fetched yet
-    window.location.href = '/games';
-  }, [pathname, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
+    router.push('/games');
+    window.setTimeout(() => {
+      if (!window.location.pathname.startsWith('/games')) {
+        window.location.assign('/games');
+      }
+    }, 500);
+  }, [pathname, router, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
 
   const desktopLinks = useMemo(() => {
     const links = [
@@ -1208,10 +1210,11 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
           transform: desktopMenuOpen ? 'translateY(0)' : 'translateY(-4px)',
           transition: 'opacity 150ms ease-in-out, transform 180ms ease-in-out',
           willChange: 'opacity, transform',
+          backgroundColor: '#ffffff',
+          colorScheme: 'light' as const,
         }}
         onMouseEnter={openDesktopMenu}
         onMouseLeave={scheduleDesktopMenuClose}
-        style={{ backgroundColor: '#ffffff', colorScheme: 'light' as const }}
       >
         <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
           <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
@@ -1421,8 +1424,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               transform: manualDropdownOpen ? 'translateY(0)' : 'translateY(-4px)',
               transition: 'opacity 150ms ease-in-out, transform 180ms ease-in-out',
               willChange: 'opacity, transform',
+              backgroundColor: '#ffffff',
+              colorScheme: 'light' as const,
             }}
-            style={{ backgroundColor: '#ffffff', colorScheme: 'light' as const }}
           >
             <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
               <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">

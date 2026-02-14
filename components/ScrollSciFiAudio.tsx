@@ -8,6 +8,17 @@ const BASE_GAIN = 0.06;
 const MIN_SCROLL_DELTA = 4;
 const SPEED_SMOOTHING = 0.2;
 
+const SCROLL_SFX_EVENT = "bullmoney-scroll-sfx";
+
+type ScrollSfxDetail = {
+  /** Absolute/relative scroll delta in px since last frame (either X or Y). */
+  delta?: number;
+  /** Time delta in ms that `delta` occurred over. */
+  elapsed?: number;
+  /** Precomputed 0..1 speed/intensity. If provided, `delta/elapsed` is ignored. */
+  speed?: number;
+};
+
 type ScrollNodes = {
   osc: OscillatorNode;
   gain: GainNode;
@@ -186,6 +197,29 @@ export function ScrollSciFiAudio() {
       rafIdRef.current = window.requestAnimationFrame(tick);
     };
 
+    const handleExternalSfx = (event: Event) => {
+      const custom = event as CustomEvent<ScrollSfxDetail>;
+      const detail = custom.detail ?? {};
+      if (mutedRef.current || sfxRef.current <= 0) return;
+
+      let rawSpeed = 0;
+      if (typeof detail.speed === "number" && Number.isFinite(detail.speed)) {
+        rawSpeed = detail.speed;
+      } else {
+        const delta = Math.abs(detail.delta ?? 0);
+        const elapsed = Math.max(16, detail.elapsed ?? 16);
+        if (delta < MIN_SCROLL_DELTA) return;
+        rawSpeed = Math.min(1, (delta / elapsed) * 18);
+      }
+
+      const speed = lastSpeedRef.current + (rawSpeed - lastSpeedRef.current) * SPEED_SMOOTHING;
+      lastSpeedRef.current = speed;
+      updateSound(speed);
+
+      if (stopTimerRef.current) window.clearTimeout(stopTimerRef.current);
+      stopTimerRef.current = window.setTimeout(stopSound, SCROLL_IDLE_MS);
+    };
+
     const handleVisibility = () => {
       if (document.hidden) stopSound();
     };
@@ -199,11 +233,13 @@ export function ScrollSciFiAudio() {
     const unlockEvents: Array<keyof WindowEventMap> = ["pointerdown", "touchstart", "keydown"];
     unlockEvents.forEach((e) => window.addEventListener(e, unlockAudio, { passive: true }));
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener(SCROLL_SFX_EVENT, handleExternalSfx as EventListener);
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       unlockEvents.forEach((e) => window.removeEventListener(e, unlockAudio));
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener(SCROLL_SFX_EVENT, handleExternalSfx as EventListener);
       document.removeEventListener("visibilitychange", handleVisibility);
       if (stopTimerRef.current) window.clearTimeout(stopTimerRef.current);
       if (rafIdRef.current !== null) window.cancelAnimationFrame(rafIdRef.current);

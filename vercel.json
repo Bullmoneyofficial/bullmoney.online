@@ -31,56 +31,6 @@
           "value": "(?:www\\.)?bullmoney\\.shop"
         }
       ]
-    },
-    {
-      "source": "/product/:path*",
-      "destination": "/store/product/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?:www\\.)?bullmoney\\.shop"
-        }
-      ]
-    },
-    {
-      "source": "/checkout",
-      "destination": "/store/checkout",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?:www\\.)?bullmoney\\.shop"
-        }
-      ]
-    },
-    {
-      "source": "/gift-cards",
-      "destination": "/store/gift-cards",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?:www\\.)?bullmoney\\.shop"
-        }
-      ]
-    },
-    {
-      "source": "/account/:path*",
-      "destination": "/store/account/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?:www\\.)?bullmoney\\.shop"
-        }
-      ]
-    },
-    {
-      "source": "/success/:path*",
-      "destination": "/store/success/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?:www\\.)?bullmoney\\.shop"
-        }
-      ]
     }
   ],
   "headers": [

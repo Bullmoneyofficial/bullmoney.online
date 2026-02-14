@@ -15,11 +15,6 @@ interface EmailProvider {
 // Check which providers are configured
 export function listConfiguredProviders(): EmailProvider[] {
   const providers: EmailProvider[] = [];
-
-  // SendGrid (recommended on Render where outbound SMTP may be blocked)
-  if (process.env.SENDGRID_API_KEY && !process.env.SENDGRID_API_KEY.includes('xxxxx')) {
-    providers.push({ name: 'sendgrid', enabled: true });
-  }
   
   // Gmail SMTP (primary)
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
@@ -31,51 +26,12 @@ export function listConfiguredProviders(): EmailProvider[] {
     providers.push({ name: 'render', enabled: true });
   }
   
+  // SendGrid (optional)
+  if (process.env.SENDGRID_API_KEY && !process.env.SENDGRID_API_KEY.includes('xxxxx')) {
+    providers.push({ name: 'sendgrid', enabled: true });
+  }
+  
   return providers;
-}
-
-async function sendWithSendgrid(params: {
-  to: string[];
-  subject: string;
-  html: string;
-  from: string;
-  replyTo?: string;
-  attachments?: Array<{ filename: string; content: Buffer; cid?: string }>; // content must be a Buffer
-}): Promise<SendEmailResult> {
-  const apiKey = process.env.SENDGRID_API_KEY;
-  if (!apiKey || apiKey.includes('xxxxx')) {
-    return { success: false, provider: 'sendgrid', error: 'SENDGRID_API_KEY not configured' };
-  }
-
-  const mod: any = await import('@sendgrid/mail');
-  const sgMail = mod?.default || mod;
-  if (!sgMail?.setApiKey || !sgMail?.send) {
-    return { success: false, provider: 'sendgrid', error: 'SendGrid client not available' };
-  }
-
-  sgMail.setApiKey(apiKey);
-
-  const attachments = (params.attachments || []).map((att) => ({
-    filename: att.filename,
-    content: att.content.toString('base64'),
-    type: 'application/octet-stream',
-    disposition: 'inline',
-    content_id: att.cid,
-  }));
-
-  for (const recipient of params.to) {
-    await sgMail.send({
-      to: recipient,
-      from: params.from,
-      subject: params.subject,
-      html: params.html,
-      replyTo: params.replyTo,
-      attachments: attachments.length ? attachments : undefined,
-    });
-    console.log(`[Email] Sent to ${recipient} via SendGrid`);
-  }
-
-  return { success: true, provider: 'sendgrid', messageId: 'batch-sent' };
 }
 
 // Create nodemailer transporter for Render SMTP
@@ -95,9 +51,6 @@ function createRenderTransporter() {
     port,
     secure,
     auth: { user, pass },
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 20_000,
   });
 }
 
@@ -122,9 +75,6 @@ function createGmailTransporter() {
       user: process.env.SMTP_USER,
       pass: password,
     },
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 20_000,
   });
 }
 
@@ -172,26 +122,6 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   
   // Get logo attachments for inline images
   const emailAttachments = attachments ? getEmailAttachments() : [];
-
-  // Try SendGrid first when configured (works on Render even if SMTP is blocked)
-  if (process.env.SENDGRID_API_KEY && !process.env.SENDGRID_API_KEY.includes('xxxxx')) {
-    try {
-      return await sendWithSendgrid({
-        to: recipients,
-        subject,
-        html,
-        from: fromAddress,
-        replyTo: replyTo || process.env.SMTP_USER,
-        attachments: emailAttachments.map((att) => ({
-          filename: att.filename,
-          content: att.content,
-          cid: att.content_id,
-        })),
-      });
-    } catch (error) {
-      console.error('[Email] SendGrid error:', error);
-    }
-  }
   
   // Try Render SMTP first (primary)
   if (process.env.RENDER_SMTP_HOST && process.env.RENDER_SMTP_USER && process.env.RENDER_SMTP_PASS) {
@@ -304,26 +234,6 @@ export async function sendEmailWithAttachment(options: SendEmailWithAttachmentOp
       console.log(`[Email] Adding PDF attachment: ${pdfAttachment.filename}`);
     } else {
       console.warn(`[Email] PDF attachment not found: ${pdfAttachment.path}`);
-    }
-  }
-
-  // Try SendGrid first when configured
-  if (process.env.SENDGRID_API_KEY && !process.env.SENDGRID_API_KEY.includes('xxxxx')) {
-    try {
-      return await sendWithSendgrid({
-        to: recipients,
-        subject,
-        html,
-        from: fromAddress,
-        replyTo: replyTo || process.env.SMTP_USER,
-        attachments: allAttachments.map((att) => ({
-          filename: att.filename,
-          content: Buffer.isBuffer(att.content) ? att.content : Buffer.from(att.content),
-          cid: att.cid,
-        })),
-      });
-    } catch (error) {
-      console.error('[Email] SendGrid error with attachment:', error);
     }
   }
   
@@ -451,8 +361,36 @@ export async function verifyEmailConfig(): Promise<{ configured: boolean; provid
       error: 'No email providers configured',
     };
   }
+  
+  // Try to verify Render SMTP connection
+  if (process.env.RENDER_SMTP_HOST && process.env.RENDER_SMTP_USER && process.env.RENDER_SMTP_PASS) {
+    try {
+      const transporter = createRenderTransporter();
+      await transporter.verify();
+      return { configured: true, providers };
+    } catch (error) {
+      return {
+        configured: false,
+        providers,
+        error: error instanceof Error ? error.message : 'Render SMTP verification failed',
+      };
+    }
+  }
 
-  // Avoid network calls here; SMTP is commonly blocked on PaaS and can hang.
-  // Actual connectivity is validated by POST test sends.
+  // Fallback verify Gmail
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      const transporter = createGmailTransporter();
+      await transporter.verify();
+      return { configured: true, providers };
+    } catch (error) {
+      return {
+        configured: false,
+        providers,
+        error: error instanceof Error ? error.message : 'Gmail verification failed',
+      };
+    }
+  }
+  
   return { configured: true, providers };
 }

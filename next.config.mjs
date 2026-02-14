@@ -211,12 +211,6 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
-          // PERFORMANCE: stale-while-revalidate serves cached version instantly
-          // while revalidating in background. Much better UX than no-cache.
-          {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=300',
-          },
         ],
       },
       // Service Worker - allow scope to root
@@ -288,6 +282,10 @@ const nextConfig = {
             value: 'ALLOWALL',
           },
           {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0',
+          },
+          {
             key: 'Content-Security-Policy',
             value: "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' blob: data:; style-src * 'unsafe-inline'; img-src * data: blob: https: http:; font-src * data:; connect-src * wss: ws: https: http: blob: data:; media-src * blob: data: https: http:; frame-src * blob: data: https: http:; worker-src * blob: data:; child-src * blob: data:; object-src *; base-uri *; form-action *; frame-ancestors *;",
           },
@@ -324,6 +322,10 @@ const nextConfig = {
           {
             key: 'X-Frame-Options',
             value: 'ALLOWALL',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0',
           },
           {
             key: 'Content-Security-Policy',

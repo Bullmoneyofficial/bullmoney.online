@@ -73,16 +73,49 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       return cachedMax;
     };
 
+    // Emit scroll SFX events so the global ScrollSciFiAudio can play the same dragging sound
+    // even when we scroll a container (which doesn't change window.scrollY).
+    const lastSfxPosRef = { current: 0 };
+    const lastSfxTimeRef = { current: performance.now() };
+    let sfxInitialized = false;
+    const emitScrollSfx = (nextPos: number) => {
+      const now = performance.now();
+      if (!sfxInitialized) {
+        sfxInitialized = true;
+        lastSfxPosRef.current = nextPos;
+        lastSfxTimeRef.current = now;
+        return;
+      }
+
+      const delta = nextPos - lastSfxPosRef.current;
+      const elapsed = now - lastSfxTimeRef.current;
+      lastSfxPosRef.current = nextPos;
+      lastSfxTimeRef.current = now;
+
+      if (Math.abs(delta) < 3) return;
+      window.dispatchEvent(
+        new CustomEvent("bullmoney-scroll-sfx", {
+          detail: {
+            delta,
+            elapsed,
+          },
+        })
+      );
+    };
+
     let lastScrollY = -999;
     const setScroll = (y: number) => {
       if (Math.abs(y - lastScrollY) < 2) return;
       lastScrollY = y;
       if (containerEl) {
         containerEl.scrollTop = y;
+        emitScrollSfx(y);
         return;
       }
       if (rootScroller) rootScroller.scrollTop = y;
       window.scrollTo(0, y);
+
+      emitScrollSfx(y);
     };
 
     const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();

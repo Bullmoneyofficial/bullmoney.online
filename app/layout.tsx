@@ -270,8 +270,8 @@ export default function RootLayout({
       #bm-splash .bm-orb-a{width:240px;height:240px;top:12%;left:18%;background:radial-gradient(circle,rgba(24,24,27,.12),rgba(24,24,27,0) 65%);}
       #bm-splash .bm-orb-b{width:280px;height:280px;right:14%;bottom:10%;background:radial-gradient(circle,rgba(24,24,27,.1),rgba(24,24,27,0) 65%);}
 
-      /* Splash content wrapper */
-      #bm-splash .bm-sway-content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;}
+      /* Cross-browser sway layer (more reliable than animating the fixed viewport itself) */
+      #bm-splash .bm-sway-content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;animation:bm-splash-drunk-sway 3.2s cubic-bezier(.37,.01,.63,1) infinite;will-change:transform;transform:translate3d(0,0,0);}
 
       /* Logo container */
       #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:162px;height:162px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-intro .7s cubic-bezier(.2,.8,.2,1) both;will-change:transform,opacity;}
@@ -693,14 +693,17 @@ export default function RootLayout({
       #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
       #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
       #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
-
+      html.bm-sway body{animation:bm-sway 2.1s cubic-bezier(.34,.73,.64,.26) both;transform-origin:50% 50%;will-change:transform;}
+      html.bm-sway-safe body{animation:bm-sway-safe .9s ease-out both;transform-origin:50% 50%;}
 
       @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9);will-change:transform}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
       @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
       @keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
       @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
-
-      @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
+      @keyframes bm-splash-drunk-sway{0%{transform:translate3d(0,0,0) rotate(0deg)}20%{transform:translate3d(-22px,.2px,0) rotate(-.48deg)}40%{transform:translate3d(22px,-.2px,0) rotate(.48deg)}60%{transform:translate3d(-20px,.16px,0) rotate(-.4deg)}80%{transform:translate3d(20px,-.16px,0) rotate(.4deg)}100%{transform:translate3d(0,0,0) rotate(0deg)}}
+      @keyframes bm-sway{0%{transform:translate3d(0,0,0) rotate(0deg)}16%{transform:translate3d(-16px,1.5px,0) rotate(-1.1deg)}32%{transform:translate3d(12px,-1.8px,0) rotate(0.9deg)}50%{transform:translate3d(-14px,2px,0) rotate(-0.8deg)}68%{transform:translate3d(10px,-1.2px,0) rotate(0.6deg)}84%{transform:translate3d(-8px,1px,0) rotate(-0.3deg)}100%{transform:translate3d(0,0,0) rotate(0deg)}}
+      @keyframes bm-sway-safe{0%{transform:translate3d(0,0,0)}25%{transform:translate3d(-3px,0,0)}50%{transform:translate3d(3px,0,0)}75%{transform:translate3d(-2px,0,0)}100%{transform:translate3d(0,0,0)}}
+      @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-sway-content,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
       @media(min-width:768px){#bm-splash .bm-logo-wrap{width:216px;height:216px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}
         ` }} />
         {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
