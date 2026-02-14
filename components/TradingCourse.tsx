@@ -1007,7 +1007,7 @@ export default function TradingCourse({ appearance = 'hub' }: { appearance?: 'hu
                                           return (
                                             <button
                                               key={idx}
-                                              onClick={() => void saveQuizAttempt(q, idx)}
+                                              onClick={() => void submitQuizAttempt(q, idx)}
                                               className={
                                                 'text-left px-3 py-2 rounded-xl border transition-colors ' +
                                                 (selected ? 'border-black/20 bg-black/5' : 'border-black/10 hover:bg-black/5')
