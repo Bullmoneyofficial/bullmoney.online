@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, Suspense, useState, useEffect, startTransition } from "react";
 import dynamic from "next/dynamic";
 
 // ============================================================================
@@ -59,7 +59,29 @@ interface AppProvidersProps {
   children: ReactNode;
 }
 
+// ✅ HYDRATION SAFE: All providers render on both server and client
+// Heavy providers use dynamic() with ssr:true to defer module loading
+// FPSCounter and SmartScreensaver are client-only (ssr: false)
 export function AppProviders({ children }: AppProvidersProps) {
+  const [showDeferred, setShowDeferred] = useState(false);
+  
+  useEffect(() => {
+    // Enable deferred components during idle time
+    const enableDeferred = () => {
+      startTransition(() => {
+        setShowDeferred(true);
+      });
+    };
+    
+    if ('requestIdleCallback' in window) {
+      const id = (window as any).requestIdleCallback(enableDeferred, { timeout: 2000 });
+      return () => (window as any).cancelIdleCallback(id);
+    } else {
+      const timeout = setTimeout(enableDeferred, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, []);
+
   return (
     <ThemeProvider
       attribute="class"
@@ -75,11 +97,16 @@ export function AppProviders({ children }: AppProvidersProps) {
                 <AudioSettingsProvider>
                   <StudioProvider>
                     <ShopProvider>
-                      <SmartScreensaverProvider>
-                        {children}
-                        {/* Dev FPS overlay — fixed, always visible on all pages including mobile */}
-                        <FPSCounter show={process.env.NODE_ENV === 'development'} position="bottom-right" />
-                      </SmartScreensaverProvider>
+                      {/* SmartScreensaver deferred to idle time (ssr: false prevents hydration mismatch) */}
+                      {showDeferred ? (
+                        <SmartScreensaverProvider>
+                          {children}
+                          {/* Dev FPS overlay */}
+                          <FPSCounter show={process.env.NODE_ENV === 'development'} position="bottom-right" />
+                        </SmartScreensaverProvider>
+                      ) : (
+                        children
+                      )}
                     </ShopProvider>
                   </StudioProvider>
                 </AudioSettingsProvider>

@@ -162,6 +162,38 @@ const LazyGlobalModals = memo(function LazyGlobalModals() {
   );
 });
 
+/**
+ * AdminShortcutHandler - Handles Cmd/Ctrl+Shift+A to open admin panel
+ * Must be inside UIStateProvider context
+ */
+function AdminShortcutHandler() {
+  const { setAdminModalOpen } = useUIState();
+  
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isTypingTarget = Boolean(
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      );
+
+      if (isTypingTarget) return;
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setAdminModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setAdminModalOpen]);
+  
+  return null;
+}
+
 export function ClientProviders({ children, modal, splashFinished = false }: ClientProvidersProps) {
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(240);
   const allowMobileComponents = allowMobileLazy || !isMobileViewport;
@@ -241,6 +273,8 @@ export function ClientProviders({ children, modal, splashFinished = false }: Cli
               <AuthProvider>
                 {canMountAudioWidget && <AudioWidget />}
                 {modal}
+                {/* Admin shortcut: Cmd/Ctrl+Shift+A opens admin panel */}
+                <AdminShortcutHandler />
                 <div data-lenis-content data-store-lenis>
                   <main
                     className="min-h-screen"
@@ -337,6 +371,9 @@ export function ClientProviders({ children, modal, splashFinished = false }: Cli
                 - EXCEPTION: AudioWidget stays mounted for audio persistence
               */}
               {allowMobileComponents && <LazyGlobalModals />}
+              
+              {/* Admin shortcut: Cmd/Ctrl+Shift+A opens admin panel */}
+              <AdminShortcutHandler />
               
               {/* Admin components - only mount after idle to avoid blocking main content */}
               <Suspense fallback={null}>

@@ -901,11 +901,22 @@ export default function RootLayout({
         {/* Prevent auto-detection that can break layouts */}
         <meta name="format-detection" content="telephone=no,date=no,email=no,address=no" />
 
-        {/* PERFORMANCE: dns-prefetch only origins actually used during page load */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* PERFORMANCE: Resource hints for faster loading                       */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        
+        {/* Preconnect to critical origins (establishes connection early) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
-        {/* PERFORMANCE: Preload critical assets with proper priorities */}
+        
+        {/* DNS Prefetch for third-party domains (resolves DNS early) */}
+        <link rel="dns-prefetch" href="https://prod.spline.design" />
+        <link rel="dns-prefetch" href="https://cdn.spline.design" />
+        <link rel="dns-prefetch" href="https://va.vercel-scripts.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        
+        {/* Preload critical assets with proper priorities */}
         <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />
         
         {/* 

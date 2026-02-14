@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
+import { useState, useEffect, useRef, useCallback, startTransition, useDeferredValue, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+// ✅ HYDRATION OPTIMIZATION: Import deferred state utilities
+import { useHydrated, useIdleCallback } from "@/hooks/useHydrationOptimization";
 // ✅ LAZY-LOADED: These modules are only used in useEffect callbacks,
 // so we use dynamic import() to avoid adding them to the compile-time module graph.
 // browserDetection (309 lines), glassStyles (62 lines), prefetchHelper (170 lines)
@@ -339,11 +341,14 @@ function WhiteboardCanvas({ isMobile }: { isMobile: boolean }) {
 
 function HomeContent() {
   const { optimizeSection } = useLazyBigDeviceScrollOptimizer();
+  const isHydrated = useHydrated();
   
-  // Start uninitialized - useEffect will check localStorage on client mount
+  // ✅ HYDRATION OPTIMIZED: Start with safe defaults that match SSR
+  // useEffect will check localStorage on client mount
   // This ensures SSR hydration works correctly in production
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'telegram' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
+  // ✅ HYDRATION OPTIMIZED: Initialize as false to match server render
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isUltraWide, setIsUltraWide] = useState(false);
@@ -378,8 +383,8 @@ function HomeContent() {
   // Showcase scroll — lazy-loaded as effect component (461+134 lines deferred)
   // Rendered as <LazyShowcaseScroll /> in JSX below
 
-  // Defer analytics + prefetch — lazy-loaded to avoid compiling 170+309 lines up front
-  useEffect(() => {
+  // ✅ HYDRATION OPTIMIZED: Defer analytics + prefetch to after hydration and idle time
+  useIdleCallback(() => {
     import("@/lib/prefetchHelper").then(({ deferAnalytics, smartPrefetch }) => {
       deferAnalytics(() => {
         import("@/lib/analytics").then(() => {
@@ -393,7 +398,7 @@ function HomeContent() {
         { href: '/course', options: { priority: 'low' } },
       ]);
     });
-  }, []);
+  }, { timeout: 3000, enabled: isHydrated });
 
   // Check for Account Manager query parameter and open modal
   useEffect(() => {
@@ -558,8 +563,11 @@ function HomeContent() {
       return;
     }
 
-    // Mount all stages immediately - no staggered delays
-    setSequenceStage(5);
+    // ✅ HYDRATION OPTIMIZED: Mount all stages immediately using startTransition
+    // This marks the update as non-urgent so it doesn't block interactions
+    startTransition(() => {
+      setSequenceStage(5);
+    });
   }, [currentView]);
   
   const componentsRegisteredRef = useRef(false);

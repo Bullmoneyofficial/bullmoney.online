@@ -1,11 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, ReactNode, useEffect, useState, useRef } from "react";
+import { Suspense, ReactNode, useEffect, useState, useRef, startTransition } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
-import { useUIState } from "@/contexts/UIStateHook";
+import { markHydrationComplete } from "@/components/FastHydrationWrapper";
+
 // ✅ LAZY-LOADED: SEO/analytics/audio deferred to avoid blocking first paint
 const ScrollSciFiAudio = dynamic(
   () => import("@/components/ScrollSciFiAudio").then(mod => ({ default: mod.ScrollSciFiAudio })),
@@ -127,6 +128,8 @@ interface LayoutProvidersProps {
 /**
  * LayoutProviders - Client-side wrapper for dynamic components in root layout
  * Handles all lazy-loaded providers and components with ssr: false
+ * 
+ * ✅ HYDRATION OPTIMIZED: Progressive mounting stages
  */
 export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Only defer navbar/UltimateHub on mobile to avoid blocking first paint
@@ -172,6 +175,11 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Global Ultimate Hub visibility - controlled by toggle in navbar & store header
   // Default OFF to prevent heavy component from loading and blocking page render
   const [showUltimateHub, setShowUltimateHub] = useState(false);
+  // ✅ HYDRATION OPTIMIZED: Progressive mount stages
+  // Stage 0: Initial (SSR match)
+  // Stage 1: Hydration complete - show children
+  // Stage 2: Interactive - show navbar
+  // Stage 3: Idle - show extras (SEO, analytics, etc.)
   const [mountStage, setMountStage] = useState(0);
   const [isSplashFinished, setIsSplashFinished] = useState(false);
   
@@ -205,19 +213,36 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     }
   }, []);
 
-  // Only run mount stage progression ONCE on initial load, not on every pathname change.
-  // Re-running on every navigation causes flicker as components gated on mountStage re-render.
+  // ✅ HYDRATION OPTIMIZED: Progressive mount stages
   const mountStageInitialized = useRef(false);
   useEffect(() => {
     if (mountStageInitialized.current) return;
     mountStageInitialized.current = true;
-    // Stage 2: Show navbar + children immediately
-    setMountStage(2);
-    // Stage 3: Cursor + extras after a short delay to not block first paint
+    
+    // Mark global hydration complete
+    markHydrationComplete();
+    
+    // Stage 1: Show children immediately (sync, no delay)
+    setMountStage(1);
+    
+    // Stage 2: Show navbar after a microtask (non-blocking)
+    queueMicrotask(() => {
+      startTransition(() => {
+        setMountStage(2);
+      });
+    });
+    
+    // Stage 3: Show extras during idle time
+    const enableExtras = () => {
+      startTransition(() => {
+        setMountStage(3);
+      });
+    };
+    
     if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(() => setMountStage(3), { timeout: 1500 });
+      (window as any).requestIdleCallback(enableExtras, { timeout: 1500 });
     } else {
-      setTimeout(() => setMountStage(3), 300);
+      setTimeout(enableExtras, 300);
     }
     
     // ✅ PERF: Initialize resource preloading during idle time
@@ -279,36 +304,6 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   const canShowUltimateHub = mountStage >= 2;
   const canShowCursor = mountStage >= 3;
   const canShowSupport = canShowUltimateHub && supportReady && isSplashFinished;
-
-  // ============================================
-  // ADMIN PANEL KEYBOARD SHORTCUT: Cmd/Ctrl+Shift+A
-  // ============================================
-  const { setAdminModalOpen } = useUIState();
-  
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      const isTypingTarget = Boolean(
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable)
-      );
-
-      if (isTypingTarget) return;
-
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
-        e.preventDefault();
-        setAdminModalOpen(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [setAdminModalOpen]);
 
   // Dev-only guard to avoid crash when React tries to remove nodes that were already moved/removed by imperative code
   useEffect(() => {

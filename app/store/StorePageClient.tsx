@@ -1,12 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, startTransition, useDeferredValue } from 'react';
 import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ShoppingBag, CreditCard, X } from 'lucide-react';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
+// ✅ HYDRATION OPTIMIZATION: Import deferred utilities
+import { useHydrated, useIdleCallback } from '@/hooks/useHydrationOptimization';
 // ✅ LAZY: forceEnableScrolling (342 lines) loaded via import() in useEffect
 
 // ✅ PERF: ProductCard (1,279 lines + framer-motion) lazy-loaded — not needed at compile time
@@ -473,16 +475,27 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  // ✅ HYDRATION OPTIMIZED: Use useDeferredValue for search to prevent blocking UI
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { open: openProductsModal } = useProductsModalUI();
+  const isHydrated = useHydrated();
 
+  // ✅ HYDRATION OPTIMIZED: Use startTransition for filter updates
   const [filters, setFilters] = useState<ProductFilters>({
     category: searchParams.get('category') || '',
     min_price: searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined,
     max_price: searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined,
     sort_by: (searchParams.get('sort_by') as ProductFilters['sort_by']) || 'newest',
   });
+  
+  // Wrap filter updates in startTransition
+  const updateFilters = useCallback((newFilters: Partial<ProductFilters>) => {
+    startTransition(() => {
+      setFilters(prev => ({ ...prev, ...newFilters }));
+    });
+  }, []);
 
   const [showLoader, setShowLoader] = useState(false);
 
