@@ -561,13 +561,6 @@ export default function RootLayout({
         }
       }
       
-      /* Hybrid device (touch laptop): bigger touch targets */
-      html.hybrid-device a,
-      html.hybrid-device button,
-      html.hybrid-device [role="button"] {
-        min-height: 44px;
-        min-width: 44px;
-      }
       
       /* Responsive breakpoint classes from sw-touch.js */
       html.vp-mobile body { font-size: 14px; }
@@ -601,16 +594,6 @@ export default function RootLayout({
         -webkit-tap-highlight-color: rgba(0,0,0,0);
       }
       
-      /* Touch target minimums (WCAG 2.5.5 compliance) */
-      html.touch-device a,
-      html.touch-device button,
-      html.touch-device [role="button"],
-      html.touch-device input,
-      html.touch-device select,
-      html.touch-device textarea {
-        min-height: 44px;
-        min-width: 44px;
-      }
       
       /* Prevent text selection on interactive elements */
       button, [role="button"], a, .no-select {

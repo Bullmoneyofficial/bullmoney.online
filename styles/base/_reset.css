@@ -94,8 +94,6 @@ select,
 textarea,
 [role="button"],
 [tabindex]:not([tabindex="-1"]) {
-  min-height: var(--touch-target-min);
-  min-width: var(--touch-target-min);
   /* Prevent callout on long press (iOS) */
   -webkit-touch-callout: none;
   /* Disable user selection for better touch UX */

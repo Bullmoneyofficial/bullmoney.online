@@ -1257,7 +1257,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 borderLeft: '1px solid rgba(0,0,0,0.1)',
                 willChange: 'transform',
                 WebkitOverflowScrolling: 'touch',
-                overscrollBehaviorY: 'contain',
+                overscrollBehaviorY: 'none',
                 paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
               }}
             >
