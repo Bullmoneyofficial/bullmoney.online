@@ -418,6 +418,7 @@ function parseChannelHTML(html: string, channelUsername: string, channelName: st
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
+        .replace(/&apos;|&#x27;/gi, "'")
         .replace(/&#33;/g, '!')
         .replace(/&#63;/g, '?')
         .replace(/&#64;/g, '@')

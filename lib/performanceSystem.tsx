@@ -3,6 +3,17 @@
 import React, { useEffect, useRef, useState, memo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
+type TargetFpsTier = 30 | 60 | 75 | 90 | 120;
+
+function roundToCommonHz(hz: number): TargetFpsTier {
+  if (!Number.isFinite(hz) || hz <= 0) return 60;
+  if (hz >= 115) return 120;
+  if (hz >= 85) return 90;
+  if (hz >= 70) return 75;
+  if (hz >= 55) return 60;
+  return 30;
+}
+
 /**
  * Performance System
  * 

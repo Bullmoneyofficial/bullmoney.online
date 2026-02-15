@@ -24,27 +24,6 @@ export function usePerformanceInit() {
     setPerformanceMode 
   } = usePerformanceStore();
 
-  const tryUpgradeRefreshRate = useCallback(async () => {
-    try {
-      const measuredHz = await measureRefreshRate();
-      const currentHz = usePerformanceStore.getState().refreshRate;
-
-      if (measuredHz > currentHz) {
-        console.log(`[PerformanceInit] Upgrading refresh rate: ${currentHz}Hz -> ${measuredHz}Hz`);
-        setRefreshRate(measuredHz);
-
-        if (measuredHz >= 120) {
-          document.documentElement.classList.add('display-120hz', 'fps-120');
-          document.documentElement.classList.remove('display-90hz', 'fps-90');
-        } else if (measuredHz >= 90) {
-          document.documentElement.classList.add('display-90hz', 'fps-90');
-        }
-      }
-    } catch {
-      // Best-effort only.
-    }
-  }, [measureRefreshRate, setRefreshRate]);
-
   /**
    * Measure actual display refresh rate using RAF timing
    */
@@ -85,6 +64,27 @@ export function usePerformanceInit() {
       requestAnimationFrame(measure);
     });
   }, []);
+
+  const tryUpgradeRefreshRate = useCallback(async () => {
+    try {
+      const measuredHz = await measureRefreshRate();
+      const currentHz = usePerformanceStore.getState().refreshRate;
+
+      if (measuredHz > currentHz) {
+        console.log(`[PerformanceInit] Upgrading refresh rate: ${currentHz}Hz -> ${measuredHz}Hz`);
+        setRefreshRate(measuredHz);
+
+        if (measuredHz >= 120) {
+          document.documentElement.classList.add('display-120hz', 'fps-120');
+          document.documentElement.classList.remove('display-90hz', 'fps-90');
+        } else if (measuredHz >= 90) {
+          document.documentElement.classList.add('display-90hz', 'fps-90');
+        }
+      }
+    } catch {
+      // Best-effort only.
+    }
+  }, [measureRefreshRate, setRefreshRate]);
 
   /**
    * Detect ProMotion-capable devices

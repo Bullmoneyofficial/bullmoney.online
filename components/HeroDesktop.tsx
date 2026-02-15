@@ -315,7 +315,7 @@ const Styles = () => (
     /* When content overlay has content, position picker at top with content centered below */
     .hero-content-overlay.has-content {
       justify-content: flex-start;
-      padding-top: 100px;
+      padding-top: 60px;
     }
 
     .hero-content-wrapper {
@@ -1011,7 +1011,7 @@ const Styles = () => (
         max-width: 360px;
       }
       .hero-content-overlay.has-content {
-        padding-top: 80px;
+        padding-top: 40px;
       }
     }
 
@@ -1739,7 +1739,7 @@ const saveBgPreferences = (favorites: BackgroundEffect[], enabled: BackgroundEff
 
 // Load color preferences from localStorage
 const loadColorPreferences = (): { mode: 'color' | 'grayscale' | 'custom', color: { h: number, s: number, l: number, a: number } } => {
-  if (typeof window === 'undefined') return { mode: 'grayscale', color: { h: 0, s: 50, l: 50, a: 0.5 } };
+  if (typeof window === 'undefined') return { mode: 'color', color: { h: 0, s: 50, l: 50, a: 0.5 } };
   try {
     const stored = localStorage.getItem('color-preferences');
     if (stored) {
@@ -1748,7 +1748,7 @@ const loadColorPreferences = (): { mode: 'color' | 'grayscale' | 'custom', color
   } catch (e) {
     console.error('[ColorPrefs] Error loading:', e);
   }
-  return { mode: 'grayscale', color: { h: 0, s: 50, l: 50, a: 0.5 } };
+  return { mode: 'color', color: { h: 0, s: 50, l: 50, a: 0.5 } };
 };
 
 // Save color preferences to localStorage
@@ -2299,15 +2299,16 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const [toast, setToast] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<BackgroundEffect[]>([]);
   const [enabledEffects, setEnabledEffects] = useState<BackgroundEffect[]>(effects as BackgroundEffect[]);
-  const [showGrayscale, setShowGrayscale] = useState(true);
+  const [showGrayscale, setShowGrayscale] = useState(false);
   
   // Color System State
-  const [colorMode, setColorMode] = useState<'color' | 'grayscale' | 'custom'>('grayscale');
+  const [colorMode, setColorMode] = useState<'color' | 'grayscale' | 'custom'>('color');
   const [customColor, setCustomColor] = useState({ h: 0, s: 50, l: 50, a: 0.5 }); // HSL for easier manipulation
   const [showColorPicker, setShowColorPicker] = useState(false);
   
   const [show3DOverlay] = useState(true);
   const [isSceneSwitching, setIsSceneSwitching] = useState(false);
+  const [showBgMenu, setShowBgMenu] = useState(false);
 
   // Load preferences on mount
   useEffect(() => {
@@ -2832,49 +2833,6 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       )}
       {isReady && (
         <div className={`hero-content-overlay ${getContentOverlay(currentEffect) ? 'has-content' : 'picker-only'}`}>
-          {/* Stacked Control Buttons — BG Picker, Color, 3D (vertically) */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            {/* BG Picker Button */}
-            <button 
-              className="bg-selector-toggle"
-              style={{ marginBottom: 0 }}
-              onClick={() => setShowPanel(prev => !prev)}
-              title="Background Settings (Ctrl+B)"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-              </svg>
-              <span>BG Picker</span>
-            </button>
-
-            {/* Color Toggle */}
-            <ToggleGrayscaleButton 
-              isActive={showGrayscale} 
-              onClick={() => setShowColorPicker(!showColorPicker)}
-              label={colorMode === 'grayscale' ? 'B&W' : colorMode === 'custom' ? 'Custom' : 'Color'}
-            />
-
-            {/* 3D Toggle - Click to hide/show, Hold to open scene picker */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <Toggle3DButton 
-                isActive={showSpline} 
-                onClick={() => setShowSpline(true)}
-                onLongPress={() => setShowSplinePanel(!showSplinePanel)}
-              />
-              <motion.span 
-                className="text-[9px] text-white/40 font-medium tracking-wide"
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                Hold • Download
-              </motion.span>
-            </div>
-          </div>
-          
           {/* Content wrapper for centering the actual content */}
           {getContentOverlay(currentEffect) && (
             <div className="hero-content-wrapper">
@@ -2883,6 +2841,244 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
           )}
         </div>
       )}
+
+      {/* Unified BG Picker Button — fixed center, matching mobile Discord hero style */}
+      <div style={{ position: 'fixed', top: '140px', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, zIndex: 2147483647, pointerEvents: 'none' }}>
+        {/* Main BG Picker Button */}
+        <button 
+          className="bg-selector-toggle" 
+          style={{ 
+            position: 'relative', 
+            top: 'auto', 
+            left: 'auto', 
+            transform: 'none', 
+            pointerEvents: 'auto',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #ffffff 100%)',
+            color: '#000000',
+            border: '1px solid rgba(255, 255, 255, 0.8)',
+          }}
+          onClick={() => setShowBgMenu(!showBgMenu)}
+          title="Background Settings (Ctrl+B)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          <span style={{ color: '#000000' }}>BG Picker</span>
+          <svg 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="#000000" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            style={{ 
+              width: 14, 
+              height: 14, 
+              marginLeft: 4,
+              transform: showBgMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease'
+            }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {/* Smart Dropdown Menu with Quick BG Picker */}
+        <AnimatePresence>
+          {showBgMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              style={{
+                pointerEvents: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                padding: '12px',
+                background: 'rgba(0, 0, 0, 0.9)',
+                borderRadius: 16,
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5)',
+                minWidth: 200,
+                maxWidth: 280,
+              }}
+            >
+              {/* Quick Background Switcher */}
+              <div style={{ marginBottom: 4 }}>
+                <div style={{ 
+                  fontSize: 10, 
+                  fontWeight: 600, 
+                  color: 'rgba(255,255,255,0.4)', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '0.1em',
+                  marginBottom: 8,
+                  paddingLeft: 4
+                }}>
+                  Quick Switch
+                </div>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(5, 1fr)', 
+                  gap: 6,
+                }}>
+                  {(effects as BackgroundEffect[]).slice(0, 10).map((effect, index) => {
+                    const isActive = currentIndex === index;
+                    const isEnabled = enabledEffects.includes(effect);
+                    const bgIcons: Record<string, string> = {
+                      'gridScan': '▦',
+                      'spline': '◇',
+                      'liquidEther': '◎',
+                      'galaxy': '✦',
+                      'terminal': '▤',
+                      'darkVeil': '◐',
+                      'lightPillar': '▮',
+                      'letterGlitch': 'A̷',
+                      'ballpit': '●',
+                      'gridDistortion': '◫'
+                    };
+                    return (
+                      <button
+                        key={effect}
+                        onClick={() => {
+                          if (isEnabled) {
+                            switchToBackground(index);
+                          }
+                        }}
+                        disabled={!isEnabled}
+                        title={EFFECT_NAMES[effect]}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 8,
+                          border: isActive ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)',
+                          background: isActive 
+                            ? 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)' 
+                            : 'rgba(255,255,255,0.05)',
+                          color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
+                          fontSize: 16,
+                          cursor: isEnabled ? 'pointer' : 'not-allowed',
+                          opacity: isEnabled ? 1 : 0.3,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease',
+                          transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                        }}
+                      >
+                        {bgIcons[effect] || '◌'}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Current BG Label */}
+                <div style={{ 
+                  fontSize: 11, 
+                  color: 'rgba(255,255,255,0.6)', 
+                  textAlign: 'center',
+                  marginTop: 8,
+                }}>
+                  {EFFECT_NAMES[effects[currentIndex] as BackgroundEffect]}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+
+              {/* Quick Toggle Row */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {/* Color Toggle */}
+                <button
+                  onClick={() => {
+                    // Cycle through color modes
+                    const modes: ('color' | 'grayscale' | 'custom')[] = ['color', 'grayscale', 'custom'];
+                    const currentModeIndex = modes.indexOf(colorMode);
+                    const nextMode = modes[(currentModeIndex + 1) % modes.length];
+                    setColorMode(nextMode);
+                    setShowGrayscale(nextMode === 'grayscale');
+                    saveColorPreferences(nextMode, customColor);
+                    showToast(`Color: ${nextMode === 'grayscale' ? 'B&W' : nextMode === 'custom' ? 'Custom' : 'Normal'}`);
+                  }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    padding: '10px 12px',
+                    background: colorMode !== 'color' ? 'rgba(41, 151, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                    border: colorMode !== 'color' ? '1px solid rgba(41, 151, 255, 0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    color: '#fff',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>{colorMode === 'grayscale' ? '◐' : colorMode === 'custom' ? '◉' : '○'}</span>
+                  {colorMode === 'grayscale' ? 'B&W' : colorMode === 'custom' ? 'Tint' : 'Color'}
+                </button>
+
+                {/* 3D Toggle */}
+                <button
+                  onClick={() => { 
+                    setShowSpline(!showSpline);
+                    showToast(`3D: ${!showSpline ? 'ON' : 'OFF'}`);
+                  }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    padding: '10px 12px',
+                    background: showSpline ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                    border: showSpline ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    color: showSpline ? '#86efac' : '#fff',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>◇</span>
+                  3D {showSpline ? 'ON' : 'OFF'}
+                </button>
+              </div>
+
+              {/* More Options */}
+              <button
+                onClick={() => { setShowPanel(true); setShowBgMenu(false); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '8px 12px',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  color: 'rgba(255,255,255,0.5)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                More Options →
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Spline Scene Selector Panel */}
       {showSplinePanel && (
@@ -3251,17 +3447,8 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
 
       </div>
 
-      {/* Ultimate Hub Modal - Uses UIStateContext */}
-      {isUltimateHubOpen && (
-        <div className="modal-overlay" style={{ background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none' }} onClick={() => setUltimateHubOpen(false)}>
-          <div className="modal-content modal-content-hub" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setUltimateHubOpen(false)}>×</button>
-            <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
-              <UltimateHub />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Ultimate Hub - Renders its own backdrop/drawer via UnifiedHubPanel */}
+      <UltimateHub />
 
       {/* Products Modal - Support drawer style */}
       <AnimatePresence>

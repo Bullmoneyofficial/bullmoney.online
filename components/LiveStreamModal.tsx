@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
@@ -6,12 +5,13 @@ import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Radio, Loader2, LogIn, LogOut, User, Tv, ExternalLink, RefreshCw } from 'lucide-react';
+import type { YouTubeEvent, YouTubePlayer, YouTubeProps } from 'react-youtube';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop } from '@/components/ShopContext';
 import { createSupabaseClient } from '@/lib/supabase';
 import { useLiveStreamModalUI } from '@/contexts/UIStateContext';
 
-const YouTube = dynamic(() => import('react-youtube'), {
+const YouTube = dynamic<YouTubeProps>(() => import('react-youtube').then((m) => m.default), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-black/20" />,
 });
@@ -22,6 +22,29 @@ const YT_STORAGE_KEY = 'bullmoney_youtube_auth';
 const DISCOVER_CACHE_KEY = 'bullmoney_discover_videos';
 const DISCOVER_TTL = 2 * 60 * 1000; // 2 minutes
 const MARKET_NEWS_REFRESH_MS = 60 * 1000;
+
+function decodeText(input?: string): string {
+  if (!input) return '';
+  return input
+    // decode &amp; first so &amp;#39; becomes &#39;
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&apos;|&#x27;/gi, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_m, dec) => {
+      const codePoint = Number.parseInt(String(dec), 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : '';
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_m, hex) => {
+      const codePoint = Number.parseInt(String(hex), 16);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : '';
+    })
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 // Types
 interface DiscoverVideo {
@@ -132,7 +155,7 @@ const LiveStreamContent = memo(({ shouldSkipHeavyEffects }: { shouldSkipHeavyEff
   const [marketNewsLoading, setMarketNewsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<YouTubePlayer | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -559,7 +582,7 @@ const LiveStreamContent = memo(({ shouldSkipHeavyEffects }: { shouldSkipHeavyEff
                             autoplay: shouldSkipEffects ? 0 : 1,
                           },
                         }}
-                        onReady={(e) => { playerRef.current = e.target; }}
+                        onReady={(e: YouTubeEvent) => { playerRef.current = e.target; }}
                         className="w-full h-full"
                         iframeClassName="w-full h-full absolute inset-0"
                       />
@@ -725,7 +748,7 @@ const LiveStreamContent = memo(({ shouldSkipHeavyEffects }: { shouldSkipHeavyEff
                                   className="w-16 h-12 rounded object-cover shrink-0"
                                 />
                                 <p className={`text-sm font-medium wrap-break-word ${personalVideoId === videoId ? 'text-white' : 'text-black'}`}>
-                                  {snippet?.title || 'Untitled'}
+                                  {decodeText(snippet?.title) || 'Untitled'}
                                 </p>
                               </motion.button>
                             );

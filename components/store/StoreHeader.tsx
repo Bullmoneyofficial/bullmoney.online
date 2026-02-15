@@ -49,6 +49,7 @@ const CourseDrawer = dynamic(() => import('@/components/course/CourseDrawer').th
 const SocialsDrawer = dynamic(() => import('@/components/socials/SocialsDrawer').then(m => ({ default: m.SocialsDrawer })), { ssr: false, loading: () => null });
 const StoreAccountDrawer = dynamic(() => import('@/components/store/StoreAccountDrawer').then(m => ({ default: m.StoreAccountDrawer })), { ssr: false, loading: () => null });
 const LiveStreamModal = dynamic(() => import('@/components/LiveStreamModal'), { ssr: false, loading: () => null });
+const RewardsCard = dynamic(() => import('@/components/RewardsCard'), { ssr: false, loading: () => null });
 
 // ============================================================================
 // STORE HEADER - MODERN PILL NAVIGATION 
@@ -135,7 +136,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setDesktopMenuOpen,
     setDropdownMenuOpen: setManualDropdownOpen,
   } = useStoreMenuUI();
-  const { isUltimateHubOpen, shouldSkipHeavyEffects } = useUIState();
+  const { isUltimateHubOpen, shouldSkipHeavyEffects, isCourseDrawerOpen, isSocialsDrawerOpen } = useUIState();
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [accountManagerOpen, setAccountManagerOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
@@ -147,7 +148,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const [gamesManualOpen, setGamesManualOpen] = useState(false);
   const [siteSearchOpen, setSiteSearchOpen] = useState(false);
   const [showDesignSections, setShowDesignSections] = useState(true);
+  const [rewardsCardOpen, setRewardsCardOpen] = useState(false);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const desktopMenuOpenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, getItemCount, isOpen: isCartOpen } = useCartStore();
   const { isAuthenticated, recruit, signOut } = useRecruitAuth();
@@ -245,6 +248,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     return () => {
       if (desktopMenuCloseTimer.current) {
         clearTimeout(desktopMenuCloseTimer.current);
+      }
+      if (desktopMenuOpenTimer.current) {
+        clearTimeout(desktopMenuOpenTimer.current);
       }
       if (menuToggleTimer.current) {
         clearTimeout(menuToggleTimer.current);
@@ -364,11 +370,48 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       adminModalOpen ||
       gamesManualOpen ||
       isProductsModalOpen ||
-      isCartOpen
+      isCartOpen ||
+      accountManagerOpen ||
+      isCourseDrawerOpen ||
+      isSocialsDrawerOpen ||
+      isLiveStreamModalOpen
     );
 
     const html = document.documentElement;
     const body = document.body;
+
+    const unlockScroll = () => {
+      const top = body.style.top;
+      const lockedY = top && top.startsWith('-') ? Math.abs(parseInt(top, 10)) : null;
+
+      body.removeAttribute('data-storeheader-scroll-lock');
+      html.removeAttribute('data-storeheader-scroll-lock');
+
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      html.style.overflow = '';
+
+      // Store pages rely on a normally scrolling document; be explicit.
+      html.style.overflowY = 'auto';
+      html.style.overflowX = 'hidden';
+      body.style.overflowY = 'auto';
+      body.style.overflowX = 'hidden';
+
+      const targetY = (typeof lockedY === 'number' && !Number.isNaN(lockedY))
+        ? lockedY
+        : storeHeaderScrollYRef.current;
+      if (targetY) {
+        try {
+          window.scrollTo(0, targetY);
+        } catch {
+          // Ignore
+        }
+      }
+    };
 
     if (shouldLockBackgroundScroll) {
       if (body.getAttribute('data-storeheader-scroll-lock') !== 'true') {
@@ -398,19 +441,20 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       return;
     }
 
-    if (body.getAttribute('data-storeheader-scroll-lock') === 'true') {
-      body.removeAttribute('data-storeheader-scroll-lock');
-      html.removeAttribute('data-storeheader-scroll-lock');
+    // Release scroll lock.
+    // IMPORTANT: Some flows can leave body in a locked state without the attribute
+    // (e.g. interrupted route transitions). If no overlay is open, always ensure
+    // the document is scrollable again.
+    const hasStoreHeaderAttr = body.getAttribute('data-storeheader-scroll-lock') === 'true'
+      || html.getAttribute('data-storeheader-scroll-lock') === 'true';
+    const looksLocked =
+      body.style.position === 'fixed' ||
+      body.style.overflow === 'hidden' ||
+      html.style.overflow === 'hidden' ||
+      body.style.top.startsWith('-');
 
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      body.style.overflow = '';
-      html.style.overflow = '';
-
-      window.scrollTo(0, storeHeaderScrollYRef.current);
+    if (hasStoreHeaderAttr || looksLocked) {
+      unlockScroll();
     }
   }, [
     mobileMenuOpen,
@@ -421,6 +465,10 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     gamesManualOpen,
     isProductsModalOpen,
     isCartOpen,
+    accountManagerOpen,
+    isCourseDrawerOpen,
+    isSocialsDrawerOpen,
+    isLiveStreamModalOpen,
   ]);
 
   useEffect(() => {
@@ -647,10 +695,22 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       clearTimeout(desktopMenuCloseTimer.current);
       desktopMenuCloseTimer.current = null;
     }
-    setDesktopMenuOpen(true);
+    // Cancel any pending open timer to avoid duplicates
+    if (desktopMenuOpenTimer.current) {
+      clearTimeout(desktopMenuOpenTimer.current);
+    }
+    // Delay opening to avoid accidental triggers on quick mouse passes
+    desktopMenuOpenTimer.current = setTimeout(() => {
+      setDesktopMenuOpen(true);
+    }, 300);
   }, [isUltimateHubOpen, isCasinoPage, isOverCanvasSection]);
 
   const scheduleDesktopMenuClose = useCallback(() => {
+    // Cancel any pending open so a quick hover-out doesn't open the menu
+    if (desktopMenuOpenTimer.current) {
+      clearTimeout(desktopMenuOpenTimer.current);
+      desktopMenuOpenTimer.current = null;
+    }
     if (desktopMenuCloseTimer.current) {
       clearTimeout(desktopMenuCloseTimer.current);
     }
@@ -731,19 +791,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, [canUseDevAdminShortcut]);
 
   const handleRewardsClick = useCallback(() => {
-    if (isAuthenticated && recruit) {
-      openAccountDrawer();
-    } else {
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(ACCOUNT_DRAWER_PENDING_KEY, 'true');
-        } catch {
-          // Ignore storage errors
-        }
-      }
-      startPagemodeLogin('/store');
-    }
-  }, [isAuthenticated, recruit, openAccountDrawer, startPagemodeLogin]);
+    SoundEffects.click();
+    setRewardsCardOpen(true);
+  }, []);
   
   // Handle category click - navigate and scroll to products (only for store pages)
   const handleCategoryClick = useCallback((href: string) => {
@@ -1314,11 +1364,13 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       {/* Invisible Hover Trigger Strip - Smart detection avoids canvas sections */}
       {!isCasinoPage && !isAccountPage && (
         <div
-          className="fixed left-0 right-0 hidden lg:block pointer-events-auto z-[895]"
+          className="fixed hidden lg:block pointer-events-auto z-[895]"
           style={{
             top: '48px',
-            // Minimal 5px activation zone - only opens when cursor touches the header edge
-            height: '5px',
+            // Ultra-small activation zone (near the menu button only)
+            height: '2px',
+            right: '28px',
+            width: '44px',
           }}
           onMouseEnter={openDesktopMenu}
           onMouseLeave={scheduleDesktopMenuClose}
@@ -1807,6 +1859,13 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
       {/* Cart Drawer - Always available wherever StoreHeader is rendered */}
       <CartDrawer />
+
+      {/* Rewards Card Modal - fetches from SQL */}
+      <RewardsCard
+        isOpen={rewardsCardOpen}
+        onClose={() => setRewardsCardOpen(false)}
+        userEmail={recruit?.email || null}
+      />
 
       {/* Course Drawer - CartDrawer-style, controlled by context */}
       <CourseDrawer />

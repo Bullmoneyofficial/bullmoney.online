@@ -123,7 +123,7 @@ export const DEFAULT_AFFILIATE_CONTENT: AffiliateDashboardContent = {
   analytics_title: "Analytics",
   commission_info: "Earn up to 25% commission on broker rates per lot traded by your referrals.",
   qr_section_title: "Your Referral QR Code",
-  qr_section_description: "Clients can scan and auto-fill your code in pagemode.",
+  qr_section_description: "Clients can scan to open the welcome screen with your referral code auto-filled.",
   referral_link_title: "Your Referral Link",
   referral_link_description: "Share this link to earn commissions on every trade your referrals make",
   payout_info: "Payouts are processed monthly for balances over $50.",

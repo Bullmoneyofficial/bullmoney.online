@@ -662,7 +662,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[2147483642] flex items-stretch justify-end bg-transparent lg:bg-white/80 lg:backdrop-blur-md ultimate-hub-backdrop"
+            className="fixed inset-0 z-[2147483642] flex items-stretch justify-end bg-transparent lg:bg-black/30 ultimate-hub-backdrop"
             onClick={onClose}
             onPointerDown={(event) => {
               event.preventDefault();

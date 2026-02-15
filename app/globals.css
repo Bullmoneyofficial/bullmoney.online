@@ -104,75 +104,176 @@ html[data-showcase-running="true"] [class*="particle"] {
   height: 0;
 }
 
-/* Store desktop column scrollbars — GPU-accelerated, zero JS overhead */
+/* Store desktop column styles — natural document flow, no scroll trapping */
 @media (min-width: 1024px) {
-  /* Page-level snap container so columns lock to viewport center */
-  .store-snap-scroll {
-    scroll-snap-type: y proximity;
-    scroll-behavior: auto;
-  }
-
-  /* Columns container: sticky so it locks full-screen when scrolled into view */
+  /* Columns container: positioned relative so page scroll flows naturally */
   .store-columns-container {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 10;
-    /* Snap target: page-level snap will center this */
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
   }
 
+  /* Columns: content flows inline within the document.
+     No overflow-y/auto, no scrollbar-gutter, no containment.
+     Page-level scroll handles everything — no scroll trapping. */
   .store-column-scroll {
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
     touch-action: pan-y;
-    scrollbar-color: rgb(0, 0, 0) transparent;
-    scrollbar-width: thin;
-    /* GPU-accelerate scroll container */
-    will-change: scroll-position;
-    contain: layout style paint;
-    /* Promote to own compositing layer for off-main-thread scrolling */
-    transform: translateZ(0);
-    /* Smooth scroll for programmatic calls, but native for wheel/touch */
-    scroll-behavior: auto;
+    position: relative;
+    transition: filter 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .store-column-scroll::-webkit-scrollbar {
-    width: 10px;
+  /* ──────────────────────────────────────────────
+     COLUMN FOCUS MODE — activated on user scroll
+     ────────────────────────────────────────────── */
+
+  /* Focused column: becomes its own scroll container */
+  .store-column-scroll.column-focused {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: calc(100vh - 48px) !important;
+    max-height: calc(100vh - 48px) !important;
+    position: sticky !important;
+    top: 48px;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .store-column-scroll::-webkit-scrollbar-track {
+  /* Thin Apple-style scrollbar on focused column */
+  .store-column-scroll.column-focused::-webkit-scrollbar {
+    width: 6px;
+  }
+  .store-column-scroll.column-focused::-webkit-scrollbar-track {
     background: transparent;
+    margin: 8px 0;
+  }
+  .store-column-scroll.column-focused::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 100px;
+    transition: background 0.2s ease;
+  }
+  .store-column-scroll.column-focused::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+  /* Firefox thin scrollbar */
+  .store-column-scroll.column-focused {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
   }
 
-  .store-column-scroll::-webkit-scrollbar-thumb {
-    background-color: rgb(0, 0, 0);
-    border-radius: 999px;
-    border: 2px solid transparent;
-    background-clip: content-box;
+  /* Dimmed (unfocused) column */
+  .store-column-scroll.column-dimmed {
+    filter: brightness(0.45) saturate(0.7);
+    opacity: 0.6;
+    pointer-events: none;
+    user-select: none;
   }
 
-  /* RIGHT COLUMN: scrollbar on the left side via direction trick */
+  /* Dim overlay inside unfocused column — catches click to switch focus */
+  .column-dim-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    pointer-events: auto;
+    cursor: pointer;
+    border-radius: 16px;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 0.25) 0%,
+      rgba(0, 0, 0, 0.12) 70%,
+      transparent 100%
+    );
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+    transition: opacity 0.3s ease;
+  }
+  .column-dim-overlay:hover {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 0.15) 0%,
+      rgba(0, 0, 0, 0.06) 70%,
+      transparent 100%
+    );
+  }
+
+  /* Apple-style exit button — floats above columns */
+  .column-exit-btn {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px 8px 14px;
+    border: none;
+    border-radius: 100px;
+    /* Apple frosted glass pill */
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(40px) saturate(1.8);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    box-shadow:
+      0 0 0 0.5px rgba(255, 255, 255, 0.2),
+      0 2px 8px rgba(0, 0, 0, 0.25),
+      0 8px 32px rgba(0, 0, 0, 0.18);
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Slide-up entrance */
+    animation: columnExitBtnIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .column-exit-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow:
+      0 0 0 0.5px rgba(255, 255, 255, 0.35),
+      0 4px 16px rgba(0, 0, 0, 0.3),
+      0 12px 40px rgba(0, 0, 0, 0.2);
+    transform: translateX(-50%) scale(1.04);
+  }
+  .column-exit-btn:active {
+    transform: translateX(-50%) scale(0.97);
+    background: rgba(255, 255, 255, 0.28);
+  }
+  .column-exit-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .column-exit-btn-label {
+    line-height: 1;
+  }
+
+  @keyframes columnExitBtnIn {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(16px) scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  }
+
+  /* When focus is active, fade divider */
+  .column-focus-active .store-scroll-hint {
+    opacity: 0.15 !important;
+  }
+
+  /* RIGHT COLUMN: rtl direction trick for layout purposes */
   .store-col-right {
     direction: rtl;
   }
   .store-col-right > .store-col-right-inner {
     direction: ltr;
-  }
-
-  /* Column container — prevent scroll leaking from divider gap */
-  .store-column-scroll:not(:hover) {
-    pointer-events: auto;
-  }
-
-  /* Hover highlight on columns to show they're independently scrollable */
-  .store-col-left,
-  .store-col-right {
-    transition: box-shadow 0.15s ease;
-  }
-  .store-col-left:hover,
-  .store-col-right:hover {
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
   }
 
   /* Scroll hint divider animation */
@@ -669,7 +770,9 @@ body[data-modal-open="true"] button[title*="Close" i]:hover {
 .store-layout {
   position: relative;
   z-index: 1;
-  isolation: isolate;
+  /* NOTE: Removed isolation:isolate — it created a stacking context that
+     could interfere with scroll chaining on big viewports. Games layout
+     doesn't use it and scrolls fine without it. */
   background: #ffffff !important;
 }
 
@@ -695,7 +798,10 @@ body.store-page-body {
 .store-layout {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y pan-x;
-  overscroll-behavior: contain;
+  /* NOTE: Removed overscroll-behavior:contain — it trapped scroll events
+     inside .store-layout if the element ever becomes a scroll container
+     (even transiently via JS inline styles). Games layout uses 'auto'. */
+  overscroll-behavior: auto;
   scroll-behavior: auto;
 }
 

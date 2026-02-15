@@ -121,7 +121,7 @@ export default function AffiliateQRPosterPanel() {
   const getReferralLink = useCallback((affiliate: AffiliateRecord) => {
     if (affiliate.custom_referral_link) return affiliate.custom_referral_link;
     const code = affiliate.affiliate_code || "";
-    if (!code) return `${BASE_URL}/register/pagemode`;
+    if (!code) return `${BASE_URL}/`;
     
     const params = new URLSearchParams();
     params.set("ref", code);
@@ -130,7 +130,7 @@ export default function AffiliateQRPosterPanel() {
     params.set("utm_medium", "qr_poster");
     params.set("utm_campaign", "partner_link");
     
-    return `${BASE_URL}/register/pagemode?${params.toString()}`;
+    return `${BASE_URL}/?${params.toString()}`;
   }, []);
 
   // Toast helper

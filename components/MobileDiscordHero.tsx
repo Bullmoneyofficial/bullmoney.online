@@ -3490,7 +3490,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
 
       {/* Unified BG Picker Button */}
       {/* Added safe-area-inset-top for mobile notches/cutouts */}
-      <div style={{ position: 'fixed', top: 'max(100px, calc(100px + env(safe-area-inset-top, 0px)))', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, zIndex: 2147483647, pointerEvents: 'none' }}>
+      <div style={{ position: 'fixed', top: 'max(180px, calc(180px + env(safe-area-inset-top, 0px)))', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, zIndex: 2147483647, pointerEvents: 'none' }}>
         {/* Main BG Picker Button */}
         <button 
           className="bg-selector-toggle" 
@@ -4137,17 +4137,8 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
 
       </div>
 
-      {/* Ultimate Hub Modal - Uses UIStateContext */}
-      {isUltimateHubOpen && (
-        <div className="modal-overlay" onClick={() => setUltimateHubOpen(false)}>
-          <div className="modal-content modal-content-hub" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setUltimateHubOpen(false)}>×</button>
-            <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
-              <UltimateHub />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Ultimate Hub - Renders its own backdrop/drawer via UnifiedHubPanel */}
+      <UltimateHub />
 
       {/* Products Modal - Support drawer style */}
       <AnimatePresence>

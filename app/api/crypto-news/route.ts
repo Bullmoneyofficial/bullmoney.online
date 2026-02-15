@@ -195,5 +195,25 @@ function attrOf(xml: string, tag: string, attr: string) {
 }
 
 function strip(s: string) {
-  return s.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+  return s
+    .replace(/<[^>]+>/g, "")
+    // decode common entities (handle double-encoded text like &amp;#39;)
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, " ")
+    .replace(/&apos;|&#x27;/gi, "'")
+    .replace(/&#39;/g, "'")
+    // decode numeric entities
+    .replace(/&#(\d+);/g, (_m, dec) => {
+      const codePoint = Number.parseInt(String(dec), 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : "";
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_m, hex) => {
+      const codePoint = Number.parseInt(String(hex), 16);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : "";
+    })
+    .replace(/\s+/g, " ")
+    .trim();
 }

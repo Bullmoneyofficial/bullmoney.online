@@ -16,6 +16,7 @@ export function forceEnableScrolling() {
   if (typeof window === 'undefined') return;
 
   let clickTimeout: ReturnType<typeof setTimeout> | null = null;
+  let wheelRafId: number | null = null;
 
   // Detect browser types
   const ua = navigator.userAgent;
@@ -266,8 +267,89 @@ export function forceEnableScrolling() {
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // Desktop wheel/trackpad fallback
+  //
+  // Symptom: On larger viewports, some fixed overlays/canvases/3D scenes intercept
+  // the wheel event (sometimes calling preventDefault/stopPropagation), so the page
+  // only scrolls when the cursor is over a specific scrollable region (e.g. header).
+  //
+  // Fix: Listen in CAPTURE phase and, if the scrollingElement doesn't move after
+  // a wheel input, manually scroll the window by deltaY.
+  // ---------------------------------------------------------------------------
+  const isEditableTarget = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) return false;
+    const el = target as HTMLElement;
+    if (el.isContentEditable) return true;
+    const tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'OPTION';
+  };
+
+  const isVerticallyScrollable = (el: Element) => {
+    const node = el as HTMLElement;
+    if (!node) return false;
+    const style = window.getComputedStyle(node);
+    const overflowY = style.overflowY;
+    if (overflowY !== 'auto' && overflowY !== 'scroll' && overflowY !== 'overlay') return false;
+    return node.scrollHeight > node.clientHeight + 2;
+  };
+
+  const findScrollableAncestor = (target: EventTarget | null): HTMLElement | null => {
+    if (!(target instanceof Element)) return null;
+    let el: HTMLElement | null = target as HTMLElement;
+    while (el && el !== document.body && el !== document.documentElement) {
+      if (isVerticallyScrollable(el)) return el;
+      el = el.parentElement;
+    }
+    return null;
+  };
+
+  const onWheelCapture = (event: WheelEvent) => {
+    // Only help desktop-like environments (mouse/trackpad). Mobile scroll uses touch.
+    if (window.innerWidth < 769) return;
+    if (Math.abs(event.deltaY) < 1) return;
+
+    // Respect pinch-to-zoom and browser zoom gestures
+    if (event.ctrlKey || event.metaKey) return;
+
+    // Avoid hijacking wheel inside inputs/editors
+    if (isEditableTarget(event.target)) return;
+
+    // If a modal is open, let the modal manage its own scroll.
+    const hasOpenModal = document.querySelector('[role="dialog"]:not([data-state="closed"])');
+    if (hasOpenModal) return;
+
+    // If the wheel target is inside a dedicated scroll container, don't override.
+    const scrollableAncestor = findScrollableAncestor(event.target);
+    if (scrollableAncestor) return;
+
+    const scrollingElement = document.scrollingElement || document.documentElement;
+    if (!scrollingElement) return;
+    const maxScrollable = scrollingElement.scrollHeight - scrollingElement.clientHeight;
+    if (maxScrollable <= 4) return;
+
+    // Debounce per-frame: check if the page scroll actually moved after wheel.
+    const start = scrollingElement.scrollTop;
+    const deltaY = event.deltaY;
+    if (wheelRafId !== null) cancelAnimationFrame(wheelRafId);
+    wheelRafId = requestAnimationFrame(() => {
+      wheelRafId = null;
+      const current = (document.scrollingElement || document.documentElement).scrollTop;
+      if (Math.abs(current - start) < 1) {
+        try {
+          window.scrollBy({ top: deltaY, left: 0, behavior: 'auto' });
+        } catch {
+          // Ignore
+        }
+      }
+    });
+  };
+
   // Run immediately
   enableScroll();
+
+  // Capture-phase wheel fallback so stopPropagation in components can't block it.
+  window.addEventListener('wheel', onWheelCapture, { passive: true, capture: true } as any);
 
   // Run on DOM content loaded
   const onDomContentLoaded = () => {
@@ -316,6 +398,11 @@ export function forceEnableScrolling() {
 
   // Cleanup function
   return () => {
+    window.removeEventListener('wheel', onWheelCapture as any, true as any);
+    if (wheelRafId !== null) {
+      cancelAnimationFrame(wheelRafId);
+      wheelRafId = null;
+    }
     observer.disconnect();
     if (clickTimeout) {
       clearTimeout(clickTimeout);

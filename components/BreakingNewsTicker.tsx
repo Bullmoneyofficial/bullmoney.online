@@ -20,6 +20,28 @@ const ICONS: Record<string, string> = {
   commodities: "🛢️", geopolitics: "🌍", economics: "🏛️", tech: "💻",
 };
 
+function decodeText(input: string): string {
+  return (input || "")
+    // decode &amp; first so &amp;#39; becomes &#39;
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, " ")
+    .replace(/&apos;|&#x27;/gi, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_m, dec) => {
+      const codePoint = Number.parseInt(String(dec), 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : "";
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_m, hex) => {
+      const codePoint = Number.parseInt(String(hex), 16);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : "";
+    })
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function getTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const m = Math.floor(diff / 60000);
@@ -69,6 +91,9 @@ export default function BreakingNewsTicker() {
       if (data.items?.length > 0) {
         const incoming: NewsItem[] = data.items.map((item: NewsItem) => ({
           ...item,
+          title: decodeText(item.title),
+          subtitle: decodeText(item.subtitle),
+          source: decodeText(item.source),
           age: getTimeAgo(item.published_at),
         }));
         const hash = incoming.map((n: NewsItem) => n.link).join("|");
@@ -187,6 +212,9 @@ export default function BreakingNewsTicker() {
         if (data.items?.length > 0) {
           setSearchResults(data.items.map((item: NewsItem) => ({
             ...item,
+            title: decodeText(item.title),
+            subtitle: decodeText(item.subtitle),
+            source: decodeText(item.source),
             age: getTimeAgo(item.published_at),
           })));
         } else {

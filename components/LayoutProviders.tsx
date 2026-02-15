@@ -213,6 +213,31 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     }
   }, []);
 
+  // Global scroll safety net (desktop wheel/trackpad + stale modal/menu locks).
+  // Kept as a dynamic import to avoid pulling the utility into the critical path.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let cleanup: undefined | (() => void);
+
+    import('@/lib/forceScrollEnabler')
+      .then((mod) => {
+        if (typeof mod.forceEnableScrolling === 'function') {
+          cleanup = mod.forceEnableScrolling();
+        }
+      })
+      .catch(() => {
+        // Ignore — scrolling will still work on most browsers; this is a safety net.
+      });
+
+    return () => {
+      try {
+        cleanup?.();
+      } catch {
+        // Ignore
+      }
+    };
+  }, []);
+
   // ✅ HYDRATION OPTIMIZED: Progressive mount stages
   const mountStageInitialized = useRef(false);
   useEffect(() => {

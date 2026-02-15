@@ -448,6 +448,13 @@ const nextConfig = {
   // Canonical route aliases for app/webview links
   async redirects() {
     return [
+      // Redirect old QR code URLs to homepage (pagemode welcome screen lives on /)
+      {
+        source: '/register/pagemode',
+        destination: '/',
+        permanent: false,
+        // Query params (ref, aff_code, etc.) are automatically forwarded
+      },
       {
         source: '/game',
         destination: '/games',

@@ -355,8 +355,6 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const [expandedProduct, setExpandedProduct] = useState<ProductWithDetails | null>(null);
   const [viewerProduct, setViewerProduct] = useState<ProductWithDetails | null>(null);
   const [viewerMounted, setViewerMounted] = useState(false);
-  const leftColumnRef = useRef<HTMLDivElement | null>(null);
-  const rightColumnRef = useRef<HTMLDivElement | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isUltraWide, setIsUltraWide] = useState(false);
@@ -524,39 +522,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     return normalized.startsWith('/') ? normalized : `/${normalized.replace(/^public\//, '')}`;
   }, []);
 
-  // Column scroll isolation is handled entirely via CSS:
-  // - overflow-y: auto on each column
-  // - overscroll-behavior: contain prevents scroll leaking to the page
-  // - No JS wheel listeners needed — browser compositor handles scrolling
-  //   on the GPU thread, giving 60fps+ with zero main-thread cost.
-
-  // Auto-scroll columns into center of viewport when they enter view
-  const columnsContainerRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!isDesktop) return;
-    // Wait for mount then find the columns grid
-    const el = document.querySelector('[data-columns-grid]') as HTMLDivElement | null;
-    if (!el) return;
-    columnsContainerRef.current = el;
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.15 && entry.intersectionRatio < 0.85) {
-            // Snap columns into full view
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Only snap once per scroll direction
-            io.disconnect();
-            // Re-observe after user might scroll away
-            setTimeout(() => io.observe(el), 2000);
-          }
-        }
-      },
-      { threshold: [0.15, 0.5, 0.85], rootMargin: '-10% 0px' }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [isDesktop]);
+  // Column layout: content flows naturally in the document.
+  // Each column renders its sections inline — the page scrolls the whole thing.
+  // No JS scroll snapping needed since columns are no longer sticky/trapped.
 
 
   const handleOpenVip = useCallback(() => {
@@ -591,43 +559,6 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
     router.push('/');
   }, [router]);
-
-  const columnNavItems = useMemo(() => ([
-    { label: 'Home', href: '/' },
-    { label: 'Store', href: '/store' },
-    { label: 'Apparel', href: '/store?category=apparel' },
-    { label: 'Accessories', href: '/store?category=accessories' },
-    { label: 'Tech & Gear', href: '/store?category=tech-gear' },
-    { label: 'Drinkware', href: '/store?category=drinkware' },
-  ]), []);
-
-  const columnDesktopLinks = useMemo(() => ([
-    { label: 'Products', onClick: () => openProductsModal(), variant: 'link' as const },
-    { label: 'VIP', href: '/VIP', variant: 'link' as const },
-    { label: 'Community', href: '/community', variant: 'link' as const },
-  ]), [openProductsModal]);
-
-  const columnHeaderSection = (
-    <section
-      data-apple-section
-      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
-    >
-      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-6" style={{ paddingTop: 12, paddingBottom: 12 }}>
-        <StorePillNav
-          items={columnNavItems}
-          desktopLinks={columnDesktopLinks}
-          position="static"
-          showSearch={true}
-          showUser={true}
-          showCart={true}
-          cartCount={cartCount}
-          onCartClick={openCart}
-          onSearchClick={handleVisitShop}
-          onUserClick={handleStoreAccountClick}
-        />
-      </div>
-    </section>
-  );
 
   useEffect(() => {
     setHasMounted(true);
@@ -1611,18 +1542,37 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         <div className="mt-6 lg:hidden">
           <ToastProvider>
             <DeferredMount fallback={<div className="h-64 w-full rounded-2xl bg-black/5 animate-pulse" />}>
+              <TelegramSection />
+            </DeferredMount>
+            <DeferredMount fallback={<div className="h-64 w-full rounded-2xl bg-black/5 animate-pulse mt-4" />}>
               <QuotesSection />
             </DeferredMount>
             <DeferredMount fallback={<div className="h-64 w-full rounded-2xl bg-black/5 animate-pulse mt-4" />}>
               <BreakingNewsSection />
             </DeferredMount>
-            <DeferredMount fallback={<div className="h-64 w-full rounded-2xl bg-black/5 animate-pulse mt-4" />}>
-              <TelegramSection />
-            </DeferredMount>
           </ToastProvider>
         </div>
 
         <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-1">
+          <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Community Signals</h3>
+              <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                Live
+              </span>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[420px] lg:min-h-[calc(100vh-220px)] flex-1">
+              <div
+                className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+              >
+                <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
+                  <BullMoneyCommunity />
+                </DeferredMount>
+              </div>
+            </div>
+          </div>
+
           <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold">Market Quotes</h3>
@@ -1656,25 +1606,6 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
               >
                 <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
                   <BreakingNewsTicker />
-                </DeferredMount>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Community Signals</h3>
-              <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                Live
-              </span>
-            </div>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[420px] lg:min-h-[calc(100vh-220px)] flex-1">
-              <div
-                className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                style={{ filter: 'invert(1) hue-rotate(180deg)' }}
-              >
-                <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
-                  <BullMoneyCommunity />
                 </DeferredMount>
               </div>
             </div>
@@ -1879,45 +1810,6 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
             <div className="min-h-[560px] h-full overflow-hidden">
               <TestimonialsCarousel tone="light" className="mt-0 max-w-none px-0" />
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-  const heroDuplicateSection = (
-    <section
-      data-apple-section
-      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 600px' }}
-    >
-      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
-        <div className="relative min-h-[70vh] w-full overflow-x-hidden overflow-y-visible rounded-3xl border border-black/10">
-          {heroMedia}
-          {shouldShowHeroMapOverlay && (
-            <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
-              <WorldMap dots={HERO_WORLD_MAP_DOTS} lineColor="#00D4FF" forceVisible forceLite showCryptoCoins />
-            </div>
-          )}
-          <div
-            className="absolute inset-0 z-[1]"
-            style={{
-              background: 'rgba(0,0,0,0.35)',
-              mixBlendMode: 'multiply',
-              pointerEvents: 'none',
-            }}
-          />
-          <div
-            className="relative z-10 flex min-h-[70vh] w-full flex-col justify-center px-6 sm:px-10"
-            style={{ color: heroTitleColor, textShadow: heroTextShadow }}
-          >
-            <p className="text-[11px] uppercase tracking-[0.32em]" style={{ color: heroMetaColor }}>
-              Trader mode
-            </p>
-            <h2 className="mt-4 text-2xl sm:text-4xl font-semibold tracking-tight">
-              Market focus, visualized.
-            </h2>
-            <p className="mt-3 max-w-xl text-sm sm:text-base" style={{ color: heroBodyColor, textShadow: heroBodyShadow }}>
-              A second view of the live hero scene to keep context alongside your dashboards.
-            </p>
           </div>
         </div>
       </div>
@@ -2450,7 +2342,6 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   return (
     <div
       data-store-page
-      className="store-snap-scroll"
       style={{
         minHeight: '100vh',
         width: '100%',
@@ -2711,71 +2602,8 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       </section>
       )}
 
-
-
-
-
-
-
-
-
-      {/* Columns grid */}
-      <div
-        data-columns-grid
-        className="w-full lg:grid lg:grid-cols-[minmax(0,1.05fr)_auto_minmax(0,0.95fr)] lg:items-start lg:h-[100vh] lg:overflow-hidden store-columns-container"
-        style={{ overscrollBehavior: 'contain' }}
-      >
-        {/* LEFT COLUMN — scrollbar on right (default), GPU-accelerated via CSS */}
-        <div
-          ref={leftColumnRef}
-          className="lg:pr-1 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll store-col-left"
-        >
-          {isDesktop && columnHeaderSection}
-          {isDesktop && heroMode === 'store' && featuresSection}
-          {isDesktop && heroMode === 'trader' && dashboardsSection}
-        </div>
-
-        {/* CENTER SCROLL HINT DIVIDER — hide in design mode */}
-        {isDesktop && (
-          <div className="store-scroll-hint hidden lg:flex flex-col items-center justify-center gap-3 h-full select-none pointer-events-none" style={{ width: 32 }}>
-            <div className="flex flex-col items-center gap-1 opacity-40 animate-pulse" style={{ animationDuration: '3s' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60"><path d="M12 5v14"/><path d="m5 12 7-7 7 7"/></svg>
-              <span className="text-[9px] font-medium tracking-widest uppercase text-white/50" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>scroll</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-            </div>
-            <div className="w-px flex-1 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-            <div className="flex flex-col items-center gap-1 opacity-40 animate-pulse" style={{ animationDuration: '3s', animationDelay: '1.5s' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60"><path d="M12 5v14"/><path d="m5 12 7-7 7 7"/></svg>
-              <span className="text-[9px] font-medium tracking-widest uppercase text-white/50" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>scroll</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-            </div>
-          </div>
-        )}
-
-        {/* RIGHT COLUMN — scrollbar on left via direction trick */}
-        <div
-          ref={rightColumnRef}
-          className="space-y-0 lg:pl-1 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll store-col-right"
-        >
-          <div className="store-col-right-inner">
-            {isDesktop && columnHeaderSection}
-            {isDesktop && heroMode === 'store' && dashboardsSection}
-            {isDesktop && heroMode === 'store' && testimonialsSection}
-            {isDesktop && heroMode === 'trader' && heroDuplicateSection}
-            {isDesktop && heroMode === 'trader' && featuresSection}
-            {isDesktop && heroMode === 'trader' && metaMarketIntelligenceSection}
-            {isDesktop && heroMode === 'trader' && testimonialsSection}
-            {!isDesktop && dashboardsSection}
-          </div>
-        </div>
-      </div>
-
-      {/* Products section — always below columns on desktop */}
-      {isDesktop && productsSectionBlock}
-      {/* metaQuotesSection only appears below columns (not in either column) — trader mode only */}
-      {isDesktop && heroMode === 'trader' && metaQuotesSection}
-
-      {!isDesktop && productsSectionBlock}
+      {/* Products section — full width, no columns */}
+      {productsSectionBlock}
 
       {!isDesktop && featuresSection}
       {!isDesktop && heroMode === 'trader' && metaMarketIntelligenceSection}

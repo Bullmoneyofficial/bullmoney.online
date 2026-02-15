@@ -15,7 +15,7 @@ interface LightPillarProps {
   noiseIntensity?: number;
   mixBlendMode?: React.CSSProperties['mixBlendMode'];
   pillarRotation?: number;
-  quality?: 'low' | 'medium' | 'high';
+  quality?: 'minimal' | 'low' | 'medium' | 'high';
 }
 
 const LightPillar: React.FC<LightPillarProps> = ({
@@ -68,6 +68,7 @@ const LightPillar: React.FC<LightPillarProps> = ({
     if (isMobile && quality !== 'low') effectiveQuality = 'low';
 
     const qualitySettings = {
+      minimal: { iterations: 16, waveIterations: 1, pixelRatio: 0.35, precision: 'lowp', stepMultiplier: 1.8 },
       low: { iterations: 24, waveIterations: 1, pixelRatio: 0.5, precision: 'mediump', stepMultiplier: 1.5 },
       medium: { iterations: 40, waveIterations: 2, pixelRatio: 0.65, precision: 'mediump', stepMultiplier: 1.2 },
       high: {

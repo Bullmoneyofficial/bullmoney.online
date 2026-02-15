@@ -465,7 +465,7 @@ export default function AffiliateRecruitsDashboard({
   }, [weeklyTaskChecks, weeklyTaskStorageKey]);
   
   const referralLink = useMemo(() => {
-    const referralPath = '/register/pagemode';
+    const referralPath = '/';
 
     // Return base URL if no valid tracking code
     if (!myTrackingCode || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found' || myTrackingCode.trim() === '') {

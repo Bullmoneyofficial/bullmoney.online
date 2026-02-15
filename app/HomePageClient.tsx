@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, startTransition, useDeferredValue, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 // ✅ HYDRATION OPTIMIZATION: Import deferred state utilities
 import { useHydrated, useIdleCallback } from "@/hooks/useHydrationOptimization";
@@ -142,200 +141,6 @@ const TelegramUnlockScreen = dynamic(
 
 // ✅ CLEANED: SplineModals (RemoteSceneModal, SplitSceneModal, AllScenesModal, OrbSplineLauncher) removed — never rendered
 
-
-// ═══════════════════════════════════════════════════════════════════
-// WhiteboardCanvas Component - Click to Activate (prevents scroll snapping)
-// ═══════════════════════════════════════════════════════════════════
-function WhiteboardCanvas({ isMobile }: { isMobile: boolean }) {
-  const [isActive, setIsActive] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  const handleActivate = () => {
-    setIsActive(true);
-  };
-  
-  // Prevent iframe from causing auto-scroll on load
-  useEffect(() => {
-    if (containerRef.current) {
-      const preventScroll = (e: Event) => {
-        e.preventDefault();
-        e.stopPropagation();
-      };
-      
-      const container = containerRef.current;
-      container.addEventListener('scroll', preventScroll, { passive: false });
-      container.addEventListener('focus', preventScroll, { passive: false });
-      
-      return () => {
-        container.removeEventListener('scroll', preventScroll);
-        container.removeEventListener('focus', preventScroll);
-      };
-    }
-  }, []);
-
-  return (
-    <div 
-      ref={containerRef}
-      className={isMobile ? "flex-shrink-0 mt-4" : "flex-shrink-0 mt-8"}
-      data-whiteboard-container
-      style={{
-        scrollMarginTop: '100vh',
-        contain: 'layout style paint',
-      }}
-    >
-      <div
-        className={isMobile
-          ? "w-full border-t border-white/15 overflow-hidden"
-          : "mx-auto w-full max-w-[1800px] rounded-2xl sm:rounded-3xl border border-white/15 overflow-hidden"}
-        style={isMobile ? {
-          background: '#000000',
-          scrollMarginTop: '100vh',
-        } : {
-          background: 'linear-gradient(180deg, rgba(7,7,7,0.98), rgba(0,0,0,1))',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
-          scrollMarginTop: '100vh',
-        }}
-      >
-        {!isMobile && (
-          <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/10">
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/55">Notes & Whiteboard</p>
-            <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white">
-              Trader Notes & Whiteboard Page
-            </h2>
-            <p className="mt-2 text-sm sm:text-base text-white/70 max-w-3xl">
-              Use this page to map setups, annotate chart ideas, plan risk, and track post-trade lessons in one focused workspace built for traders.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                "Pre-market plan",
-                "Trade setup mapping",
-                "Risk/reward scenarios",
-                "Session notes",
-                "Post-trade review",
-                "Weekly playbook",
-              ].map((useCase) => (
-                <span
-                  key={useCase}
-                  className="inline-flex items-center rounded-full border border-white/20 bg-white/8 px-3 py-1.5 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.08em] text-white/90"
-                >
-                  {useCase}
-                </span>
-              ))}
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2.5">
-              <Link
-                href="/design"
-                prefetch={true}
-                className="inline-flex items-center justify-center rounded-full border border-white/30 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
-              >
-                Open Full Notes Studio
-              </Link>
-              <a
-                href="https://excalidraw.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-full border border-white/30 bg-black/60 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
-              >
-                Open Whiteboard In New Tab
-              </a>
-            </div>
-          </div>
-        )}
-
-        <div
-          style={{
-            height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
-            minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
-            background: '#ffffff',
-            position: 'relative',
-          }}
-        >
-          {/* Click to activate overlay - prevents scroll snap and touch interference */}
-          {!isActive && (
-            <div
-              onClick={handleActivate}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 10,
-                cursor: 'pointer',
-                pointerEvents: 'auto',
-                touchAction: 'none',
-                background: 'rgba(0, 0, 0, 0.02)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backdropFilter: 'blur(1px)',
-                transition: 'all 0.2s ease',
-              }}
-              className="hover:bg-black/5"
-            >
-              <div
-                style={{
-                  background: 'rgba(0, 0, 0, 0.85)',
-                  color: 'white',
-                  padding: isMobile ? '12px 24px' : '16px 32px',
-                  borderRadius: '999px',
-                  fontSize: isMobile ? '11px' : '12px',
-                  fontWeight: 600,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}
-              >
-                {isMobile ? 'Tap to Enable' : 'Click to Enable Whiteboard'}
-              </div>
-            </div>
-          )}
-          
-          {/* Iframe with interaction disabled by default */}
-          <iframe
-            src="https://excalidraw.com"
-            title="App Design Canvas"
-            className={isActive ? 'active' : ''}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-              pointerEvents: isActive ? 'auto' : 'none',
-              touchAction: isActive ? 'auto' : 'none',
-              WebkitOverflowScrolling: isActive ? 'touch' : undefined,
-              scrollMarginTop: '100vh',
-              contain: 'strict',
-            }}
-            loading="lazy"
-            tabIndex={isActive ? 0 : -1}
-            sandbox="allow-scripts allow-same-origin allow-popups"
-            onLoad={(e) => {
-              // Prevent iframe from stealing focus and scrolling page
-              if (!isActive) {
-                try {
-                  const iframe = e.target as HTMLIFrameElement;
-                  iframe.blur();
-                  // Prevent any scroll behavior
-                  if (iframe.contentWindow) {
-                    try {
-                      iframe.contentWindow.scroll = () => {};
-                    } catch {}
-                  }
-                } catch {}
-              }
-            }}
-            onFocus={(e) => {
-              // Prevent focus from scrolling page
-              if (!isActive) {
-                e.preventDefault();
-                (e.target as HTMLIFrameElement).blur();
-              }
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-// ═══════════════════════════════════════════════════════════════════
 
 // Legacy flag placeholder to satisfy stale client bundles that may reference it during Fast Refresh.
 
@@ -1123,12 +928,12 @@ function HomeContent() {
               style={isMobile ? {
                 minHeight: 'auto',
                 height: 'auto',
-                paddingTop: 'calc(110px + env(safe-area-inset-top, 0px))',
+                paddingTop: 'calc(52px + env(safe-area-inset-top, 0px))',
                 paddingBottom: '12px',
               } : {
                 minHeight: 'auto',
                 height: 'auto',
-                paddingTop: '120px',
+                paddingTop: '52px',
                 paddingBottom: '40px',
               }}
               data-canvas-section="true"
@@ -1155,8 +960,50 @@ function HomeContent() {
                 )}
               </div>
 
-              {/* Canvas/Whiteboard integrated into hero */}
-              <WhiteboardCanvas isMobile={isMobile} />
+              {/* Community Signals section within hero */}
+              <div data-apple-section-wrapper className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+                {hasMounted && showStage2 && (
+                  <div style={deferredSectionStyle}>
+                    <div
+                      className={isMobile
+                        ? "w-full border-t border-white/15 overflow-hidden"
+                        : "mx-auto w-full max-w-[1800px] rounded-2xl sm:rounded-3xl border border-white/15 overflow-hidden"}
+                      style={isMobile ? {
+                        background: '#000000',
+                      } : {
+                        background: 'linear-gradient(180deg, rgba(7,7,7,0.98), rgba(0,0,0,1))',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+                      }}
+                    >
+                      {!isMobile && (
+                        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/10">
+                          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/55">Community Hub</p>
+                          <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white">
+                            Community Signals
+                          </h2>
+                          <p className="mt-2 text-sm sm:text-base text-white/70 max-w-3xl">
+                            Connect with the BullMoney trading community and access real-time signals and market insights.
+                          </p>
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
+                          minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
+                          background: '#ffffff',
+                        }}
+                      >
+                        <div
+                          className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                        >
+                          <BullMoneyCommunity />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Market Quotes section within hero */}
               <div data-apple-section-wrapper className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
@@ -1239,51 +1086,6 @@ function HomeContent() {
                           className="w-full"
                         >
                           <BreakingNewsTicker />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Community Signals section within hero */}
-              <div data-apple-section-wrapper className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
-                {hasMounted && showStage2 && (
-                  <div style={deferredSectionStyle}>
-                    <div
-                      className={isMobile
-                        ? "w-full border-t border-white/15 overflow-hidden"
-                        : "mx-auto w-full max-w-[1800px] rounded-2xl sm:rounded-3xl border border-white/15 overflow-hidden"}
-                      style={isMobile ? {
-                        background: '#000000',
-                      } : {
-                        background: 'linear-gradient(180deg, rgba(7,7,7,0.98), rgba(0,0,0,1))',
-                        boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
-                      }}
-                    >
-                      {!isMobile && (
-                        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/10">
-                          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/55">Community Hub</p>
-                          <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white">
-                            Community Signals
-                          </h2>
-                          <p className="mt-2 text-sm sm:text-base text-white/70 max-w-3xl">
-                            Connect with the BullMoney trading community and access real-time signals and market insights.
-                          </p>
-                        </div>
-                      )}
-
-                      <div
-                        style={{
-                          height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
-                          minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
-                          background: '#ffffff',
-                        }}
-                      >
-                        <div
-                          className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                        >
-                          <BullMoneyCommunity />
                         </div>
                       </div>
                     </div>

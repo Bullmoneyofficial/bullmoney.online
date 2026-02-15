@@ -149,7 +149,6 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const maxRetries = runtimeProfile.isLowMemory ? 5 : 4;
   const retryDelayMs = runtimeProfile.isLowMemory ? 700 : 450;
   const loadTimeoutMs = runtimeProfile.isLowMemory ? 12000 : 9000;
-  const useSafeSplineFilters = runtimeProfile.isInAppBrowser || runtimeProfile.isWebView || runtimeProfile.isLowMemory;
   
   const scheduleRetry = useCallback((reason: 'timeout' | 'error' | 'visibility' | 'contextlost') => {
     if (retryCount >= maxRetries) {
@@ -358,30 +357,8 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       )}
 
       {/* Spline — always rendered on all devices including low-memory */}
-      {!useSafeSplineFilters && (
-        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-          <defs>
-            <filter id="grayscale-filter-mobile">
-              <feColorMatrix type="saturate" values="0" />
-              <feComponentTransfer>
-                <feFuncR type="linear" slope="1.1" />
-                <feFuncG type="linear" slope="1.1" />
-                <feFuncB type="linear" slope="1.1" />
-              </feComponentTransfer>
-            </filter>
-          </defs>
-        </svg>
-      )}
       <div
         className="absolute inset-0 welcome-spline-canvas-host"
-        style={{
-          filter: useSafeSplineFilters
-            ? 'grayscale(100%) saturate(0)'
-            : 'url(#grayscale-filter-mobile) grayscale(100%) saturate(0) contrast(1.1)',
-          WebkitFilter: useSafeSplineFilters
-            ? 'grayscale(100%) saturate(0)'
-            : 'grayscale(100%) saturate(0) contrast(1.1)',
-        } as React.CSSProperties}
       >
         <Spline
           key={`welcome-spline-${retryKey}`}
@@ -396,44 +373,13 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
             opacity: isLoaded ? 1 : 0.6,
             transition: 'opacity 400ms ease-out',
             willChange: 'opacity',
-            filter: 'grayscale(100%) saturate(0)',
-            WebkitFilter: 'grayscale(100%) saturate(0)',
             transform: 'translateZ(0)',
             backfaceVisibility: 'hidden',
           } as React.CSSProperties}
         />
       </div>
 
-      {!useSafeSplineFilters ? (
-        <>
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              zIndex: 1,
-              backgroundColor: 'rgb(128, 128, 128)',
-              mixBlendMode: 'color',
-              WebkitMixBlendMode: 'color',
-            } as React.CSSProperties}
-          />
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              zIndex: 1,
-              backgroundColor: 'rgba(128, 128, 128, 0.3)',
-              mixBlendMode: 'saturation',
-              WebkitMixBlendMode: 'saturation',
-            } as React.CSSProperties}
-          />
-        </>
-      ) : (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            zIndex: 1,
-            backgroundColor: 'rgba(110, 110, 110, 0.16)',
-          }}
-        />
-      )}
+
     </div>
   );
 });
@@ -903,6 +849,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     referralCode: ''
   });
 
+  // --- REFERRAL ATTRIBUTION STATE (populated from URL params / localStorage) ---
+  const [referralAttribution, setReferralAttribution] = useState({
+    affiliateId: '',
+    affiliateName: '',
+    affiliateEmail: '',
+    affiliateCode: '',
+    source: '',
+    medium: '',
+    campaign: '',
+  });
+
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   
@@ -916,6 +873,112 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       document.head.appendChild(style);
     }
   }, []);
+
+  // --- EXTRACT REFERRAL CODE & AFFILIATE DETAILS FROM URL PARAMS ---
+  // When users scan QR codes from the affiliate dashboard, the URL contains
+  // ref, aff_code, aff_id, aff_name, aff_email, utm_source, utm_medium, utm_campaign
+  // This auto-fills the referral code and tracks attribution
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    const affCode = urlParams.get('aff_code');
+    const affiliateCode = (refCode || affCode || '').trim();
+    const brokerParam = (urlParams.get('broker') || urlParams.get('partner') || urlParams.get('aff_broker') || '').trim().toLowerCase();
+
+    // Auto-select broker if specified in URL
+    if (brokerParam === 'xm') {
+      setActiveBroker('XM');
+    } else if (brokerParam === 'vantage') {
+      setActiveBroker('Vantage');
+    }
+
+    // Extract full affiliate attribution from URL
+    const affiliateId = (urlParams.get('aff_id') || '').trim();
+    const affiliateName = (urlParams.get('aff_name') || '').trim();
+    const affiliateEmail = (urlParams.get('aff_email') || '').trim();
+    const source = (urlParams.get('utm_source') || '').trim();
+    const medium = (urlParams.get('utm_medium') || '').trim();
+    const campaign = (urlParams.get('utm_campaign') || '').trim();
+
+    // Also check localStorage for previously stored referral context
+    let storedContext: any = null;
+    try {
+      const rawStoredContext = localStorage.getItem('bullmoney_referral_context');
+      if (rawStoredContext) {
+        storedContext = JSON.parse(rawStoredContext);
+      }
+    } catch {}
+
+    // Resolve values: URL params take priority over stored context
+    const resolvedAffiliateCode = affiliateCode || String(storedContext?.affiliateCode || '').trim();
+    const resolvedAffiliateId = affiliateId || String(storedContext?.affiliateId || '').trim();
+    const resolvedAffiliateName = affiliateName || String(storedContext?.affiliateName || '').trim();
+    const resolvedAffiliateEmail = affiliateEmail || String(storedContext?.affiliateEmail || '').trim();
+    const resolvedSource = source || String(storedContext?.source || '').trim();
+    const resolvedMedium = medium || String(storedContext?.medium || '').trim();
+    const resolvedCampaign = campaign || String(storedContext?.campaign || '').trim();
+
+    if (resolvedAffiliateCode) {
+      console.log('[PageMode] 🎯 Referral attribution detected:', {
+        affiliateCode: resolvedAffiliateCode,
+        affiliateId: resolvedAffiliateId,
+        affiliateName: resolvedAffiliateName,
+        affiliateEmail: resolvedAffiliateEmail,
+      });
+
+      // Auto-fill referral code in form
+      setFormData(prev => ({ ...prev, referralCode: resolvedAffiliateCode }));
+      setReferralAttribution({
+        affiliateId: resolvedAffiliateId,
+        affiliateName: resolvedAffiliateName,
+        affiliateEmail: resolvedAffiliateEmail,
+        affiliateCode: resolvedAffiliateCode,
+        source: resolvedSource,
+        medium: resolvedMedium,
+        campaign: resolvedCampaign,
+      });
+
+      // Persist referral context in localStorage for session continuity
+      try {
+        localStorage.setItem('bullmoney_referral_context', JSON.stringify({
+          affiliateId: resolvedAffiliateId,
+          affiliateName: resolvedAffiliateName,
+          affiliateEmail: resolvedAffiliateEmail,
+          affiliateCode: resolvedAffiliateCode,
+          source: resolvedSource,
+          medium: resolvedMedium,
+          campaign: resolvedCampaign,
+          capturedAt: new Date().toISOString(),
+        }));
+      } catch {}
+
+      // Track referral click (once per session per code)
+      const clickTrackKey = `bm_ref_click_tracked_${resolvedAffiliateCode}`;
+      const hasQueryCode = Boolean(affiliateCode);
+      if (hasQueryCode && !sessionStorage.getItem(clickTrackKey)) {
+        fetch('/api/affiliate/track-click', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            affiliateCode: resolvedAffiliateCode,
+            affiliateId: resolvedAffiliateId,
+            source: resolvedSource || 'affiliate',
+            medium: resolvedMedium || 'qr_code',
+            campaign: resolvedCampaign || 'partner_link',
+          }),
+        })
+          .then(() => sessionStorage.setItem(clickTrackKey, '1'))
+          .catch((error) => console.error('[PageMode] Referral click track failed:', error));
+      }
+
+      // Clean URL params after extraction (keeps URL clean)
+      if (affiliateCode) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- WELCOME AUDIO: Play once on page load (no loop) ---
   useEffect(() => {
@@ -1241,6 +1304,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           password: formData.password,
           mt5_id: formData.mt5Number,
           referred_by_code: formData.referralCode || null,
+          referral_attribution: formData.referralCode
+            ? {
+                affiliate_id: referralAttribution.affiliateId || null,
+                affiliate_name: referralAttribution.affiliateName || null,
+                affiliate_email: referralAttribution.affiliateEmail || null,
+                affiliate_code: referralAttribution.affiliateCode || formData.referralCode,
+                source: referralAttribution.source || 'affiliate',
+                medium: referralAttribution.medium || 'qr_code',
+                campaign: referralAttribution.campaign || 'partner_link',
+              }
+            : null,
           used_code: true,
         }),
       });
@@ -2141,11 +2215,26 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.referralCode}
                             onChange={handleChange}
                             placeholder="Referral Code (Optional)"
-                            className="w-full bg-white border border-black/[0.1] rounded-xl px-4 py-4 !text-black transition-all cursor-target text-base placeholder-black/30 focus:outline-none focus:border-black/30 apple-input"
+                            readOnly={!!referralAttribution.affiliateCode}
+                            className={cn(
+                              "w-full bg-white border rounded-xl px-4 py-4 !text-black transition-all cursor-target text-base placeholder-black/30 focus:outline-none focus:border-black/30 apple-input",
+                              referralAttribution.affiliateCode
+                                ? "border-green-500/40 bg-green-50/30"
+                                : "border-black/[0.1]"
+                            )}
                             style={{ color: 'rgb(0, 0, 0)' }}
                           />
+                          {referralAttribution.affiliateCode && (
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                              <Check className="w-4 h-4 text-green-600" />
+                            </div>
+                          )}
                         </div>
-                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">Leave blank if you don't have one.</p>
+                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">
+                          {referralAttribution.affiliateCode
+                            ? `Referred by ${referralAttribution.affiliateName || referralAttribution.affiliateEmail || 'a BullMoney partner'}`
+                            : 'Leave blank if you don\'t have one.'}
+                        </p>
                       </div>
 
                         <div

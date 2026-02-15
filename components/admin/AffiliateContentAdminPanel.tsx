@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 import {
   Save,
   RefreshCw,
@@ -224,7 +225,7 @@ export default function AffiliateContentAdminPanel() {
   };
 
   // Tab buttons
-  const tabs: { id: EditorTab; label: string; icon: React.ElementType }[] = [
+  const tabs: { id: EditorTab; label: string; icon: LucideIcon }[] = [
     { id: "content", label: "Text Content", icon: FileText },
     { id: "tiers", label: "Tier Settings", icon: Award },
     { id: "tasks", label: "Weekly Tasks", icon: List },

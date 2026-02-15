@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       html: createEmailTemplate({
         affiliateName: affiliateName || 'BullMoney Affiliate',
         affiliateCode: affiliateCode || 'PARTNER',
-        referralLink: referralLink || 'https://bullmoney.online/register/pagemode',
+        referralLink: referralLink || 'https://bullmoney.online/',
       }),
       attachments: [
         {

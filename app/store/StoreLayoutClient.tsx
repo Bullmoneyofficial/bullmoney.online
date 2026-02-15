@@ -210,6 +210,22 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           }
         }
         
+        /* DESKTOP (≥1024px): same overflow safeguard as mobile, but
+           EXCLUDE .column-focused elements so they can independently scroll */
+        @media (min-width: 1024px) {
+          .store-layout,
+          .store-layout > *:not(.column-focused),
+          .store-layout main,
+          [data-store-page],
+          [data-store-page] > *:not(.column-focused),
+          [data-store-page] main {
+            height: auto !important;
+            max-height: none !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+          }
+        }
+        
         /* Allow global theme overlays to render on store pages */
         
         /* Disable pointer events on any canvas elements while on store */

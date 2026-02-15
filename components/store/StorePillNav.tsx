@@ -248,7 +248,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
             )}
             {/* Hero Mode Toggle - Store / Trader / Design */}
             {heroMode && onHeroModeChange && (
-              <div className="hidden sm:flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
+              <div className="inline-flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
                 {(['store', 'trader', 'design'] as const).map((mode) => (
                   <Link
                     key={mode}
@@ -271,10 +271,10 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                         }, 600);
                       }
                     }}
-                    className={`px-3 h-full inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
+                    className={`px-3 h-full inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.12em] transition-all whitespace-nowrap ${
                       heroMode === mode
                         ? 'bg-black text-white'
-                        : 'text-black/60 hover:text-black'
+                        : 'bg-white text-black hover:bg-black/5'
                     }`}
                     aria-current={heroMode === mode ? 'page' : undefined}
                   >
