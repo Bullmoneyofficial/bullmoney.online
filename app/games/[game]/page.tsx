@@ -13,9 +13,9 @@ function isValidGameSlug(game: string): game is (typeof VALID_GAMES)[number] {
 export async function generateMetadata({
   params,
 }: {
-  params: { game: string };
+  params: Promise<{ game: string }>;
 }): Promise<Metadata> {
-  const game = params.game;
+  const { game } = await params;
 
   if (!isValidGameSlug(game)) {
     return {

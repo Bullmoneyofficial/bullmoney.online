@@ -16,31 +16,37 @@ const preloadedResources = new Set<string>();
 const getIsDev = () => typeof window !== 'undefined' && 
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-// ✅ INSTANT WARMUP: Only in dev mode or first-time visitors
+// Critical endpoints to pre-warm (edge = 0ms cold start, but warm node routes too)
+const CRITICAL_ENDPOINTS = [
+  '/api/warmup',      // Edge - instant
+  '/api/health',      // Edge - instant
+  '/api/geo-detect',  // Edge - instant
+  '/api/prices/live', // Node - needs warmup
+];
+
+// ✅ INSTANT WARMUP: Pre-warm all critical endpoints on first visit
 const instantWarmup = () => {
   if (typeof window === 'undefined') return;
   
   const isDev = getIsDev();
   
-  // PERFORMANCE: In production, skip instant warmup if user has visited recently
-  // Vercel cron keeps the app warm; we only need this for first-time visitors
+  // PERFORMANCE: In production, skip if warmed this session
   if (!isDev) {
     const lastWarmup = sessionStorage.getItem('_bm_warmup');
-    if (lastWarmup) return; // Already warmed this session
+    if (lastWarmup) return;
     sessionStorage.setItem('_bm_warmup', Date.now().toString());
   }
   
-  // Use sendBeacon for non-blocking fire-and-forget request
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/warmup');
-  } else {
-    // Fallback to fetch with keepalive
-    fetch('/api/warmup', { 
+  // Warm all critical endpoints in parallel using fetch (HEAD = minimal bandwidth)
+  // Note: sendBeacon only sends POST, but our APIs use GET/HEAD
+  CRITICAL_ENDPOINTS.forEach(endpoint => {
+    fetch(endpoint, { 
       method: 'HEAD', 
-      keepalive: true,
+      keepalive: true,  // Survives page unload
       cache: 'no-store',
-    }).catch(() => {});
-  }
+      priority: 'low',  // Don't compete with critical resources
+    }).catch(() => {}); // Silent fail - best effort
+  });
 };
 
 // Run instant warmup immediately when this module loads

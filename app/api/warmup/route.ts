@@ -19,7 +19,6 @@ export async function GET() {
     timestamp,
     region: process.env.VERCEL_REGION || 'unknown',
     runtime: 'edge',
-    uptime: process.uptime?.() || 'N/A',
   }, {
     headers: {
       'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -36,5 +35,12 @@ export async function HEAD() {
       'Cache-Control': 'no-store, no-cache, must-revalidate',
       'X-Warmup-Time': Date.now().toString(),
     },
+  });
+}
+
+// Support POST for sendBeacon calls
+export async function POST() {
+  return Response.json({ status: 'warm', timestamp: Date.now() }, {
+    headers: { 'Cache-Control': 'no-store' },
   });
 }
