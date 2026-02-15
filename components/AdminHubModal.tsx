@@ -49,12 +49,17 @@ type RowProps = {
   title: string;
   subtitle?: string;
   meta?: string;
+  isEditing?: boolean;
   onEdit: () => void;
   onDelete: () => void;
 };
 
-const Row: React.FC<RowProps> = ({ title, subtitle, meta, onEdit, onDelete }) => (
-  <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2 gap-3">
+const Row: React.FC<RowProps> = ({ title, subtitle, meta, isEditing, onEdit, onDelete }) => (
+  <div className={`flex items-center justify-between rounded-lg border px-3 py-2.5 gap-3 transition-colors ${
+    isEditing
+      ? "border-blue-500/50 bg-blue-950/30 ring-1 ring-blue-500/20"
+      : "border-slate-800 bg-slate-900/70"
+  }`}>
     <div className="min-w-0 flex-1">
       <div className="text-white font-semibold text-sm truncate">{title}</div>
       {subtitle ? <div className="text-slate-300 text-xs truncate">{subtitle}</div> : null}
@@ -63,14 +68,18 @@ const Row: React.FC<RowProps> = ({ title, subtitle, meta, onEdit, onDelete }) =>
     <div className="flex items-center gap-2 shrink-0">
       <button
         onClick={onEdit}
-        className="p-1.5 rounded-md bg-white/20 hover:bg-white/30 border border-white/40 text-white transition-colors"
-        title="Edit"
+        className={`p-2 rounded-md border transition-colors ${
+          isEditing
+            ? "bg-blue-500/30 hover:bg-blue-500/40 border-blue-400/50 text-blue-200"
+            : "bg-white/20 hover:bg-white/30 border-white/40 text-white"
+        }`}
+        title={isEditing ? "Close editor" : "Edit"}
       >
-        <Edit className="w-4 h-4" />
+        {isEditing ? <X className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
       </button>
       <button
         onClick={onDelete}
-        className="p-1.5 rounded-md bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 transition-colors"
+        className="p-2 rounded-md bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 transition-colors"
         title="Delete"
       >
         <Trash2 className="w-4 h-4" />
@@ -295,7 +304,7 @@ export function AdminHubModal({
   // Products
   const [products, setProducts] = useState<any[]>([]);
   const [productForm, setProductForm] = useState({
-    id: "",
+    id: "__closed__",
     name: "",
     description: "",
     price: "0",
@@ -305,11 +314,12 @@ export function AdminHubModal({
     visible: true,
     displayOrder: 0,
   });
+  const closeProductForm = () => setProductForm(f => ({ ...f, id: "__closed__" }));
 
   // VIP (bullmoney_vip)
   const [vipProducts, setVipProducts] = useState<any[]>([]);
   const [vipForm, setVipForm] = useState({
-    id: "",
+    id: "__closed__",
     name: "",
     description: "",
     price: "0",
@@ -319,11 +329,12 @@ export function AdminHubModal({
     sortOrder: 0,
     planOptions: "[]",
   });
+  const closeVipForm = () => setVipForm(f => ({ ...f, id: "__closed__" }));
 
   // Services
   const [services, setServices] = useState<any[]>([]);
   const [serviceForm, setServiceForm] = useState({
-    id: "",
+    id: "__closed__",
     title: "",
     description: "",
     icon_name: "",
@@ -335,16 +346,18 @@ export function AdminHubModal({
     is_visible: true,
     display_order: 0,
   });
+  const closeServiceForm = () => setServiceForm(f => ({ ...f, id: "__closed__" }));
 
   // Livestream
   const [videos, setVideos] = useState<any[]>([]);
   const [liveForm, setLiveForm] = useState({
-    id: "",
+    id: "__closed__",
     title: "",
     youtube_id: "",
     is_live: false,
     order_index: 0,
   });
+  const closeLiveForm = () => setLiveForm(f => ({ ...f, id: "__closed__" }));
   const [liveConfig, setLiveConfig] = useState({
     id: "",
     channel_url: "",
@@ -355,7 +368,7 @@ export function AdminHubModal({
   // Analysis
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [analysisForm, setAnalysisForm] = useState({
-    id: "",
+    id: "__closed__",
     title: "",
     content: "",
     market: "forex",
@@ -363,17 +376,19 @@ export function AdminHubModal({
     pair: "",
     is_published: true,
   });
+  const closeAnalysisForm = () => setAnalysisForm(f => ({ ...f, id: "__closed__" }));
 
   // Recruits / VIP
   const [recruits, setRecruits] = useState<any[]>([]);
   const [recruitForm, setRecruitForm] = useState({
-    id: "",
+    id: "__closed__",
     email: "",
     status: "Pending",
     is_vip: false,
     commission_balance: "0",
     notes: "",
   });
+  const closeRecruitForm = () => setRecruitForm(f => ({ ...f, id: "__closed__" }));
 
   // FAQ Content
   const [faqCategories, setFaqCategories] = useState<any[]>([]);
@@ -919,20 +934,26 @@ export function AdminHubModal({
           <h3 className="text-white font-semibold text-sm">Store products (products table)</h3>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setProductForm({
-                id: "",
-                name: "",
-                description: "",
-                price: "0",
-                category: "",
-                imageUrl: "",
-                buyUrl: "",
-                visible: true,
-                displayOrder: 0,
-              })}
-              className="px-2 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700"
+              onClick={() => {
+                if (productForm.id === "") {
+                  closeProductForm();
+                } else {
+                  setProductForm({
+                    id: "",
+                    name: "",
+                    description: "",
+                    price: "0",
+                    category: "",
+                    imageUrl: "",
+                    buyUrl: "",
+                    visible: true,
+                    displayOrder: 0,
+                  });
+                }
+              }}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${productForm.id === "" ? "bg-blue-600 text-white border-blue-500" : "bg-slate-800 text-slate-200 border-slate-700"}`}
             >
-              New product
+              {productForm.id === "" ? "✕ Cancel" : "+ New product"}
             </button>
             <button onClick={refreshProducts} className="p-1 text-slate-300" title="Refresh products">
               <RefreshCw className="w-4 h-4" />
@@ -941,9 +962,12 @@ export function AdminHubModal({
         </div>
 
         {/* New product form inline at top when no id set */}
-        {productForm.id === "" && productForm.name === "" && (
-          <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-            <h4 className="text-white text-sm font-semibold">Create product</h4>
+        {productForm.id === "" && (
+          <div className="space-y-2 p-3 rounded-lg border border-blue-500/30 bg-blue-950/20">
+            <div className="flex items-center justify-between">
+              <h4 className="text-white text-sm font-semibold">Create product</h4>
+              <button onClick={closeProductForm} className="p-1 rounded-md hover:bg-white/10 text-slate-300"><X className="w-4 h-4" /></button>
+            </div>
             {renderProductFormFields()}
           </div>
         )}
@@ -958,25 +982,33 @@ export function AdminHubModal({
                 title={`${p.name} (${p.category || "N/A"})`}
                 subtitle={`${useCurrencyLocaleStore.getState().formatPrice(p.price ?? 0)} • Visible: ${p.visible ? "yes" : "no"}`}
                 meta={p.buy_url || p.buyUrl ? "Buy URL" : undefined}
-                onEdit={() =>
-                  setProductForm({
-                    id: pid,
-                    name: p.name || "",
-                    description: p.description || "",
-                    price: String(p.price ?? "0"),
-                    category: p.category || "",
-                    imageUrl: p.image_url || p.imageUrl || "",
-                    buyUrl: p.buy_url || p.buyUrl || "",
-                    visible: Boolean(p.visible),
-                    displayOrder: Number(p.display_order || 0),
-                  })
-                }
+                isEditing={isEditing}
+                onEdit={() => {
+                  if (isEditing) {
+                    closeProductForm();
+                  } else {
+                    setProductForm({
+                      id: pid,
+                      name: p.name || "",
+                      description: p.description || "",
+                      price: String(p.price ?? "0"),
+                      category: p.category || "",
+                      imageUrl: p.image_url || p.imageUrl || "",
+                      buyUrl: p.buy_url || p.buyUrl || "",
+                      visible: Boolean(p.visible),
+                      displayOrder: Number(p.display_order || 0),
+                    });
+                  }
+                }}
                 onDelete={() => removeProduct(pid)}
               />
               {media ? <CollapsiblePreview label="Preview">{media}</CollapsiblePreview> : null}
               {isEditing && (
-                <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-                  <h4 className="text-white text-sm font-semibold">Edit product</h4>
+                <div className="space-y-2 p-3 rounded-lg border border-blue-500/30 bg-blue-950/20 animate-in slide-in-from-top-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-white text-sm font-semibold">Edit product</h4>
+                    <button onClick={closeProductForm} className="p-1 rounded-md hover:bg-white/10 text-slate-300"><X className="w-4 h-4" /></button>
+                  </div>
                   {renderProductFormFields()}
                 </div>
               )}
@@ -990,20 +1022,26 @@ export function AdminHubModal({
           <h3 className="text-white font-semibold text-sm">VIP Store (bullmoney_vip)</h3>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setVipForm({
-                id: "",
-                name: "",
-                description: "",
-                price: "0",
-                imageUrl: "",
-                buyUrl: "",
-                comingSoon: false,
-                sortOrder: 0,
-                planOptions: "[]",
-              })}
-              className="px-2 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700"
+              onClick={() => {
+                if (vipForm.id === "") {
+                  closeVipForm();
+                } else {
+                  setVipForm({
+                    id: "",
+                    name: "",
+                    description: "",
+                    price: "0",
+                    imageUrl: "",
+                    buyUrl: "",
+                    comingSoon: false,
+                    sortOrder: 0,
+                    planOptions: "[]",
+                  });
+                }
+              }}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${vipForm.id === "" ? "bg-blue-600 text-white border-blue-500" : "bg-slate-800 text-slate-200 border-slate-700"}`}
             >
-              New VIP item
+              {vipForm.id === "" ? "✕ Cancel" : "+ New VIP item"}
             </button>
             <button onClick={refreshVipProducts} className="p-1 text-slate-300" title="Refresh VIP">
               <RefreshCw className="w-4 h-4" />
@@ -1011,9 +1049,12 @@ export function AdminHubModal({
           </div>
         </div>
 
-        {vipForm.id === "" && vipForm.name === "" && (
-          <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-            <h4 className="text-white text-sm font-semibold">Create VIP item</h4>
+        {vipForm.id === "" && (
+          <div className="space-y-2 p-3 rounded-lg border border-blue-500/30 bg-blue-950/20">
+            <div className="flex items-center justify-between">
+              <h4 className="text-white text-sm font-semibold">Create VIP item</h4>
+              <button onClick={closeVipForm} className="p-1 rounded-md hover:bg-white/10 text-slate-300"><X className="w-4 h-4" /></button>
+            </div>
             {renderVipFormFields()}
           </div>
         )}
@@ -1032,26 +1073,34 @@ export function AdminHubModal({
                 title={`${p.name}`}
                 subtitle={`${useCurrencyLocaleStore.getState().formatPrice(p.price ?? 0)} • Coming soon: ${p.coming_soon ? "yes" : "no"}`}
                 meta={`Plans: ${Array.isArray(p.plan_options) ? p.plan_options.length : 0}`}
-                onEdit={() =>
-                  setVipForm({
-                    id: vid,
-                    name: p.name || "",
-                    description: p.description || "",
-                    price: String(p.price ?? "0"),
-                    imageUrl: p.image_url || p.imageUrl || "",
-                    buyUrl: p.buy_url || p.buyUrl || "",
-                    comingSoon: !!p.coming_soon,
-                    sortOrder: Number(p.sort_order || 0),
-                    planOptions: p.planOptions || "[]",
-                  })
-                }
+                isEditing={isEditing}
+                onEdit={() => {
+                  if (isEditing) {
+                    closeVipForm();
+                  } else {
+                    setVipForm({
+                      id: vid,
+                      name: p.name || "",
+                      description: p.description || "",
+                      price: String(p.price ?? "0"),
+                      imageUrl: p.image_url || p.imageUrl || "",
+                      buyUrl: p.buy_url || p.buyUrl || "",
+                      comingSoon: !!p.coming_soon,
+                      sortOrder: Number(p.sort_order || 0),
+                      planOptions: p.planOptions || "[]",
+                    });
+                  }
+                }}
                 onDelete={() => removeVipProduct(vid)}
               />
               {media ? <CollapsiblePreview label="Preview">{media}</CollapsiblePreview> : null}
               {planPreview ? <CollapsiblePreview label="Plan options JSON">{planPreview}</CollapsiblePreview> : null}
               {isEditing && (
-                <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-                  <h4 className="text-white text-sm font-semibold">Edit VIP item</h4>
+                <div className="space-y-2 p-3 rounded-lg border border-blue-500/30 bg-blue-950/20">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-white text-sm font-semibold">Edit VIP item</h4>
+                    <button onClick={closeVipForm} className="p-1 rounded-md hover:bg-white/10 text-slate-300"><X className="w-4 h-4" /></button>
+                  </div>
                   {renderVipFormFields()}
                 </div>
               )}
@@ -1203,22 +1252,28 @@ export function AdminHubModal({
         <h3 className="text-white font-semibold text-sm">Services</h3>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setServiceForm({
-              id: "",
-              title: "",
-              description: "",
-              icon_name: "",
-              price: "",
-              features: "",
-              cta_text: "",
-              cta_url: "",
-              is_featured: false,
-              is_visible: true,
-              display_order: 0,
-            })}
-            className="px-2 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700"
+            onClick={() => {
+              if (serviceForm.id === "") {
+                closeServiceForm();
+              } else {
+                setServiceForm({
+                  id: "",
+                  title: "",
+                  description: "",
+                  icon_name: "",
+                  price: "",
+                  features: "",
+                  cta_text: "",
+                  cta_url: "",
+                  is_featured: false,
+                  is_visible: true,
+                  display_order: 0,
+                });
+              }
+            }}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${serviceForm.id === "" ? "bg-blue-600 text-white border-blue-500" : "bg-slate-800 text-slate-200 border-slate-700"}`}
           >
-            New service
+            {serviceForm.id === "" ? "✕ Cancel" : "+ New service"}
           </button>
           <button onClick={refreshServices} className="p-1 text-slate-300" title="Refresh services">
             <RefreshCw className="w-4 h-4" />
@@ -1226,9 +1281,12 @@ export function AdminHubModal({
         </div>
       </div>
 
-      {serviceForm.id === "" && serviceForm.title === "" && (
-        <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-          <h4 className="text-white text-sm font-semibold">Create service</h4>
+      {serviceForm.id === "" && (
+        <div className="space-y-2 p-3 rounded-lg border border-blue-500/30 bg-blue-950/20">
+          <div className="flex items-center justify-between">
+            <h4 className="text-white text-sm font-semibold">Create service</h4>
+            <button onClick={closeServiceForm} className="p-1 rounded-md hover:bg-white/10 text-slate-300"><X className="w-4 h-4" /></button>
+          </div>
           {renderServiceFormFields()}
         </div>
       )}
@@ -1243,27 +1301,35 @@ export function AdminHubModal({
               title={s.title}
               subtitle={`${s.price || ""} • ${s.icon_name || ""}`}
               meta={`Visible: ${s.is_visible ? "yes" : "no"}`}
-              onEdit={() =>
-                setServiceForm({
-                  id: sid,
-                  title: s.title || "",
-                  description: s.description || "",
-                  icon_name: s.icon_name || "",
-                  price: s.price || "",
-                  features: Array.isArray(s.features) ? s.features.join("|") : s.features || "",
-                  cta_text: s.cta_text || "",
-                  cta_url: s.cta_url || "",
-                  is_featured: !!s.is_featured,
-                  is_visible: !!s.is_visible,
-                  display_order: Number(s.display_order || 0),
-                })
-              }
+              isEditing={isEditing}
+              onEdit={() => {
+                if (isEditing) {
+                  closeServiceForm();
+                } else {
+                  setServiceForm({
+                    id: sid,
+                    title: s.title || "",
+                    description: s.description || "",
+                    icon_name: s.icon_name || "",
+                    price: s.price || "",
+                    features: Array.isArray(s.features) ? s.features.join("|") : s.features || "",
+                    cta_text: s.cta_text || "",
+                    cta_url: s.cta_url || "",
+                    is_featured: !!s.is_featured,
+                    is_visible: !!s.is_visible,
+                    display_order: Number(s.display_order || 0),
+                  });
+                }
+              }}
               onDelete={() => removeService(sid)}
             />
             {media ? <CollapsiblePreview label="Preview">{media}</CollapsiblePreview> : null}
             {isEditing && (
-              <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-                <h4 className="text-white text-sm font-semibold">Edit service</h4>
+              <div className="space-y-2 p-3 rounded-lg border border-blue-500/30 bg-blue-950/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white text-sm font-semibold">Edit service</h4>
+                  <button onClick={closeServiceForm} className="p-1 rounded-md hover:bg-white/10 text-slate-300"><X className="w-4 h-4" /></button>
+                </div>
                 {renderServiceFormFields()}
               </div>
             )}

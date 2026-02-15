@@ -436,64 +436,109 @@ const useIsDesktop = () => {
 const APPLE_GLOBAL_STYLES = `
   /* Apple-style smooth animations */
   @keyframes apple-fade-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px) translateZ(0); }
+    to { opacity: 1; transform: translateY(0) translateZ(0); }
   }
 
   @keyframes apple-scale-in {
-    from {
-      opacity: 0;
-      transform: scale(0.94);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.92) translateZ(0); }
+    to { opacity: 1; transform: scale(1) translateZ(0); }
   }
 
   @keyframes apple-slide-in {
-    from {
-      opacity: 0;
-      transform: translateX(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   @keyframes apple-pulse {
-    0%, 100% {
-      opacity: 1;
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+
+  /* 3D Card entrance - perspective lift */
+  @keyframes card-3d-enter {
+    0% {
+      opacity: 0;
+      transform: perspective(1200px) rotateX(8deg) translateY(40px) scale(0.92);
+      filter: blur(4px);
     }
-    50% {
-      opacity: 0.85;
+    60% {
+      opacity: 1;
+      transform: perspective(1200px) rotateX(-2deg) translateY(-4px) scale(1.01);
+      filter: blur(0px);
+    }
+    100% {
+      opacity: 1;
+      transform: perspective(1200px) rotateX(0deg) translateY(0) scale(1);
+      filter: blur(0px);
     }
   }
 
-  /* Apple button hover effect */
+  /* 3D Button press */
+  @keyframes btn-3d-press {
+    0% { transform: perspective(600px) translateZ(0) scale(1); }
+    50% { transform: perspective(600px) translateZ(-8px) scale(0.97); }
+    100% { transform: perspective(600px) translateZ(0) scale(1); }
+  }
+
+  /* Staggered fade-up for children */
+  @keyframes stagger-fade-up {
+    from { opacity: 0; transform: translateY(16px) translateZ(0); }
+    to { opacity: 1; transform: translateY(0) translateZ(0); }
+  }
+
+  /* Subtle float animation */
+  @keyframes subtle-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-3px); }
+  }
+
+  /* Progress bar fill animation */
+  @keyframes progress-segment-fill {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  /* Shimmer sweep on buttons */
+  @keyframes btn-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Input focus glow pulse */
+  @keyframes input-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+    50% { box-shadow: 0 0 0 4px rgba(0,0,0,0.06); }
+  }
+
+  /* Checkbox pop */
+  @keyframes check-pop {
+    0% { transform: scale(0.6); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  /* Apple button hover effect - 3D */
   .apple-button {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
   }
 
   .apple-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.25);
+    transform: perspective(600px) translateY(-2px) translateZ(8px);
+    box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.3);
   }
 
   .apple-button:active {
-    transform: translateY(0);
+    transform: perspective(600px) translateY(0) translateZ(-4px) scale(0.98);
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.15);
+    transition-duration: 0.1s;
   }
 
-  /* Card animation */
+  /* Card animation - 3D entrance */
   .apple-card {
-    animation: apple-scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: card-3d-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform-style: preserve-3d;
   }
 
   /* Text fade in */
@@ -501,23 +546,84 @@ const APPLE_GLOBAL_STYLES = `
     animation: apple-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Input focus effect */
+  /* Input focus effect - 3D lift + glow */
   .apple-input {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
   }
 
   .apple-input:focus {
-    transform: scale(1.01);
+    transform: perspective(600px) translateZ(4px) scale(1.01);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(0,0,0,0.08);
+    border-color: rgba(0,0,0,0.2) !important;
   }
 
-  /* Progress indicator */
-  @keyframes progress-fill {
-    from {
-      width: 0%;
-    }
-    to {
-      width: 100%;
-    }
+  /* Stagger animation helpers */
+  .stagger-1 { animation: stagger-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+  .stagger-2 { animation: stagger-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+  .stagger-3 { animation: stagger-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+  .stagger-4 { animation: stagger-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+  .stagger-5 { animation: stagger-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+  .stagger-6 { animation: stagger-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
+
+  /* 3D primary button with shimmer */
+  .btn-3d-primary {
+    background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%);
+    background-size: 200% 200%;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-3d-primary::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .btn-3d-primary:hover::after {
+    left: 100%;
+  }
+
+  .btn-3d-primary:hover {
+    transform: perspective(600px) translateY(-2px) translateZ(12px);
+    box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  }
+
+  .btn-3d-primary:active {
+    transform: perspective(600px) translateY(1px) translateZ(-4px) scale(0.97);
+    transition-duration: 0.1s;
+  }
+
+  /* 3D secondary button */
+  .btn-3d-secondary {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  .btn-3d-secondary:hover {
+    transform: perspective(600px) translateY(-1px) translateZ(6px);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.12);
+    border-color: rgba(0,0,0,0.2) !important;
+  }
+
+  .btn-3d-secondary:active {
+    transform: perspective(600px) translateY(0) translateZ(-2px) scale(0.98);
+    transition-duration: 0.1s;
+  }
+
+  /* Progress bar segment with animation */
+  .progress-segment-active {
+    animation: progress-segment-fill 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform-origin: left;
+  }
+
+  /* Floating subtle animation for icons */
+  .icon-float {
+    animation: subtle-float 3s ease-in-out infinite;
   }
 
   .gpu-layer {
@@ -1296,6 +1402,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     });
 
     try {
+      const hasAffiliateAttribution = Boolean(referralAttribution?.affiliateCode);
       const res = await fetch('/api/recruit-auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1304,7 +1411,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           password: formData.password,
           mt5_id: formData.mt5Number,
           referred_by_code: formData.referralCode || null,
-          referral_attribution: formData.referralCode
+          referral_attribution: hasAffiliateAttribution
             ? {
                 affiliate_id: referralAttribution.affiliateId || null,
                 affiliate_name: referralAttribution.affiliateName || null,
@@ -1507,13 +1614,24 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
       {/* HEADER - BULLMONEY FREE TITLE */}
       {!loading && step !== -1 && step !== -2 && (
-        <div className="w-full md:fixed md:top-6 lg:top-8 md:left-0 md:right-0 flex flex-col items-center pt-6 md:pt-8 pb-4 md:pb-6 bg-white/95 backdrop-blur-md mb-8 md:mb-0 z-50 border-b border-black/[0.08]" style={{ zIndex: 100, backgroundColor: 'rgba(255,255,255,0.95)' }}>
-          <div className="mb-3 md:mb-4 text-center w-full">
-             <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-black" style={{ animation: 'apple-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-              BULLMONEY <span className="text-black" style={{ fontWeight: 900 }}>FREE</span>
-            </h1>
-          </div>
-          <div className="w-full max-w-xl h-1 bg-black/[0.08] opacity-70 transition-all duration-500 rounded-full" />
+        <div style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingTop: 20,
+          paddingBottom: 12,
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          marginBottom: 24,
+          zIndex: 100,
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
+        }}>
+          <h1 style={{ fontSize: 18, fontWeight: 600, color: '#000', letterSpacing: '-0.02em', animation: 'apple-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            BullMoney <span style={{ color: 'rgba(0,0,0,0.4)', fontWeight: 400 }}>Free</span>
+          </h1>
         </div>
       )}
 
@@ -1566,114 +1684,105 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   // edges around the content. The Spline bg fills the viewport independently.
                 }}
               >
-                {/* Minimalistic Branding Header - Clean Apple-style */}
+                {/* Minimalistic Branding Header */}
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative z-10 pt-10 pb-5 text-center pointer-events-none"
+                  style={{ position: 'relative', zIndex: 10, paddingTop: 40, paddingBottom: 20, textAlign: 'center', pointerEvents: 'none' }}
                 >
                   <motion.h1
-                    className="relative text-[clamp(1.8rem,6vw,2.4rem)] font-semibold tracking-tight"
                     style={{
-                      color: 'rgb(255, 255, 255)',
+                      position: 'relative',
+                      fontSize: 'clamp(1.8rem,6vw,2.4rem)',
+                      fontWeight: 600,
+                      color: '#fff',
                       textShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
                       letterSpacing: '-0.03em',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
                     }}
                   >
                     BullMoney
                   </motion.h1>
                 </motion.div>
 
-                {/* Main Content Area - Apple-style centered card */}
+                {/* Main Content Area */}
                 <div
-                  className="relative flex-1 flex flex-col items-center justify-center px-4 w-full pb-6"
-                  style={{ zIndex: 10, pointerEvents: 'auto' }}
+                  style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px', width: '100%', paddingBottom: 24, zIndex: 10, pointerEvents: 'auto' }}
                 >
-                  {/* Clean Card Container - Apple-style minimal (35% smaller on mobile) */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="w-full max-w-[13rem] rounded-xl p-4 sm:max-w-[20rem] sm:rounded-2xl sm:p-7 border border-black/[0.08] apple-card"
+                    className="apple-card"
                     style={{
-                      background: 'rgb(255, 255, 255)',
-                      boxShadow: '0 2px 20px rgba(0, 0, 0, 0.08)',
+                      width: '100%',
+                      maxWidth: 208,
+                      borderRadius: 12,
+                      padding: 16,
+                      background: '#fff',
+                      boxShadow: '0 1px 12px rgba(0, 0, 0, 0.06)',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
                     }}
                   >
-                    {/* Clean title */}
-                    <h2 className="text-base sm:text-xl font-semibold text-black mb-1.5 sm:mb-2 text-center">
-                      Get Started
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.7, rotateY: -20 }}
+                      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                      transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}
+                    >
+                      <img src="/IMG_2921.PNG" alt="BullMoney" className="icon-float" style={{ width: 36, height: 36, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))' }} />
+                    </motion.div>
+                    <h2 style={{ fontSize: 14, fontWeight: 600, color: '#000', marginBottom: 2, textAlign: 'center', letterSpacing: '-0.02em' }}>
+                      BullMoney
                     </h2>
-                    <p className="text-black/50 text-xs sm:text-sm mb-5 sm:mb-8 text-center font-normal">
-                      Choose how to continue
+                    <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 10, marginBottom: 16, textAlign: 'center', fontWeight: 400 }}>
+                      Free trading tools & community
                     </p>
 
-                    {/* Clean Button Stack - 35% smaller on mobile */}
-                    <div className="flex flex-col gap-2 sm:gap-3">
-                      {/* Primary Button - Black solid (Sign In First) */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <motion.button
-                        onClick={() => {
-                          setViewMode('login');
-                          setStep(0);
-                        }}
-                        whileTap={{ scale: 0.97 }}
-                        className="w-full py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all apple-button text-white"
-                        style={{
-                          background: 'rgb(0, 0, 0)',
-                          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
-                        }}
+                        onClick={() => { setViewMode('login'); setStep(0); }}
+                        whileHover={{ scale: 1.03, y: -1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="btn-3d-primary"
+                        style={{ width: '100%', padding: '8px 0', borderRadius: 10, fontWeight: 600, fontSize: 11, background: '#000', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 3px 12px -3px rgba(0,0,0,0.3)' }}
                       >
                         Sign In
                       </motion.button>
 
-                      {/* Secondary Button - Black border */}
                       <motion.button
-                        onClick={() => {
-                          setViewMode('register');
-                          setStep(0);
-                        }}
-                        whileTap={{ scale: 0.97 }}
-                        className="w-full py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all text-black bg-white border border-black/20 hover:border-black/40"
+                        onClick={() => { setViewMode('register'); setStep(0); }}
+                        whileHover={{ scale: 1.03, y: -1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="btn-3d-secondary"
+                        style={{ width: '100%', padding: '8px 0', borderRadius: 10, fontWeight: 600, fontSize: 11, color: '#000', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.15)', cursor: 'pointer' }}
                       >
                         Create Account
                       </motion.button>
 
-                      {/* Minimal Divider */}
-                      <div className="flex items-center gap-2 sm:gap-3 my-1 sm:my-2">
-                        <div className="flex-1 h-[0.5px] bg-black/[0.08]" />
-                        <span className="text-black/30 text-[10px] sm:text-xs font-normal">or</span>
-                        <div className="flex-1 h-[0.5px] bg-black/[0.08]" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0' }}>
+                        <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(0,0,0,0.06)' }} />
+                        <span style={{ color: 'rgba(0,0,0,0.25)', fontSize: 9, fontWeight: 400 }}>or</span>
+                        <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(0,0,0,0.06)' }} />
                       </div>
 
-                      {/* Guest Button - Light gray */}
                       <motion.button
                         onClick={() => setStep(-2)}
-                        whileTap={{ scale: 0.97 }}
-                        className="w-full py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-normal text-[11px] sm:text-[13px] transition-all text-black/70 hover:text-black bg-gray-100 hover:bg-gray-200"
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{ width: '100%', padding: '6px 0', borderRadius: 10, fontWeight: 400, fontSize: 10, color: 'rgba(0,0,0,0.5)', backgroundColor: 'rgba(0,0,0,0.03)', border: 'none', cursor: 'pointer', transition: 'all 0.2s ease' }}
                       >
-                        Continue as Guest
+                        Browse as Guest
                       </motion.button>
                     </div>
 
-                    {/* Clean Footer */}
-                    <p className="text-center text-black/30 text-[10px] sm:text-xs mt-4 sm:mt-6 font-normal leading-relaxed">
+                    <p style={{ textAlign: 'center', color: 'rgba(0,0,0,0.25)', fontSize: 9, marginTop: 12, fontWeight: 400, lineHeight: 1.6 }}>
                       By continuing, you agree to our{' '}
-                      <button 
-                        type="button"
-                        onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
-                        className="text-black/50 hover:text-black/70 transition-colors"
-                      >
-                        Terms
-                      </button>
-                      {' and '}
-                      <button 
-                        type="button"
-                        onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
-                        className="text-black/50 hover:text-black/70 transition-colors"
-                      >
-                        Privacy Policy
-                      </button>
+                      <button type="button" onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 9 }}>Terms</button>
+                      {' & '}
+                      <button type="button" onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 9 }}>Privacy</button>
                     </p>
                   </motion.div>
                 </div>
@@ -1730,18 +1839,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 ...(iosInAppShieldStyle ?? {}),
               }}
             >
-              {/* Back Button - Apple Style */}
+              {/* Back Button */}
               <button
                 onClick={() => setStep(-1)}
-                className="fixed top-5 right-4 flex items-center gap-2 text-black text-sm font-medium transition-all cursor-target py-2 px-3.5 rounded-xl z-50 apple-button"
-                style={{
-                  pointerEvents: 'auto',
-                  background: 'rgb(255, 255, 255)',
-                  border: '1px solid rgba(0, 0, 0, 0.1)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                }}
+                className="apple-button cursor-target"
+                style={{ position: 'fixed', top: 20, right: 16, display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.5)', fontSize: 13, fontWeight: 500, padding: '8px 12px', borderRadius: 12, zIndex: 50, backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', pointerEvents: 'auto' }}
               >
-                <ChevronLeft className="w-4 h-4" /> Back
+                <ChevronLeft style={{ width: 16, height: 16 }} /> Back
               </button>
 
               {/* Header */}
@@ -1749,43 +1853,42 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 pt-16 pb-8 text-center"
-                style={{ pointerEvents: 'none' }}
+                style={{ position: 'relative', zIndex: 10, paddingTop: 56, paddingBottom: 24, textAlign: 'center', pointerEvents: 'none', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}
               >
-                <h1 className="text-[2.5rem] font-semibold tracking-tight text-black" style={{ letterSpacing: '-0.04em' }}>
+                <h1 style={{ fontSize: 24, fontWeight: 600, color: '#fff', letterSpacing: '-0.03em' }}>
                   BullMoney
                 </h1>
-                <p className="text-base text-black/50 mt-2 font-normal">
-                  Trading Excellence
-                </p>
               </motion.div>
 
               {/* Card */}
-              <div className="flex-1 flex flex-col items-center justify-center px-6 w-full pb-12 relative z-10" style={{ pointerEvents: 'auto' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', width: '100%', paddingBottom: 40, position: 'relative', zIndex: 10, pointerEvents: 'auto' }}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="rounded-3xl p-8 text-center w-full max-w-sm border border-black/[0.06] shadow-lg apple-card"
-                  style={{ background: 'rgb(255, 255, 255)' }}
+                  className="apple-card"
+                  style={{ borderRadius: 16, padding: 24, textAlign: 'center', width: '100%', maxWidth: 320, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', background: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}
                 >
-                  <div className="mb-6 flex justify-center">
-                    <div className="h-16 w-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(0, 0, 0, 0.03)', border: '1px solid rgba(0, 0, 0, 0.06)' }}>
-                      <User className="w-7 h-7 text-black/40" />
-                    </div>
-                  </div>
-                  <h2 className="text-xl font-semibold text-black mb-2 tracking-tight">Guest Access</h2>
-                  <p className="text-sm text-black/50 mb-8 leading-relaxed font-normal">
-                    Browse without an account.<br />
-                    Some features may be limited.
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.7, rotateY: -20 }}
+                    animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                    transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}
+                  >
+                    <img src="/IMG_2921.PNG" alt="BullMoney" className="icon-float" style={{ width: 44, height: 44, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))' }} />
+                  </motion.div>
+                  <h2 style={{ fontSize: 18, fontWeight: 600, color: '#000', marginBottom: 4, letterSpacing: '-0.02em' }}>Guest Access</h2>
+                  <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', marginBottom: 20, lineHeight: 1.6, fontWeight: 400 }}>
+                    Browse freely. Some features are limited.
                   </p>
                   <motion.button
                     onClick={() => { setStep(99); onUnlock(); }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 rounded-2xl font-semibold text-base transition-all apple-button"
-                    style={{ background: 'rgb(0, 0, 0)', color: 'rgb(255, 255, 255)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)' }}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.96, y: 1 }}
+                    className="btn-3d-primary"
+                    style={{ width: '100%', padding: '12px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, background: '#000', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)' }}
                   >
-                    Continue to Site
+                    Continue
                   </motion.button>
                 </motion.div>
               </div>
@@ -1825,41 +1928,101 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
        {/* ================= LOGIN VIEW - APPLE STYLE ================= */}
         {step !== -1 && step !== -2 && viewMode === 'login' ? (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="fixed inset-0 bg-white flex flex-col items-center justify-center z-[99999998] apple-card"
-            style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', backgroundColor: '#fff', ...(iosInAppShieldStyle ?? {}) }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 flex flex-col items-center justify-center"
+            style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', backgroundColor: '#fff', zIndex: 99999998, ...(iosInAppShieldStyle ?? {}) }}
           >
-             {/* Back Button - Apple Style */}
-             <button 
-               onClick={() => setStep(-1)} 
-               className="fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-black hover:text-black/70 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-white border border-black/10 hover:border-black/20 shadow-sm z-[2147483646] apple-button"
+             {/* Back Button */}
+             <motion.button
+               initial={{ opacity: 0, x: -20 }}
+               animate={{ opacity: 1, x: 0 }}
+               transition={{ delay: 0.4, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+               onClick={() => setStep(-1)}
+               className="btn-3d-secondary cursor-target"
+               style={{ position: 'fixed', top: 56, left: 16, display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.5)', fontSize: 13, fontWeight: 500, padding: '8px 12px', borderRadius: 12, backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.08)', zIndex: 2147483646, cursor: 'pointer' }}
              >
-               <ChevronLeft className="w-5 h-5" /> Back
-             </button>
-             
-             <div className="bg-white p-8 md:p-10 rounded-3xl relative overflow-hidden w-full max-w-md mx-4 border border-black/[0.06] shadow-lg">
-                
-                <h2 className="text-2xl md:text-3xl font-semibold mb-2 relative z-10 text-black tracking-tight">Sign In</h2>
-                    <p className="mb-8 relative z-10 text-sm md:text-base text-black/50 font-normal">Access your account</p>
+               <ChevronLeft style={{ width: 16, height: 16 }} /> Back
+             </motion.button>
 
-                <form onSubmit={handleLoginSubmit} className="space-y-4 relative z-10" autoComplete="on">
-                   <div className="relative group">
-                      <input
-                        autoFocus
-                        type="email"
-                        name="email"
-                        id="login-email"
-                        autoComplete="username"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        placeholder="Email"
-                        className="w-full bg-white border border-black/[0.1] rounded-xl px-4 py-4 !text-black transition-all focus:outline-none focus:border-black/30 text-base placeholder-black/30 apple-input"
-                        style={{ color: 'rgb(0, 0, 0)' }}
-                      />
-                    </div>
+             <motion.div
+               initial={{ opacity: 0, rotateX: 10, y: 50, scale: 0.9 }}
+               animate={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
+               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+               style={{
+                 backgroundColor: '#fff',
+                 padding: 24,
+                 borderRadius: 20,
+                 position: 'relative',
+                 overflow: 'hidden',
+                 width: '100%',
+                 maxWidth: 384,
+                 marginLeft: 16,
+                 marginRight: 16,
+                 border: '1px solid rgba(0,0,0,0.08)',
+                 boxShadow: '0 8px 32px -8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.04)',
+                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
+                 perspective: 1200,
+                 transformStyle: 'preserve-3d' as any,
+               }}
+             >
+                {/* Top edge highlight */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)', zIndex: 20, pointerEvents: 'none' }} />
 
-                   <div className="relative group">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.7, rotateY: -20 }}
+                  animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                  transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, position: 'relative', zIndex: 10 }}
+                >
+                  <img src="/IMG_2921.PNG" alt="BullMoney" className="icon-float" style={{ width: 44, height: 44, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))' }} />
+                </motion.div>
+
+                <motion.h2
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, color: '#000', letterSpacing: '-0.02em' }}
+                >
+                  Sign In
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ marginBottom: 20, fontSize: 13, color: 'rgba(0,0,0,0.45)', fontWeight: 400 }}
+                >
+                  Welcome back to BullMoney
+                </motion.p>
+
+                <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', zIndex: 10 }} autoComplete="on">
+                   <motion.div
+                     initial={{ opacity: 0, y: 16 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.35, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                   >
+                     <input
+                       autoFocus
+                       type="email"
+                       name="email"
+                       id="login-email"
+                       autoComplete="username"
+                       value={loginEmail}
+                       onChange={(e) => setLoginEmail(e.target.value)}
+                       placeholder="Email"
+                       className="apple-input"
+                       style={{ width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 14, padding: '14px 16px', color: '#000', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
+                     />
+                   </motion.div>
+
+                   <motion.div
+                     initial={{ opacity: 0, y: 16 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.45, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                     style={{ position: 'relative' }}
+                   >
                       <input
                         type={showPassword ? "text" : "password"}
                         name="password"
@@ -1868,69 +2031,95 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className="w-full bg-white border border-black/[0.1] rounded-xl px-4 py-4 pr-12 !text-black transition-all focus:outline-none focus:border-black/30 text-base placeholder-black/30 apple-input"
-                        style={{ color: 'rgb(0, 0, 0)' }}
+                        className="apple-input"
+                        style={{ width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 14, padding: '14px 16px', paddingRight: 44, color: '#000', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors cursor-target text-black/30 hover:text-black/60"
+                        className="cursor-target"
+                        style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(0,0,0,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                       >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
                       </button>
-                    </div>
-                    
+                    </motion.div>
+
                     {submitError && (
-                      <div className="text-red-600 text-sm bg-red-50 p-3 rounded-xl flex items-center gap-2 border border-red-100">
-                        <AlertCircle className="w-4 h-4 shrink-0" /> {submitError}
-                      </div>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', fontSize: 12, backgroundColor: '#fef2f2', padding: 10, borderRadius: 12, border: '1px solid #fee2e2' }}
+                      >
+                        <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} /> {submitError}
+                      </motion.div>
                     )}
 
-                    <button
+                    <motion.button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className="relative z-10 w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed cursor-target text-base apple-button"
-                      style={{
-                        background: 'rgb(0, 0, 0)', 
-                        color: 'rgb(255, 255, 255)',
-                        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)'
-                      }}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.55, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      whileHover={(loginEmail && loginPassword) ? { scale: 1.02, y: -2 } : {}}
+                      whileTap={(loginEmail && loginPassword) ? { scale: 0.96, y: 1 } : {}}
+                      className="btn-3d-primary cursor-target"
+                      style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: '#fff', border: 'none', cursor: (loginEmail && loginPassword) ? 'pointer' : 'not-allowed', opacity: (!loginEmail || !loginPassword) ? 0.4 : 1, boxShadow: (loginEmail && loginPassword) ? '0 4px 20px -4px rgba(0,0,0,0.3)' : 'none' }}
                     >
                       Sign In
-                    </button>
+                    </motion.button>
                 </form>
 
-                <div className="mt-6 text-center border-t border-black/[0.06] pt-6"> 
-                  <button onClick={toggleViewMode} className="text-sm transition-colors cursor-target text-black/50 hover:text-black/70 font-normal">
-                    Don't have an account? <span className="text-black">Create one</span>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  style={{ marginTop: 16, textAlign: 'center', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 16 }}
+                >
+                  <button onClick={toggleViewMode} className="btn-3d-secondary cursor-target" style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', fontWeight: 400, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }}>
+                    Don't have an account? <span style={{ color: '#000', fontWeight: 500 }}>Create one</span>
                   </button>
-                </div>
-             </div>
+                </motion.div>
+             </motion.div>
           </motion.div>
         ) : (
           /* ================= UNLOCK FLOW VIEW ================= */
           <>
             {step === 1 && (
-              <div className="flex justify-center gap-2 md:gap-3 mb-6 md:mb-8">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}
+              >
                 {(["Vantage", "XM"] as const).map((partner) => {
                   const isActive = activeBroker === partner;
-                  const isPartnerXM = partner === 'XM';
                   return (
-                    <button
+                    <motion.button
                       key={partner}
                       onClick={() => handleBrokerSwitch(partner)}
-                      className={cn(
-                        "relative px-5 md:px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base apple-button",
-                        isActive 
-                          ? "text-black bg-white shadow-md" 
-                          : "bg-white/70 border border-black/10 text-black/60 hover:bg-white/90"
-                      )}
+                      whileHover={{ scale: 1.06 }}
+                      whileTap={{ scale: 0.94 }}
+                      className="cursor-target"
+                      style={{
+                        position: 'relative',
+                        padding: '7px 18px',
+                        borderRadius: 9999,
+                        fontWeight: 500,
+                        fontSize: 13,
+                        zIndex: 20,
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease',
+                        color: isActive ? '#fff' : 'rgba(0,0,0,0.5)',
+                        backgroundColor: isActive ? '#000' : 'rgba(0,0,0,0.04)',
+                        boxShadow: isActive ? '0 4px 16px -4px rgba(0,0,0,0.25)' : 'none',
+                      }}
                     >
                       {partner}
-                    </button>
+                    </motion.button>
                   );
                 })}
-              </div>
+              </motion.div>
             )}
 
             <AnimatePresence mode="wait">
@@ -1941,13 +2130,16 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   key="step0-apple"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="fixed inset-0 bg-white flex flex-col items-center justify-center z-[99999998] apple-card"
-                  style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', backgroundColor: '#fff', ...(iosInAppShieldStyle ?? {}) }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  className="fixed inset-0 flex flex-col items-center justify-center"
+                  style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', backgroundColor: '#fff', zIndex: 99999998, ...(iosInAppShieldStyle ?? {}) }}
                  >
-                   {/* Back Button - Apple Style */}
-                   <button 
+                   {/* Back Button */}
+                   <motion.button
+                     initial={{ opacity: 0, x: -20 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     transition={{ delay: 0.4, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                      onClick={() => {
                        if (returnToAccountManager) {
                          localStorage.removeItem('return_to_account_manager');
@@ -1955,51 +2147,122 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                        } else {
                          setStep(-1);
                        }
-                     }} 
-                     className="fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-black hover:text-black/70 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-white border border-black/10 hover:border-black/20 shadow-sm z-[2147483646] apple-button"
+                     }}
+                     className="btn-3d-secondary cursor-target"
+                     style={{ position: 'fixed', top: 56, left: 16, display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.5)', fontSize: 13, fontWeight: 500, padding: '8px 12px', borderRadius: 12, backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.08)', zIndex: 2147483646, cursor: 'pointer' }}
                    >
-                     <ChevronLeft className="w-5 h-5" /> {returnToAccountManager ? 'Back to Account Manager' : 'Back'}
-                   </button>
-                   
-                   <div className="bg-white p-8 md:p-10 rounded-3xl relative overflow-hidden text-center w-full max-w-md mx-4 border border-black/[0.06] shadow-lg" style={{ zIndex: 1 }}>
-                      
-                      {/* Icon */}
-                      <div className="mb-6 flex justify-center">
-                         <div className="h-16 w-16 md:h-20 md:w-20 rounded-full flex items-center justify-center" style={{ background: 'rgba(0, 0, 0, 0.03)', border: '1px solid rgba(0, 0, 0, 0.06)' }}>
-                           <ShieldCheck className="w-8 h-8 md:w-10 md:h-10 text-black/40" />
-                         </div>
-                      </div>
+                     <ChevronLeft style={{ width: 16, height: 16 }} /> {returnToAccountManager ? 'Account Manager' : 'Back'}
+                   </motion.button>
 
-                      <h2 className="text-2xl md:text-3xl font-semibold mb-3 relative z-10 text-black tracking-tight">Free Access</h2>
-                       <p className="text-sm md:text-base mb-8 max-w-sm mx-auto leading-relaxed relative z-10 text-black/50 font-normal"> 
-                        Trading setups and community access.<br/>
-                        <span className="text-black/40">No payment required.</span>
-                      </p>
+                   <motion.div
+                     initial={{ opacity: 0, rotateX: 10, y: 50, scale: 0.9 }}
+                     animate={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
+                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                     style={{
+                       backgroundColor: '#fff',
+                       padding: 24,
+                       borderRadius: 20,
+                       position: 'relative',
+                       overflow: 'hidden',
+                       textAlign: 'center',
+                       width: '100%',
+                       maxWidth: 384,
+                       marginLeft: 16,
+                       marginRight: 16,
+                       border: '1px solid rgba(0,0,0,0.08)',
+                       boxShadow: '0 8px 32px -8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.04)',
+                       zIndex: 1,
+                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
+                       perspective: 1200,
+                       transformStyle: 'preserve-3d' as any,
+                     }}
+                   >
+                      {/* Top edge highlight */}
+                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)', zIndex: 20, pointerEvents: 'none' }} />
 
-                      <motion.button 
-                        onClick={handleNext}
-                        whileTap={{ scale: 0.98 }}
-                        className="relative z-10 w-full py-4 md:py-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center cursor-target apple-button"
-                        style={{ background: 'rgb(0, 0, 0)', color: 'rgb(255, 255, 255)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)' }}
+                      {/* Logo */}
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8, rotateY: -20 }}
+                        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                        transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}
                       >
-                        Get Started
-                      </motion.button>
-                      
-                      <div className="mt-6 space-y-3 relative z-10">
-                         <div className="flex items-center justify-center gap-2 text-xs text-black/40">
-                             <Lock className="w-3 h-3" /> No credit card required
-                         </div>
+                        <img src="/IMG_2921.PNG" alt="BullMoney" style={{ width: 48, height: 48, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.1))' }} />
+                      </motion.div>
 
-                         <motion.button 
+                      <motion.h2
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, color: '#000', letterSpacing: '-0.02em' }}
+                      >
+                        Get Free Access
+                      </motion.h2>
+                      <motion.p
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        style={{ fontSize: 13, marginBottom: 20, color: 'rgba(0,0,0,0.45)', fontWeight: 400 }}
+                      >
+                        3 steps · 2 minutes · No payment needed
+                      </motion.p>
+
+                      {/* 3-Step Preview - staggered animated */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.35, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        style={{ position: 'relative', zIndex: 10, marginBottom: 20, backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: 14, padding: 14, border: '1px solid rgba(0,0,0,0.05)' }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          {[
+                            { n: '1', text: 'Open a free broker account' },
+                            { n: '2', text: 'Enter your trading ID' },
+                            { n: '3', text: 'Create your login' },
+                          ].map((s, i) => (
+                            <motion.div
+                              key={s.n}
+                              initial={{ opacity: 0, x: -16 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.45 + i * 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                              style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}
+                            >
+                              <span style={{ width: 22, height: 22, borderRadius: '50%', backgroundColor: '#000', color: '#fff', fontSize: 10, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>{s.n}</span>
+                              <span style={{ fontSize: 13, color: 'rgba(0,0,0,0.6)' }}>{s.text}</span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+
+                      <motion.button
+                        onClick={handleNext}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.65, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.96, y: 1 }}
+                        className="btn-3d-primary cursor-target"
+                        style={{ position: 'relative', zIndex: 10, width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)' }}
+                      >
+                        Get Started <ArrowRight style={{ width: 16, height: 16 }} />
+                      </motion.button>
+
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8, duration: 0.5 }}
+                        style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', zIndex: 10 }}
+                      >
+                         <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)' }}><Lock style={{ width: 12, height: 12, display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />No credit card required</p>
+                         <button
                            onClick={toggleViewMode}
-                           whileTap={{ scale: 0.98 }}
-                          className="w-full py-3 rounded-xl text-sm font-normal transition-all text-black/50 hover:text-black/70"
-                          style={{ background: 'transparent' }}
+                           className="btn-3d-secondary"
+                           style={{ fontSize: 13, fontWeight: 400, color: 'rgba(0,0,0,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }}
                          >
-                            Already have an account? Sign in
-                         </motion.button>
-                      </div>
-                   </div>
+                            Already registered? <span style={{ color: '#000', fontWeight: 500 }}>Sign in</span>
+                         </button>
+                      </motion.div>
+                   </motion.div>
                  </motion.div>
               )}
 
@@ -2007,75 +2270,75 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {step === 1 && (
                 <motion.div
                   key="step1"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full flex flex-col items-center justify-center"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                 >
                   <StepCard
                     {...getStepProps(1)}
-                    title="Open Free Account"
-                    className="register-card w-full max-w-md mx-auto"
+                    title="Open a Free Broker Account"
+                    className="register-card"
                     isXM={isXM}
                     disableEffects={true}
                     disableBackdropBlur={disableBackdropBlur}
                     actions={
-                      <div className="flex flex-col gap-3 md:gap-4">
-                        <p className="text-xs text-center flex items-center justify-center gap-1.5 text-black/40">
-                          <Clock className="w-3.5 h-3.5" /> Takes 1 minute · No deposit required
-                        </p>
-                        
-                        <div className="flex flex-col items-center justify-center gap-2.5 md:gap-3">
-                           {/* Copy button - Apple style */}
-                          <button
-                            onClick={() => copyCode(brokerCode)}
-                            className="inline-flex items-center gap-2 rounded-xl px-4 py-3.5 md:py-4 text-sm font-semibold transition cursor-target w-full justify-center text-black apple-button bg-white border border-black/10"
-                          >
-                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            <span>{copied ? "Copied" : `Copy Code: ${brokerCode}`}</span>
-                          </button>
-
-                           {/* Primary action button - Black */}
-                          <button
-                            onClick={handleBrokerClick}
-                            className="w-full py-4 md:py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 cursor-target text-base apple-button text-white"
-                            style={{ 
-                              background: 'rgb(0, 0, 0)', 
-                              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)' 
-                            }}
-                          >
-                            <span>Open Free Account</span>
-                            <ExternalLink className="h-4 w-4" />
-                          </button>
-                        </div>
-                        
-                        {/* Secondary button */}
-                        <button 
-                            onClick={handleNext}
-                            className="w-full py-3.5 md:py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 cursor-target text-base apple-button text-white"
-                            style={{
-                              background: 'rgb(0, 0, 0)',
-                              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)'
-                            }}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <motion.button
+                          onClick={() => copyCode(brokerCode)}
+                          whileHover={{ scale: 1.01, y: -1 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="btn-3d-secondary cursor-target"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 14, padding: '12px 16px', fontSize: 13, fontWeight: 600, width: '100%', justifyContent: 'center', color: '#000', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }}
                         >
-                            Sign In
-                        </button>
+                          {copied ? <Check style={{ height: 16, width: 16 }} /> : <Copy style={{ height: 16, width: 16 }} />}
+                          <span>{copied ? "Copied!" : `Copy Code: ${brokerCode}`}</span>
+                        </motion.button>
+
+                        <motion.button
+                          onClick={handleBrokerClick}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.96, y: 1 }}
+                          className="btn-3d-primary cursor-target"
+                          style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)' }}
+                        >
+                          Open {activeBroker} Account <ExternalLink style={{ height: 16, width: 16 }} />
+                        </motion.button>
+
+                        <motion.button
+                          onClick={handleNext}
+                          whileHover={{ scale: 1.01, y: -1 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="btn-3d-secondary cursor-target"
+                          style={{ width: '100%', padding: '12px 0', borderRadius: 14, fontWeight: 500, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#000', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }}
+                        >
+                          I've Opened My Account <ArrowRight style={{ width: 16, height: 16 }} />
+                        </motion.button>
                       </div>
                     }
                   >
-                    <p className="text-sm md:text-[15px] leading-relaxed mb-4 text-center text-black/60">
-                      BullMoney works with regulated brokers. <br className="hidden md:block" />
-                      This free account lets us verify your access.
+                    <p style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 16, color: 'rgba(0,0,0,0.5)' }}>
+                      We partner with regulated brokers so you get free access. Use the code below when signing up.
                     </p>
-                    
-                    {/* Simple broker icon */}
-                    <div className="relative mx-auto w-full max-w-[240px] md:max-w-[280px] h-28 md:h-32 rounded-2xl overflow-hidden mb-2 bg-black/[0.03] border border-black/[0.06] flex items-center justify-center">
-                      <Sparkles className="w-12 h-12 md:w-16 md:h-16 text-black/20" />
-                      <span className="absolute text-lg md:text-xl font-semibold text-black/30">{brokerCode}</span>
+
+                    {/* Broker code display - compact */}
+                    <div style={{ width: '100%', borderRadius: 12, overflow: 'hidden', marginBottom: 12, backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+                      <div>
+                        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(0,0,0,0.3)', fontWeight: 500, display: 'block' }}>Partner Code</span>
+                        <span style={{ fontSize: 20, fontWeight: 700, color: '#000', letterSpacing: '0.02em' }}>{brokerCode}</span>
+                      </div>
+                      <button onClick={() => copyCode(brokerCode)} style={{ color: 'rgba(0,0,0,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                        {copied ? <Check style={{ height: 16, width: 16 }} /> : <Copy style={{ height: 16, width: 16 }} />}
+                      </button>
                     </div>
 
+                    {/* How-to steps inline */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+                      <p><span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>1.</span> Copy the code above</p>
+                      <p><span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>2.</span> Open the broker link & paste it when signing up</p>
+                      <p><span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>3.</span> Come back and tap "I've Opened My Account"</p>
+                    </div>
                   </StepCard>
                 </motion.div>
               )}
@@ -2084,55 +2347,65 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {step === 2 && (
                 <motion.div
                   key="step2"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   className="w-full flex flex-col items-center justify-center"
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                 >
                   <StepCard
                     {...getStepProps(2)}
-                    title="Confirm Your Account ID"
-                    className="register-card w-full max-w-md mx-auto"
+                    title="Enter Your Trading ID"
+                    className="register-card"
                     isXM={isXM}
                     disableEffects={shouldReduceEffects}
                     disableBackdropBlur={disableBackdropBlur}
                     actions={
-                      <button
-                        onClick={handleNext}
-                        disabled={!formData.mt5Number}
-                        className="w-full py-3 md:py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 cursor-target text-base apple-button disabled:opacity-40 disabled:cursor-not-allowed text-white"
-                        style={{ background: 'rgb(0, 0, 0)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)' }}
-                      >
-                        Continue <ArrowRight className="w-4 h-4" />
-                      </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <motion.button
+                          onClick={handleNext}
+                          disabled={!formData.mt5Number}
+                          whileHover={formData.mt5Number ? { scale: 1.02, y: -2 } : {}}
+                          whileTap={formData.mt5Number ? { scale: 0.96, y: 1 } : {}}
+                          className="btn-3d-primary cursor-target"
+                          style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', cursor: formData.mt5Number ? 'pointer' : 'not-allowed', opacity: !formData.mt5Number ? 0.4 : 1, boxShadow: formData.mt5Number ? '0 4px 20px -4px rgba(0,0,0,0.3)' : 'none' }}
+                        >
+                          Continue <ArrowRight style={{ width: 16, height: 16 }} />
+                        </motion.button>
+                        <motion.button
+                          onClick={handleBack}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="cursor-target"
+                          style={{ display: 'flex', alignItems: 'center', fontSize: 13, color: 'rgba(0,0,0,0.4)', margin: '0 auto', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          <ChevronLeft style={{ width: 14, height: 14, marginRight: 2 }} /> Back
+                        </motion.button>
+                      </div>
                     }
                   >
-                    <div className="space-y-3 md:space-y-4 pt-2">
-                      <div className="flex items-center justify-between">
-                          <p className="text-black/60 text-sm">After opening your account, you'll receive an email with your trading ID (MT5 ID).</p>
-                      </div>
-                      
-                      <div className="relative group">
-                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30 w-5 h-5 group-focus-within:text-black/60 transition-colors" />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 }}>
+                      <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', lineHeight: 1.6 }}>
+                        After signing up with {activeBroker}, check your email for your <span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.7)' }}>MT5 Trading ID</span> (a number like 12345678).
+                      </p>
+
+                      <div style={{ position: 'relative' }}>
+                        <Hash style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(0,0,0,0.25)', width: 18, height: 18 }} className="icon-float" />
                         <input
                           autoFocus
                           type="tel"
                           name="mt5Number"
                           value={formData.mt5Number}
                           onChange={handleChange}
-                          placeholder="Enter MT5 ID (numbers only)"
-                          className="w-full bg-white border border-black/10 rounded-xl pl-10 pr-4 py-3.5 md:py-4 !text-black placeholder-black/30 focus:outline-none focus:border-black/30 transition-all cursor-target text-base apple-input"
-                          style={{ color: 'rgb(0, 0, 0)' }}
+                          placeholder="e.g. 12345678"
+                          className="apple-input cursor-target"
+                          style={{ width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 14, paddingLeft: 40, paddingRight: 16, paddingTop: 14, paddingBottom: 14, color: '#000', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
                         />
                       </div>
-                      <p className="text-xs text-black/40 flex items-center gap-1"><Lock className="w-3 h-3"/> Used only to verify access</p>
+                      <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', gap: 4 }}><Lock style={{ width: 12, height: 12 }}/> Only used to verify access — never shared</p>
                     </div>
                   </StepCard>
-                  <button onClick={handleBack} className="mt-3 md:mt-4 flex items-center text-black/50 hover:text-black/70 text-sm mx-auto transition-colors cursor-target">
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Back
-                  </button>
                 </motion.div>
               )}
 
@@ -2140,157 +2413,142 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {step === 3 && (
                 <motion.div
                   key="step3"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   className="w-full flex flex-col items-center justify-center"
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                 >
                   <StepCard
                     {...getStepProps(3)}
-                    title="Create Account"
-                    className="register-card w-full max-w-md mx-auto"
+                    title="Create Your Login"
+                    className="register-card"
                     isXM={isXM}
                     disableEffects={true}
                     disableBackdropBlur={disableBackdropBlur}
                     actions={
-                      <button
-                        onClick={handleNext}
-                        disabled={!formData.email || !formData.password || !acceptedTerms}
-                        className="w-full py-4 md:py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 cursor-target text-base text-white disabled:opacity-40 disabled:cursor-not-allowed apple-button"
-                        style={{ background: 'rgb(0, 0, 0)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)' }}
-                      >
-                        Complete Registration
-                      </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <motion.button
+                          onClick={handleNext}
+                          disabled={!formData.email || !formData.password || !acceptedTerms}
+                          whileHover={(formData.email && formData.password && acceptedTerms) ? { scale: 1.02, y: -2 } : {}}
+                          whileTap={(formData.email && formData.password && acceptedTerms) ? { scale: 0.96, y: 1 } : {}}
+                          className="btn-3d-primary cursor-target"
+                          style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', cursor: (formData.email && formData.password && acceptedTerms) ? 'pointer' : 'not-allowed', opacity: (!formData.email || !formData.password || !acceptedTerms) ? 0.4 : 1, boxShadow: (formData.email && formData.password && acceptedTerms) ? '0 4px 20px -4px rgba(0,0,0,0.3)' : 'none' }}
+                        >
+                          Finish &amp; Get Access <ShieldCheck style={{ width: 16, height: 16 }} />
+                        </motion.button>
+                        <motion.button
+                          onClick={handleBack}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="cursor-target"
+                          style={{ display: 'flex', alignItems: 'center', fontSize: 13, color: 'rgba(0,0,0,0.4)', margin: '0 auto', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          <ChevronLeft style={{ width: 14, height: 14, marginRight: 2 }} /> Back
+                        </motion.button>
+                      </div>
                     }
                   >
-                     <p className="text-xs md:text-sm mb-6 text-black/50 font-normal">Access setups, tools, and the community.</p>
-                    <div className="space-y-4 md:space-y-4 pt-1">
+                    <p style={{ fontSize: 13, marginBottom: 16, color: 'rgba(0,0,0,0.45)', fontWeight: 400 }}>Last step — set up your email and password.</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <div>
-                        <div className="relative group">
-                          <input
-                            autoFocus
-                            type="email"
-                            name="email"
-                            autoComplete="username"
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="Email address"
-                            className="w-full bg-white border border-black/[0.1] rounded-xl px-4 py-4 !text-black transition-all cursor-target text-base placeholder-black/30 focus:outline-none focus:border-black/30 apple-input"
-                            style={{ color: 'rgb(0, 0, 0)' }}
-                          />
-                        </div>
-                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">We'll send your login details here.</p>
+                        <input
+                          autoFocus
+                          type="email"
+                          name="email"
+                          autoComplete="username"
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="Email address"
+                          className="apple-input cursor-target"
+                          style={{ width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '14px 16px', color: '#000', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
+                        />
                       </div>
 
-                      <div>
-                        <div className="relative group">
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            autoComplete="new-password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="Create password (min 6 chars)"
-                            className="w-full bg-white border border-black/[0.1] rounded-xl px-4 pr-12 py-4 !text-black transition-all cursor-target text-base placeholder-black/30 focus:outline-none focus:border-black/30 apple-input"
-                            style={{ color: 'rgb(0, 0, 0)' }}
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors cursor-target text-black/30 hover:text-black/60"
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">Must be at least 6 characters.</p>
-                      </div>
-
-                      <div>
-                        <div className="relative group">
-                          <input
-                            type="text"
-                            name="referralCode"
-                            value={formData.referralCode}
-                            onChange={handleChange}
-                            placeholder="Referral Code (Optional)"
-                            readOnly={!!referralAttribution.affiliateCode}
-                            className={cn(
-                              "w-full bg-white border rounded-xl px-4 py-4 !text-black transition-all cursor-target text-base placeholder-black/30 focus:outline-none focus:border-black/30 apple-input",
-                              referralAttribution.affiliateCode
-                                ? "border-green-500/40 bg-green-50/30"
-                                : "border-black/[0.1]"
-                            )}
-                            style={{ color: 'rgb(0, 0, 0)' }}
-                          />
-                          {referralAttribution.affiliateCode && (
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                              <Check className="w-4 h-4 text-green-600" />
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-[10px] mt-1.5 ml-1 text-black/40">
-                          {referralAttribution.affiliateCode
-                            ? `Referred by ${referralAttribution.affiliateName || referralAttribution.affiliateEmail || 'a BullMoney partner'}`
-                            : 'Leave blank if you don\'t have one.'}
-                        </p>
-                      </div>
-
-                        <div
-                        onClick={() => setAcceptedTerms(!acceptedTerms)}
-                        className="flex items-start gap-3 p-4 rounded-xl bg-black/[0.02] cursor-pointer transition-colors cursor-target border border-black/[0.06]"
-                      >
-                        <div 
-                          onClick={() => setAcceptedTerms(!acceptedTerms)}
-                          className="w-5 h-5 rounded border border-black/20 flex items-center justify-center mt-0.5 transition-colors shrink-0 cursor-pointer"
-                          style={{ background: acceptedTerms ? 'rgb(0, 0, 0)' : 'transparent' }}
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          autoComplete="new-password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder="Password (min 6 characters)"
+                          className="apple-input cursor-target"
+                          style={{ width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '14px 16px', paddingRight: 44, color: '#000', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(0,0,0,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                         >
-                          {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-black/50 leading-relaxed font-normal">
-                            I agree to the{' '}
-                            <button 
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
-                              className="text-black hover:text-black/70 transition-colors"
-                            >
-                              Terms of Service
-                            </button>
-                            {', '}
-                            <button 
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
-                              className="text-black hover:text-black/70 transition-colors"
-                            >
-                              Privacy Policy
-                            </button>
-                            {', and '}
-                            <button 
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }}
-                              className="text-black hover:text-black/70 transition-colors"
-                            >
-                              Disclaimer
-                            </button>
-                            . I understand this is educational content only.
+                          {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
+                        </button>
+                      </div>
+
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="text"
+                          name="referralCode"
+                          value={formData.referralCode}
+                          onChange={handleChange}
+                          placeholder="BullMoney Affiliate Code (optional)"
+                          readOnly={!!referralAttribution.affiliateCode}
+                          className="apple-input cursor-target"
+                          style={{
+                            width: '100%',
+                            backgroundColor: referralAttribution.affiliateCode ? 'rgba(240,253,244,0.3)' : '#fff',
+                            border: referralAttribution.affiliateCode ? '1px solid rgba(34,197,94,0.4)' : '1px solid rgba(0,0,0,0.1)',
+                            borderRadius: 12,
+                            padding: '14px 16px',
+                            paddingRight: referralAttribution.affiliateCode ? 44 : 16,
+                            color: '#000',
+                            fontSize: 16,
+                            outline: 'none',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                        {referralAttribution.affiliateCode && (
+                          <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}>
+                            <Check style={{ width: 16, height: 16, color: '#16a34a' }} />
+                          </div>
+                        )}
+                        {referralAttribution.affiliateCode && (
+                          <p style={{ fontSize: 11, marginTop: 4, marginLeft: 4, color: 'rgba(22,163,74,0.7)' }}>
+                            Referred by {referralAttribution.affiliateName || referralAttribution.affiliateEmail || 'a BullMoney partner'}
                           </p>
+                        )}
+                      </div>
+
+                      {/* Terms checkbox - compact */}
+                      <div
+                        onClick={() => setAcceptedTerms(!acceptedTerms)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.02)', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.05)' }}
+                      >
+                        <div
+                          style={{ width: 18, height: 18, borderRadius: 4, border: '1px solid rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer', background: acceptedTerms ? '#000' : 'transparent' }}
+                        >
+                          {acceptedTerms && <Check style={{ width: 12, height: 12, color: '#fff' }} />}
                         </div>
+                        <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', lineHeight: 1.6, fontWeight: 400, flex: 1 }}>
+                          I agree to the{' '}
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModalTab('terms'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.7)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11 }}>Terms</button>
+                          {', '}
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModalTab('privacy'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.7)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11 }}>Privacy</button>
+                          {' & '}
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.7)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11 }}>Disclaimer</button>
+                        </p>
                       </div>
                     </div>
 
                     {submitError && (
-                      <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-xl border border-red-100 mt-4">
-                        <AlertCircle className="w-4 h-4 shrink-0" />
-                        <span className="text-xs font-normal">{submitError}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', backgroundColor: '#fef2f2', padding: 10, borderRadius: 12, border: '1px solid #fee2e2', marginTop: 12 }}>
+                        <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                        <span style={{ fontSize: 12, fontWeight: 400 }}>{submitError}</span>
                       </div>
                     )}
                   </StepCard>
-
-                  <button onClick={handleBack} className="mt-4 md:mt-5 flex items-center text-sm mx-auto transition-colors cursor-target text-white/50 hover:text-white/70 font-normal"> 
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Back
-                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -2314,20 +2572,111 @@ const StepCard = memo(({ number, number2, title, children, actions, className, i
   const useRed = typeof number2 === "number";
   const n = useRed ? number2 : number;
   return (
-    <div className={cn(
-      "group relative overflow-hidden rounded-3xl p-6 md:p-10 apple-card bg-white border border-black/[0.06] shadow-lg",
-      className
-    )}>
-      
-      <div className="flex items-center justify-between mb-6 md:mb-8 relative z-10">
-        <span className="inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-wider px-3 py-1.5 rounded-full bg-black/[0.03] border border-black/[0.06] text-black/40 font-normal">
-          Step {n} of 3
-        </span>
-      </div>
-      <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 relative z-10 text-black tracking-tight">{title}</h3>
-      <div className="flex-1 relative z-10">{children}</div>
-      {actions && <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-black/[0.06] relative z-10">{actions}</div>}
-    </div>
+    <motion.div
+      className={cn("apple-card", className)}
+      initial={{ opacity: 0, rotateX: 8, y: 40, scale: 0.92 }}
+      animate={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 20,
+        padding: '20px',
+        backgroundColor: '#fff',
+        border: '1px solid rgba(0,0,0,0.08)',
+        boxShadow: '0 4px 24px -4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
+        perspective: 1200,
+        transformStyle: 'preserve-3d' as any,
+      }}
+    >
+      {/* Subtle top-edge highlight for 3D depth */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)', zIndex: 20, pointerEvents: 'none' }} />
+
+      {/* Logo */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, rotateY: -20 }}
+        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+        transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, position: 'relative', zIndex: 10 }}
+      >
+        <img src="/IMG_2921.PNG" alt="BullMoney" className="icon-float" style={{ width: 40, height: 40, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))' }} />
+      </motion.div>
+
+      {/* Animated progress bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, position: 'relative', zIndex: 10 }}
+      >
+        <div style={{ display: 'flex', gap: 6, flex: 1 }}>
+          {[1, 2, 3].map((dot) => (
+            <div
+              key={dot}
+              style={{
+                height: 4,
+                borderRadius: 9999,
+                flex: 1,
+                backgroundColor: 'rgba(0,0,0,0.08)',
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+              {dot <= n && (
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.6, delay: 0.3 + dot * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: '#000',
+                    borderRadius: 9999,
+                    transformOrigin: 'left',
+                  }}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)', fontWeight: 500, letterSpacing: '0.02em' }}
+        >
+          {n}/3
+        </motion.span>
+      </motion.div>
+
+      <motion.h3
+        initial={{ opacity: 0, x: -12 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.25, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{ fontSize: 18, fontWeight: 600, marginBottom: 12, position: 'relative', zIndex: 10, color: '#000', letterSpacing: '-0.02em' }}
+      >
+        {title}
+      </motion.h3>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{ flex: 1, position: 'relative', zIndex: 10 }}
+      >
+        {children}
+      </motion.div>
+      {actions && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(0,0,0,0.06)', position: 'relative', zIndex: 10 }}
+        >
+          {actions}
+        </motion.div>
+      )}
+    </motion.div>
   );
 });
 StepCard.displayName = "StepCard";

@@ -859,6 +859,76 @@ export function welcomeEmail(email: string): { subject: string; html: string } {
 }
 
 // ============================================================================
+// TEMPLATE: AFFILIATE SIGNUP NOTIFICATION (Admin + Affiliate)
+// Sent when a new user signs up via affiliate QR/link attribution
+// ============================================================================
+export function affiliateSignupNotificationEmail(vars: {
+  newUserEmail: string;
+  mt5Id?: string | null;
+  referralCode?: string | null;
+  affiliateCode?: string | null;
+  affiliateEmail?: string | null;
+  affiliateName?: string | null;
+  source?: string | null;
+  medium?: string | null;
+  campaign?: string | null;
+}): { subject: string; html: string } {
+  const safe = (v: any) => String(v ?? '').trim();
+  const newUserEmail = safe(vars.newUserEmail);
+  const mt5Id = safe(vars.mt5Id);
+  const referralCode = safe(vars.referralCode);
+  const affiliateCode = safe(vars.affiliateCode);
+  const affiliateEmail = safe(vars.affiliateEmail);
+  const affiliateName = safe(vars.affiliateName);
+  const source = safe(vars.source);
+  const medium = safe(vars.medium);
+  const campaign = safe(vars.campaign);
+
+  const subjectCode = affiliateCode || referralCode || 'referral';
+  const subject = `New BullMoney Signup • ${subjectCode}`;
+
+  const content = `
+    <h2 style="color: ${BRAND_BLUE}; font-size: 20px; font-weight: 800; margin: 0 0 16px;">New signup tracked to an affiliate</h2>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="background-color: ${CARD_BG}; border: 1px solid ${BORDER_COLOR}; border-radius: 12px;">
+      <tr><td style="padding: 18px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 10px 0; color: #aaa; font-size: 13px;">New user email</td>
+            <td style="padding: 10px 0; color: #fff; font-size: 13px; font-weight: 700; text-align: right;">${newUserEmail || '—'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #aaa; font-size: 13px; border-top: 1px solid ${BORDER_COLOR};">MT5 ID</td>
+            <td style="padding: 10px 0; color: #fff; font-size: 13px; text-align: right; border-top: 1px solid ${BORDER_COLOR};">${mt5Id || '—'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #aaa; font-size: 13px; border-top: 1px solid ${BORDER_COLOR};">Referral code</td>
+            <td style="padding: 10px 0; color: #fff; font-size: 13px; text-align: right; border-top: 1px solid ${BORDER_COLOR};">${referralCode || affiliateCode || '—'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #aaa; font-size: 13px; border-top: 1px solid ${BORDER_COLOR};">Affiliate</td>
+            <td style="padding: 10px 0; color: #fff; font-size: 13px; text-align: right; border-top: 1px solid ${BORDER_COLOR};">${affiliateName || affiliateEmail || affiliateCode || '—'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #aaa; font-size: 13px; border-top: 1px solid ${BORDER_COLOR};">Attribution</td>
+            <td style="padding: 10px 0; color: #fff; font-size: 13px; text-align: right; border-top: 1px solid ${BORDER_COLOR};">${[source, medium, campaign].filter(Boolean).join(' / ') || '—'}</td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+
+    <p style="color: #888; font-size: 13px; line-height: 1.6; margin: 14px 0 0;">
+      This email is sent automatically when PageMode receives affiliate attribution from a QR code or referral link.
+    </p>
+  `;
+
+  return {
+    subject,
+    html: emailWrapper(content),
+  };
+}
+
+// ============================================================================
 // CRYPTO PAYMENT TEMPLATES - Used by crypto-payment API & admin hub
 // All templates support {{variable}} replacement for SQL-based editing
 // ============================================================================

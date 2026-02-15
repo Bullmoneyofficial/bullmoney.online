@@ -874,37 +874,112 @@ export function FPSCounter({
 
     let cancelled = false;
 
-    const runSpeedTest = async () => {
-      if (speedtestDisabledRef.current) return;
+    let pollInterval = 30000; // Start at 30s
+    let intervalId: ReturnType<typeof setTimeout> | null = null;
 
+    // Browser-based Cloudflare speed test fallback (works on mobile, apps, any env)
+    const runBrowserSpeedTest = async (): Promise<{ downMbps: number; upMbps: number; latency: number } | null> => {
       try {
-        const response = await fetch('/api/speedtest?quick=false');
-        
-        if (response.ok) {
-          const result = await response.json();
-          if (result?.available === false) {
-            speedtestDisabledRef.current = true;
-            return;
-          }
-          if (!cancelled && result && !result.error) {
-            setLatency(Math.round(result.latency ?? 0));
-            setDownloadSpeed(result.downMbps ?? 0);
-            setUploadSpeed(result.upMbps ?? 0);
-            return;
-          }
+        // Download test: 500KB payload
+        const downUrl = `https://speed.cloudflare.com/__down?bytes=500000&ts=${Date.now()}`;
+        const downStart = performance.now();
+        const downRes = await fetch(downUrl, { cache: 'no-store' });
+        const downBuf = await downRes.arrayBuffer();
+        const downElapsed = (performance.now() - downStart) / 1000;
+        const downMbps = Math.round((downBuf.byteLength / 1024 / 1024 * 8) / Math.max(downElapsed, 0.001) * 100) / 100;
+
+        // Upload test: 200KB payload
+        const upPayload = new Uint8Array(200_000);
+        const upUrl = `https://speed.cloudflare.com/__up?ts=${Date.now()}`;
+        const upStart = performance.now();
+        await fetch(upUrl, { method: 'POST', body: upPayload, cache: 'no-store' });
+        const upElapsed = (performance.now() - upStart) / 1000;
+        const upMbps = Math.round((200_000 / 1024 / 1024 * 8) / Math.max(upElapsed, 0.001) * 100) / 100;
+
+        // Latency: 3 pings
+        const pings: number[] = [];
+        for (let i = 0; i < 3; i++) {
+          const pingStart = performance.now();
+          await fetch(`https://speed.cloudflare.com/__down?bytes=64&ts=${Date.now()}-${i}`, { cache: 'no-store' });
+          pings.push(performance.now() - pingStart);
         }
-      } catch (error) {
-        // Ignore
+        const latency = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 0;
+
+        return { downMbps, upMbps, latency };
+      } catch {
+        return null;
       }
     };
 
+    const scheduleNext = () => {
+      if (cancelled) return;
+      intervalId = setTimeout(runSpeedTest, pollInterval);
+    };
+
+    const runSpeedTest = async () => {
+      if (speedtestDisabledRef.current || cancelled) return;
+
+      try {
+        const response = await fetch('/api/speedtest?quick=false');
+        const result = await response.json();
+
+        if (result?.available === false) {
+          // Server says API unavailable — try browser-based fallback directly
+          const browserResult = await runBrowserSpeedTest();
+          if (!cancelled && browserResult) {
+            setLatency(browserResult.latency);
+            setDownloadSpeed(browserResult.downMbps);
+            setUploadSpeed(browserResult.upMbps);
+            pollInterval = 60000; // Browser test is heavier, poll less often
+          }
+          scheduleNext();
+          return;
+        }
+
+        if (!response.ok || result?.error) {
+          // Server returned an error — try browser fallback before backing off
+          const browserResult = await runBrowserSpeedTest();
+          if (!cancelled && browserResult) {
+            setLatency(browserResult.latency);
+            setDownloadSpeed(browserResult.downMbps);
+            setUploadSpeed(browserResult.upMbps);
+            pollInterval = 60000;
+          } else {
+            const retryAfter = result?.retryAfter;
+            pollInterval = retryAfter ? retryAfter * 1000 : Math.min(pollInterval * 2, 5 * 60 * 1000);
+          }
+          scheduleNext();
+          return;
+        }
+
+        if (!cancelled && result) {
+          setLatency(Math.round(result.latency ?? 0));
+          setDownloadSpeed(result.downMbps ?? 0);
+          setUploadSpeed(result.upMbps ?? 0);
+          pollInterval = 30000; // Reset to normal interval on success
+        }
+      } catch (error) {
+        // Server API unreachable — use browser-based fallback
+        const browserResult = await runBrowserSpeedTest();
+        if (!cancelled && browserResult) {
+          setLatency(browserResult.latency);
+          setDownloadSpeed(browserResult.downMbps);
+          setUploadSpeed(browserResult.upMbps);
+          pollInterval = 60000;
+        } else {
+          pollInterval = Math.min(pollInterval * 2, 5 * 60 * 1000);
+        }
+      }
+
+      scheduleNext();
+    };
+
     const initialTimeout = setTimeout(runSpeedTest, 2000);
-    const interval = setInterval(runSpeedTest, 30000);
 
     return () => {
       cancelled = true;
       clearTimeout(initialTimeout);
-      clearInterval(interval);
+      if (intervalId) clearTimeout(intervalId);
     };
   }, [show]);
 

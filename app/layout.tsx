@@ -254,7 +254,7 @@ export default function RootLayout({
       :root{--app-vh:1vh;}
       html,body{background:#000000!important;}
       
-      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;transform-origin:50% 50%;}
+      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;background-color:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),background-color .55s cubic-bezier(.22,1,.36,1);overflow:hidden;will-change:opacity,transform,background-color;transform-origin:50% 50%;}
       /* Lock viewport while splash is active — overrides scroll fixes below */
       html:has(#bm-splash:not(.hide)),html:has(#bm-splash:not(.hide)) body{overflow:hidden!important;height:100%!important;position:static!important;}
       @supports not (selector(:has(*))){html:not(.bm-splash-done),html:not(.bm-splash-done) body{overflow:hidden!important;height:100%!important;}}
@@ -278,7 +278,7 @@ export default function RootLayout({
       #bm-splash .bm-sway-content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;}
 
       /* Logo container */
-      #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:162px;height:162px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-intro .7s cubic-bezier(.2,.8,.2,1) both;will-change:transform,opacity;}
+      #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:162px;height:162px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-intro .7s cubic-bezier(.2,.8,.2,1) both;will-change:transform,opacity;transition:width .45s cubic-bezier(.22,1,.36,1),height .45s cubic-bezier(.22,1,.36,1);}
       #bm-splash .bm-logo-wrap svg{width:100%;height:100%;filter:drop-shadow(0 0 20px rgba(0,0,0,0.08));}
 
       /* Title */
@@ -700,8 +700,15 @@ export default function RootLayout({
 
 
       /* === Splash Finale: logo grows to playing-card size, all else disappears === */
-      #bm-splash.bm-splash-finale{justify-content:center;align-items:center;}
-      #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:auto!important;transform:translateX(-15px)!important;}
+      #bm-splash.bm-splash-finale{justify-content:center;align-items:center;background:#0a0a0a;background-color:#0a0a0a;}
+      #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:transform!important;--bm-finale-scale:1;transform:translateX(-15px) scale(var(--bm-finale-scale))!important;transition:transform .8s cubic-bezier(.22,1,.36,1),width .8s cubic-bezier(.22,1,.36,1),height .8s cubic-bezier(.22,1,.36,1)!important;}
+      /* Use filter invert() so the inline SVG (black) can become white on dark bg (Safari-friendly) */
+      #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));}
+      /* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS */
+      #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+      #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}
+      /* Extra idle motion: spin + synced contrast/glow (doesn't fight wrapper transform/scale) */
+      #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{transform-origin:50% 50%;will-change:transform,filter;animation:bm-finale-spin 8s cubic-bezier(.4,0,.2,1) infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
       #bm-splash.bm-splash-finale .bm-title,
       #bm-splash.bm-splash-finale .bm-subtitle,
       #bm-splash.bm-splash-finale .bm-progress-wrap{animation:bm-finale-fadeout .35s cubic-bezier(.4,0,.2,1) forwards!important;pointer-events:none;}
@@ -711,12 +718,23 @@ export default function RootLayout({
 
       @keyframes bm-finale-fadeout{0%{opacity:1}100%{opacity:0;visibility:hidden}}
 
+      @keyframes bm-finale-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+      /* Smooth off-black↔off-white cycle with long dwell at endpoints */
+      @keyframes bm-finale-bg{0%,12%{background-color:#0a0a0a}30%{background-color:#222}50%{background-color:#777}70%{background-color:#ccc}88%,100%{background-color:#f2f2f2}}
+      @keyframes bm-finale-filter-contrast{
+        0%,12%{filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16));-webkit-filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16))}
+        30%{filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14));-webkit-filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14))}
+        50%{filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12));-webkit-filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12))}
+        70%{filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10));-webkit-filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10))}
+        88%,100%{filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12));-webkit-filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12))}
+      }
+
       @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9);will-change:transform}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
       @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
       @keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
       @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
 
-      @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
+      @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-logo-wrap svg,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
       @media(min-width:768px){#bm-splash .bm-logo-wrap{width:216px;height:216px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}\n      @media(min-width:768px){#bm-splash.bm-splash-finale .bm-logo-wrap{width:380px;height:380px;}}
         ` }} />
         {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}

@@ -246,9 +246,9 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                 <span className="text-[12px] font-semibold hidden sm:inline relative z-10">Manual</span>
               </button>
             )}
-            {/* Hero Mode Toggle - Store / Trader / Design */}
+            {/* Hero Mode Toggle - Store / Trader / Design (hidden on mobile) */}
             {heroMode && onHeroModeChange && (
-              <div className="inline-flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
+              <div className="hidden sm:inline-flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
                 {(['store', 'trader', 'design'] as const).map((mode) => (
                   <Link
                     key={mode}

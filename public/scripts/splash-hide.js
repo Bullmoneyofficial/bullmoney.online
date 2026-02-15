@@ -43,11 +43,11 @@
   var splashStartAt = Date.now();
   var finaleStarted = false;
   var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
-  var minVisibleMs = isInAppBrowser ? 800 : 400;
+  var minVisibleMs = isInAppBrowser ? 400 : 200;
   var mem = (navigator && navigator.deviceMemory) ? navigator.deviceMemory : 0;
   var lowMemory = mem > 0 && mem <= 4;
   var constrainedSplash = isInAppBrowser || lowMemory;
-  var maxSplashMs = constrainedSplash ? 6500 : 12000;
+  var maxSplashMs = constrainedSplash ? 4000 : 6000;
   var loadAudio = null;
   var interactionBound = false;
   var lifecycleBound = false;
@@ -213,14 +213,14 @@
     if (progressEl) progressEl.textContent = display + '%';
     if (barEl) barEl.style.width = visualProgress + '%';
 
-    // Trigger finale at 85%
-    if (visualProgress >= 85 && !finaleStarted) {
+    // Trigger finale at 75%
+    if (visualProgress >= 75 && !finaleStarted) {
       startFinale();
     }
 
     if (visualProgress >= 90) {
       if (!ninetyStallStart) ninetyStallStart = Date.now();
-      if (Date.now() - ninetyStallStart > 1600) {
+      if (Date.now() - ninetyStallStart > 800) {
         targetPct = 100;
       }
     } else {
@@ -469,27 +469,80 @@
     }
     
     // Grow logo from its current size to 1.75x, centered on screen
+    // NOTE: layout CSS owns position/size/transform with !important;
+    // we animate via a CSS variable so we don't fight the cascade.
     if (logoWrap) {
-      // Kill any running animation that would override our transform
+      // Kill any running intro animation
       logoWrap.style.animation = 'none';
-      logoWrap.style.willChange = 'auto';
-      // Center with inset:0 + margin:auto (bulletproof, no translate needed)
-      logoWrap.style.position = 'absolute';
-      logoWrap.style.top = '0';
-      logoWrap.style.left = '0';
-      logoWrap.style.right = '0';
-      logoWrap.style.bottom = '0';
-      logoWrap.style.margin = 'auto';
-      logoWrap.style.padding = '0';
-      logoWrap.style.zIndex = '100000';
-      logoWrap.style.width = '280px';
-      logoWrap.style.height = '280px';
-      logoWrap.style.transform = 'scale(1) translateX(-15px)';
-      // Force reflow
-      void logoWrap.offsetHeight;
-      // Slow grow across the 85→100 loading window (~1.5s)
-      logoWrap.style.transition = 'transform 1.5s cubic-bezier(.22,1,.36,1)';
-      logoWrap.style.transform = 'scale(1.75) translateX(-15px)';
+
+      // Prefer animating via CSS variable (lets layout CSS keep transform ownership),
+      // but provide a Safari-safe fallback by animating transform directly.
+      var supportsCssVars = false;
+      try {
+        supportsCssVars = !!(window.CSS && CSS.supports && CSS.supports('--bm-test: 0'));
+      } catch (e) {
+        supportsCssVars = false;
+      }
+
+      // Start at 1, then animate to 1.75
+      try {
+        if (supportsCssVars) {
+          logoWrap.style.setProperty('--bm-finale-scale', '1');
+          void logoWrap.offsetHeight;
+          logoWrap.style.setProperty('--bm-finale-scale', '1.75');
+        } else {
+          // Ensure we win over any stylesheet !important rules
+          logoWrap.style.setProperty('transition', 'transform 1.5s cubic-bezier(.22,1,.36,1)', 'important');
+          logoWrap.style.setProperty('transform', 'translateX(-15px) scale(1)', 'important');
+          void logoWrap.offsetHeight;
+          logoWrap.style.setProperty('transform', 'translateX(-15px) scale(1.75)', 'important');
+        }
+      } catch (e) {
+        // Fallback: if setProperty fails for any reason, do nothing.
+      }
+
+      // After the grow finishes, keep the logo subtly animating in its big state.
+      // Respect reduced motion.
+      try {
+        var prefersReduced = false;
+        if (window.matchMedia) {
+          prefersReduced = !!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        }
+        if (!prefersReduced) {
+          setTimeout(function() {
+            if (!splash || splash.classList.contains('hide')) return;
+            splash.classList.add('bm-splash-idle');
+
+            // Clear any existing timer (defensive)
+            try {
+              if (window.__BM_SPLASH_IDLE_TIMER__) clearInterval(window.__BM_SPLASH_IDLE_TIMER__);
+            } catch (e) {}
+
+            var up = false;
+            window.__BM_SPLASH_IDLE_TIMER__ = setInterval(function() {
+              if (!splash || splash.classList.contains('hide') || !logoWrap) {
+                try { clearInterval(window.__BM_SPLASH_IDLE_TIMER__); } catch (e) {}
+                window.__BM_SPLASH_IDLE_TIMER__ = null;
+                return;
+              }
+              up = !up;
+              // Small pulse around the final scale
+              try {
+                if (supportsCssVars) {
+                  logoWrap.style.setProperty('--bm-finale-scale', up ? '1.78' : '1.72');
+                } else {
+                  logoWrap.style.setProperty('transition', 'transform .9s cubic-bezier(.22,1,.36,1)', 'important');
+                  logoWrap.style.setProperty('transform', up ? 'translateX(-15px) scale(1.78)' : 'translateX(-15px) scale(1.72)', 'important');
+                }
+              } catch (e) {
+                // noop
+              }
+            }, 950);
+          }, 800);
+        }
+      } catch (e) {
+        // noop
+      }
     }
   }
 
@@ -510,6 +563,14 @@
     }
     caf(animFrame);
     clearInterval(stallWatchdog);
+    try {
+      if (window.__BM_SPLASH_IDLE_TIMER__) {
+        clearInterval(window.__BM_SPLASH_IDLE_TIMER__);
+        window.__BM_SPLASH_IDLE_TIMER__ = null;
+      }
+    } catch (e) {
+      // noop
+    }
     unbindInteractionSoundRetry();
     unbindLifecycleSoundRetry();
     splash.classList.add('hide');
@@ -549,7 +610,7 @@
     // Safety net: ensure exit even in constrained webviews
     setTimeout(function() {
       if (splash && !splash.classList.contains('hide')) startFinale();
-    }, constrainedSplash ? 7000 : 8000);
+    }, constrainedSplash ? 3500 : 5000);
 
     // Hard fail-safe in case of runtime errors or missing APIs
     hardFailTimer = setTimeout(forceHide, maxSplashMs);

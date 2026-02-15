@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
 import { encryptValue } from '@/lib/crypto-encryption';
+import { sendEmail } from '@/lib/email-service';
+import { welcomeEmail, affiliateSignupNotificationEmail } from '@/lib/email-templates';
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -76,6 +78,92 @@ export async function POST(request: NextRequest) {
 
     if (error || !recruit) {
       return NextResponse.json({ success: false, error: error?.message || 'Failed to create recruit' }, { status: 500 });
+    }
+
+    // ----------------------------------------------------------------------
+    // EMAILS
+    // - Always: welcome email to the new user
+    // - If affiliate attribution exists (QR/link): notify admin + affiliate
+    // Email failures should NOT block signup.
+    // ----------------------------------------------------------------------
+    try {
+      const { subject, html } = welcomeEmail(email);
+      await sendEmail({
+        to: email,
+        subject,
+        html,
+      });
+    } catch (err) {
+      console.error('[RecruitAuth] Welcome email failed:', err);
+    }
+
+    // Only send admin/affiliate notifications when the signup came with explicit attribution
+    // (QR/referral link flow sets referral_attribution; manual typed codes do not.)
+    const hasAttribution = Boolean(referralAttribution && (referralAttribution.affiliate_code || referralAttribution.affiliate_email || referralAttribution.affiliate_id));
+    if (hasAttribution) {
+      const ADMIN_NOTIFY_EMAIL = 'bullmoneytraders@gmail.com';
+      const attribAffiliateCode = String(referralAttribution?.affiliate_code || '').trim();
+      const attribAffiliateEmailRaw = String(referralAttribution?.affiliate_email || '').trim().toLowerCase();
+      const attribAffiliateName = String(referralAttribution?.affiliate_name || '').trim();
+      const attribSource = String(referralAttribution?.source || '').trim();
+      const attribMedium = String(referralAttribution?.medium || '').trim();
+      const attribCampaign = String(referralAttribution?.campaign || '').trim();
+
+      // Attempt to resolve affiliate email from DB if missing (using affiliate_code)
+      let resolvedAffiliateEmail = attribAffiliateEmailRaw;
+      if (!resolvedAffiliateEmail && attribAffiliateCode) {
+        try {
+          const { data: affiliateRow } = await supabase
+            .from('recruits')
+            .select('email')
+            .ilike('affiliate_code', attribAffiliateCode)
+            .maybeSingle();
+          const candidate = String((affiliateRow as any)?.email || '').trim().toLowerCase();
+          if (candidate) resolvedAffiliateEmail = candidate;
+        } catch (err) {
+          console.warn('[RecruitAuth] Could not resolve affiliate email from code:', err);
+        }
+      }
+
+      const notifyVars = {
+        newUserEmail: email,
+        mt5Id: mt5Id || recruit.mt5_id || null,
+        referralCode: referralCode || null,
+        affiliateCode: attribAffiliateCode || null,
+        affiliateEmail: resolvedAffiliateEmail || null,
+        affiliateName: attribAffiliateName || null,
+        source: attribSource || null,
+        medium: attribMedium || null,
+        campaign: attribCampaign || null,
+      };
+
+      // Admin notify
+      try {
+        const { subject, html } = affiliateSignupNotificationEmail(notifyVars);
+        await sendEmail({
+          to: ADMIN_NOTIFY_EMAIL,
+          subject,
+          html,
+          attachments: false,
+        });
+      } catch (err) {
+        console.error('[RecruitAuth] Admin affiliate-signup notify failed:', err);
+      }
+
+      // Affiliate notify (separate send to avoid exposing admin email)
+      if (resolvedAffiliateEmail && resolvedAffiliateEmail !== email) {
+        try {
+          const { subject, html } = affiliateSignupNotificationEmail(notifyVars);
+          await sendEmail({
+            to: resolvedAffiliateEmail,
+            subject,
+            html,
+            attachments: false,
+          });
+        } catch (err) {
+          console.error('[RecruitAuth] Affiliate signup notify failed:', err);
+        }
+      }
     }
 
     return NextResponse.json({ success: true, recruit });

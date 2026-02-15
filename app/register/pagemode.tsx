@@ -738,6 +738,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setSubmitError(null);
 
     try {
+      const hasAffiliateAttribution = Boolean(referralAttribution?.affiliateCode);
       const res = await fetch('/api/recruit-auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -746,7 +747,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           password: formData.password,
           mt5_id: formData.mt5Number,
           referred_by_code: formData.referralCode || null,
-          referral_attribution: formData.referralCode
+          referral_attribution: hasAffiliateAttribution
             ? {
                 affiliate_id: referralAttribution.affiliateId || null,
                 affiliate_name: referralAttribution.affiliateName || null,
@@ -1280,7 +1281,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             name="referralCode"
                             value={formData.referralCode}
                             onChange={handleChange}
-                            placeholder="Referral Code (Optional)"
+                            placeholder="BullMoney Affiliate Code (Optional)"
+                            readOnly={!!referralAttribution.affiliateCode}
                             className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-4 py-3.5 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
                           />
                         </div>
@@ -1288,7 +1290,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                         {referralAttribution.affiliateCode && (
                           <div className="mt-2.5 rounded-xl border border-[#e5e5ea] bg-[#f5f5f7] p-3">
-                            <p className="text-[10px] text-[#86868b] font-semibold">Referral auto-filled</p>
+                            <p className="text-[10px] text-[#86868b] font-semibold">Affiliate code auto-filled</p>
                             <div className="mt-1 grid grid-cols-1 gap-0.5 text-[10px] text-[#86868b]">
                               <p>Code: <span className="text-[#1d1d1f] font-medium">{referralAttribution.affiliateCode}</span></p>
                               {referralAttribution.affiliateName && (
