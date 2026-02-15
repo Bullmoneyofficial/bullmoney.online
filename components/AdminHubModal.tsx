@@ -35,6 +35,8 @@ import RewardsAdminPanel from "@/components/RewardsAdminPanel";
 import NewsletterMessagesPanel from "@/components/NewsletterMessagesPanel";
 import CryptoPaymentsAdminPanel from "@/components/CryptoPaymentsAdminPanel";
 import CryptoRefundsAdminPanel from "@/components/CryptoRefundsAdminPanel";
+import AffiliateQRPosterPanel from "@/components/admin/AffiliateQRPosterPanel";
+import AffiliateContentAdminPanel from "@/components/admin/AffiliateContentAdminPanel";
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // Generate a reasonably unique id when inserting rows from the client
@@ -277,7 +279,7 @@ export function AdminHubModal({
     "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store" | "crypto" | "crypto_refunds"
   >("products");
   const [tabsListOpen, setTabsListOpen] = useState(false);
-  const [affiliateView, setAffiliateView] = useState<"calculator" | "admin">("calculator");
+  const [affiliateView, setAffiliateView] = useState<"calculator" | "admin" | "qr-posters" | "content-editor">("calculator");
   const [storeView, setStoreView] = useState<"analytics" | "promos" | "rewards" | "messages">("analytics");
   const [busy, setBusy] = useState(false);
   const isSyncing = useRef(false);
@@ -2063,8 +2065,8 @@ export function AdminHubModal({
                     )}
                     {activeTab === "affiliate" && (
                       <div className="space-y-4">
-                        {/* Toggle between Calculator and Admin Panel */}
-                        <div className="flex gap-2 p-1 bg-slate-900/50 rounded-lg border border-slate-800 w-fit">
+                        {/* Toggle between Calculator, Admin Panel, and QR Posters */}
+                        <div className="flex gap-2 p-1 bg-slate-900/50 rounded-lg border border-slate-800 w-fit flex-wrap">
                           <button
                             onClick={() => setAffiliateView("calculator")}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -2085,14 +2087,33 @@ export function AdminHubModal({
                           >
                             Admin Panel
                           </button>
+                          <button
+                            onClick={() => setAffiliateView("qr-posters")}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              affiliateView === "qr-posters"
+                                ? "bg-white text-black"
+                                : "text-slate-400 hover:text-slate-300"
+                            }`}
+                          >
+                            QR Posters
+                          </button>
+                          <button
+                            onClick={() => setAffiliateView("content-editor")}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              affiliateView === "content-editor"
+                                ? "bg-white text-black"
+                                : "text-slate-400 hover:text-slate-300"
+                            }`}
+                          >
+                            Content Editor
+                          </button>
                         </div>
 
                         {/* Content */}
-                        {affiliateView === "calculator" ? (
-                          <AdminAffiliateCalculator />
-                        ) : (
-                          <AffiliateAdminPanel />
-                        )}
+                        {affiliateView === "calculator" && <AdminAffiliateCalculator />}
+                        {affiliateView === "admin" && <AffiliateAdminPanel />}
+                        {affiliateView === "qr-posters" && <AffiliateQRPosterPanel />}
+                        {affiliateView === "content-editor" && <AffiliateContentAdminPanel />}
                       </div>
                     )}
                   </div>

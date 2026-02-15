@@ -17,6 +17,9 @@ import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 import { ShopProvider } from "@/components/ShopContext";
 
+// ── PERFORMANCE PROVIDERS (critical for mobile phone heat prevention) ─────
+import { GlobalAnimationPauseProvider } from "@/components/GlobalAnimationPauseProvider";
+
 // FPSCounter: dev-only, loaded lazily to avoid compiling PerformanceProvider.tsx (997 lines)
 // + deviceMonitor.ts (2737 lines) + browserDetection + safariOptimizations = ~4000 lines
 const FPSCounter = dynamic(
@@ -89,32 +92,39 @@ export function AppProviders({ children }: AppProvidersProps) {
       enableSystem
       disableTransitionOnChange
     >
-      <ThemesProvider>
-        <GlobalThemeProvider>
-          <ViewportStateProvider>
-            <MobileMenuProvider>
-              <RecruitAuthProvider>
-                <AudioSettingsProvider>
-                  <StudioProvider>
-                    <ShopProvider>
-                      {/* SmartScreensaver deferred to idle time (ssr: false prevents hydration mismatch) */}
-                      {showDeferred ? (
-                        <SmartScreensaverProvider>
-                          {children}
-                          {/* Dev FPS overlay */}
-                          <FPSCounter show={process.env.NODE_ENV === 'development'} position="bottom-right" />
-                        </SmartScreensaverProvider>
-                      ) : (
-                        children
-                      )}
-                    </ShopProvider>
-                  </StudioProvider>
-                </AudioSettingsProvider>
-              </RecruitAuthProvider>
-            </MobileMenuProvider>
-          </ViewportStateProvider>
-        </GlobalThemeProvider>
-      </ThemesProvider>
+      {/* GlobalAnimationPauseProvider: CRITICAL for mobile phone heat prevention
+          - Pauses ALL animations when tab is hidden
+          - Reduces animation speed on mobile
+          - Detects thermal throttling and responds
+      */}
+      <GlobalAnimationPauseProvider idleTimeout={60000}>
+        <ThemesProvider>
+          <GlobalThemeProvider>
+            <ViewportStateProvider>
+              <MobileMenuProvider>
+                <RecruitAuthProvider>
+                  <AudioSettingsProvider>
+                    <StudioProvider>
+                      <ShopProvider>
+                        {/* SmartScreensaver deferred to idle time (ssr: false prevents hydration mismatch) */}
+                        {showDeferred ? (
+                          <SmartScreensaverProvider>
+                            {children}
+                            {/* Dev FPS overlay */}
+                            <FPSCounter show={process.env.NODE_ENV === 'development'} position="bottom-right" />
+                          </SmartScreensaverProvider>
+                        ) : (
+                          children
+                        )}
+                      </ShopProvider>
+                    </StudioProvider>
+                  </AudioSettingsProvider>
+                </RecruitAuthProvider>
+              </MobileMenuProvider>
+            </ViewportStateProvider>
+          </GlobalThemeProvider>
+        </ThemesProvider>
+      </GlobalAnimationPauseProvider>
     </ThemeProvider>
   );
 }

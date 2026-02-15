@@ -17,19 +17,36 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import AffiliateAdminPanel from "@/app/recruit/AffiliateAdminPanel";
+import AffiliateContentAdminPanel from "@/components/admin/AffiliateContentAdminPanel";
 import ProfileManger, { type AffiliateProfileForm } from "@/app/recruit/ProfileManger";
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
+import { useAffiliateDashboardContent, type AffiliateTier } from '@/hooks/useAffiliateDashboardContent';
 
 // --- SUPABASE SETUP ---
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!; 
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Admin email normalization helper (matches AdminHubModal)
+const normalizeEmail = (email?: string | null) => (email || "").trim().toLowerCase();
+
+// Main admin email (same as AdminHub)
+const MAIN_ADMIN_EMAIL = normalizeEmail(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
+
+// Affiliate-specific admin emails
 const AFFILIATE_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_AFFILIATE_ADMIN_EMAILS || "")
   .split(",")
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
+
+// Combined check: is this email an admin?
+const isAdminEmail = (email?: string | null): boolean => {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return false;
+  // Check main admin OR affiliate admin list
+  return normalized === MAIN_ADMIN_EMAIL || AFFILIATE_ADMIN_EMAILS.includes(normalized);
+};
 
 const STAFF_GROUP_LINK = 'https://t.me/+aKB315PRM5A2OGI0';
 const STAFF_GROUP_CHAT_ID = process.env.NEXT_PUBLIC_TELEGRAM_STAFF_CHAT_ID || '';
@@ -58,18 +75,7 @@ interface AffiliateEarnings {
   monthly_lots: number;
 }
 
-interface AffiliateTier {
-  name: string;
-  minTraders: number;
-  maxTraders: number | null;
-  commissionPercent: number;
-  xmRatePerLot: number;
-  vantageRatePerLot: number;
-  bonusMultiplier: number;
-  color: string;
-  icon: string;
-  perks: string[];
-}
+// AffiliateTier type is now imported from useAffiliateDashboardContent hook
 
 interface DashboardStats {
   total: number;
@@ -115,41 +121,8 @@ interface TelegramFeedMessage {
 
 type DashboardTabId = 'overview' | 'recruits' | 'earnings' | 'analytics' | 'admin';
 
-// --- TIER DEFINITIONS ---
-const AFFILIATE_TIERS: AffiliateTier[] = [
-  { name: 'Starter', minTraders: 1, maxTraders: 4, commissionPercent: 5, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.0, color: '#000000', icon: 'target', perks: ['Basic dashboard access', 'Monthly payouts', 'Email support'] },
-  { name: 'Bronze', minTraders: 5, maxTraders: 14, commissionPercent: 10, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.1, color: '#cd7f32', icon: 'award', perks: ['Priority email support', 'Weekly performance reports', 'Custom referral link'] },
-  { name: 'Silver', minTraders: 15, maxTraders: 29, commissionPercent: 15, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.2, color: '#c0c0c0', icon: 'star', perks: ['Telegram support', 'Marketing materials', 'Bi-weekly payouts'] },
-  { name: 'Gold', minTraders: 30, maxTraders: 49, commissionPercent: 20, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.35, color: '#ffd700', icon: 'trophy', perks: ['1-on-1 support calls', 'Co-branded landing pages', 'Weekly payouts'] },
-  { name: 'Elite', minTraders: 50, maxTraders: null, commissionPercent: 25, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.5, color: '#000000', icon: 'sparkles', perks: ['Dedicated account manager', 'Custom commission rates', 'Instant payouts', 'Exclusive bonuses'] },
-];
-
-const TIER_WEEKLY_TASKS: Record<string, Array<{ title: string; timeMinutes: number; whyItMatters: string }>> = {
-  Starter: [
-    { title: 'Repost 1 BullMoney post on your story/feed', timeMinutes: 10, whyItMatters: 'Keeps your audience warm and reminds them you are active.' },
-    { title: 'Invite 1 trader friend to register with your link', timeMinutes: 20, whyItMatters: 'One direct invite each week compounds fast over time.' },
-  ],
-  Bronze: [
-    { title: 'Repost 2 BullMoney posts with your own short caption', timeMinutes: 25, whyItMatters: 'Personal captions convert better than plain reposts.' },
-    { title: 'DM 3 warm contacts who trade or want to learn', timeMinutes: 35, whyItMatters: 'Warm outreach usually gives the highest reply rate.' },
-    { title: 'Follow up with last week leads', timeMinutes: 20, whyItMatters: 'Most signups happen after follow-up, not first message.' },
-  ],
-  Silver: [
-    { title: 'Publish 1 simple market insight post + referral CTA', timeMinutes: 45, whyItMatters: 'Educational posts build trust and inbound leads.' },
-    { title: 'Host 1 quick Q&A in Telegram/Instagram stories', timeMinutes: 30, whyItMatters: 'Live interaction shortens the trust cycle.' },
-    { title: 'Recruit 1 qualified trader and help them connect MT5', timeMinutes: 60, whyItMatters: 'Activation quality matters more than raw signups.' },
-  ],
-  Gold: [
-    { title: 'Post 2 educational clips (entry basics or risk tips)', timeMinutes: 90, whyItMatters: 'Video content drives stronger long-term growth.' },
-    { title: 'Run 1 small networking session with trader friends', timeMinutes: 60, whyItMatters: 'Group conversations produce multiple referrals at once.' },
-    { title: 'Review analytics tab and optimize your best channel', timeMinutes: 30, whyItMatters: 'Data-led tweaks can increase conversions quickly.' },
-  ],
-  Elite: [
-    { title: 'Build a weekly content sequence (3-post funnel)', timeMinutes: 90, whyItMatters: 'A repeatable funnel scales without constant manual effort.' },
-    { title: 'Mentor 1 newer affiliate and co-promote together', timeMinutes: 60, whyItMatters: 'Partnership growth creates new audience overlap.' },
-    { title: 'Audit top leads and set a next-step action for each', timeMinutes: 45, whyItMatters: 'Systematic follow-up protects revenue opportunities.' },
-  ],
-};
+// --- TIER DEFINITIONS: Now loaded dynamically from useAffiliateDashboardContent hook ---
+// See /hooks/useAffiliateDashboardContent.ts for the data source
 
 // --- HELPERS ---
 const maskEmail = (email: string) => {
@@ -190,23 +163,7 @@ const formatNumber = (num: number, decimals = 2) => {
   }).format(num);
 };
 
-const getTierFromActive = (activeCount: number): AffiliateTier => {
-  for (let i = AFFILIATE_TIERS.length - 1; i >= 0; i--) {
-    if (activeCount >= AFFILIATE_TIERS[i].minTraders) {
-      return AFFILIATE_TIERS[i];
-    }
-  }
-  return AFFILIATE_TIERS[0];
-};
-
-const getNextTier = (activeCount: number): AffiliateTier | null => {
-  const currentTier = getTierFromActive(activeCount);
-  const currentIndex = AFFILIATE_TIERS.findIndex(t => t.name === currentTier.name);
-  if (currentIndex < AFFILIATE_TIERS.length - 1) {
-    return AFFILIATE_TIERS[currentIndex + 1];
-  }
-  return null;
-};
+// getTierFromActive, getNextTier, getProgressToNextTier now come from useAffiliateDashboardContent hook
 
 const getTierIcon = (iconName: string): React.ElementType => {
   const icons: Record<string, React.ElementType> = {
@@ -217,18 +174,6 @@ const getTierIcon = (iconName: string): React.ElementType => {
     sparkles: Sparkles,
   };
   return icons[iconName] || Target;
-};
-
-const getProgressToNextTier = (activeCount: number) => {
-  const currentTier = getTierFromActive(activeCount);
-  const nextTier = getNextTier(activeCount);
-  
-  if (!nextTier) return 100; // Already at Elite
-  
-  const tradersInCurrentTier = activeCount - currentTier.minTraders;
-  const tradersNeededForNext = nextTier.minTraders - currentTier.minTraders;
-  
-  return Math.min((tradersInCurrentTier / tradersNeededForNext) * 100, 100);
 };
 
 const getIsoWeekKey = () => {
@@ -265,6 +210,7 @@ export default function AffiliateRecruitsDashboard({
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showTutorial, setShowTutorial] = useState(false);
   const [showProfileManager, setShowProfileManager] = useState(false);
+  const [showAdminContentEditor, setShowAdminContentEditor] = useState(false);
   const [tutorialIndex, setTutorialIndex] = useState(0);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileForm, setProfileForm] = useState<AffiliateProfileForm>({
@@ -308,6 +254,25 @@ export default function AffiliateRecruitsDashboard({
   const [weeklyTaskChecks, setWeeklyTaskChecks] = useState<Record<string, boolean>>({});
   const [staffMessages, setStaffMessages] = useState<TelegramFeedMessage[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
+  const [isStaffFeedExpanded, setIsStaffFeedExpanded] = useState(false);
+
+  // --- DYNAMIC CONTENT FROM DATABASE ---
+  const {
+    content: dashboardContent,
+    tiers: AFFILIATE_TIERS,
+    weeklyTasks: TIER_WEEKLY_TASKS,
+    tips: affiliateTips,
+    faqItems: affiliateFaq,
+    getTierFromActive,
+    getNextTier,
+    getProgressToNextTier,
+    showQrCode,
+    showTasks,
+    showTips,
+    showLeaderboard,
+    showTelegramFeed,
+    loading: contentLoading,
+  } = useAffiliateDashboardContent();
   const [staffError, setStaffError] = useState<string | null>(null);
 
   // Default to card view on mobile for better UX
@@ -377,9 +342,9 @@ export default function AffiliateRecruitsDashboard({
   const isDevMode = process.env.NODE_ENV !== 'production';
   const authBypassed = isDevMode && skipAuthInDev;
 
-  const currentTier = useMemo(() => getTierFromActive(stats.active), [stats.active]);
-  const nextTier = useMemo(() => getNextTier(stats.active), [stats.active]);
-  const tierProgress = useMemo(() => getProgressToNextTier(stats.active), [stats.active]);
+  const currentTier = useMemo(() => getTierFromActive(stats.active), [stats.active, getTierFromActive]);
+  const nextTier = useMemo(() => getNextTier(stats.active), [stats.active, getNextTier]);
+  const tierProgress = useMemo(() => getProgressToNextTier(stats.active), [stats.active, getProgressToNextTier]);
   const currentMonthLabel = useMemo(
     () => new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date()),
     []
@@ -417,7 +382,7 @@ export default function AffiliateRecruitsDashboard({
   }, []);
 
   const currentWeekKey = useMemo(() => getIsoWeekKey(), []);
-  const currentTierTasks = useMemo(() => TIER_WEEKLY_TASKS[currentTier.name] || [], [currentTier.name]);
+  const currentTierTasks = useMemo(() => TIER_WEEKLY_TASKS[currentTier.name] || [], [currentTier.name, TIER_WEEKLY_TASKS]);
   const weeklyTaskStorageKey = useMemo(() => {
     if (!affiliateUserId) return null;
     return `affiliate-weekly-tasks:${affiliateUserId}:${currentWeekKey}`;
@@ -876,21 +841,65 @@ export default function AffiliateRecruitsDashboard({
     };
   }, [affiliateUserId, myTrackingCode]);
 
+  // Admin check - matches AdminHubModal logic (pagemode + Supabase auth + isAdmin flag)
   useEffect(() => {
-    try {
-      const savedSession = localStorage.getItem("bullmoney_session");
-      if (!savedSession) {
-        setIsAffiliateAdmin(false);
-        return;
+    let mounted = true;
+    
+    const checkAdmin = async () => {
+      // Check 1: Pagemode session (localStorage)
+      try {
+        const raw = localStorage.getItem("bullmoney_session");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const email = normalizeEmail(parsed?.email);
+          const isAdminFlag = Boolean(parsed?.isAdmin);
+          
+          // If pagemode session has admin flag OR email is in admin list
+          if (isAdminFlag || isAdminEmail(email)) {
+            if (mounted) setIsAffiliateAdmin(true);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Pagemode session parse error:", err);
       }
-
-      const session = JSON.parse(savedSession);
-      const email = String(session?.email || "").toLowerCase();
-      setIsAffiliateAdmin(AFFILIATE_ADMIN_EMAILS.includes(email));
-    } catch (err) {
-      console.error("Admin allowlist check failed:", err);
-      setIsAffiliateAdmin(false);
-    }
+      
+      // Check 2: Supabase auth session
+      try {
+        const { data } = await supabase.auth.getSession();
+        const supabaseEmail = data?.session?.user?.email;
+        if (isAdminEmail(supabaseEmail)) {
+          if (mounted) setIsAffiliateAdmin(true);
+          return;
+        }
+      } catch (err) {
+        console.error("Supabase auth check error:", err);
+      }
+      
+      // Not admin
+      if (mounted) setIsAffiliateAdmin(false);
+    };
+    
+    checkAdmin();
+    
+    // Listen for auth state changes
+    const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isAdminEmail(session?.user?.email)) {
+        if (mounted) setIsAffiliateAdmin(true);
+      }
+    });
+    
+    // Listen for storage changes (pagemode session updates)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "bullmoney_session") checkAdmin();
+    };
+    window.addEventListener("storage", onStorage);
+    
+    return () => {
+      mounted = false;
+      authSub?.subscription?.unsubscribe();
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   // Helper function for secure clipboard copy with fallback
@@ -1890,6 +1899,15 @@ export default function AffiliateRecruitsDashboard({
               >
                 <Settings className="w-4 h-4" /> {showProfileManager ? 'Hide Profile' : 'Profile Manager'}
               </button>
+              {isAffiliateAdmin && (
+                <button
+                  onClick={() => setShowAdminContentEditor(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all bg-amber-500 hover:bg-amber-400 text-black border border-amber-600"
+                  title="Edit Dashboard Content"
+                >
+                  <Shield className="w-4 h-4" /> Admin
+                </button>
+              )}
             </div>
           </div>
 
@@ -1932,6 +1950,15 @@ export default function AffiliateRecruitsDashboard({
               >
                 <Settings className="w-4 h-4" />
               </button>
+              {isAffiliateAdmin && (
+                <button
+                  onClick={() => setShowAdminContentEditor(true)}
+                  className="p-2 rounded-lg transition-all bg-amber-500 text-black border border-amber-600 hover:bg-amber-400"
+                  title="Admin: Edit Dashboard"
+                >
+                  <Shield className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -1941,116 +1968,6 @@ export default function AffiliateRecruitsDashboard({
             {currentTier.name} Partner
           </div>
         </header>
-
-        <section className="mb-6 rounded-2xl border border-black/15 bg-white p-2 md:p-4">
-          {/* Desktop Layout */}
-          <div className="hidden md:block">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-              <div>
-                <h3 className="text-base font-bold text-black">Staff Group Updates</h3>
-                <p className="text-xs text-black/60">Live messages from BullMoney staff Telegram</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => loadStaffFeed(false)}
-                  className="px-3 py-2 rounded-lg text-sm font-semibold bg-white text-black hover:bg-black/5 border border-black/20"
-                  style={{ backgroundColor: '#ffffff', color: '#000000' }}
-                >
-                  Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={() => window.open(STAFF_GROUP_LINK, '_blank', 'noopener,noreferrer')}
-                  className="px-3 py-2 rounded-lg text-sm font-semibold bg-white text-black hover:bg-black/5 border border-black/20"
-                  style={{ backgroundColor: '#ffffff', color: '#000000' }}
-                >
-                  Open Group
-                </button>
-              </div>
-            </div>
-
-            {staffLoading && staffMessages.length === 0 && (
-              <div className="rounded-xl border border-black/10 bg-white p-3 text-xs text-black/60">Loading staff messages...</div>
-            )}
-
-            {staffError && staffMessages.length === 0 && (
-              <div className="rounded-xl border border-black/15 bg-white p-3 text-xs text-black/70">
-                Could not load staff feed. If this persists, add the staff group chat id to `NEXT_PUBLIC_TELEGRAM_STAFF_CHAT_ID`.
-              </div>
-            )}
-
-            {!staffLoading && staffMessages.length === 0 && !staffError && (
-              <div className="rounded-xl border border-black/10 bg-white p-3 text-xs text-black/60">
-                No recent staff messages yet.
-              </div>
-            )}
-
-            {staffMessages.length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
-                {staffMessages.slice(0, 6).map((message) => (
-                  <article key={message.id} className="rounded-xl border border-black/12 bg-white p-3">
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <p className="text-xs font-semibold text-black truncate">{message.author || 'Staff'}</p>
-                      <p className="text-[10px] text-black/50 shrink-0">{message.formattedTime}</p>
-                    </div>
-                    <p className="text-xs text-black/80 leading-relaxed line-clamp-3">{message.text || '(Media message)'}</p>
-                    {message.hasMedia && (
-                      <p className="mt-1.5 text-[10px] font-medium text-black/55 uppercase tracking-wide">{message.mediaType || 'media'}</p>
-                    )}
-                  </article>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Banner Layout */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div>
-                <h3 className="text-xs font-bold text-black">Staff Updates</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => window.open(STAFF_GROUP_LINK, '_blank', 'noopener,noreferrer')}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-black hover:bg-black/5 border border-black/20 shrink-0"
-                style={{ backgroundColor: '#ffffff', color: '#000000' }}
-              >
-                Join
-              </button>
-            </div>
-
-            {staffLoading && staffMessages.length === 0 && (
-              <div className="rounded-lg border border-black/10 bg-black/2 p-2 text-[11px] text-black/60">Loading...</div>
-            )}
-
-            {staffError && staffMessages.length === 0 && (
-              <div className="rounded-lg border border-black/15 bg-black/2 p-2 text-[11px] text-black/70">
-                Could not load messages
-              </div>
-            )}
-
-            {!staffLoading && staffMessages.length === 0 && !staffError && (
-              <div className="rounded-lg border border-black/10 bg-black/2 p-2 text-[11px] text-black/60">
-                No recent messages
-              </div>
-            )}
-
-            {staffMessages.length > 0 && (
-              <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                {staffMessages.slice(0, 3).map((message) => (
-                  <article key={message.id} className="rounded-lg border border-black/12 bg-black/3 p-2">
-                    <div className="flex items-start justify-between gap-1.5">
-                      <p className="text-[11px] font-semibold text-black truncate flex-1">{message.author || 'Staff'}</p>
-                      <p className="text-[9px] text-black/50 shrink-0">{message.formattedTime}</p>
-                    </div>
-                    <p className="text-[11px] text-black/80 leading-snug line-clamp-2 mt-0.5">{message.text || '(Media message)'}</p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
 
         {showTutorial && (
           <div className="mb-6 rounded-2xl border border-black/15 bg-white p-4 md:p-5 space-y-4">
@@ -2671,6 +2588,138 @@ export default function AffiliateRecruitsDashboard({
                       Next unlock: <span className="font-semibold text-black">{nextTier.name}</span> ({nextTier.commissionPercent}%)
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* PAYMENT SETUP - Skrill */}
+              <div className="bg-white border border-black/10 rounded-2xl overflow-hidden">
+                <div className="p-4 md:p-5 border-b border-black/5 flex items-start gap-3">
+                  <div className={cn(
+                    "p-2.5 rounded-xl shrink-0",
+                    isXMUser ? "bg-red-500/10 text-red-400" : "bg-purple-500/10 text-purple-500"
+                  )}>
+                    <Wallet className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-black">Payment Setup</h3>
+                    <p className="text-xs text-black/50 mt-0.5">Set up Skrill to receive your affiliate commissions</p>
+                  </div>
+                </div>
+
+                <div className="p-4 md:p-5 space-y-4">
+                  {/* Why Skrill */}
+                  <div className="bg-linear-to-br from-purple-500/5 to-pink-500/5 rounded-xl p-4 border border-purple-500/10">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
+                          <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#8B2B8B"/>
+                          <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#8B2B8B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-black text-sm">Why Skrill?</h4>
+                        <p className="text-xs text-black/60 mt-1 leading-relaxed">
+                          Skrill is our preferred payment method for fast, secure international transfers. 
+                          No bank hassles, low fees, and instant access to your funds worldwide.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Setup Steps */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-black">Quick Setup (2 mins)</h4>
+                    <div className="grid gap-2.5">
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-black/2 border border-black/5">
+                        <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-white text-xs font-bold shrink-0">1</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-black">Create a Skrill Account</p>
+                          <p className="text-xs text-black/50 mt-0.5">Sign up free and verify your email</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-black/2 border border-black/5">
+                        <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-white text-xs font-bold shrink-0">2</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-black">Verify Your Identity</p>
+                          <p className="text-xs text-black/50 mt-0.5">Upload ID for full account access</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-black/2 border border-black/5">
+                        <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-white text-xs font-bold shrink-0">3</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-black">Share Your Skrill Email</p>
+                          <p className="text-xs text-black/50 mt-0.5">Update your profile with your Skrill email to receive payments</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Download Apps */}
+                  <div className="pt-3 border-t border-black/5">
+                    <h4 className="text-sm font-semibold text-black mb-3">Download Skrill App</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <a
+                        href="https://apps.apple.com/app/skrill/id311462091"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-xl border border-black/10 bg-white hover:bg-black/5 transition-colors group"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                          <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="currentColor">
+                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-black/50 uppercase tracking-wide">Download on the</p>
+                          <p className="text-sm font-semibold text-black">App Store</p>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-black/30 group-hover:text-black/60 transition-colors shrink-0" />
+                      </a>
+
+                      <a
+                        href="https://play.google.com/store/apps/details?id=com.skrill.android.wallet"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-xl border border-black/10 bg-white hover:bg-black/5 transition-colors group"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                          <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="currentColor">
+                            <path d="M3 20.5v-17c0-.83.67-1.5 1.5-1.5h15c.83 0 1.5.67 1.5 1.5v17c0 .83-.67 1.5-1.5 1.5h-15c-.83 0-1.5-.67-1.5-1.5zm5.5-2.5l7-6-7-6v12z"/>
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-black/50 uppercase tracking-wide">Get it on</p>
+                          <p className="text-sm font-semibold text-black">Google Play</p>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-black/30 group-hover:text-black/60 transition-colors shrink-0" />
+                      </a>
+
+                      <a
+                        href="https://www.skrill.com/en/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-xl border border-black/10 bg-white hover:bg-black/5 transition-colors group"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-linear-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                          <ExternalLink className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-black/50 uppercase tracking-wide">Sign up at</p>
+                          <p className="text-sm font-semibold text-black">Skrill.com</p>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-black/30 group-hover:text-black/60 transition-colors shrink-0" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Tip */}
+                  <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <Bell className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-700 leading-relaxed">
+                      <span className="font-semibold">Pro tip:</span> Use the same email for Skrill that you used to sign up. 
+                      This makes payout matching instant and avoids delays.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -3610,6 +3659,48 @@ export default function AffiliateRecruitsDashboard({
                     Close
                   </button>
                 </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Content Editor Modal */}
+      <AnimatePresence>
+        {showAdminContentEditor && isAffiliateAdmin && (
+          <div className="fixed inset-0 z-[110] flex items-start justify-center overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAdminContentEditor(false)}
+              className="fixed inset-0 bg-black/90 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              className="relative w-full max-w-6xl my-4 mx-4 bg-gray-950 rounded-2xl border border-gray-800 shadow-2xl overflow-hidden"
+            >
+              <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-gray-800 bg-gray-950/95 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Admin: Dashboard Content Editor</h2>
+                    <p className="text-xs text-gray-400">Edit text, tiers, tasks, tips, FAQ and feature toggles for all affiliates</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAdminContentEditor(false)}
+                  className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4 max-h-[85vh] overflow-y-auto">
+                <AffiliateContentAdminPanel />
+              </div>
             </motion.div>
           </div>
         )}

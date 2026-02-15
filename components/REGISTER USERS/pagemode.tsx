@@ -22,6 +22,9 @@ import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "fram
 import { cn } from "@/lib/utils";
 import { persistSession } from '@/lib/sessionPersistence';
 
+// --- THERMAL OPTIMIZATION (prevent phone overheating) ---
+import { getGlobalThermalState } from '@/hooks/useThermalOptimization';
+
 // --- UNIFIED SHIMMER SYSTEM ---
 import { ShimmerLine, ShimmerBorder, ShimmerSpinner, ShimmerRadialGlow } from '@/components/ui/UnifiedShimmer';
 
@@ -113,8 +116,24 @@ const isLowMemoryDevice = (): boolean => {
   );
 };
 
+// =============================================================================
+// THERMAL-AWARE QUALITY HELPERS (prevent phone overheating)
+// Everything ALWAYS renders - just at reduced quality when device is hot
+// =============================================================================
+function getThermalQualityMultiplier(): number {
+  const state = getGlobalThermalState();
+  if (!state.isPageVisible) return 0.3;
+  switch (state.thermalLevel) {
+    case 'critical': return 0.4;
+    case 'hot': return 0.6;
+    case 'warm': return 0.8;
+    default: return 1.0;
+  }
+}
+
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (MOBILE) ---
 // Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
+// THERMAL-AWARE: Reduces canvas quality when device is hot
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const runtimeProfile = useMemo(() => getRuntimeProfile(), []);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -233,7 +252,26 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     setIsLoaded(true);
     setHasError(false);
     setLoadTimeout(false);
-  }, []);
+    
+    // THERMAL-AWARE: Reduce canvas resolution based on device heat
+    // Always renders but at reduced quality when device is warm/hot
+    if (splineApp) {
+      try {
+        const canvas = splineApp.canvas as HTMLCanvasElement | undefined;
+        if (canvas) {
+          const thermalMultiplier = getThermalQualityMultiplier();
+          const baseFactor = runtimeProfile.isLowMemory ? 0.5 : 0.7;
+          const scaleFactor = Math.max(0.3, baseFactor * thermalMultiplier);
+          const w = Math.round(canvas.clientWidth * scaleFactor);
+          const h = Math.round(canvas.clientHeight * scaleFactor);
+          splineApp.setSize(w, h);
+          console.log(`[WelcomeSpline] Thermal-adjusted canvas to ${w}x${h} (${Math.round(scaleFactor * 100)}% quality)`);
+        }
+      } catch (e) {
+        console.warn('[WelcomeSpline] Could not reduce canvas size:', e);
+      }
+    }
+  }, [runtimeProfile.isLowMemory]);
 
   const handleError = useCallback((error: any) => {
     console.error('[WelcomeSpline] Load error:', error);

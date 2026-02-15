@@ -354,6 +354,7 @@ export const GridScan: React.FC<GridScanProps> = ({
 
   const [modelsReady, setModelsReady] = useState(false);
   const [uiFaceActive, setUiFaceActive] = useState(false);
+  const [textOpacity, setTextOpacity] = useState(0);
 
   const lookTarget = useRef(new Vector2(0, 0));
   const tiltTarget = useRef(0);
@@ -365,6 +366,56 @@ export const GridScan: React.FC<GridScanProps> = ({
   const tiltVel = useRef(0);
   const yawCurrent = useRef(0);
   const yawVel = useRef(0);
+
+  // Track scan phase for text overlay - opacity follows the scan light
+  useEffect(() => {
+    const duration = Math.max(0.05, scanDuration);
+    const delay = Math.max(0.0, scanDelay);
+    const cycle = duration + delay;
+    const startTime = performance.now() / 1000;
+    
+    let animationId: number;
+    const checkPhase = () => {
+      const now = performance.now() / 1000;
+      const elapsed = now - startTime;
+      const tCycle = elapsed % cycle;
+      
+      let opacity = 0;
+      
+      if (tCycle < duration) {
+        // During scan: fade in as scan passes through center (around 40-60% of scan)
+        // then stay visible, then start fading slightly near end
+        const scanProgress = tCycle / duration;
+        
+        if (scanProgress < 0.3) {
+          // Early scan - text fading in as light approaches
+          opacity = scanProgress / 0.3;
+        } else if (scanProgress < 0.7) {
+          // Mid scan - text fully visible
+          opacity = 1;
+        } else {
+          // Late scan - text stays mostly visible but starts subtle fade
+          opacity = 1 - (scanProgress - 0.7) * 0.3; // fades from 1 to 0.91
+        }
+      } else {
+        // During delay phase - text stays visible and slowly fades
+        const delayProgress = (tCycle - duration) / delay;
+        // Stay at ~0.9 opacity for most of delay, then fade out at the end
+        if (delayProgress < 0.7) {
+          opacity = 0.9;
+        } else {
+          // Fade out in last 30% of delay
+          opacity = 0.9 * (1 - (delayProgress - 0.7) / 0.3);
+        }
+      }
+      
+      setTextOpacity(Math.max(0, Math.min(1, opacity)));
+      animationId = requestAnimationFrame(checkPhase);
+    };
+    
+    animationId = requestAnimationFrame(checkPhase);
+    return () => cancelAnimationFrame(animationId);
+  }, [scanDuration, scanDelay]);
 
   const MAX_SCANS = 8;
   const scanStartsRef = useRef<number[]>([]);
@@ -828,6 +879,179 @@ export const GridScan: React.FC<GridScanProps> = ({
           </div>
         </div>
       )}
+      
+      {/* BullMoney branding text - fades in/out following scan light */}
+      <div 
+        className="gridscan__brand-overlay"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          pointerEvents: 'none',
+          zIndex: 10,
+          opacity: textOpacity,
+          padding: '20px',
+        }}
+      >
+        <h1 
+          style={{
+            fontSize: 'clamp(2rem, 8vw, 4.5rem)',
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
+            margin: 0,
+            background: 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 50%, #ffffff 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            textShadow: '0 0 40px rgba(255, 255, 255, 0.15)',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+          }}
+        >
+          <span style={{ WebkitTextFillColor: 'transparent', background: 'linear-gradient(135deg, #c2c2c2 0%, #ffffff 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>BULL</span>MONEY
+        </h1>
+        <p
+          style={{
+            fontSize: 'clamp(0.75rem, 2.5vw, 1.1rem)',
+            fontWeight: 500,
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            color: 'rgba(255, 255, 255, 0.5)',
+            marginTop: '0.5rem',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          Elite Trading Community
+        </p>
+      </div>
+      
+      {/* Scroll indicator - bottom of hero */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 'clamp(20px, 5vh, 40px)',
+          left: 0,
+          right: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          pointerEvents: 'none',
+          zIndex: 10,
+          opacity: textOpacity * 0.8,
+          width: '100%',
+        }}
+      >
+        <p
+          style={{
+            fontSize: 'clamp(0.65rem, 2vw, 0.85rem)',
+            fontWeight: 500,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            background: 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 50%, #ffffff 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            margin: 0,
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif',
+          }}
+        >
+          Check the sentiment below
+        </p>
+        {/* Animated scroll icon */}
+        <div
+          style={{
+            width: '24px',
+            height: '40px',
+            borderRadius: '12px',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            position: 'relative',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{
+              width: '4px',
+              height: '8px',
+              borderRadius: '2px',
+              background: 'linear-gradient(180deg, #ffffff 0%, #a0a0a0 100%)',
+              position: 'absolute',
+              top: '8px',
+              animation: 'scrollBounce 1.5s ease-in-out infinite',
+            }}
+          />
+        </div>
+        {/* Chevron arrows */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', marginTop: '-4px' }}>
+          <svg 
+            width="16" 
+            height="8" 
+            viewBox="0 0 16 8" 
+            fill="none"
+            style={{ 
+              opacity: 0.5,
+              animation: 'chevronPulse 1.5s ease-in-out infinite',
+            }}
+          >
+            <path d="M1 1L8 7L15 1" stroke="url(#scrollGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="scrollGradient" x1="1" y1="4" x2="15" y2="4" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#ffffff"/>
+                <stop offset="0.5" stopColor="#a0a0a0"/>
+                <stop offset="1" stopColor="#ffffff"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <svg 
+            width="16" 
+            height="8" 
+            viewBox="0 0 16 8" 
+            fill="none"
+            style={{ 
+              opacity: 0.3,
+              animation: 'chevronPulse 1.5s ease-in-out infinite 0.15s',
+            }}
+          >
+            <path d="M1 1L8 7L15 1" stroke="url(#scrollGradient2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="scrollGradient2" x1="1" y1="4" x2="15" y2="4" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#ffffff"/>
+                <stop offset="0.5" stopColor="#a0a0a0"/>
+                <stop offset="1" stopColor="#ffffff"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+      
+      {/* CSS keyframes for scroll animation */}
+      <style>{`
+        @keyframes scrollBounce {
+          0%, 100% { 
+            transform: translateY(0);
+            opacity: 1;
+          }
+          50% { 
+            transform: translateY(12px);
+            opacity: 0.3;
+          }
+        }
+        @keyframes chevronPulse {
+          0%, 100% { 
+            opacity: 0.5;
+            transform: translateY(0);
+          }
+          50% { 
+            opacity: 0.8;
+            transform: translateY(3px);
+          }
+        }
+      `}</style>
     </div>
   );
 };

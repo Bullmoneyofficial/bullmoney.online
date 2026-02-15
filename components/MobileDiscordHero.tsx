@@ -11,6 +11,9 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Box, Palette, ArrowLeft, X } from 'lucide-react';
 
+// Thermal optimization for preventing phone overheating
+import { useThermalOptimization, getGlobalThermalState, type ThermalOptimizationConfig } from '@/hooks/useThermalOptimization';
+
 // Dynamic import for Spline (heavy 3D component)
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
   ssr: false,
@@ -173,6 +176,34 @@ const IS_MOBILE = typeof window !== 'undefined' && (
 const MOBILE_DPR = IS_MOBILE ? Math.min(window.devicePixelRatio, 1) : (typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1);
 const MOBILE_TARGET_FPS = IS_MOBILE ? 30 : 60;
 const MOBILE_FRAME_INTERVAL = 1000 / MOBILE_TARGET_FPS;
+
+// =============================================================================
+// THERMAL-AWARE QUALITY HELPERS
+// These helpers get current thermal state and return reduced quality settings
+// to prevent phone overheating while ALWAYS keeping content visible
+// =============================================================================
+function getThermalQualityMultiplier(): number {
+  const state = getGlobalThermalState();
+  if (!state.isPageVisible) return 0.3; // Minimal when hidden
+  switch (state.thermalLevel) {
+    case 'critical': return 0.4;
+    case 'hot': return 0.6;
+    case 'warm': return 0.8;
+    default: return 1.0;
+  }
+}
+
+function getThermalDpr(): number {
+  const state = getGlobalThermalState();
+  const baseDpr = IS_MOBILE ? 1 : Math.min(window.devicePixelRatio ?? 1, 2);
+  const multiplier = getThermalQualityMultiplier();
+  return Math.max(0.5, baseDpr * multiplier); // Never go below 0.5 for readability
+}
+
+function shouldReduceAnimations(): boolean {
+  const state = getGlobalThermalState();
+  return state.thermalLevel === 'hot' || state.thermalLevel === 'critical' || state.powerSaverActive;
+}
 
 // Import the cool background effects
 import LiquidEther from './LiquidEther';
@@ -1222,11 +1253,11 @@ const Styles = () => (
       height: 40px;
       padding: 0 16px;
       border-radius: 20px;
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: rgba(255, 255, 255, 0.9);
+      background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #ffffff 100%);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      color: #000000;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       letter-spacing: 0.02em;
       cursor: pointer;
       display: flex;
@@ -1237,32 +1268,61 @@ const Styles = () => (
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 
-        0 1px 3px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 2px 8px rgba(0, 0, 0, 0.15),
+        0 4px 20px rgba(255, 255, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
       white-space: nowrap;
       min-width: fit-content;
+      overflow: hidden;
+    }
+
+    .bg-selector-toggle::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+      );
+      animation: shimmer 2.5s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        left: -100%;
+      }
+      50%, 100% {
+        left: 100%;
+      }
     }
 
     .bg-selector-toggle:hover {
-      background: rgba(0, 0, 0, 0.65);
-      border-color: rgba(255, 255, 255, 0.3);
+      background: linear-gradient(135deg, #ffffff 0%, #e8e8e8 50%, #ffffff 100%);
+      border-color: rgba(255, 255, 255, 1);
       transform: scale(1.02);
       box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        0 8px 32px rgba(255, 255, 255, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
     }
 
     .bg-selector-toggle svg {
       width: 16px;
       height: 16px;
-      opacity: 0.9;
+      opacity: 1;
       flex-shrink: 0;
+      stroke: #000000;
     }
 
     .bg-selector-panel {
       position: fixed;
-      top: 130px;
+      top: max(150px, calc(150px + env(safe-area-inset-top, 0px)));
       left: 50%;
       transform: translateX(-50%);
       z-index: 2147483647;
@@ -1510,13 +1570,13 @@ const Styles = () => (
         display: none;
       }
       .bg-selector-panel {
-        top: 120px;
+        top: max(140px, calc(140px + env(safe-area-inset-top, 0px)));
         width: calc(100vw - 32px);
         max-width: none;
         left: 16px;
         transform: translateX(0);
         transform-origin: top left;
-        max-height: calc(100vh - 160px);
+        max-height: calc(100vh - 180px - env(safe-area-inset-top, 0px));
       }
       @keyframes slideDown {
         from {
@@ -1537,10 +1597,10 @@ const Styles = () => (
         padding: 0 10px;
       }
       .bg-selector-panel {
-        top: 110px;
+        top: max(130px, calc(130px + env(safe-area-inset-top, 0px)));
         width: calc(100vw - 20px);
         left: 10px;
-        max-height: calc(100vh - 130px);
+        max-height: calc(100vh - 150px - env(safe-area-inset-top, 0px));
         border-radius: 12px;
       }
       .bg-selector-header {
@@ -1887,22 +1947,22 @@ interface CyclingBackgroundProps {
 }
 
 // All available effects list for mapping favorites to indices
-const ALL_EFFECTS: BackgroundEffect[] = ['spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'gridScan', 'ballpit', 'gridDistortion'];
+// NOTE: This order must match the 'effects' prop order in CyclingBackground for index mapping to work correctly
+const ALL_EFFECTS: BackgroundEffect[] = ['gridScan', 'spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'ballpit', 'gridDistortion'];
 
 // Helper to get initial effect index from localStorage (runs only once)
-// GRID SCAN is always prioritized on load
+// GRID SCAN is always prioritized on load - it's at index 0 in the effects array
 const getInitialEffectIndex = (effectsLength: number, reloadsPerCycle: number): number => {
-  const gridScanIndex = Math.max(0, ALL_EFFECTS.indexOf('gridScan'));
-  // SSR safety - default to Grid Scan index
-  if (typeof window === 'undefined') return gridScanIndex;
+  // Grid Scan is ALWAYS at index 0 in the effects array (first position)
+  const GRID_SCAN_INDEX = 0;
+  // SSR safety - default to Grid Scan (index 0)
+  if (typeof window === 'undefined') return GRID_SCAN_INDEX;
   
   try {
     // FORCE CLEAR old cache on version change - ensures Grid Scan is default
     const VERSION_KEY = 'bullmoney-bg-version';
-    const CURRENT_VERSION = 'v6-gridscan-priority-default';
+    const CURRENT_VERSION = 'v7-gridscan-index-zero';
     const storedVersion = localStorage.getItem(VERSION_KEY);
-    const targetEffect = 'gridScan';
-    const targetIndex = Math.max(0, ALL_EFFECTS.indexOf(targetEffect));
     
     if (storedVersion !== CURRENT_VERSION) {
       // Clear all old data and force Grid Scan
@@ -1915,14 +1975,14 @@ const getInitialEffectIndex = (effectsLength: number, reloadsPerCycle: number): 
       console.log('[CyclingBG] Version change detected - clearing cache, showing Grid Scan');
     }
     
-    // GRID SCAN always starts first on each load
-    console.log('[CyclingBG] Defaulting to Grid Scan — prioritized on load');
-    localStorage.setItem('bg-effect-index', String(targetIndex));
+    // GRID SCAN always starts first on each load (index 0)
+    console.log('[CyclingBG] Defaulting to Grid Scan — prioritized on load (index 0)');
+    localStorage.setItem('bg-effect-index', String(GRID_SCAN_INDEX));
     localStorage.setItem('bg-reload-count', '0');
-    return targetIndex;
+    return GRID_SCAN_INDEX;
   } catch (e) {
     console.error('[CyclingBG] Error:', e);
-    return gridScanIndex; // Fallback - show Grid Scan
+    return GRID_SCAN_INDEX; // Fallback - show Grid Scan (index 0)
   }
 };
 
@@ -2113,16 +2173,22 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
     setIsLoaded(true);
     setHasError(false);
 
-    // Mobile: reduce Spline canvas resolution for better performance
-    if (IS_MOBILE && splineApp) {
+    // THERMAL-AWARE: Reduce Spline canvas resolution based on device heat
+    // Always renders but at reduced quality when device is warm/hot
+    if (splineApp) {
       try {
         const canvas = splineApp.canvas as HTMLCanvasElement | undefined;
         if (canvas) {
-          const scaleFactor = 0.6; // Render at 60% resolution on mobile
+          // Get thermal-aware quality multiplier (0.4 to 1.0)
+          const thermalMultiplier = getThermalQualityMultiplier();
+          // Mobile gets 60% base, desktop gets 80% base
+          const baseFactor = IS_MOBILE ? 0.6 : 0.8;
+          // Apply thermal reduction on top of base factor
+          const scaleFactor = Math.max(0.3, baseFactor * thermalMultiplier);
           const w = Math.round(canvas.clientWidth * scaleFactor);
           const h = Math.round(canvas.clientHeight * scaleFactor);
           splineApp.setSize(w, h);
-          console.log(`[SplineBackground] Mobile: reduced canvas to ${w}x${h} (${Math.round(scaleFactor * 100)}% quality)`);
+          console.log(`[SplineBackground] Thermal-adjusted canvas to ${w}x${h} (${Math.round(scaleFactor * 100)}% quality)`);
         }
       } catch (e) {
         console.warn('[SplineBackground] Could not reduce canvas size:', e);
@@ -2860,13 +2926,17 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const [colorMode, setColorMode] = useState<'color' | 'grayscale' | 'custom'>('color');
   const [customColor, setCustomColor] = useState({ h: 0, s: 50, l: 50, a: 0.5 }); // HSL for easier manipulation
   
-  const [show3DOverlay] = useState(true);
+  // 3D Spline overlay - OFF by default so grid shows first
+  const [show3DOverlay, setShow3DOverlay] = useState(false);
   const [isSceneSwitching, setIsSceneSwitching] = useState(false);
-  const [showSpline, setShowSpline] = useState(true); // Control Spline visibility
+  const [showSpline, setShowSpline] = useState(false); // Control Spline visibility - OFF by default
   const [splinePlayMode, setSplinePlayMode] = useState(false); // Mobile 3D interaction toggle
   const [currentSplineScene, setCurrentSplineScene] = useState(SPLINE_SCENES[3]); // Default to Scene 3 for mobile
   const [downloadingScenes, setDownloadingScenes] = useState<Set<string>>(new Set());
   const [cacheVersion, setCacheVersion] = useState(0); // forces UI refresh on cache changes
+  
+  // Unified BG Picker menu state
+  const [showBgMenu, setShowBgMenu] = useState(false);
 
   // Toggle spline-play-mode class on .hero-wrapper for mobile 3D interactivity
   useEffect(() => {
@@ -3170,8 +3240,13 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
     }
   }, []);
 
-  // Render a single effect component - only one at a time for memory efficiency
+  // THERMAL-AWARE: Render effects with quality adjusted based on device temperature
+  // Everything ALWAYS renders - just at reduced quality when hot
   const renderEffect = (effect: BackgroundEffect) => {
+    // Get thermal quality multiplier (0.4 to 1.0) - applied to all effects
+    const thermalQ = getThermalQualityMultiplier();
+    const reduceAnimations = shouldReduceAnimations();
+    
     switch (effect) {
       case 'spline':
         return <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} />;
@@ -3182,16 +3257,16 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
             mouseForce={IS_MOBILE ? 5 : 10}
             cursorSize={IS_MOBILE ? 30 : 60}
             isViscous={false}
-            viscous={IS_MOBILE ? 8 : 15}
-            iterationsViscous={IS_MOBILE ? 4 : 8}
-            iterationsPoisson={IS_MOBILE ? 4 : 8}
-            resolution={IS_MOBILE ? 0.15 : 0.25}
+            viscous={(IS_MOBILE ? 8 : 15) * thermalQ}
+            iterationsViscous={Math.max(2, Math.round((IS_MOBILE ? 4 : 8) * thermalQ))}
+            iterationsPoisson={Math.max(2, Math.round((IS_MOBILE ? 4 : 8) * thermalQ))}
+            resolution={Math.max(0.08, (IS_MOBILE ? 0.15 : 0.25) * thermalQ)}
             isBounce={false}
             autoDemo
-            autoSpeed={IS_MOBILE ? 0.15 : 0.3}
-            autoIntensity={IS_MOBILE ? 0.6 : 1.2}
+            autoSpeed={(IS_MOBILE ? 0.15 : 0.3) * thermalQ}
+            autoIntensity={(IS_MOBILE ? 0.6 : 1.2) * thermalQ}
             takeoverDuration={0.3}
-            autoResumeDelay={3000}
+            autoResumeDelay={reduceAnimations ? 5000 : 3000}
             autoRampDuration={0.5}
           />
         );
@@ -3200,12 +3275,12 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
           <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
             <DarkVeil
               hueShift={0}
-              noiseIntensity={IS_MOBILE ? 0.005 : 0.01}
+              noiseIntensity={(IS_MOBILE ? 0.005 : 0.01) * thermalQ}
               scanlineIntensity={0}
-              speed={IS_MOBILE ? 0.15 : 0.3}
+              speed={(IS_MOBILE ? 0.15 : 0.3) * thermalQ}
               scanlineFrequency={0}
-              warpAmount={IS_MOBILE ? 0.02 : 0.05}
-              resolutionScale={IS_MOBILE ? 0.5 : 1}
+              warpAmount={(IS_MOBILE ? 0.02 : 0.05) * thermalQ}
+              resolutionScale={Math.max(0.3, (IS_MOBILE ? 0.5 : 1) * thermalQ)}
             />
           </div>
         );
@@ -3214,33 +3289,33 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
           <LightPillar
             topColor="#ffffff"
             bottomColor="#cccccc"
-            intensity={IS_MOBILE ? 0.4 : 0.6}
-            rotationSpeed={IS_MOBILE ? 0.08 : 0.15}
-            glowAmount={IS_MOBILE ? 0.001 : 0.002}
+            intensity={(IS_MOBILE ? 0.4 : 0.6) * thermalQ}
+            rotationSpeed={(IS_MOBILE ? 0.08 : 0.15) * thermalQ}
+            glowAmount={(IS_MOBILE ? 0.001 : 0.002) * thermalQ}
             pillarWidth={IS_MOBILE ? 1.5 : 2}
             pillarHeight={0.3}
-            noiseIntensity={IS_MOBILE ? 0.1 : 0.2}
+            noiseIntensity={(IS_MOBILE ? 0.1 : 0.2) * thermalQ}
             pillarRotation={15}
             interactive={false}
             mixBlendMode="screen"
-            quality="low"
+            quality={thermalQ < 0.6 ? 'minimal' : 'low'}
           />
         );
       case 'gridScan':
         return (
           <GridScan
-            sensitivity={IS_MOBILE ? 0.2 : 0.4}
+            sensitivity={(IS_MOBILE ? 0.2 : 0.4) * thermalQ}
             lineThickness={1}
             linesColor="#444444"
-            gridScale={IS_MOBILE ? 0.1 : 0.15}
+            gridScale={Math.max(0.05, (IS_MOBILE ? 0.1 : 0.15) * thermalQ)}
             scanColor="#ffffff"
-            scanOpacity={IS_MOBILE ? 0.2 : 0.3}
+            scanOpacity={(IS_MOBILE ? 0.2 : 0.3) * thermalQ}
             enablePost={false}
             bloomIntensity={0}
             chromaticAberration={0}
-            noiseIntensity={IS_MOBILE ? 0.002 : 0.005}
-            scanDuration={IS_MOBILE ? 6 : 4}
-            scanDelay={IS_MOBILE ? 3 : 2}
+            noiseIntensity={(IS_MOBILE ? 0.002 : 0.005) * thermalQ}
+            scanDuration={reduceAnimations ? 10 : (IS_MOBILE ? 6 : 4)}
+            scanDelay={reduceAnimations ? 5 : (IS_MOBILE ? 3 : 2)}
           />
         );
       case 'galaxy':
@@ -3248,25 +3323,25 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
           <Galaxy
             mouseRepulsion={false}
             mouseInteraction={false}
-            density={IS_MOBILE ? 0.4 : 0.8}
-            glowIntensity={IS_MOBILE ? 0.2 : 0.4}
+            density={Math.max(0.2, (IS_MOBILE ? 0.4 : 0.8) * thermalQ)}
+            glowIntensity={(IS_MOBILE ? 0.2 : 0.4) * thermalQ}
             saturation={0}
             hueShift={0}
-            twinkleIntensity={IS_MOBILE ? 0.02 : 0.05}
-            rotationSpeed={IS_MOBILE ? 0.008 : 0.015}
+            twinkleIntensity={(IS_MOBILE ? 0.02 : 0.05) * thermalQ}
+            rotationSpeed={(IS_MOBILE ? 0.008 : 0.015) * thermalQ}
             repulsionStrength={1}
             autoCenterRepulsion={0}
-            starSpeed={IS_MOBILE ? 0.08 : 0.15}
-            speed={IS_MOBILE ? 0.1 : 0.2}
+            starSpeed={(IS_MOBILE ? 0.08 : 0.15) * thermalQ}
+            speed={(IS_MOBILE ? 0.1 : 0.2) * thermalQ}
             transparent={false}
-            disableAnimation={false}
+            disableAnimation={reduceAnimations}
           />
         );
       case 'letterGlitch':
         return (
           <LetterGlitch
             glitchColors={['#ffffff', '#dddddd', '#bbbbbb']}
-            glitchSpeed={IS_MOBILE ? 120 : 80}
+            glitchSpeed={reduceAnimations ? 200 : (IS_MOBILE ? 120 : 80)}
             centerVignette={true}
             outerVignette={true}
             smooth={false}
@@ -3276,8 +3351,8 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       case 'ballpit':
         return (
           <Ballpit
-            count={IS_MOBILE ? 20 : 40}
-            gravity={0.005}
+            count={Math.max(10, Math.round((IS_MOBILE ? 20 : 40) * thermalQ))}
+            gravity={0.005 * thermalQ}
             friction={0.99}
             wallBounce={0.85}
             followCursor={false}
@@ -3286,10 +3361,10 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       case 'gridDistortion':
         return (
           <GridDistortion
-            imageSrc={IS_MOBILE ? "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&q=40" : "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=800&q=60"}
-            grid={IS_MOBILE ? 5 : 8}
-            mouse={IS_MOBILE ? 0.04 : 0.08}
-            strength={IS_MOBILE ? 0.04 : 0.08}
+            imageSrc={IS_MOBILE || thermalQ < 0.6 ? "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&q=40" : "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=800&q=60"}
+            grid={Math.max(3, Math.round((IS_MOBILE ? 5 : 8) * thermalQ))}
+            mouse={(IS_MOBILE ? 0.04 : 0.08) * thermalQ}
+            strength={(IS_MOBILE ? 0.04 : 0.08) * thermalQ}
             relaxation={0.95}
           />
         );
@@ -3299,18 +3374,18 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
             scale={IS_MOBILE ? 1 : 1.5}
             gridMul={IS_MOBILE ? [1, 0.75] : [1.5, 1]}
             digitSize={IS_MOBILE ? 0.8 : 1}
-            timeScale={IS_MOBILE ? 0.15 : 0.3}
-            scanlineIntensity={IS_MOBILE ? 0.2 : 0.4}
-            glitchAmount={IS_MOBILE ? 0.3 : 0.5}
-            flickerAmount={IS_MOBILE ? 0.2 : 0.4}
-            noiseAmp={IS_MOBILE ? 0.4 : 0.8}
-            curvature={IS_MOBILE ? 0.01 : 0.03}
+            timeScale={(IS_MOBILE ? 0.15 : 0.3) * thermalQ}
+            scanlineIntensity={(IS_MOBILE ? 0.2 : 0.4) * thermalQ}
+            glitchAmount={(IS_MOBILE ? 0.3 : 0.5) * thermalQ}
+            flickerAmount={reduceAnimations ? 0 : (IS_MOBILE ? 0.2 : 0.4) * thermalQ}
+            noiseAmp={(IS_MOBILE ? 0.4 : 0.8) * thermalQ}
+            curvature={(IS_MOBILE ? 0.01 : 0.03) * thermalQ}
             tint="#ffffff"
             mouseReact={false}
             mouseStrength={0}
             pageLoadAnimation={false}
             brightness={0.5}
-            dpr={IS_MOBILE ? 0.5 : 0.75}
+            dpr={Math.max(0.35, (IS_MOBILE ? 0.5 : 0.75) * thermalQ)}
           />
         );
       default:
@@ -3413,52 +3488,247 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
         </div>
       )}
 
-      {/* Stacked Control Buttons — BG Picker, Color, 3D (vertically) */}
-      <div style={{ position: 'fixed', top: 80, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, zIndex: 2147483647, pointerEvents: 'none' }}>
-        {/* BG Picker Button */}
+      {/* Unified BG Picker Button */}
+      {/* Added safe-area-inset-top for mobile notches/cutouts */}
+      <div style={{ position: 'fixed', top: 'max(100px, calc(100px + env(safe-area-inset-top, 0px)))', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, zIndex: 2147483647, pointerEvents: 'none' }}>
+        {/* Main BG Picker Button */}
         <button 
           className="bg-selector-toggle" 
-          style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none', pointerEvents: 'auto' }}
-          onClick={() => setShowPanel(!showPanel)}
-          title="Background Settings (Ctrl+B)"
+          style={{ 
+            position: 'relative', 
+            top: 'auto', 
+            left: 'auto', 
+            transform: 'none', 
+            pointerEvents: 'auto',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #ffffff 100%)',
+            color: '#000000',
+            border: '1px solid rgba(255, 255, 255, 0.8)',
+          }}
+          onClick={() => setShowBgMenu(!showBgMenu)}
+          title="Background Settings"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
             <rect x="3" y="3" width="7" height="7" rx="1" />
             <rect x="14" y="3" width="7" height="7" rx="1" />
             <rect x="3" y="14" width="7" height="7" rx="1" />
             <rect x="14" y="14" width="7" height="7" rx="1" />
           </svg>
-          <span>BG Picker</span>
+          <span style={{ color: '#000000' }}>BG Picker</span>
+          <svg 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="#000000" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            style={{ 
+              width: 14, 
+              height: 14, 
+              marginLeft: 4,
+              transform: showBgMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease'
+            }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </button>
 
-        {/* Color Toggle */}
-        <div style={{ pointerEvents: 'auto' }}>
-          <ToggleGrayscaleButton 
-            isActive={showGrayscale} 
-            onClick={() => setShowColorPicker(!showColorPicker)}
-            label={colorMode === 'grayscale' ? 'B&W' : colorMode === 'custom' ? 'Custom' : 'Color'}
-          />
-        </div>
+        {/* Smart Dropdown Menu with Quick BG Picker */}
+        <AnimatePresence>
+          {showBgMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              style={{
+                pointerEvents: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                padding: '12px',
+                background: 'rgba(0, 0, 0, 0.9)',
+                borderRadius: 16,
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5)',
+                minWidth: 200,
+                maxWidth: 280,
+              }}
+            >
+              {/* Quick Background Switcher */}
+              <div style={{ marginBottom: 4 }}>
+                <div style={{ 
+                  fontSize: 10, 
+                  fontWeight: 600, 
+                  color: 'rgba(255,255,255,0.4)', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '0.1em',
+                  marginBottom: 8,
+                  paddingLeft: 4
+                }}>
+                  Quick Switch
+                </div>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(5, 1fr)', 
+                  gap: 6,
+                }}>
+                  {(effects as BackgroundEffect[]).slice(0, 10).map((effect, index) => {
+                    const isActive = currentIndex === index;
+                    const isEnabled = enabledEffects.includes(effect);
+                    const bgIcons: Record<string, string> = {
+                      'gridScan': '▦',
+                      'spline': '◇',
+                      'liquidEther': '◎',
+                      'galaxy': '✦',
+                      'terminal': '▤',
+                      'darkVeil': '◐',
+                      'lightPillar': '▮',
+                      'letterGlitch': 'A̷',
+                      'ballpit': '●',
+                      'gridDistortion': '◫'
+                    };
+                    return (
+                      <button
+                        key={effect}
+                        onClick={() => {
+                          if (isEnabled) {
+                            switchToBackground(index);
+                          }
+                        }}
+                        disabled={!isEnabled}
+                        title={EFFECT_NAMES[effect]}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 8,
+                          border: isActive ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)',
+                          background: isActive 
+                            ? 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)' 
+                            : 'rgba(255,255,255,0.05)',
+                          color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
+                          fontSize: 16,
+                          cursor: isEnabled ? 'pointer' : 'not-allowed',
+                          opacity: isEnabled ? 1 : 0.3,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease',
+                          transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                        }}
+                      >
+                        {bgIcons[effect] || '◌'}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Current BG Label */}
+                <div style={{ 
+                  fontSize: 11, 
+                  color: 'rgba(255,255,255,0.6)', 
+                  textAlign: 'center',
+                  marginTop: 8,
+                }}>
+                  {EFFECT_NAMES[effects[currentIndex] as BackgroundEffect]}
+                </div>
+              </div>
 
-        {/* 3D Toggle - Click to hide/show, Hold to open scene picker */}
-        <div className="flex flex-col items-center gap-1" style={{ pointerEvents: 'auto' }}>
-          <Toggle3DButton 
-            isActive={showSpline} 
-            onClick={() => setShowSpline(true)}
-            onLongPress={() => setShowSplinePanel(!showSplinePanel)}
-          />
-          <motion.span 
-            className="text-[9px] text-white/40 font-medium tracking-wide"
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-          >
-            Hold • Download
-          </motion.span>
-        </div>
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
 
-        {/* Interact 3D Button — toggles mobile Spline interactivity */}
-        {showSpline && currentEffect === 'spline' && (
+              {/* Quick Toggle Row */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {/* Color Toggle */}
+                <button
+                  onClick={() => {
+                    // Cycle through color modes
+                    const modes: ('color' | 'grayscale' | 'custom')[] = ['color', 'grayscale', 'custom'];
+                    const currentModeIndex = modes.indexOf(colorMode);
+                    const nextMode = modes[(currentModeIndex + 1) % modes.length];
+                    setColorMode(nextMode);
+                    setShowGrayscale(nextMode === 'grayscale');
+                    saveColorPreferences(nextMode, customColor);
+                    showToast(`Color: ${nextMode === 'grayscale' ? 'B&W' : nextMode === 'custom' ? 'Custom' : 'Normal'}`);
+                  }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    padding: '10px 12px',
+                    background: colorMode !== 'color' ? 'rgba(41, 151, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                    border: colorMode !== 'color' ? '1px solid rgba(41, 151, 255, 0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    color: '#fff',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>{colorMode === 'grayscale' ? '◐' : colorMode === 'custom' ? '◉' : '○'}</span>
+                  {colorMode === 'grayscale' ? 'B&W' : colorMode === 'custom' ? 'Tint' : 'Color'}
+                </button>
+
+                {/* 3D Toggle */}
+                <button
+                  onClick={() => { 
+                    setShow3DOverlay(!show3DOverlay);
+                    setShowSpline(!show3DOverlay);
+                    showToast(`3D: ${!show3DOverlay ? 'ON' : 'OFF'}`);
+                  }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    padding: '10px 12px',
+                    background: show3DOverlay ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                    border: show3DOverlay ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    color: show3DOverlay ? '#86efac' : '#fff',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>◇</span>
+                  3D {show3DOverlay ? 'ON' : 'OFF'}
+                </button>
+              </div>
+
+              {/* More Options */}
+              <button
+                onClick={() => { setShowPanel(true); setShowBgMenu(false); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '8px 12px',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  color: 'rgba(255,255,255,0.5)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                More Options →
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Interact 3D Button — toggles mobile Spline interactivity (only shows when 3D overlay is active) */}
+        {show3DOverlay && (
           <button
             style={{
               pointerEvents: 'auto',

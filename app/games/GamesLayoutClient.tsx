@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { ThermalGuard } from '@/components/ThermalGuard';
 
 const StoreHeader = dynamic(
   () => import('@/components/store/StoreHeader').then(mod => ({ default: mod.StoreHeader })),
@@ -182,9 +183,11 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
       `}</style>
 
       <StoreHeader />
-      <main className="w-full" style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100dvh - 72px)', display: 'flex', flexDirection: 'column', touchAction: 'pan-y pan-x' }}>
-        {children}
-      </main>
+      <ThermalGuard showIndicator={process.env.NODE_ENV === 'development'}>
+        <main className="w-full" style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100dvh - 72px)', display: 'flex', flexDirection: 'column', touchAction: 'pan-y pan-x' }}>
+          {children}
+        </main>
+      </ThermalGuard>
     </div>
   );
 }

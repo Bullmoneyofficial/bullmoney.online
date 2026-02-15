@@ -41,6 +41,14 @@ const PrintDesignStudio = dynamic(
   { ssr: false }
 );
 
+// ✅ LAZY: useShowcaseScroll (461 lines) converted to lazy effect component — side-effect only
+const LazyShowcaseScroll = dynamic(() => import("@/hooks/useShowcaseScroll").then(mod => ({
+  default: function ShowcaseScrollEffect(props: { startDelay: number; enabled: boolean; pageId: string }) {
+    mod.useShowcaseScroll(props);
+    return null;
+  }
+})), { ssr: false });
+
 // ✅ PERF: Sample data lazy-loaded — only needed when sections render
 let _cachedPrintProducts: any[] | null = null;
 let _cachedDigitalArt: any[] | null = null;
@@ -379,14 +387,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const heroCacheLoadedRef = useRef(false);
   const allowHeavyHeroReady = allowHeavyHero && hasMounted && heroImageReady;
 
-  // ✅ PERF: Showcase scroll lazy-loaded — not needed for first paint
-  useEffect(() => {
-    if (!hasMounted) return;
-    import('@/hooks/useShowcaseScroll').then(m => {
-      // Hook can't be called dynamically, but the module exports a standalone init
-      // Just prefetch the module for when it's needed
-    });
-  }, [hasMounted]);
+  // ✅ PERF: Showcase scroll lazy-loaded — activated via component below
 
   const resolvedHeroSlide = useMemo(() => {
     const fallbackImage = HERO_CAROUSEL_SLIDES[FIRST_HERO_IMAGE_INDEX] || HERO_CAROUSEL_SLIDES[0];
@@ -2457,6 +2458,8 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         color: '#1d1d1f',
       }}
     >
+      {/* Showcase scroll animation for store page */}
+      {hasMounted && <LazyShowcaseScroll startDelay={1000} enabled={true} pageId="store" />}
       <style jsx>{`
         @keyframes gridStaggerIn {
           0% { opacity: 0; transform: translateY(8px); }
