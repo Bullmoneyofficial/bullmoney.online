@@ -43,10 +43,10 @@ export default function RecruitModal({ isOpen, onClose }: RecruitModalProps) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = 'visible';
     }
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = 'visible';
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

@@ -354,9 +354,10 @@ export function initDesktopOptimizations(): void {
   root.style.setProperty('transform', 'translateZ(0)');
   
   // Set performance CSS variables
-  root.style.setProperty('--native-refresh-rate', String(caps.estimatedRefreshRate));
-  root.style.setProperty('--target-fps', String(caps.estimatedRefreshRate));
-  root.style.setProperty('--frame-duration', `${1000 / caps.estimatedRefreshRate}ms`);
+  const effectiveHz = Math.min(120, Math.max(30, Math.round(caps.estimatedRefreshRate || 60)));
+  root.style.setProperty('--native-refresh-rate', String(effectiveHz));
+  root.style.setProperty('--target-fps', String(effectiveHz));
+  root.style.setProperty('--frame-duration', `${1000 / effectiveHz}ms`);
 }
 
 export default {

@@ -15,6 +15,7 @@ export function usePerformanceInit() {
   const initRef = useRef(false);
   const fpsRef = useRef<number[]>([]);
   const rafRef = useRef<number>(0);
+  const refreshUpgradeCleanupRef = useRef<null | (() => void)>(null);
   
   const { 
     setRefreshRate, 
@@ -22,6 +23,27 @@ export function usePerformanceInit() {
     setReduceMotion,
     setPerformanceMode 
   } = usePerformanceStore();
+
+  const tryUpgradeRefreshRate = useCallback(async () => {
+    try {
+      const measuredHz = await measureRefreshRate();
+      const currentHz = usePerformanceStore.getState().refreshRate;
+
+      if (measuredHz > currentHz) {
+        console.log(`[PerformanceInit] Upgrading refresh rate: ${currentHz}Hz -> ${measuredHz}Hz`);
+        setRefreshRate(measuredHz);
+
+        if (measuredHz >= 120) {
+          document.documentElement.classList.add('display-120hz', 'fps-120');
+          document.documentElement.classList.remove('display-90hz', 'fps-90');
+        } else if (measuredHz >= 90) {
+          document.documentElement.classList.add('display-90hz', 'fps-90');
+        }
+      }
+    } catch {
+      // Best-effort only.
+    }
+  }, [measureRefreshRate, setRefreshRate]);
 
   /**
    * Measure actual display refresh rate using RAF timing
@@ -107,18 +129,16 @@ export function usePerformanceInit() {
       }
     }
     
-    // MacBook Pro with ProMotion (14" and 16" from 2021+) or any Apple Silicon Mac
-    const isMacBookPro = isMac && (
-      isAppleSilicon ||
+    // MacBook Pro with ProMotion (14" and 16" from 2021+). IMPORTANT:
+    // Apple Silicon != ProMotion (e.g., 13" M1 MacBook is 60Hz).
+    const isMacBookProProMotion = isMac && (
       window.screen.width >= 3024 || // 14" scaled
       window.screen.height >= 1964
     );
     
-    // ENHANCED: High-refresh desktop monitor detection
-    const isHighRefreshDesktop = (
-      window.screen.width >= 2560 || // 1440p+ monitors often 144Hz+
-      (memory >= 16 && cores >= 8) // High-spec PC likely has good monitor
-    );
+    // High-refresh desktop monitor detection should be based on an explicit signal.
+    // Speculating from specs/screen size causes false positives.
+    const isHighRefreshDesktop = false;
     
     // High-refresh gaming monitors (check via Screen API if available)
     const hasScreenAPI = 'refreshRate' in (window.screen as any);
@@ -127,12 +147,12 @@ export function usePerformanceInit() {
       if (screenHz >= 90) return true;
     }
 
-    const result = isIPhonePro || isIPadPro || isMacBookPro || isAppleSilicon || isHighRefreshDesktop;
+    const result = isIPhonePro || isIPadPro || isMacBookProProMotion || isHighRefreshDesktop;
     
     if (result && !isIPhonePro && !isIPadPro) {
       console.log('[PerformanceInit] 🖥️ Desktop high-refresh detected:', {
         isAppleSilicon,
-        isMacBookPro,
+        isMacBookPro: isMacBookProProMotion,
         isHighRefreshDesktop,
         cores,
         memory: `${memory}GB`
@@ -240,6 +260,39 @@ export function usePerformanceInit() {
 
       // Start FPS monitoring
       startFPSMonitoring();
+
+      // Variable refresh browsers (notably iOS/macOS ProMotion) can start at 60Hz
+      // and ramp up after interaction. Re-measure once after the first interaction.
+      let upgraded = false;
+      const onFirstInteraction = () => {
+        if (upgraded) return;
+        upgraded = true;
+        // Slight delay so the browser has time to ramp refresh.
+        setTimeout(() => {
+          void tryUpgradeRefreshRate();
+        }, 250);
+      };
+
+      window.addEventListener('touchstart', onFirstInteraction, { passive: true, once: true } as any);
+      window.addEventListener('pointerdown', onFirstInteraction, { passive: true, once: true } as any);
+      window.addEventListener('scroll', onFirstInteraction, { passive: true, once: true } as any);
+
+      const onVisibility = () => {
+        if (document.visibilityState === 'visible') {
+          void tryUpgradeRefreshRate();
+        }
+      };
+      document.addEventListener('visibilitychange', onVisibility);
+
+      // Cleanup listeners
+      const cleanupInteraction = () => {
+        window.removeEventListener('touchstart', onFirstInteraction as any);
+        window.removeEventListener('pointerdown', onFirstInteraction as any);
+        window.removeEventListener('scroll', onFirstInteraction as any);
+        document.removeEventListener('visibilitychange', onVisibility);
+      };
+
+      refreshUpgradeCleanupRef.current = cleanupInteraction;
     };
 
     let idleHandle: number | null = null;
@@ -267,6 +320,11 @@ export function usePerformanceInit() {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
+
+      if (refreshUpgradeCleanupRef.current) {
+        refreshUpgradeCleanupRef.current();
+        refreshUpgradeCleanupRef.current = null;
+      }
     };
   }, [
     detectProMotion, 
@@ -274,7 +332,8 @@ export function usePerformanceInit() {
     setPerformanceMode, 
     setReduceMotion, 
     setRefreshRate, 
-    startFPSMonitoring
+    startFPSMonitoring,
+    tryUpgradeRefreshRate
   ]);
 }
 

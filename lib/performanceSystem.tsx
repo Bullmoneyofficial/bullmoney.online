@@ -295,6 +295,7 @@ interface FPSMonitorProps {
 
 export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: FPSMonitorProps) => {
   const [fps, setFps] = useState(0);
+  const [capHz, setCapHz] = useState<TargetFpsTier>(60);
   const [speedMbps, setSpeedMbps] = useState<number | null>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [speedSources, setSpeedSources] = useState<{ method: string; speed: number }[]>([]);
@@ -476,8 +477,9 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
       const now = performance.now();
       const elapsed = now - lastTimeRef.current;
 
-      // Update FPS display every 2 seconds to reduce state updates
-      if (elapsed >= 2000) {
+      // Update FPS display frequently enough to catch variable refresh spikes
+      // (e.g., iOS/macOS ProMotion can ramp to 120Hz during interaction/scroll).
+      if (elapsed >= 500) {
         setFps(Math.round(frameCountRef.current * 1000 / elapsed));
         frameCountRef.current = 0;
         lastTimeRef.current = now;
@@ -494,6 +496,32 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
         rafIdRef.current = null;
       }
     };
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const readCap = () => {
+      const screenHz = (window.screen as any)?.refreshRate;
+      if (typeof screenHz === 'number' && Number.isFinite(screenHz) && screenHz > 0) {
+        setCapHz(roundToCommonHz(Math.min(screenHz, 120)));
+        return;
+      }
+
+      const root = document.documentElement;
+      if (root.classList.contains('display-120hz') || root.classList.contains('fps-120')) {
+        setCapHz(120);
+      } else if (root.classList.contains('display-90hz') || root.classList.contains('fps-90')) {
+        setCapHz(90);
+      } else {
+        setCapHz(60);
+      }
+    };
+
+    readCap();
+    const interval = window.setInterval(readCap, 1000);
+    return () => window.clearInterval(interval);
   }, [enabled]);
 
   if (!enabled) return null;
@@ -516,7 +544,7 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
 
   const content = (
     <div
-      className={`fixed ${positionClasses[position]} z-[2147483647]`}
+      className={`fixed ${positionClasses[position]} z-2147483647`}
       style={{
         background: 'rgba(0, 0, 0, 0.92)',
         /* PERF FIX: Removed backdrop-filter: blur(12px) — this is a debug overlay,
@@ -550,6 +578,13 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
             {fps}
           </span>
           <span style={{ fontSize: '8px', opacity: 0.5, fontWeight: '500' }}>FPS</span>
+        </div>
+
+        {/* Capability (not FPS) */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+          <span style={{ fontSize: '8px', opacity: 0.45, fontWeight: '600' }}>CAP</span>
+          <span style={{ fontSize: '11px', fontWeight: '600', fontVariantNumeric: 'tabular-nums' }}>{capHz}</span>
+          <span style={{ fontSize: '8px', opacity: 0.5, fontWeight: '500' }}>Hz</span>
         </div>
         
         {/* Divider */}

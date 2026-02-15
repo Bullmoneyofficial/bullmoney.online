@@ -241,6 +241,7 @@ export function ClientProviders({ children, modal, splashFinished = false }: Cli
   // ====================================================================
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const isStorePage = pathname.startsWith('/store');
+  const isGamesPage = pathname.startsWith('/games');
 
   // Global media mute handler (applies to any stray audio/video tags on page/layout)
   useEffect(() => {
@@ -302,7 +303,7 @@ export function ClientProviders({ children, modal, splashFinished = false }: Cli
   }
 
   return (
-    <PerformanceProvider showFPS={false}>
+    <PerformanceProvider showFPS={isGamesPage}>
       <ErrorBoundary>
         <MobilePerformanceProvider>
           <SoundProvider enabled={!masterMuted} volume={0.4}>

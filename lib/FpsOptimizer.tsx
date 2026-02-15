@@ -240,6 +240,24 @@ const TIER_CONFIGS: Record<DeviceTier, DeviceTierConfig> = {
   },
 };
 
+function getDisplayTargetFrameRate(): 60 | 90 | 120 {
+  if (typeof window === 'undefined') return 60;
+
+  const screenHz = (window.screen as any)?.refreshRate;
+  if (typeof screenHz === 'number' && Number.isFinite(screenHz) && screenHz > 0) {
+    if (screenHz >= 115) return 120;
+    if (screenHz >= 85) return 90;
+    return 60;
+  }
+
+  // Fall back to any earlier detection that added classes.
+  const root = document.documentElement;
+  if (root.classList.contains('display-120hz') || root.classList.contains('fps-120')) return 120;
+  if (root.classList.contains('display-90hz') || root.classList.contains('fps-90')) return 90;
+
+  return 60;
+}
+
 /**
  * Detect if user has Apple device or Instagram premium experience
  */
@@ -634,7 +652,11 @@ export const FpsOptimizerProvider = memo(function FpsOptimizerProvider({
       setShimmerQuality(tierConfig.shimmerQuality);
       setSplineQuality(tierConfig.splineQuality);
     }
-    setTargetFrameRate(tierConfig.targetFrameRate);
+    // Prefer a higher target on high-refresh displays (up to 120) instead of
+    // being stuck at 60 due to conservative tier defaults.
+    const displayTarget = getDisplayTargetFrameRate();
+    const effectiveTarget = Math.min(120, Math.max(tierConfig.targetFrameRate, displayTarget)) as 60 | 90 | 120;
+    setTargetFrameRate(effectiveTarget);
     
     console.log(`[FpsOptimizer] Device tier: ${tier}, Mobile: ${window.innerWidth < 768}, Safari: ${safari}, ApplePremium: ${hasApplePremiumExperience}, Instagram: ${isInstagram}`);
   }, []);

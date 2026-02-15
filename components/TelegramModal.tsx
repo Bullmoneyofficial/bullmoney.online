@@ -23,11 +23,11 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = 'visible';
     }
 
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = 'visible';
     };
   }, [isOpen]);
 

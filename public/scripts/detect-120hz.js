@@ -11,7 +11,7 @@
       var w=screen.width||0,h=screen.height||0;
       if(/iphone/.test(ua)&&dpr>=3&&(w>=390||h>=844))hz=120;
       else if(/ipad/.test(ua)&&dpr>=2&&w>=1024)hz=120;
-      else if(/macintosh/i.test(ua)&&(navigator.hardwareConcurrency||0)>=8)hz=120;
+      else if(/macintosh/i.test(ua)&&((w>=3024)||(h>=1964)))hz=120;
       else if(/samsung|oneplus|xiaomi|oppo|realme|vivo/i.test(ua)&&dpr>=2.5)hz=120;
       else if(/pixel.*pro/i.test(ua))hz=90;
       else if(!(/mobi|android|iphone|ipad/i.test(ua))&&((navigator.deviceMemory||8)>=16||w>=2560))hz=120;

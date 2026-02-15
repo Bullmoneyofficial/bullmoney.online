@@ -32,27 +32,33 @@ export function measureActualFrameRate(): Promise<number> {
       resolve(60);
       return;
     }
-    
-    let frames = 0;
-    let startTime = performance.now();
-    const targetFrames = 30; // Measure 30 frames for accuracy
-    
+ 
+    // Use per-frame deltas and the median to reduce the impact of a few janky frames.
+    // This measures the *effective* RAF cadence (often close to refresh rate when idle).
+    const deltas: number[] = [];
+    let lastTs: number | null = null;
+    const targetDeltas = 60; // ~0.5s at 120Hz, ~1s at 60Hz
+
     const countFrame = (timestamp: number) => {
-      frames++;
-      if (frames < targetFrames) {
-        requestAnimationFrame(countFrame);
-      } else {
-        const elapsed = timestamp - startTime;
-        const fps = Math.round((frames / elapsed) * 1000);
-        // Round to nearest common refresh rate
-        if (fps >= 110) measuredFps = 120;
-        else if (fps >= 80) measuredFps = 90;
-        else if (fps >= 55) measuredFps = 60;
-        else measuredFps = 30;
-        resolve(measuredFps);
+      if (lastTs !== null) {
+        const delta = timestamp - lastTs;
+        if (delta > 0) deltas.push(delta);
       }
+      lastTs = timestamp;
+
+      if (deltas.length < targetDeltas) {
+        requestAnimationFrame(countFrame);
+        return;
+      }
+
+      deltas.sort((a, b) => a - b);
+      const medianDelta = deltas[Math.floor(deltas.length / 2)] || 16.67;
+      const fps = 1000 / medianDelta;
+
+      measuredFps = Math.max(1, Math.min(240, Math.round(fps)));
+      resolve(measuredFps);
     };
-    
+
     requestAnimationFrame(countFrame);
   });
 }
@@ -122,27 +128,13 @@ function detectProMotionDevice(): boolean {
   // NEW: Apple Silicon Mac detection (M1, M2, M3, M4 with ProMotion displays)
   const isMac = /macintosh|mac os x/i.test(ua);
   if (isMac) {
-    // Check for Apple GPU (indicates Apple Silicon)
-    try {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-      if (gl) {
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        if (debugInfo) {
-          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
-          // Apple Silicon GPUs
-          if (renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer))) {
-            console.log('[120Hz] 🍎 Apple Silicon Mac detected:', renderer);
-            return true;
-          }
-        }
-      }
-    } catch (e) {}
-    
-    // Fallback: Check for high core count (Apple Silicon has 8+ cores)
-    const cores = navigator.hardwareConcurrency || 4;
-    if (cores >= 8) {
-      console.log('[120Hz] 🖥️ High-core Mac detected (likely Apple Silicon)');
+    // IMPORTANT: Apple Silicon is NOT the same as ProMotion.
+    // Only certain MacBook Pro models (14"/16") have ProMotion.
+    const w = window.screen.width;
+    const h = window.screen.height;
+    const looksLikeProMotionMBP = w >= 3024 || h >= 1964;
+    if (looksLikeProMotionMBP) {
+      console.log('[120Hz] 🍎 MacBook Pro ProMotion-class display detected');
       return true;
     }
   }
@@ -198,22 +190,25 @@ export function use120Hz(): RefreshRateInfo {
   useEffect(() => {
     const initRefreshRate = async () => {
       const nativeHz = detectRefreshRate();
-      const targetHz = Math.min(nativeHz, 120); // Cap at 120Hz
-      
-      // Measure actual FPS capability
+      const nativeTarget = Math.min(nativeHz, 120); // Cap at 120Hz
+
+      // Measure actual RAF cadence. If it indicates a higher refresh than the native guess,
+      // allow targetHz to rise (up to 120) instead of being stuck at 60.
       const actualFps = await measureActualFrameRate();
-      
+      const measuredTarget = Math.min(actualFps, 120);
+      const targetHz = Math.max(nativeTarget, measuredTarget);
+
       setInfo({
         nativeHz,
-        targetHz: Math.min(targetHz, actualFps), // Use measured if lower
-        isHighRefresh: nativeHz >= 90,
-        isProMotion: nativeHz >= 120,
+        targetHz,
+        isHighRefresh: targetHz >= 90,
+        isProMotion: targetHz >= 120,
         frameInterval: 1000 / targetHz,
         supportsVariableRate: 'refreshRate' in (window.screen as any),
         actualFps,
       });
-      
-      console.log(`🖥️ Display: ${nativeHz}Hz detected, measured ${actualFps}fps, targeting ${Math.min(targetHz, actualFps)}fps`);
+
+      console.log(`🖥️ Display: ${nativeHz}Hz detected, measured ${actualFps}fps, targeting ${targetHz}fps`);
     };
     
     initRefreshRate();
@@ -266,10 +261,11 @@ export function inject120HzCSS(): void {
   
   const nativeHz = detectRefreshRate();
   const root = document.documentElement;
+  const nativeTarget = Math.min(nativeHz, 120);
   
   root.style.setProperty('--native-refresh-rate', String(nativeHz));
-  root.style.setProperty('--target-fps', String(Math.min(nativeHz, 120)));
-  root.style.setProperty('--frame-duration', `${1000 / nativeHz}ms`);
+  root.style.setProperty('--target-fps', String(nativeTarget));
+  root.style.setProperty('--frame-duration', `${1000 / nativeTarget}ms`);
   root.style.setProperty('--is-high-refresh', nativeHz >= 90 ? '1' : '0');
   
   // Add class for CSS-based feature detection
@@ -278,6 +274,28 @@ export function inject120HzCSS(): void {
   } else if (nativeHz >= 90) {
     root.classList.add('display-90hz');
   }
+
+  // If the native detection underestimates (common), measure RAF cadence once and
+  // raise the CSS target up to 120 if supported.
+  measureActualFrameRate()
+    .then((measured) => {
+      const measuredTarget = Math.min(measured, 120);
+      const target = Math.max(nativeTarget, measuredTarget);
+
+      root.style.setProperty('--native-refresh-rate', String(Math.max(nativeHz, target)));
+      root.style.setProperty('--target-fps', String(target));
+      root.style.setProperty('--frame-duration', `${1000 / target}ms`);
+      root.style.setProperty('--is-high-refresh', target >= 90 ? '1' : '0');
+
+      if (target >= 120) {
+        root.classList.add('display-120hz');
+      } else if (target >= 90) {
+        root.classList.add('display-90hz');
+      }
+    })
+    .catch(() => {
+      // Best-effort only; keep initial CSS values.
+    });
 }
 
 export default use120Hz;

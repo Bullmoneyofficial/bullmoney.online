@@ -377,8 +377,32 @@ export function useThermalOptimization() {
     if (state.powerSaverActive) {
       return POWER_SAVER_CONFIG;
     }
-    return THERMAL_CONFIGS[state.thermalLevel];
-  }, [state.isPageVisible, state.powerSaverActive, state.thermalLevel]);
+    const base = THERMAL_CONFIGS[state.thermalLevel];
+
+    // IMPORTANT: iOS/macOS ProMotion and high-refresh displays are often variable.
+    // If the browser is actually producing >60fps (measured), allow our targetFps
+    // to rise accordingly (up to 120) so we don't unnecessarily cap animations.
+    // Still respect inferred low power mode.
+    if (state.isLowPowerMode) {
+      return base;
+    }
+
+    const avg = Number.isFinite(state.averageFps) ? state.averageFps : 60;
+    const measuredTier: 60 | 90 | 120 = avg >= 110 ? 120 : avg >= 80 ? 90 : 60;
+    const targetFps = Math.min(120, Math.max(base.targetFps, measuredTier));
+
+    if (targetFps === base.targetFps) {
+      return base;
+    }
+
+    return { ...base, targetFps };
+  }, [
+    state.isPageVisible,
+    state.powerSaverActive,
+    state.thermalLevel,
+    state.isLowPowerMode,
+    state.averageFps,
+  ]);
 
   // Toggle power saver
   const togglePowerSaver = useCallback(() => {

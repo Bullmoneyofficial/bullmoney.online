@@ -139,7 +139,7 @@ export function Modal({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : 'auto';
-    return () => { document.body.style.overflow = 'auto'; };
+    return () => { document.body.style.overflow = 'visible'; };
   }, [open]);
 
   return (

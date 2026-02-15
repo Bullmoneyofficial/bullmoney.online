@@ -630,7 +630,7 @@ export default function ServicesShowcaseModal({
     if (!mounted) return;
     document.body.style.overflow = open ? "hidden" : "auto";
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = "visible";
     };
   }, [open, mounted]);
 

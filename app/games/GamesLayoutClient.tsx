@@ -183,7 +183,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
       `}</style>
 
       <StoreHeader />
-      <ThermalGuard showIndicator={process.env.NODE_ENV === 'development'}>
+      <ThermalGuard showIndicator={false}>
         <main className="w-full" style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100dvh - 72px)', display: 'flex', flexDirection: 'column', touchAction: 'pan-y pan-x' }}>
           {children}
         </main>

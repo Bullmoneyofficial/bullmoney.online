@@ -568,9 +568,9 @@ const HeroParallax = () => {
     if (activeProject) {
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = "visible";
     }
-    return () => { document.body.style.overflow = "auto"; }
+    return () => { document.body.style.overflow = "visible"; }
   }, [activeProject]);
 
   if (loading) {
