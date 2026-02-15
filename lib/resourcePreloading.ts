@@ -4,10 +4,50 @@
  * 
  * HYDRATION OPTIMIZED: Uses requestIdleCallback and progressive loading
  * to avoid blocking the main thread during initial page load.
+ * 
+ * COLD START PREVENTION: Includes keep-alive pings to serverless functions
+ * PERFORMANCE: Production relies on Vercel cron, client pings are supplemental
  */
 
 // Track what's already been preloaded to avoid duplicates
 const preloadedResources = new Set<string>();
+
+// Detect environment
+const getIsDev = () => typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+// ✅ INSTANT WARMUP: Only in dev mode or first-time visitors
+const instantWarmup = () => {
+  if (typeof window === 'undefined') return;
+  
+  const isDev = getIsDev();
+  
+  // PERFORMANCE: In production, skip instant warmup if user has visited recently
+  // Vercel cron keeps the app warm; we only need this for first-time visitors
+  if (!isDev) {
+    const lastWarmup = sessionStorage.getItem('_bm_warmup');
+    if (lastWarmup) return; // Already warmed this session
+    sessionStorage.setItem('_bm_warmup', Date.now().toString());
+  }
+  
+  // Use sendBeacon for non-blocking fire-and-forget request
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon('/api/warmup');
+  } else {
+    // Fallback to fetch with keepalive
+    fetch('/api/warmup', { 
+      method: 'HEAD', 
+      keepalive: true,
+      cache: 'no-store',
+    }).catch(() => {});
+  }
+};
+
+// Run instant warmup immediately when this module loads
+if (typeof window !== 'undefined') {
+  // Schedule for next microtask to not block initial execution
+  queueMicrotask(instantWarmup);
+}
 
 // Preload critical images during idle time
 export const preloadCriticalImages = () => {
@@ -184,6 +224,49 @@ export const initResourcePreloading = () => {
   
   // Priority 4: After user engagement - progressive loading
   setupProgressivePreloading();
+  
+  // Priority 5: Keep-alive to prevent cold starts
+  initColdStartPrevention();
+};
+
+// ✅ COLD START PREVENTION: Initialize keep-alive system
+export const initColdStartPrevention = () => {
+  if (typeof window === 'undefined') return;
+  
+  // Detect dev mode for more aggressive warmup
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  // Import dynamically to avoid bundling in SSR
+  import('./keepAlive').then(({ initKeepAlive }) => {
+    // PERFORMANCE: In prod, Vercel cron handles warmth - client is supplemental
+    // Skip client-side keep-alive in prod to reduce overhead (cron is enough)
+    if (!isDev) {
+      // In production, only init if user is likely to stay (after 30s)
+      setTimeout(() => {
+        initKeepAlive(); // Uses default config (8/15 min intervals)
+      }, 30000);
+      return;
+    }
+    
+    // Dev: Initialize quickly with aggressive intervals
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => {
+        initKeepAlive({
+          activeInterval: 2 * 60 * 1000,  // 2 min
+          idleInterval: 4 * 60 * 1000,    // 4 min
+          endpoints: ['/api/warmup'],
+        });
+      }, { timeout: 3000 });
+    } else {
+      setTimeout(() => {
+        initKeepAlive({
+          activeInterval: 2 * 60 * 1000,
+          idleInterval: 4 * 60 * 1000,
+          endpoints: ['/api/warmup'],
+        });
+      }, 2000);
+    }
+  });
 };
 
 // Export for manual triggering from specific pages

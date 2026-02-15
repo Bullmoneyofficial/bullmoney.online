@@ -4,12 +4,89 @@
  * ║  BullMoney Dev Logger v4.0 — Ultra Premium Terminal Dashboard   ║
  * ║  Live stats · Timing bars · Route icons · Sparklines            ║
  * ║  Animated compiles · Grouped output · Session analytics         ║
+ * ║  + Cold Start Prevention - Auto-warmup critical routes          ║
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 
 import { spawn } from 'child_process';
 import { resolve } from 'path';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+
+// ─── COLD START PREVENTION ─────────────────────────────────────
+const DEV_PORT = process.env.PORT || 3000;
+const BASE_URL = `http://localhost:${DEV_PORT}`;
+
+// Critical routes to pre-warm on dev server start
+const WARMUP_ROUTES = [
+  '/api/warmup',
+  '/api/health',
+  '/api/version',
+  '/api/geo-detect',
+  '/',
+  '/store',
+];
+
+// Keep-alive interval (2 minutes in dev - more aggressive than prod)
+const KEEPALIVE_INTERVAL = 2 * 60 * 1000;
+let keepAliveTimer = null;
+let isServerReady = false;
+
+async function warmupRoute(route) {
+  try {
+    const res = await fetch(`${BASE_URL}${route}`, {
+      method: 'HEAD',
+      headers: { 'User-Agent': 'BullMoney-Dev-Warmup/1.0' }
+    });
+    return { route, status: res.status, ok: res.ok };
+  } catch (err) {
+    return { route, status: 0, ok: false, error: err.message };
+  }
+}
+
+async function runWarmup(silent = false) {
+  if (!isServerReady) return;
+  
+  const results = await Promise.all(WARMUP_ROUTES.map(warmupRoute));
+  
+  if (!silent) {
+    const success = results.filter(r => r.ok).length;
+    const total = results.length;
+    const GREEN = `\x1b[38;2;100;220;130m`;
+    const AMBER = `\x1b[38;2;255;170;40m`;
+    const GHOST = `\x1b[38;2;55;58;70m`;
+    const X = `\x1b[0m`;
+    const B = `\x1b[1m`;
+    
+    if (success === total) {
+      process.stdout.write(`  ${GREEN}${B}⚡${X} ${GHOST}Warmed ${success}/${total} routes${X}\n`);
+    } else {
+      process.stdout.write(`  ${AMBER}${B}⚡${X} ${GHOST}Warmed ${success}/${total} routes${X}\n`);
+    }
+  }
+  
+  return results;
+}
+
+function startKeepAlive() {
+  if (keepAliveTimer) clearInterval(keepAliveTimer);
+  
+  // Initial warmup after server starts (with small delay for full initialization)
+  setTimeout(() => {
+    runWarmup(false);
+  }, 1500);
+  
+  // Periodic keep-alive pings
+  keepAliveTimer = setInterval(() => {
+    runWarmup(true); // Silent pings
+  }, KEEPALIVE_INTERVAL);
+}
+
+function stopKeepAlive() {
+  if (keepAliveTimer) {
+    clearInterval(keepAliveTimer);
+    keepAliveTimer = null;
+  }
+}
 
 // ─── ANSI HELPERS ──────────────────────────────────────────────
 const esc       = (code) => `\x1b[${code}m`;
@@ -392,13 +469,18 @@ function fmtStartup(line) {
   if (clean.includes('✓ Ready in')) {
     const ms = clean.match(/([\d.]+(?:ms|s))/)?.[1] || '';
     const bar = grad3('━'.repeat(62), [100, 220, 130], [80, 220, 230], [255, 200, 50]);
+    
+    // Start cold-start prevention
+    isServerReady = true;
+    startKeepAlive();
+    
     return [
       '',
       `  ${GREEN}${B}✓${X}  ${WHITE}${B}Server ready${X}  ${GHOST}in${X}  ${GREEN}${B}${ms}${X}`,
       '',
       `  ${bar}`,
       '',
-      `  ${GHOST}${I}  Monitoring requests…${X}  ${sparkline([10, 30, 20, 10, 5, 8, 12])}`,
+      `  ${GHOST}${I}  Monitoring requests…${X}  ${sparkline([10, 30, 20, 10, 5, 8, 12])}  ${GHOST}│${X}  ${CYAN}Keep-alive active${X}`,
       '',
     ].join('\n');
   }
@@ -637,17 +719,23 @@ child.stderr.on('data', (d) => { stderrBuf = processChunk(d, stderrBuf); });
 child.on('close', (code) => {
   if (stdoutBuf.trim()) process.stdout.write(formatLine(stdoutBuf) + '\n');
   if (stderrBuf.trim()) process.stdout.write(formatLine(stderrBuf) + '\n');
+  stopKeepAlive();
   printSummary();
   releaseLock();
   process.exit(code || 0);
 });
 
 process.on('SIGINT',  () => {
+  stopKeepAlive();
   releaseLock();
   child.kill('SIGINT');
 });
 process.on('SIGTERM', () => {
+  stopKeepAlive();
   releaseLock();
   child.kill('SIGTERM');
 });
-process.on('exit', () => releaseLock());
+process.on('exit', () => {
+  stopKeepAlive();
+  releaseLock();
+});

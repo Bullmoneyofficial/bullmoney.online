@@ -14,6 +14,8 @@
     "dev:windows": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 node scripts/dev-logger.mjs --turbo",
     "dev:webpack": "node scripts/platform-check.mjs && node scripts/dev-logger.mjs --webpack",
     "dev:plain": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev --turbo",
+    "warmup": "node scripts/dev-warmup.mjs",
+    "warmup:watch": "node scripts/dev-warmup.mjs --watch",
     "build": "node scripts/platform-check.mjs && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=8192 next build",
     "build:fast": "node scripts/platform-check.mjs && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=8192 next build",
     "build:silicon": "node scripts/platform-check.mjs && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=16384 next build",

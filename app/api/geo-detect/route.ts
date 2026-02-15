@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// ✅ EDGE RUNTIME: 0ms cold start - uses only request headers
+export const runtime = 'edge';
+
 // ============================================================================
 // GEO-DETECT API ROUTE
 // Detects user location via Vercel/Cloudflare headers or IP geolocation

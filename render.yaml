@@ -7,6 +7,7 @@ services:
     rootDir: .
     buildCommand: npm ci && npm run build
     startCommand: npm run start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,6 +21,7 @@ services:
     rootDir: next
     buildCommand: npm ci && npm run build
     startCommand: npm run start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
