@@ -48,11 +48,11 @@
   try {
     if (isInAppBrowser) splash.classList.add('bm-splash-lite');
   } catch (e) {}
-  var minVisibleMs = isInAppBrowser ? 400 : 200;
+  var minVisibleMs = isInAppBrowser ? 1400 : 200;
   var mem = (navigator && navigator.deviceMemory) ? navigator.deviceMemory : 0;
   var lowMemory = mem > 0 && mem <= 4;
   var constrainedSplash = isInAppBrowser || lowMemory;
-  var maxSplashMs = constrainedSplash ? 4000 : 6000;
+  var maxSplashMs = constrainedSplash ? (isInAppBrowser ? 6000 : 4500) : 6000;
   var loadAudio = null;
   var interactionBound = false;
   var lifecycleBound = false;
@@ -218,14 +218,15 @@
     if (progressEl) progressEl.textContent = display + '%';
     if (barEl) barEl.style.width = visualProgress + '%';
 
-    // Trigger finale at 75%
-    if (visualProgress >= 75 && !finaleStarted) {
+    // Trigger finale at 75% (85% for in-app browsers to give more reading time)
+    var finaleThreshold = isInAppBrowser ? 85 : 75;
+    if (visualProgress >= finaleThreshold && !finaleStarted) {
       startFinale();
     }
 
     if (visualProgress >= 90) {
       if (!ninetyStallStart) ninetyStallStart = Date.now();
-      if (Date.now() - ninetyStallStart > 800) {
+      if (Date.now() - ninetyStallStart > (isInAppBrowser ? 1400 : 800)) {
         targetPct = 100;
       }
     } else {
@@ -382,7 +383,7 @@
 
   function waitForHydration(cb) {
     var checks = 0;
-    var maxChecks = constrainedSplash ? 60 : 150; // 3s vs 7.5s max
+    var maxChecks = constrainedSplash ? (isInAppBrowser ? 120 : 80) : 150; // in-app: 6s, constrained: 4s, normal: 7.5s max
     
     function check() {
       try {
@@ -650,7 +651,7 @@
     // Safety net: ensure exit even in constrained webviews
     setTimeout(function() {
       if (splash && !splash.classList.contains('hide')) startFinale();
-    }, constrainedSplash ? 3500 : 5000);
+    }, constrainedSplash ? (isInAppBrowser ? 5000 : 4000) : 5000);
 
     // Hard fail-safe in case of runtime errors or missing APIs
     hardFailTimer = setTimeout(forceHide, maxSplashMs);
