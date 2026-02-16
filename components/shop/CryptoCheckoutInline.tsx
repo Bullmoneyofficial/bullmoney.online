@@ -509,6 +509,8 @@ export function CryptoCheckoutInline({
   const fmtCountdown = (s: number) =>
     `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
+  const productSubtitleIsComingSoon = /coming\s+soon/i.test(productName);
+
   // ── Amount display helpers ─────────────────────────────────────────
   const toggleDisplayMode = () =>
     setDisplayMode((p) => (p === 'fiat' ? 'crypto' : 'fiat'));
@@ -547,34 +549,40 @@ export function CryptoCheckoutInline({
       ref={checkoutRef}
       className={`w-full relative flex flex-col ${
         inline
-          ? 'rounded-2xl border border-white/15 overflow-hidden shadow-2xl max-h-[70vh]'
-          : 'max-w-lg mx-auto rounded-2xl border border-white/15 overflow-hidden shadow-2xl'
+          ? 'rounded-2xl border border-black/10 overflow-hidden shadow-2xl max-h-[80vh]'
+          : 'max-w-lg mx-auto rounded-2xl border border-black/10 overflow-hidden shadow-2xl'
       }`}
-      style={{ backgroundColor: '#000' }}
+      style={{ backgroundColor: '#fff' }}
     >
       {/* ── Top Accent Line ────────────────────────────────────── */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+      <div className="h-px w-full bg-linear-to-r from-transparent via-black/20 to-transparent" />
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <div
-        className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-white/10 backdrop-blur-xl"
-        style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}
+        className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-black/10"
+        style={{ backgroundColor: '#ffffff' }}
       >
         <div className="flex items-center gap-2.5">
           {step !== 'select-coin' && step !== 'confirm' && (
             <motion.button
               onClick={goBack}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center transition-colors"
               whileTap={{ scale: 0.9 }}
             >
-              <ArrowLeft className="w-4 h-4 text-white" />
+              <ArrowLeft className="w-4 h-4 text-black" />
             </motion.button>
           )}
           <div>
-            <h2 className="text-base md:text-lg font-bold text-white tracking-tight">
+            <h2 className="text-base md:text-lg font-bold text-black tracking-tight">
               {stepTitle[step]}
             </h2>
-            <p className="text-xs text-white/40 truncate max-w-[200px]">
+            <p
+              className={
+                productSubtitleIsComingSoon
+                  ? 'text-xs text-black/70 truncate max-w-50 inline-flex items-center rounded-full bg-black/5 border border-black/10 px-2 py-0.5'
+                  : 'text-xs text-black/50 truncate max-w-50'
+              }
+            >
               {productName}
             </p>
           </div>
@@ -584,7 +592,7 @@ export function CryptoCheckoutInline({
           {selectedCoin && step !== 'confirm' && (
             <motion.button
               onClick={toggleDisplayMode}
-              className="h-8 px-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1.5 text-xs text-white/70 font-medium"
+              className="h-8 px-3 rounded-full bg-black/5 hover:bg-black/10 transition-colors flex items-center gap-1.5 text-xs text-black/70 font-medium"
               whileTap={{ scale: 0.95 }}
               title={`Switch to ${displayMode === 'fiat' ? 'crypto' : 'fiat'} display`}
             >
@@ -595,10 +603,10 @@ export function CryptoCheckoutInline({
           {onClose && (
             <motion.button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center transition-colors"
               whileTap={{ scale: 0.9 }}
             >
-              <X className="w-4 h-4 text-white" />
+              <X className="w-4 h-4 text-black" />
             </motion.button>
           )}
         </div>
@@ -606,24 +614,24 @@ export function CryptoCheckoutInline({
 
       {/* ── Price Summary ──────────────────────────────────────── */}
       {step !== 'confirm' && (
-        <div className="px-4 md:px-5 py-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-          <span className="text-white/40 text-xs md:text-sm font-medium tracking-wide uppercase">Total</span>
+        <div className="px-4 md:px-5 py-3 border-b border-black/10 flex items-center justify-between bg-black/2">
+          <span className="text-black/60 text-xs md:text-sm font-medium tracking-wide uppercase">Total</span>
           <div className="flex items-center gap-2.5">
             <button
               onClick={toggleDisplayMode}
-              className="text-white font-bold text-base md:text-lg hover:text-white/80 transition-colors cursor-pointer tracking-tight"
+              className="text-black font-bold text-base md:text-lg hover:text-black/70 transition-colors cursor-pointer tracking-tight"
             >
               {primaryAmount}
             </button>
             {secondaryAmount && (
-              <span className="text-xs text-white/30 font-medium">{secondaryAmount}</span>
+              <span className="text-xs text-black/50 font-medium">{secondaryAmount}</span>
             )}
           </div>
         </div>
       )}
 
       {/* ── Content ────────────────────────────────────────────── */}
-      <div className={`p-4 md:p-5 overflow-y-auto ${inline ? 'max-h-[40vh] md:max-h-[45vh]' : 'max-h-[65vh]'}`}>
+      <div className={`p-4 md:p-5 overflow-y-auto ${inline ? 'max-h-[55vh] md:max-h-[60vh]' : 'max-h-[70vh]'}`}>
         <AnimatePresence mode="wait">
           {/* ═══════════════════════════════════════════════════════
               STEP: SELECT CRYPTOCURRENCY
@@ -637,7 +645,7 @@ export function CryptoCheckoutInline({
               className="space-y-2.5"
             >
               {/* Direct Send option */}
-              <p className="text-white/50 text-xs md:text-sm mb-2 font-medium">
+              <p className="text-black/60 text-xs md:text-sm mb-2 font-medium">
                 Choose a cryptocurrency:
               </p>
 
@@ -649,7 +657,7 @@ export function CryptoCheckoutInline({
                   <button
                     key={coin.coin}
                     onClick={() => handleSelectCoin(coin.coin)}
-                    className="w-full p-3.5 md:p-4 rounded-xl border border-white/10 hover:border-white/25 bg-white/[0.03] hover:bg-white/[0.07] transition-all flex items-center gap-3.5 group active:scale-[0.98]"
+                    className="w-full p-3.5 md:p-4 rounded-xl border border-black/10 hover:border-black/20 bg-black/2 hover:bg-black/5 transition-all flex items-center gap-3.5 group active:scale-[0.98]"
                   >
                     <div
                       className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center text-base md:text-lg font-bold shrink-0 shadow-lg"
@@ -663,13 +671,13 @@ export function CryptoCheckoutInline({
                     </div>
                     <div className="flex-1 text-left min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-semibold text-sm md:text-base">
+                        <span className="text-black font-semibold text-sm md:text-base">
                           {coin.name}
                         </span>
-                        <span className="text-white/30 text-xs font-medium">{coin.coin}</span>
+                        <span className="text-black/50 text-xs font-medium">{coin.coin}</span>
                       </div>
                       {price && (
-                        <p className="text-white/40 text-[11px] md:text-xs font-medium">
+                        <p className="text-black/60 text-[11px] md:text-xs font-medium">
                           1 {coin.coin} = $
                           {price.toLocaleString(undefined, {
                             maximumFractionDigits: 2,
@@ -679,11 +687,11 @@ export function CryptoCheckoutInline({
                     </div>
                     <div className="text-right shrink-0">
                       {cryptoAmt !== null ? (
-                        <p className="text-white font-semibold text-xs md:text-sm tabular-nums">
-                          {formatCrypto(cryptoAmt, coin.coin)} <span className="text-white/50">{coin.coin}</span>
+                        <p className="text-black font-semibold text-xs md:text-sm tabular-nums">
+                          {formatCrypto(cryptoAmt, coin.coin)} <span className="text-black/60">{coin.coin}</span>
                         </p>
                       ) : (
-                        <div className="w-16 h-4 bg-white/10 rounded-full animate-pulse" />
+                        <div className="w-16 h-4 bg-black/10 rounded-full animate-pulse" />
                       )}
                     </div>
                   </button>
@@ -691,39 +699,39 @@ export function CryptoCheckoutInline({
               })}
 
               {pricesLoading && (
-                <div className="flex items-center justify-center gap-2 py-3 text-white/30 text-xs font-medium">
+                <div className="flex items-center justify-center gap-2 py-3 text-black/50 text-xs font-medium">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   Loading live prices...
                 </div>
               )}
 
               {/* On-ramp option */}
-              <div className="border-t border-white/5 pt-3 mt-3">
+              <div className="border-t border-black/10 pt-3 mt-3">
                 <button
                   onClick={() => setStep('onramp')}
-                  className="w-full p-3.5 md:p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all text-left group active:scale-[0.98]"
+                  className="w-full p-3.5 md:p-4 rounded-xl bg-black/2 hover:bg-black/5 border border-black/10 hover:border-black/20 transition-all text-left group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white flex items-center justify-center shrink-0 shadow-lg">
                       <CreditCard className="w-5 h-5 text-black" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-semibold text-sm">
+                      <h3 className="text-black font-semibold text-sm">
                         Don't have crypto?
                       </h3>
-                      <p className="text-white/40 text-xs">
+                      <p className="text-black/60 text-xs">
                         Buy with card via MoonPay or Paybis
                       </p>
                     </div>
-                    <ChevronDown className="w-4 h-4 text-white/20 -rotate-90" />
+                    <ChevronDown className="w-4 h-4 text-black/30 -rotate-90" />
                   </div>
                 </button>
               </div>
 
               {/* Security badge */}
-              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white/[0.03] border border-white/10">
-                <Lock className="w-3.5 h-3.5 text-white/40 shrink-0" />
-                <p className="text-[11px] text-white/40 font-medium">
+              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-black/2 border border-black/10">
+                <Lock className="w-3.5 h-3.5 text-black/50 shrink-0" />
+                <p className="text-[11px] text-black/60 font-medium">
                   End-to-end encrypted. Verified on-chain. No wallet permissions needed.
                 </p>
               </div>
@@ -741,16 +749,16 @@ export function CryptoCheckoutInline({
               exit={{ opacity: 0, x: -20 }}
               className="space-y-2.5"
             >
-              <p className="text-white/50 text-xs md:text-sm mb-2 font-medium">
+              <p className="text-black/60 text-xs md:text-sm mb-2 font-medium">
                 Select network for{' '}
-                <span className="text-white font-semibold">{selectedCoin}</span>:
+                <span className="text-black font-semibold">{selectedCoin}</span>:
               </p>
 
               {networksForCoin.map((wallet) => (
                 <button
                   key={wallet.id}
                   onClick={() => handleSelectNetwork(wallet)}
-                  className="w-full p-3.5 md:p-4 rounded-xl border border-white/10 hover:border-white/25 bg-white/[0.03] hover:bg-white/[0.07] transition-all flex items-center gap-3.5 group active:scale-[0.98]"
+                  className="w-full p-3.5 md:p-4 rounded-xl border border-black/10 hover:border-black/20 bg-black/2 hover:bg-black/5 transition-all flex items-center gap-3.5 group active:scale-[0.98]"
                 >
                   <div
                     className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center text-xs font-bold uppercase shrink-0 shadow-lg"
@@ -767,23 +775,23 @@ export function CryptoCheckoutInline({
                         : 'BS'}
                   </div>
                   <div className="flex-1 text-left min-w-0">
-                    <span className="text-white font-semibold text-sm">
+                    <span className="text-black font-semibold text-sm">
                       {wallet.network}
                     </span>
-                    <p className="text-white/30 text-xs mt-0.5 truncate font-mono">
+                    <p className="text-black/50 text-xs mt-0.5 truncate font-mono">
                       {maskAddress(wallet.address)}
                     </p>
                   </div>
-                  <span className="text-[10px] text-white/40 capitalize px-2.5 py-1 rounded-full bg-white/5 border border-white/10 shrink-0 font-semibold">
+                  <span className="text-[10px] text-black/60 capitalize px-2.5 py-1 rounded-full bg-black/5 border border-black/10 shrink-0 font-semibold">
                     {wallet.exchange}
                   </span>
                 </button>
               ))}
 
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.03] border border-white/10 mt-3">
-                <AlertCircle className="w-3.5 h-3.5 text-white/40 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-white/40 font-medium">
-                  Send on the <strong className="text-white/60">correct network</strong> only. Wrong network = <strong className="text-white/60">permanent loss</strong>.
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-black/2 border border-black/10 mt-3">
+                <AlertCircle className="w-3.5 h-3.5 text-black/50 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-black/60 font-medium">
+                  Send on the <strong className="text-black/80">correct network</strong> only. Wrong network = <strong className="text-black/80">permanent loss</strong>.
                 </p>
               </div>
             </motion.div>
@@ -801,25 +809,25 @@ export function CryptoCheckoutInline({
               className="space-y-5"
             >
               {/* Amount Display - Switchable */}
-              <div className="text-center p-5 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-white/50 text-sm mb-2">You will send</p>
+              <div className="text-center p-5 rounded-xl bg-black/2 border border-black/10">
+                <p className="text-black/60 text-sm mb-2">You will send</p>
                 <button
                   onClick={toggleDisplayMode}
                   className="group inline-flex items-center gap-3 cursor-pointer"
                 >
-                  <span className="text-3xl font-bold text-white transition-colors">
+                  <span className="text-3xl font-bold text-black transition-colors">
                     {displayMode === 'crypto'
                       ? liveCryptoAmount
                         ? formatCrypto(liveCryptoAmount)
                         : '—'
                       : formatPrice(totalUSD)}
                   </span>
-                  <span className="text-xl text-white/50">
+                  <span className="text-xl text-black/60">
                     {displayMode === 'crypto' ? selectedCoin : ''}
                   </span>
-                  <ArrowLeftRight className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
+                  <ArrowLeftRight className="w-4 h-4 text-black/40 group-hover:text-black/70 transition-colors" />
                 </button>
-                <p className="text-white/40 text-xs mt-1">
+                <p className="text-black/60 text-xs mt-1">
                   {displayMode === 'crypto'
                     ? `≈ ${formatPrice(totalUSD)}`
                     : liveCryptoAmount
@@ -831,11 +839,11 @@ export function CryptoCheckoutInline({
               {/* Custom Amount Override (optional) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-black/70 uppercase tracking-wider">
                     Custom Amount{' '}
-                    <span className="text-white/30 normal-case tracking-normal">(optional)</span>
+                    <span className="text-black/50 normal-case tracking-normal">(optional)</span>
                   </label>
-                  <span className="text-[10px] text-white/30 font-medium">
+                  <span className="text-[10px] text-black/50 font-medium">
                     Tolerance ±2-5%
                   </span>
                 </div>
@@ -850,14 +858,14 @@ export function CryptoCheckoutInline({
                         ? `${formatCrypto(liveCryptoAmount)} ${selectedCoin}`
                         : `Amount in ${selectedCoin}`
                     }
-                    className="w-full px-4 py-3 pr-16 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-white/25 focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/10 font-mono transition-colors"
+                    className="w-full px-4 py-3 pr-16 rounded-2xl bg-black/3 border border-black/10 text-black text-sm placeholder-black/30 focus:outline-none focus:border-black/30 focus:ring-1 focus:ring-black/10 font-mono transition-colors"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/30 font-semibold">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-black/60 font-semibold">
                     {selectedCoin}
                   </span>
                 </div>
                 {customAmount && (
-                  <p className="text-xs text-white/40">
+                  <p className="text-xs text-black/60">
                     ≈{' '}
                     {livePrice
                       ? formatPrice(parseFloat(customAmount) * livePrice)
@@ -874,24 +882,24 @@ export function CryptoCheckoutInline({
                     const ratio = enteredUSD / totalUSD;
                     if (ratio > OVERPAY_TOLERANCE) {
                       return (
-                        <p className="text-xs text-white/50 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3 text-white/40" /> Overpay
+                        <p className="text-xs text-black/60 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-black/50" /> Overpay
                           detected — exceeds {Math.round(OVERPAY_TOLERANCE * 100 - 100)}% tolerance
                         </p>
                       );
                     }
                     if (ratio < UNDERPAY_TOLERANCE) {
                       return (
-                        <p className="text-xs text-white/50 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3 text-white/40" /> Underpay
+                        <p className="text-xs text-black/60 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-black/50" /> Underpay
                           detected — below {Math.round(100 - UNDERPAY_TOLERANCE * 100)}% tolerance
                         </p>
                       );
                     }
                     if (ratio !== 1) {
                       return (
-                        <p className="text-xs text-white/50 flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-white/40" /> Within
+                        <p className="text-xs text-black/60 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-black/50" /> Within
                           acceptable range
                         </p>
                       );
@@ -904,13 +912,13 @@ export function CryptoCheckoutInline({
               {/* Sender Wallet Address (optional but helps verification) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-black/70 uppercase tracking-wider">
                     Your Wallet Address{' '}
-                    <span className="text-white/30 normal-case tracking-normal">(optional)</span>
+                    <span className="text-black/50 normal-case tracking-normal">(optional)</span>
                   </label>
                   <button
                     onClick={() => setShowSenderAddr(!showSenderAddr)}
-                    className="text-[10px] text-white/30 hover:text-white/50 transition-colors flex items-center gap-1"
+                    className="text-[10px] text-black/50 hover:text-black/70 transition-colors flex items-center gap-1"
                   >
                     {showSenderAddr ? (
                       <EyeOff className="w-3 h-3" />
@@ -926,12 +934,12 @@ export function CryptoCheckoutInline({
                     value={senderWallet}
                     onChange={(e) => setSenderWallet(sanitizeInput(e.target.value))}
                     placeholder={`Your ${selectedCoin} address (for verification)`}
-                    className={`w-full px-4 py-3 rounded-2xl bg-white/[0.04] border text-white text-sm placeholder-white/25 focus:outline-none focus:ring-1 font-mono transition-colors ${
+                    className={`w-full px-4 py-3 rounded-2xl bg-black/3 border text-black text-sm placeholder-black/30 focus:outline-none focus:ring-1 font-mono transition-colors ${
                       senderWalletValid === null
-                        ? 'border-white/[0.08] focus:border-white/20 focus:ring-white/10'
+                        ? 'border-black/10 focus:border-black/30 focus:ring-black/10'
                         : senderWalletValid
-                          ? 'border-white/30 focus:border-white/40 focus:ring-white/20'
-                          : 'border-white/20 focus:border-white/30 focus:ring-white/10'
+                          ? 'border-black/30 focus:border-black/50 focus:ring-black/10'
+                          : 'border-black/20 focus:border-black/30 focus:ring-black/10'
                     }`}
                     autoComplete="off"
                     spellCheck={false}
@@ -939,24 +947,24 @@ export function CryptoCheckoutInline({
                   {senderWalletValid !== null && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       {senderWalletValid ? (
-                        <Check className="w-4 h-4 text-white/60" />
+                        <Check className="w-4 h-4 text-black/70" />
                       ) : (
-                        <AlertCircle className="w-4 h-4 text-white/40" />
+                        <AlertCircle className="w-4 h-4 text-black/50" />
                       )}
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] text-white/25 flex items-center gap-1">
+                <p className="text-[10px] text-black/50 flex items-center gap-1">
                   <Lock className="w-3 h-3" />
                   Encrypted locally — helps us verify your payment faster
                 </p>
               </div>
 
               {/* Network info */}
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                <Info className="w-4 h-4 text-white/30 shrink-0" />
-                <div className="text-[11px] text-white/40">
-                  <span className="text-white/70 font-medium">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-black/2 border border-black/10">
+                <Info className="w-4 h-4 text-black/50 shrink-0" />
+                <div className="text-[11px] text-black/60">
+                  <span className="text-black/80 font-medium">
                     {selectedWallet.network}
                   </span>{' '}
                   via {selectedWallet.exchange} ·{' '}
@@ -965,7 +973,7 @@ export function CryptoCheckoutInline({
                 {hasMultipleNetworks && (
                   <button
                     onClick={() => setStep('select-network')}
-                    className="text-[11px] text-white/40 hover:text-white/60 transition-colors shrink-0 underline underline-offset-2"
+                    className="text-[11px] text-black/60 hover:text-black/80 transition-colors shrink-0 underline underline-offset-2"
                   >
                     Change
                   </button>
@@ -975,7 +983,7 @@ export function CryptoCheckoutInline({
               {/* Continue button */}
               <motion.button
                 onClick={handleProceedToReview}
-                className="w-full py-3.5 rounded-2xl font-bold text-black text-sm transition-all flex items-center justify-center gap-2 bg-white hover:bg-white/90"
+                className="w-full py-3.5 rounded-2xl font-bold text-black text-sm transition-all flex items-center justify-center gap-2 bg-white border border-black/15 hover:bg-black/5"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -997,47 +1005,47 @@ export function CryptoCheckoutInline({
               className="space-y-5"
             >
               {/* Review summary card */}
-              <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-4">
-                <h3 className="text-white font-semibold text-sm flex items-center gap-2 uppercase tracking-wider">
-                  <CheckCircle2 className="w-4 h-4 text-white/50" />
+              <div className="p-5 rounded-2xl bg-black/2 border border-black/10 space-y-4">
+                <h3 className="text-black font-semibold text-sm flex items-center gap-2 uppercase tracking-wider">
+                  <CheckCircle2 className="w-4 h-4 text-black/60" />
                   Payment Summary
                 </h3>
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Product</span>
-                    <span className="text-white font-medium truncate max-w-50">
+                    <span className="text-black/60">Product</span>
+                    <span className="text-black font-medium truncate max-w-50">
                       {productName}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Quantity</span>
-                    <span className="text-white font-medium">{quantity}</span>
+                    <span className="text-black/60">Quantity</span>
+                    <span className="text-black font-medium">{quantity}</span>
                   </div>
-                  <div className="h-px bg-white/[0.06]" />
+                  <div className="h-px bg-black/10" />
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Amount (USD)</span>
-                    <span className="text-white font-bold">
+                    <span className="text-black/60">Amount (USD)</span>
+                    <span className="text-black font-bold">
                       {formatPrice(totalUSD)}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40">
+                    <span className="text-black/60">
                       Amount ({selectedCoin})
                     </span>
-                    <span className="text-white font-bold">
+                    <span className="text-black font-bold">
                       {formatCrypto(lockedCryptoAmount)} {selectedCoin}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Network</span>
-                    <span className="text-white font-medium">
+                    <span className="text-black/60">Network</span>
+                    <span className="text-black font-medium">
                       {selectedWallet.network}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Rate Lock</span>
-                    <span className="text-white font-medium">
+                    <span className="text-black/60">Rate Lock</span>
+                    <span className="text-black font-medium">
                       1 {selectedCoin} = $
                       {lockedPrice?.toLocaleString(undefined, {
                         maximumFractionDigits: 2,
@@ -1046,8 +1054,8 @@ export function CryptoCheckoutInline({
                   </div>
                   {senderWallet && senderWalletValid && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-white/40">From</span>
-                      <span className="text-white font-mono text-[11px]">
+                      <span className="text-black/60">From</span>
+                      <span className="text-black font-mono text-[11px]">
                         {maskAddress(senderWallet)}
                       </span>
                     </div>
@@ -1056,14 +1064,14 @@ export function CryptoCheckoutInline({
               </div>
 
               {/* Overpay/underpay warning */}
-              <div className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                <Shield className="w-4 h-4 text-white/40 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-black/2 border border-black/10">
+                <Shield className="w-4 h-4 text-black/50 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs text-white/60 font-semibold">
+                  <p className="text-xs text-black/70 font-semibold">
                     Price Locked for 15 Minutes
                   </p>
-                  <p className="text-[11px] text-white/30 mt-1 leading-relaxed">
-                    Send the <strong className="text-white/50">exact amount</strong> shown above. 
+                  <p className="text-[11px] text-black/60 mt-1 leading-relaxed">
+                    Send the <strong className="text-black/80">exact amount</strong> shown above. 
                     Underpaying by more than 2% or overpaying by more than 5% 
                     will delay processing.
                   </p>
@@ -1073,7 +1081,7 @@ export function CryptoCheckoutInline({
               {/* Confirm button */}
               <motion.button
                 onClick={handleConfirmAndPay}
-                className="w-full py-3.5 rounded-2xl font-bold text-black text-sm transition-all flex items-center justify-center gap-2 bg-white hover:bg-white/90"
+                className="w-full py-3.5 rounded-2xl font-bold text-black text-sm transition-all flex items-center justify-center gap-2 bg-white border border-black/15 hover:bg-black/5"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -1095,18 +1103,18 @@ export function CryptoCheckoutInline({
               className="space-y-5"
             >
               {/* Timer */}
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                <div className="flex items-center gap-2 text-xs text-white/40">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-black/2 border border-black/10">
+                <div className="flex items-center gap-2 text-xs text-black/60">
                   <Clock className="w-3.5 h-3.5" />
                   <span>Price locked for</span>
                 </div>
                 <span
                   className={`font-mono font-bold text-xs ${
                     countdown < 60
-                      ? 'text-white/90'
+                      ? 'text-black'
                       : countdown < 300
-                        ? 'text-white/60'
-                        : 'text-white/40'
+                        ? 'text-black/70'
+                        : 'text-black/60'
                   }`}
                 >
                   {fmtCountdown(countdown)}
@@ -1114,25 +1122,25 @@ export function CryptoCheckoutInline({
               </div>
 
               {/* Exact amount to send */}
-              <div className="text-center p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-white/40 text-[11px] uppercase tracking-wider font-semibold mb-2">Send exactly</p>
+              <div className="text-center p-5 rounded-2xl bg-black/2 border border-black/10">
+                <p className="text-black/60 text-[11px] uppercase tracking-wider font-semibold mb-2">Send exactly</p>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-3xl font-bold text-white">
+                  <span className="text-3xl font-bold text-black">
                     {formatCrypto(lockedCryptoAmount)}
                   </span>
-                  <span className="text-xl text-white/50">{selectedCoin}</span>
+                  <span className="text-xl text-black/60">{selectedCoin}</span>
                 </div>
-                <p className="text-white/30 text-xs mt-1">
+                <p className="text-black/60 text-xs mt-1">
                   ≈ {formatPrice(totalUSD)}
                 </p>
                 <button
                   onClick={() =>
                     handleCopy(formatCrypto(lockedCryptoAmount), 'amount')
                   }
-                  className="mt-2 text-[11px] text-white/30 hover:text-white/50 transition-colors flex items-center gap-1 mx-auto"
+                  className="mt-2 text-[11px] text-black/60 hover:text-black/80 transition-colors flex items-center gap-1 mx-auto"
                 >
                   {copied === 'amount' ? (
-                    <Check className="w-3 h-3 text-white/60" />
+                    <Check className="w-3 h-3 text-black/70" />
                   ) : (
                     <Copy className="w-3 h-3" />
                   )}
@@ -1141,8 +1149,8 @@ export function CryptoCheckoutInline({
               </div>
 
               {/* QR Code + Address */}
-              <div className="flex flex-col items-center gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-white/40 text-xs">
+              <div className="flex flex-col items-center gap-4 p-5 rounded-2xl bg-black/2 border border-black/10">
+                <p className="text-black/60 text-xs">
                   To this address ({selectedWallet.network})
                 </p>
 
@@ -1159,18 +1167,18 @@ export function CryptoCheckoutInline({
                 </div>
 
                 {/* Address with copy */}
-                <div className="w-full flex items-center gap-2 bg-black/50 rounded-2xl border border-white/[0.06] p-3">
-                  <code className="flex-1 text-[11px] text-white/70 break-all font-mono leading-relaxed">
+                <div className="w-full flex items-center gap-2 bg-black/5 rounded-2xl border border-black/10 p-3">
+                  <code className="flex-1 text-[11px] text-black/70 break-all font-mono leading-relaxed">
                     {selectedWallet.address}
                   </code>
                   <button
                     onClick={() => handleCopy(selectedWallet.address, 'address')}
-                    className="shrink-0 p-2 rounded-xl hover:bg-white/10 transition-colors"
+                    className="shrink-0 p-2 rounded-xl hover:bg-black/5 transition-colors"
                   >
                     {copied === 'address' ? (
-                      <Check className="w-4 h-4 text-white/60" />
+                      <Check className="w-4 h-4 text-black/70" />
                     ) : (
-                      <Copy className="w-4 h-4 text-white/40" />
+                      <Copy className="w-4 h-4 text-black/60" />
                     )}
                   </button>
                 </div>
@@ -1180,7 +1188,7 @@ export function CryptoCheckoutInline({
                   href={selectedWallet.addressExplorerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/50 transition-colors"
+                  className="flex items-center gap-1.5 text-[11px] text-black/60 hover:text-black/80 transition-colors"
                 >
                   <ExternalLink className="w-3 h-3" />
                   View on explorer
@@ -1189,28 +1197,28 @@ export function CryptoCheckoutInline({
 
               {/* Customer Email (required for receipt) */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                <label className="text-xs font-semibold text-black/70 uppercase tracking-wider">
                   Email Address{' '}
-                  <span className="text-white/50 normal-case tracking-normal">(required for receipt)</span>
+                  <span className="text-black/60 normal-case tracking-normal">(required for receipt)</span>
                 </label>
                 <input
                   type="email"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(sanitizeInput(e.target.value))}
                   placeholder="your@email.com"
-                  className={`w-full px-4 py-3 rounded-2xl bg-white/[0.04] border text-white text-sm placeholder-white/25 focus:outline-none focus:ring-1 transition-colors ${
+                  className={`w-full px-4 py-3 rounded-2xl bg-black/3 border text-black text-sm placeholder-black/30 focus:outline-none focus:ring-1 transition-colors ${
                     customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())
-                      ? 'border-white/20 focus:border-white/30 focus:ring-white/10'
-                      : 'border-white/[0.08] focus:border-white/20 focus:ring-white/10'
+                      ? 'border-black/20 focus:border-black/30 focus:ring-black/10'
+                      : 'border-black/10 focus:border-black/30 focus:ring-black/10'
                   }`}
                   autoComplete="email"
                 />
                 {customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim()) && (
-                  <p className="text-xs text-white/50 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3 text-white/40" /> Please enter a valid email
+                  <p className="text-xs text-black/60 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 text-black/50" /> Please enter a valid email
                   </p>
                 )}
-                <p className="text-[10px] text-white/25 flex items-center gap-1">
+                <p className="text-[10px] text-black/50 flex items-center gap-1">
                   <Lock className="w-3 h-3" />
                   We'll send your receipt, invoice, and payment confirmation here
                 </p>
@@ -1218,33 +1226,33 @@ export function CryptoCheckoutInline({
 
               {/* Transaction Hash Input */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                <label className="text-xs font-semibold text-black/70 uppercase tracking-wider">
                   Transaction Hash{' '}
-                  <span className="text-white/30 normal-case tracking-normal">(after sending)</span>
+                  <span className="text-black/50 normal-case tracking-normal">(after sending)</span>
                 </label>
                 <input
                   type="text"
                   value={txHash}
                   onChange={(e) => setTxHash(sanitizeInput(e.target.value))}
                   placeholder="Paste your transaction hash here..."
-                  className={`w-full px-4 py-3 rounded-2xl bg-white/[0.04] border text-white text-sm placeholder-white/25 focus:outline-none focus:ring-1 font-mono transition-colors ${
+                  className={`w-full px-4 py-3 rounded-2xl bg-black/3 border text-black text-sm placeholder-black/30 focus:outline-none focus:ring-1 font-mono transition-colors ${
                     txHash && !isValidTxHash(txHash)
-                      ? 'border-white/20 focus:border-white/30 focus:ring-white/10'
-                      : 'border-white/[0.08] focus:border-white/20 focus:ring-white/10'
+                      ? 'border-black/20 focus:border-black/30 focus:ring-black/10'
+                      : 'border-black/10 focus:border-black/30 focus:ring-black/10'
                   }`}
                   autoComplete="off"
                   spellCheck={false}
                 />
                 {txHash && !isValidTxHash(txHash) && (
-                  <p className="text-xs text-white/50 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3 text-white/40" /> Invalid transaction
+                  <p className="text-xs text-black/60 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 text-black/50" /> Invalid transaction
                     hash format
                   </p>
                 )}
-                <p className="text-[10px] text-white/25">
+                <p className="text-[10px] text-black/50">
                   Find this in your wallet's transaction history after
                   sending.
-                  {' '}<a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white/60 underline underline-offset-2">Need help? Read our full crypto guide →</a>
+                  {' '}<a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-black/60 hover:text-black/80 underline underline-offset-2">Need help? Read our full crypto guide →</a>
                 </p>
               </div>
 
@@ -1254,8 +1262,8 @@ export function CryptoCheckoutInline({
                 disabled={!txHash.trim() || !isValidTxHash(txHash) || !customerEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim()) || submitting}
                 className={`w-full py-3.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                   txHash.trim() && isValidTxHash(txHash) && customerEmail.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())
-                    ? 'bg-white text-black hover:bg-white/90'
-                    : 'bg-white/10 text-white/40'
+                    ? 'bg-white text-black border border-black/15 hover:bg-black/5'
+                    : 'bg-black/5 text-black/40 border border-black/10'
                 }`}
                 whileHover={
                   txHash.trim() && isValidTxHash(txHash)
@@ -1279,12 +1287,12 @@ export function CryptoCheckoutInline({
               </motion.button>
 
               {/* Warning */}
-              <div className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                <AlertCircle className="w-4 h-4 text-white/30 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-white/40 leading-relaxed">
-                  Send the <strong className="text-white/60">exact amount</strong> shown above. Only send{' '}
-                  <strong className="text-white/60">{selectedCoin}</strong> on the{' '}
-                  <strong className="text-white/60">{selectedWallet.network}</strong> network. Wrong
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-black/2 border border-black/10">
+                <AlertCircle className="w-4 h-4 text-black/50 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-black/60 leading-relaxed">
+                  Send the <strong className="text-black/80">exact amount</strong> shown above. Only send{' '}
+                  <strong className="text-black/80">{selectedCoin}</strong> on the{' '}
+                  <strong className="text-black/80">{selectedWallet.network}</strong> network. Wrong
                   network = permanent loss.
                 </p>
               </div>
@@ -1306,16 +1314,16 @@ export function CryptoCheckoutInline({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', delay: 0.1 }}
-                className="w-20 h-20 mx-auto rounded-full bg-white/10 flex items-center justify-center"
+                className="w-20 h-20 mx-auto rounded-full bg-black/5 flex items-center justify-center"
               >
-                <Check className="w-10 h-10 text-white" />
+                <Check className="w-10 h-10 text-black" />
               </motion.div>
 
               <div>
-                <h3 className="text-2xl font-bold text-white">
+                <h3 className="text-2xl font-bold text-black">
                   Payment Submitted!
                 </h3>
-                <p className="text-white/50 mt-2 text-sm max-w-sm mx-auto">
+                <p className="text-black/60 mt-2 text-sm max-w-sm mx-auto">
                   We're verifying your transaction on the{' '}
                   {selectedWallet?.network || 'blockchain'}. You'll receive
                   a confirmation email once verified.
@@ -1323,11 +1331,11 @@ export function CryptoCheckoutInline({
               </div>
 
               {orderNumber && (
-                <div className="p-3 rounded-2xl bg-white/[0.06] border border-white/[0.08] max-w-sm mx-auto">
-                  <p className="text-[10px] text-white/30 mb-1 uppercase tracking-wider font-semibold">
+                <div className="p-3 rounded-2xl bg-black/3 border border-black/10 max-w-sm mx-auto">
+                  <p className="text-[10px] text-black/60 mb-1 uppercase tracking-wider font-semibold">
                     Order Number
                   </p>
-                  <code className="text-sm text-white/80 font-mono font-bold">
+                  <code className="text-sm text-black/80 font-mono font-bold">
                     {orderNumber}
                   </code>
                 </div>
@@ -1336,14 +1344,14 @@ export function CryptoCheckoutInline({
               {/* Live Payment Status */}
               {paymentStatus && (
                 <div className="max-w-sm mx-auto space-y-3">
-                  <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                  <div className="p-3 rounded-2xl bg-black/2 border border-black/10">
                     <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="text-white/40">Verification</span>
+                      <span className="text-black/60">Verification</span>
                       <span className={`font-semibold ${
                         paymentStatus.status === 'confirmed' ? 'text-green-400' :
                         paymentStatus.status === 'failed' ? 'text-red-400' :
                         paymentStatus.status === 'confirming' ? 'text-blue-400' :
-                        'text-white/50'
+                        'text-black/60'
                       }`}>
                         {paymentStatus.status === 'confirmed' ? 'Confirmed' :
                          paymentStatus.status === 'confirming' ? `${paymentStatus.confirmations}/${paymentStatus.requiredConfirmations} confirmations` :
@@ -1352,7 +1360,7 @@ export function CryptoCheckoutInline({
                       </span>
                     </div>
                     {/* Progress bar */}
-                    <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="w-full h-1.5 rounded-full bg-black/10 overflow-hidden">
                       <motion.div
                         className={`h-full rounded-full ${
                           paymentStatus.status === 'confirmed' ? 'bg-green-400' :
@@ -1364,10 +1372,10 @@ export function CryptoCheckoutInline({
                         transition={{ duration: 0.5 }}
                       />
                     </div>
-                    <p className="text-[10px] text-white/30 mt-2">{paymentStatus.message}</p>
+                    <p className="text-[10px] text-black/60 mt-2">{paymentStatus.message}</p>
                   </div>
                   {!paymentStatus.isTerminal && (
-                    <div className="flex items-center justify-center gap-1.5 text-[10px] text-white/20">
+                    <div className="flex items-center justify-center gap-1.5 text-[10px] text-black/50">
                       <RefreshCw className="w-3 h-3 animate-spin" />
                       Auto-updating every 15 seconds
                     </div>
@@ -1376,11 +1384,11 @@ export function CryptoCheckoutInline({
               )}
 
               {txHash && (
-                <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] max-w-sm mx-auto">
-                  <p className="text-[10px] text-white/30 mb-1 uppercase tracking-wider font-semibold">
+                <div className="p-3 rounded-2xl bg-black/2 border border-black/10 max-w-sm mx-auto">
+                  <p className="text-[10px] text-black/60 mb-1 uppercase tracking-wider font-semibold">
                     Transaction Hash
                   </p>
-                  <code className="text-[11px] text-white/60 break-all font-mono">
+                  <code className="text-[11px] text-black/70 break-all font-mono">
                     {txHash}
                   </code>
                 </div>
@@ -1392,7 +1400,7 @@ export function CryptoCheckoutInline({
                     href={selectedWallet.explorerUrl(txHash)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/[0.06] hover:bg-white/10 text-white text-sm font-medium transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-black/5 hover:bg-black/10 text-black text-sm font-medium transition-colors"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Track on Explorer
@@ -1409,7 +1417,7 @@ export function CryptoCheckoutInline({
                 </button>
               </div>
 
-              <p className="text-[10px] text-white/25 max-w-xs mx-auto">
+              <p className="text-[10px] text-black/50 max-w-xs mx-auto">
                 Typical verification: 5–30 minutes depending on network
                 congestion
               </p>
@@ -1427,7 +1435,7 @@ export function CryptoCheckoutInline({
               exit={{ opacity: 0, x: -20 }}
               className="space-y-4"
             >
-              <p className="text-white/50 text-xs mb-3">
+              <p className="text-black/60 text-xs mb-3">
                 Don't have crypto? Buy instantly with your card, then send
                 it to complete your purchase.
               </p>
@@ -1450,44 +1458,44 @@ export function CryptoCheckoutInline({
                       );
                     }
                   }}
-                  className="w-full p-4 rounded-2xl border border-white/[0.06] hover:border-white/15 bg-white/[0.03] hover:bg-white/[0.06] transition-all text-left group"
+                  className="w-full p-4 rounded-2xl border border-black/10 hover:border-black/20 bg-black/2 hover:bg-black/4 transition-all text-left group"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-black/5 flex items-center justify-center text-black font-bold text-sm shrink-0">
                       {provider.name[0]}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-semibold text-sm group-hover:text-white/80 transition-colors">
+                      <h3 className="text-black font-semibold text-sm group-hover:text-black/80 transition-colors">
                         {provider.name}
                       </h3>
-                      <p className="text-white/40 text-xs">
+                      <p className="text-black/60 text-xs">
                         {provider.description}
                       </p>
                     </div>
-                    <ExternalLink className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors shrink-0" />
+                    <ExternalLink className="w-4 h-4 text-black/40 group-hover:text-black/60 transition-colors shrink-0" />
                   </div>
                 </button>
               ))}
 
-              <div className="border-t border-white/10 pt-4 mt-4">
-                <p className="text-white/40 text-xs md:text-sm mb-3 font-medium">
+              <div className="border-t border-black/10 pt-4 mt-4">
+                <p className="text-black/60 text-xs md:text-sm mb-3 font-medium">
                   After purchasing:
                 </p>
-                <ol className="space-y-2.5 text-xs md:text-sm text-white/40">
+                <ol className="space-y-2.5 text-xs md:text-sm text-black/60">
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] text-white font-bold shrink-0">
+                    <span className="w-5 h-5 rounded-full bg-black/5 flex items-center justify-center text-[10px] text-black font-bold shrink-0">
                       1
                     </span>
                     <span>Buy crypto on MoonPay or Paybis</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] text-white font-bold shrink-0">
+                    <span className="w-5 h-5 rounded-full bg-black/5 flex items-center justify-center text-[10px] text-black font-bold shrink-0">
                       2
                     </span>
                     <span>Send to your personal wallet</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] text-white font-bold shrink-0">
+                    <span className="w-5 h-5 rounded-full bg-black/5 flex items-center justify-center text-[10px] text-black font-bold shrink-0">
                       3
                     </span>
                     <span>Come back here and &quot;Send Crypto Directly&quot;</span>
@@ -1497,7 +1505,7 @@ export function CryptoCheckoutInline({
 
               <button
                 onClick={() => setStep('select-coin')}
-                className="w-full py-3 md:py-3.5 rounded-xl bg-white text-black text-sm font-bold transition-all hover:bg-white/90 active:scale-[0.98]"
+                className="w-full py-3 md:py-3.5 rounded-xl bg-white border border-black/15 text-black text-sm font-bold transition-all hover:bg-black/5 active:scale-[0.98]"
               >
                 I already have crypto → Send directly
               </button>
@@ -1507,7 +1515,7 @@ export function CryptoCheckoutInline({
       </div>
 
       {/* ── Security Footer ────────────────────────────────────── */}
-      <div className="px-4 md:px-5 py-2.5 border-t border-white/5 flex items-center justify-between text-[10px] md:text-xs text-white/25">
+      <div className="px-4 md:px-5 py-2.5 border-t border-black/10 flex items-center justify-between text-[10px] md:text-xs text-black/50">
         <div className="flex items-center gap-1.5">
           <Lock className="w-3 h-3" />
           <span className="font-medium">Encrypted</span>
@@ -1574,7 +1582,7 @@ export function CryptoCheckoutTrigger({
         disabled={disabled}
         style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
         className={compact
-          ? 'w-full py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-black text-white hover:bg-black/90 shadow-md'
+          ? 'w-full py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-white border border-black/15 text-black hover:bg-black/5 shadow-md'
           : 'w-full py-4 md:py-5 rounded-2xl font-bold text-sm md:text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 bg-white text-black hover:bg-white/90 shadow-lg'
         }
         whileHover={disabled ? {} : { scale: 1.02 }}
@@ -1608,15 +1616,15 @@ export function CryptoCheckoutTrigger({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[99999] flex flex-col bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-99999 flex flex-col bg-white/90 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           >
             {/* Close bar */}
             <div className="flex items-center justify-between px-4 py-3 shrink-0">
-              <span className="text-white/60 text-sm font-medium truncate max-w-[60%]">{productName}</span>
+              <span className="text-black/70 text-sm font-medium truncate max-w-[60%]">{productName}</span>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
-                className="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                className="text-black/80 hover:text-black p-2 rounded-full hover:bg-black/5 transition-colors"
                 aria-label="Close checkout"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

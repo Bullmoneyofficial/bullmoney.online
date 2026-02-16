@@ -36,6 +36,8 @@ export function CartDrawer() {
     clearCart,
     setDiscountCode,
     discountCode,
+    vipShippingCharged,
+    loadVipShippingSetting,
   } = useCartStore();
 
   const summary = getSummary();
@@ -51,7 +53,12 @@ export function CartDrawer() {
   const [showCoupon, setShowCoupon] = useState(false);
   const [showCryptoCheckout, setShowCryptoCheckout] = useState(false);
 
+  const isVipProduct = (product: any) => {
+    return Boolean(product?.buy_url || product?._source === 'vip' || product?.details?.buy_url);
+  };
+
   useEffect(() => {
+    loadVipShippingSetting();
     const mediaQuery = window.matchMedia('(min-width: 768px)');
     const updateMatch = () => setIsDesktop(mediaQuery.matches);
     updateMatch();
@@ -69,7 +76,7 @@ export function CartDrawer() {
         mediaQuery.removeListener(updateMatch);
       }
     };
-  }, []);
+  }, [loadVipShippingSetting]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -124,6 +131,14 @@ export function CartDrawer() {
     closeCart();
     router.push('/store');
   };
+
+  const nonVipSubtotal = vipShippingCharged
+    ? summary.subtotal
+    : items.reduce((sum, item) => {
+        if (isVipProduct(item.product)) return sum;
+        const itemPrice = item.product.base_price + ((item.variant as any)?.price_adjustment || 0);
+        return sum + itemPrice * item.quantity;
+      }, 0);
 
   // Portal content - renders at document.body level
   const drawerContent = (
@@ -192,7 +207,7 @@ export function CartDrawer() {
                     <ShoppingBag className="w-10 h-10" style={{ color: 'rgba(0,0,0,0.2)' }} />
                   </div>
                   <h3 className="text-lg font-medium mb-2">Your cart is empty</h3>
-                  <p className="text-sm mb-6 max-w-[240px]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                    <p className="text-sm mb-6 max-w-60" style={{ color: 'rgba(0,0,0,0.5)' }}>
                     Looks like you haven't added anything yet. Explore our collection!
                   </p>
                   <button
@@ -214,9 +229,10 @@ export function CartDrawer() {
               ) : (
                 <div className="space-y-4 md:space-y-6">
                   {items.map((item) => {
-                    const price = item.product.base_price + item.variant.price_adjustment;
+                    const vip = isVipProduct(item.product);
+                    const price = item.product.base_price + (item.variant?.price_adjustment || 0);
                     const total = price * item.quantity;
-                    const optionsText = Object.values(item.variant.options)
+                    const optionsText = Object.values((item.variant as any)?.options ?? {})
                       .filter(Boolean)
                       .join(' / ');
 
@@ -284,7 +300,7 @@ export function CartDrawer() {
                               <span className="w-8 text-center text-sm">{item.quantity}</span>
                               <button
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                disabled={item.quantity >= item.variant.inventory_count}
+                                disabled={!vip && typeof item.variant?.inventory_count === 'number' && item.quantity >= item.variant.inventory_count}
                                 className="w-9 md:w-8 h-full flex items-center justify-center disabled:opacity-30 transition-all rounded-r-lg"
                                 style={{ color: 'rgba(0,0,0,0.6)' }}
                               >
@@ -346,14 +362,14 @@ export function CartDrawer() {
                 {summary.shipping > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs text-center" style={{ color: 'rgba(0,0,0,0.45)' }}>
-                      Add {useCurrencyLocaleStore.getState().formatPrice(150 - summary.subtotal)} more for free shipping
+                      Add {useCurrencyLocaleStore.getState().formatPrice(150 - nonVipSubtotal)} more for free shipping
                     </p>
                     <div className="h-1.5 md:h-1 bg-black/10 rounded-full overflow-hidden">
                       <motion.div 
                         className="h-full"
                         style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.45), rgba(0,0,0,0.15))' }}
                         initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, (summary.subtotal / 150) * 100)}%` }}
+                        animate={{ width: `${Math.min(100, (nonVipSubtotal / 150) * 100)}%` }}
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                       />
                     </div>
@@ -422,7 +438,7 @@ export function CartDrawer() {
                           setShowCryptoCheckout((prev) => !prev);
                         }}
                         disabled={items.length === 0}
-                        className="w-full h-12 md:h-14 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border border-black/10 bg-black text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="w-full h-12 md:h-14 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border border-black/15 bg-white text-black hover:bg-black/5 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
                         {showCryptoCheckout ? 'Hide Crypto Checkout' : 'Pay with Crypto'}

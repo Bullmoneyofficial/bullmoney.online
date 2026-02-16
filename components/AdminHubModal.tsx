@@ -42,6 +42,7 @@ import AffiliateQRPosterPanel from "@/components/admin/AffiliateQRPosterPanel";
 import AffiliateContentAdminPanel from "@/components/admin/AffiliateContentAdminPanel";
 import NetworkAdminPanel from "@/components/admin/NetworkAdminPanel";
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
+import { useCartStore } from '@/stores/cart-store';
 
 // Generate a reasonably unique id when inserting rows from the client
 const safeId = () =>
@@ -323,6 +324,8 @@ export function AdminHubModal({
   const [storeView, setStoreView] = useState<"analytics" | "promos" | "rewards" | "messages">("analytics");
   const [storeDisplayMode, setStoreDisplayMode] = useState<"global" | "vip" | "timer">("global");
   const [displayModeLoading, setDisplayModeLoading] = useState(false);
+  const [vipShippingCharged, setVipShippingCharged] = useState(true);
+  const [vipShippingLoading, setVipShippingLoading] = useState(false);
   const [timerEnd, setTimerEnd] = useState<string>("");
   const [timerHeadline, setTimerHeadline] = useState<string>("Something big is coming");
   const [timerSubtext, setTimerSubtext] = useState<string>("New products dropping soon. Stay tuned.");
@@ -799,6 +802,46 @@ export function AdminHubModal({
     }
   }, [timerEnd, timerHeadline, timerSubtext, getAdminHeaders, showToast, showError]);
 
+  const fetchVipShipping = useCallback(async () => {
+    try {
+      const res = await fetch('/api/store/settings/vip-shipping', { cache: 'no-store' });
+      const data = await res.json();
+      if (typeof data?.charged === 'boolean') {
+        setVipShippingCharged(data.charged);
+        try {
+          useCartStore.getState().setVipShippingCharged(data.charged);
+        } catch {}
+      }
+    } catch (err) {
+      console.error('Failed to fetch VIP shipping setting:', err);
+    }
+  }, []);
+
+  const changeVipShipping = useCallback(async (charged: boolean) => {
+    setVipShippingLoading(true);
+    try {
+      const res = await fetch('/api/store/settings/vip-shipping', {
+        method: 'PUT',
+        headers: getAdminHeaders(),
+        body: JSON.stringify({ charged }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.success) {
+        setVipShippingCharged(Boolean(data.charged));
+        try {
+          useCartStore.getState().setVipShippingCharged(Boolean(data.charged));
+        } catch {}
+        showToast(data.message || 'VIP shipping setting updated');
+      } else {
+        showError(data?.error || 'Failed to update VIP shipping setting');
+      }
+    } catch (err) {
+      showError('Failed to update VIP shipping setting');
+    } finally {
+      setVipShippingLoading(false);
+    }
+  }, [getAdminHeaders, showToast, showError]);
+
   const syncTick = useCallback(async () => {
     if (isSyncing.current) return; // Prevent overlapping fetches during rapid polling
     isSyncing.current = true;
@@ -811,11 +854,12 @@ export function AdminHubModal({
         refreshAnalyses(),
         refreshRecruits(),
         fetchDisplayMode(),
+        fetchVipShipping(),
       ]);
     } finally {
       isSyncing.current = false;
     }
-  }, [refreshProducts, refreshVipProducts, refreshServices, refreshLivestream, refreshAnalyses, refreshRecruits, fetchDisplayMode]);
+  }, [refreshProducts, refreshVipProducts, refreshServices, refreshLivestream, refreshAnalyses, refreshRecruits, fetchDisplayMode, fetchVipShipping]);
 
   const loadAll = useCallback(async () => {
     if (!isAdmin) {
@@ -2505,6 +2549,39 @@ export function AdminHubModal({
                               <RefreshCw className="w-4 h-4 animate-spin" /> Switching mode...
                             </div>
                           )}
+                        </div>
+
+                        <div className="p-4 rounded-xl border border-slate-700 bg-slate-900/70">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h3 className="text-white font-semibold text-base mb-1">VIP Shipping Cost</h3>
+                              <p className="text-slate-400 text-sm">
+                                Toggle whether VIP products are charged shipping in the cart.
+                              </p>
+                            </div>
+
+                            <button
+                              onClick={() => changeVipShipping(!vipShippingCharged)}
+                              disabled={vipShippingLoading}
+                              className={`shrink-0 px-4 py-2 rounded-lg text-sm font-bold border transition-colors ${
+                                vipShippingCharged
+                                  ? 'bg-white text-black border-white/20'
+                                  : 'bg-slate-800 text-white border-slate-600'
+                              } ${vipShippingLoading ? 'opacity-60 pointer-events-none' : ''}`}
+                            >
+                              {vipShippingLoading
+                                ? 'Saving...'
+                                : vipShippingCharged
+                                  ? 'Shipping ON'
+                                  : 'Shipping OFF'}
+                            </button>
+                          </div>
+
+                          <div className="mt-3 text-xs text-slate-500">
+                            {vipShippingCharged
+                              ? 'VIP items follow normal shipping rules (free over $150).'
+                              : 'VIP items do not contribute to shipping charges (cart shipping is based on non-VIP items only).'}
+                          </div>
                         </div>
 
                         {/* Timer configuration panel */}

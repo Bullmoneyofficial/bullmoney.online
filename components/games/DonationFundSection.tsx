@@ -446,7 +446,7 @@ export function DonationFundSection() {
                 </button>
 
                 {showCryptoCheckout && (
-                  <div className="mt-2 rounded-xl border border-white/10 bg-black/60 p-2 max-h-[50vh] overflow-y-auto">
+                  <div className="mt-2 rounded-xl border border-black/10 bg-white p-2 max-h-[60vh] overflow-y-auto">
                     <CryptoCheckoutInline
                       productName="Gaming License Donation"
                       productImage={null}

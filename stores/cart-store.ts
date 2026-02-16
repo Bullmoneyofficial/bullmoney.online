@@ -17,6 +17,10 @@ function getCartSessionEmail(): string | null {
   return session?.email || null;
 }
 
+function isVipCartProduct(product: ProductWithDetails): boolean {
+  return Boolean((product as any).buy_url || (product as any)._source === 'vip' || (product.details as any)?.buy_url);
+}
+
 // SQL helpers (fire-and-forget)
 async function sqlUpsertCartItem(email: string, item: CartItem) {
   try {
@@ -50,6 +54,8 @@ interface CartStore {
   discountCode: string | null;
   discountAmount: number;
   _synced: boolean;
+  vipShippingCharged: boolean;
+  _vipShippingLoaded: boolean;
   
   // Actions
   addItem: (product: ProductWithDetails, variant: Variant, quantity?: number) => void;
@@ -57,6 +63,8 @@ interface CartStore {
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   setDiscountCode: (code: string | null, amount?: number) => void;
+  setVipShippingCharged: (charged: boolean) => void;
+  loadVipShippingSetting: () => Promise<void>;
   
   // Cart drawer
   openCart: () => void;
@@ -87,10 +95,31 @@ export const useCartStore = create<CartStore>()(
       discountCode: null,
       discountAmount: 0,
       _synced: false,
+      vipShippingCharged: true,
+      _vipShippingLoaded: false,
+
+      setVipShippingCharged: (charged) => set({ vipShippingCharged: charged, _vipShippingLoaded: true }),
+
+      loadVipShippingSetting: async () => {
+        const state = get();
+        if (state._vipShippingLoaded) return;
+        try {
+          const res = await fetch('/api/store/settings/vip-shipping', { cache: 'no-store' as RequestCache });
+          const data = await res.json();
+          if (res.ok && typeof data?.charged === 'boolean') {
+            set({ vipShippingCharged: data.charged, _vipShippingLoaded: true });
+          } else {
+            set({ _vipShippingLoaded: true });
+          }
+        } catch {
+          set({ _vipShippingLoaded: true });
+        }
+      },
       
       // Add item to cart
       addItem: (product, variant, quantity = 1) => {
         const itemId = `${product.id}-${variant.id}`;
+        const vip = isVipCartProduct(product);
         
         set((state) => {
           const existingItemIndex = state.items.findIndex(item => item.id === itemId);
@@ -101,8 +130,8 @@ export const useCartStore = create<CartStore>()(
             const newQuantity = newItems[existingItemIndex].quantity + quantity;
             
             // Check stock
-            if (newQuantity > variant.inventory_count) {
-              return state; // Don't exceed stock
+            if (!vip && newQuantity > variant.inventory_count) {
+              return { ...state, isOpen: true }; // Don't exceed stock, but open cart
             }
             
             newItems[existingItemIndex] = {
@@ -115,8 +144,8 @@ export const useCartStore = create<CartStore>()(
           }
           
           // Add new item
-          if (quantity > variant.inventory_count) {
-            return state; // Don't exceed stock
+          if (!vip && quantity > variant.inventory_count) {
+            return { ...state, isOpen: true }; // Don't exceed stock, but open cart
           }
           
           const newItem: CartItem = {
@@ -156,9 +185,10 @@ export const useCartStore = create<CartStore>()(
           if (itemIndex === -1) return state;
           
           const item = state.items[itemIndex];
+          const vip = isVipCartProduct(item.product);
           
           // Check stock
-          if (quantity > item.variant.inventory_count) {
+          if (!vip && quantity > item.variant.inventory_count) {
             return state;
           }
           
@@ -195,7 +225,7 @@ export const useCartStore = create<CartStore>()(
       // Get subtotal
       getSubtotal: () => {
         return get().items.reduce((sum, item) => {
-          const price = item.product.base_price + item.variant.price_adjustment;
+          const price = item.product.base_price + (item.variant?.price_adjustment ?? 0);
           return sum + price * item.quantity;
         }, 0);
       },
@@ -204,7 +234,19 @@ export const useCartStore = create<CartStore>()(
       getSummary: () => {
         const state = get();
         const subtotal = state.getSubtotal();
-        const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
+        const shippingSubtotal = state.vipShippingCharged
+          ? subtotal
+          : state.items.reduce((sum, item) => {
+              if (isVipCartProduct(item.product)) return sum;
+              const price = item.product.base_price + (item.variant?.price_adjustment ?? 0);
+              return sum + price * item.quantity;
+            }, 0);
+
+        const shipping = shippingSubtotal <= 0
+          ? 0
+          : shippingSubtotal >= FREE_SHIPPING_THRESHOLD
+            ? 0
+            : STANDARD_SHIPPING;
         const discount = state.discountAmount;
         const taxableAmount = Math.max(0, subtotal - discount);
         const tax = taxableAmount * TAX_RATE;

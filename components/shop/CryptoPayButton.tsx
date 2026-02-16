@@ -38,9 +38,9 @@ export function CryptoPayButton({
   const [showModal, setShowModal] = useState(false);
 
   const baseClasses = {
-    primary: 'w-full py-4 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg',
-    secondary: 'w-full py-3 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all border border-white/20 hover:border-white/40',
-    compact: 'px-4 py-2 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 transition-all',
+    primary: 'w-full py-4 text-black rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg border border-black/15',
+    secondary: 'w-full py-3 text-black rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all border border-black/15 hover:border-black/30',
+    compact: 'px-4 py-2 text-black rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 transition-all border border-black/15',
   };
 
   return (
@@ -50,13 +50,13 @@ export function CryptoPayButton({
           <>
             {/* Animated Shimmer Border */}
             <div className="absolute inset-0 rounded-xl p-px overflow-hidden z-1">
-              <div className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border" style={{ width: '100%' }} />
+              <div className="absolute inset-0 bg-linear-to-r from-transparent via-black to-transparent opacity-10 store-shimmer-border" style={{ width: '100%' }} />
               <div className="absolute inset-px bg-transparent rounded-xl" />
             </div>
             {/* Static White Border */}
-            <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-2" />
+            <div className="absolute inset-0 border border-black/15 rounded-xl pointer-events-none z-2" />
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-b from-black/5 to-transparent z-10 pointer-events-none" />
           </>
         )}
         
@@ -69,7 +69,7 @@ export function CryptoPayButton({
           disabled={disabled}
           className={`relative ${baseClasses[variant]} ${className}`}
           style={{
-            backgroundColor: variant === 'secondary' ? 'rgba(255, 255, 255, 0.05)' : 'rgb(245, 158, 11)',
+            backgroundColor: variant === 'secondary' ? 'rgba(0, 0, 0, 0.03)' : '#ffffff',
           }}
           whileHover={!disabled ? { scale: 1.02 } : {}}
           whileTap={!disabled ? { scale: 0.98 } : {}}
@@ -77,7 +77,7 @@ export function CryptoPayButton({
           <Wallet className={variant === 'compact' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
           <span>Pay with Crypto</span>
           {variant === 'primary' && (
-            <span className="ml-1 text-xs opacity-70">₿ Ξ ◎</span>
+            <span className="ml-1 text-xs opacity-60">₿ Ξ ◎</span>
           )}
         </motion.button>
       </div>

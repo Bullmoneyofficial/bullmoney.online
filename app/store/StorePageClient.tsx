@@ -5,7 +5,8 @@ import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, ShoppingBag, CreditCard, X } from 'lucide-react';
+import { Search, ShoppingBag, CreditCard, X, ChevronDown } from 'lucide-react';
+import { Typewriter, FallingWords, SlideInLabel } from '@/components/shop/StoreTextEffects';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
 // ✅ HYDRATION OPTIMIZATION: Import deferred utilities
 import { useHydrated, useIdleCallback } from '@/hooks/useHydrationOptimization';
@@ -39,6 +40,10 @@ const DigitalArtSection = dynamic(
 const PrintDesignStudio = dynamic(
   () => import('@/components/shop/PrintDesignStudio').then(m => ({ default: m.PrintDesignStudio })),
   { ssr: false }
+);
+const StoreAboutTimeline = dynamic(
+  () => import('@/components/shop/StoreAboutTimeline').then(m => ({ default: m.StoreAboutTimeline })),
+  { ssr: false, loading: () => <div className="h-80 w-full bg-white" /> }
 );
 
 // ✅ LAZY: useShowcaseScroll (461 lines) converted to lazy effect component — side-effect only
@@ -242,12 +247,12 @@ function StoreNetworkShowcase() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                <SlideInLabel className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
                   Network drop
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Network drops.</h2>
+                </SlideInLabel>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight"><Typewriter text="Network drops." /></h2>
                 <p className="mt-2 max-w-2xl text-sm sm:text-base" style={{ color: 'rgba(0,0,0,0.6)' }}>
-                  Fresh visuals from the BullMoney network across Instagram, TikTok, and YouTube.
+                  <FallingWords text="Fresh visuals from the BullMoney network across Instagram, TikTok, and YouTube." />
                 </p>
               </div>
             </div>
@@ -688,10 +693,19 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isUltraWide, setIsUltraWide] = useState(false);
+  const [desktopMarketIntelCollapsed, setDesktopMarketIntelCollapsed] = useState({
+    community: true,
+    quotes: true,
+    news: true,
+  });
   const [hasMounted, setHasMounted] = useState(false);
   const [allowHeavyHero, setAllowHeavyHero] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [studioState, setStudioState] = useState<{ open: boolean } & StudioOpts>({ open: false });
+
+  const toggleDesktopMarketIntel = useCallback((key: keyof typeof desktopMarketIntelCollapsed) => {
+    setDesktopMarketIntelCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   const [checkoutProduct, setCheckoutProduct] = useState<ProductWithDetails | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<
@@ -1568,10 +1582,10 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     const variant = product.variants?.[0];
     if (isVipProduct(product)) {
       // VIP products use a synthetic variant for cart
-      const syntheticVariant = variant || {
+      const syntheticVariant = {
         id: `vip-${product.id}`,
-        name: 'Default',
-        price_adjustment: 0,
+        name: (variant as any)?.name || 'Default',
+        price_adjustment: (variant as any)?.price_adjustment || 0,
         inventory_count: 999,
         sort_order: 0,
       };
@@ -1607,10 +1621,10 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
     if (paymentMethod === 'cart') {
       if (vip) {
-        const syntheticVariant = variant || {
+        const syntheticVariant = {
           id: `vip-${checkoutProduct.id}`,
-          name: 'Default',
-          price_adjustment: 0,
+          name: (variant as any)?.name || 'Default',
+          price_adjustment: (variant as any)?.price_adjustment || 0,
           inventory_count: 999,
           sort_order: 0,
         };
@@ -1910,12 +1924,12 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     >
       <div className="mx-auto w-full max-w-[26rem] sm:max-w-3xl lg:max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 24, paddingBottom: 32 }}>
         <div className="flex flex-col gap-3">
-          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+          <SlideInLabel className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
             Live dashboards
-          </p>
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Market intelligence.</h2>
+          </SlideInLabel>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight"><Typewriter text="Market intelligence." /></h2>
           <p className="text-sm sm:text-base max-w-2xl" style={{ color: 'rgba(0,0,0,0.6)' }}>
-            A streamlined look at quotes, headlines, and community trades tailored for the store.
+            <FallingWords text="A streamlined look at quotes, headlines, and community trades tailored for the store." />
           </p>
         </div>
 
@@ -1933,61 +1947,124 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
           </ToastProvider>
         </div>
 
-        <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-1">
-          <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Community</h3>
-              <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                Live
-              </span>
-            </div>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[420px] lg:min-h-[calc(100vh-220px)] flex-1">
-              <div
-                className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+        <div className="mt-6 hidden lg:block">
+          <div className="space-y-6">
+            {/* Desktop: collapsible list */}
+            <div className={`w-full rounded-2xl sm:rounded-3xl border p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col transition-colors ${desktopMarketIntelCollapsed.community ? 'bg-black text-white border-white/10' : 'bg-white border-black/10'}`}>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between"
+                onClick={() => toggleDesktopMarketIntel('community')}
+                aria-expanded={!desktopMarketIntelCollapsed.community}
+                aria-controls="desktop-market-intel-community"
               >
-                <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
-                  <BullMoneyCommunity />
-                </DeferredMount>
-              </div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-semibold">Community</h3>
+                  <span
+                    className={`rounded-full border px-2 py-1 text-[10px] uppercase tracking-[0.24em] ${desktopMarketIntelCollapsed.community ? 'border-white/15 text-white/70' : 'border-black/10'}`}
+                    style={desktopMarketIntelCollapsed.community ? undefined : { color: 'rgba(0,0,0,0.5)' }}
+                  >
+                    Live
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${desktopMarketIntelCollapsed.community ? '-rotate-90' : 'rotate-0'}`}
+                  style={desktopMarketIntelCollapsed.community ? undefined : { color: 'rgba(0,0,0,0.55)' }}
+                />
+              </button>
+              {!desktopMarketIntelCollapsed.community && (
+                <div
+                  id="desktop-market-intel-community"
+                  className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[420px] lg:min-h-[calc(100vh-220px)] flex-1"
+                >
+                  <div
+                    className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                    style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                  >
+                    <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
+                      <BullMoneyCommunity />
+                    </DeferredMount>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
 
-          <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Market Quotes</h3>
-              <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                Live
-              </span>
-            </div>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[460px] lg:min-h-[calc(100vh-220px)] flex-1">
-              <div
-                className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+            <div className={`w-full rounded-2xl sm:rounded-3xl border p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col transition-colors ${desktopMarketIntelCollapsed.quotes ? 'bg-black text-white border-white/10' : 'bg-white border-black/10'}`}>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between"
+                onClick={() => toggleDesktopMarketIntel('quotes')}
+                aria-expanded={!desktopMarketIntelCollapsed.quotes}
+                aria-controls="desktop-market-intel-quotes"
               >
-                <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
-                  <MetaTraderQuotes embedded />
-                </DeferredMount>
-              </div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-semibold">Market Quotes</h3>
+                  <span
+                    className={`rounded-full border px-2 py-1 text-[10px] uppercase tracking-[0.24em] ${desktopMarketIntelCollapsed.quotes ? 'border-white/15 text-white/70' : 'border-black/10'}`}
+                    style={desktopMarketIntelCollapsed.quotes ? undefined : { color: 'rgba(0,0,0,0.5)' }}
+                  >
+                    Live
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${desktopMarketIntelCollapsed.quotes ? '-rotate-90' : 'rotate-0'}`}
+                  style={desktopMarketIntelCollapsed.quotes ? undefined : { color: 'rgba(0,0,0,0.55)' }}
+                />
+              </button>
+              {!desktopMarketIntelCollapsed.quotes && (
+                <div
+                  id="desktop-market-intel-quotes"
+                  className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[460px] lg:min-h-[calc(100vh-220px)] flex-1"
+                >
+                  <div
+                    className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                    style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                  >
+                    <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
+                      <MetaTraderQuotes embedded />
+                    </DeferredMount>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
 
-          <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Breaking News</h3>
-              <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                Live
-              </span>
-            </div>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[420px] lg:min-h-[calc(100vh-220px)] flex-1">
-              <div
-                className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+            <div className={`w-full rounded-2xl sm:rounded-3xl border p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col transition-colors ${desktopMarketIntelCollapsed.news ? 'bg-black text-white border-white/10' : 'bg-white border-black/10'}`}>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between"
+                onClick={() => toggleDesktopMarketIntel('news')}
+                aria-expanded={!desktopMarketIntelCollapsed.news}
+                aria-controls="desktop-market-intel-news"
               >
-                <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
-                  <BreakingNewsTicker />
-                </DeferredMount>
-              </div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-semibold">Breaking News</h3>
+                  <span
+                    className={`rounded-full border px-2 py-1 text-[10px] uppercase tracking-[0.24em] ${desktopMarketIntelCollapsed.news ? 'border-white/15 text-white/70' : 'border-black/10'}`}
+                    style={desktopMarketIntelCollapsed.news ? undefined : { color: 'rgba(0,0,0,0.5)' }}
+                  >
+                    Live
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${desktopMarketIntelCollapsed.news ? '-rotate-90' : 'rotate-0'}`}
+                  style={desktopMarketIntelCollapsed.news ? undefined : { color: 'rgba(0,0,0,0.55)' }}
+                />
+              </button>
+              {!desktopMarketIntelCollapsed.news && (
+                <div
+                  id="desktop-market-intel-news"
+                  className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[420px] lg:min-h-[calc(100vh-220px)] flex-1"
+                >
+                  <div
+                    className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                    style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                  >
+                    <DeferredMount fallback={<div className="h-full w-full bg-black/5 animate-pulse" />}>
+                      <BreakingNewsTicker />
+                    </DeferredMount>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2377,9 +2454,16 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         }}
       >
         <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingTop: 24, paddingBottom: 56 }}>
+          <div className="mb-4">
+            <SlideInLabel className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>Our Collection</SlideInLabel>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight"><Typewriter text="Browse the shop" /></h2>
+            <p className="mt-1 text-sm max-w-lg" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              <FallingWords text="Premium streetwear, trading essentials, and digital art — all in one place." delay={0.2} />
+            </p>
+          </div>
           <div className="flex items-center justify-between">
             <p className="text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
-              {loading ? 'Loading products...' : `${total} ${total === 1 ? 'product' : 'products'}`}
+              {loading ? <FallingWords text="Loading products..." delay={0} /> : <FallingWords text={`${total} ${total === 1 ? 'product' : 'products'}`} delay={0} />}
             </p>
           </div>
 
@@ -2387,14 +2471,14 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
             <div className="mt-6 rounded-2xl border border-black/5 bg-white p-10 text-center">
               <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-black/10 border-t-black/40" />
               <p className="mt-4 text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                Fetching the latest collection...
+                <FallingWords text="Fetching the latest collection..." delay={0.1} />
               </p>
             </div>
           ) : products.length === 0 ? (
             <div className="mt-8 rounded-2xl border border-black/5 bg-white p-12 text-center">
-              <p className="text-base font-medium">No products found</p>
+              <p className="text-base font-medium"><Typewriter text="No products found" /></p>
               <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                Adjust your filters or search again.
+                <FallingWords text="Adjust your filters or search again." delay={0.15} />
               </p>
               <button
                 onClick={clearFilters}
@@ -2489,10 +2573,10 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
               ) : (
                 <div className="flex items-end justify-between gap-6">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                    <SlideInLabel className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
                       Featured
-                    </p>
-                    <h2 className="mt-3 text-2xl font-semibold tracking-tight">Best sellers this week</h2>
+                    </SlideInLabel>
+                    <h2 className="mt-3 text-2xl font-semibold tracking-tight"><Typewriter text="Best sellers this week" /></h2>
                   </div>
                   {useGridLayouts && (
                     <select
@@ -2586,10 +2670,10 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
               ) : useGridLayouts ? (
                 <div className="flex items-end justify-between gap-6">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                    <SlideInLabel className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
                       Timeline
-                    </p>
-                    <h2 className="mt-3 text-2xl font-semibold tracking-tight">Drop highlights</h2>
+                    </SlideInLabel>
+                    <h2 className="mt-3 text-2xl font-semibold tracking-tight"><Typewriter text="Drop highlights" /></h2>
                   </div>
                   <select
                     value={timelineGridVariant}
@@ -2621,10 +2705,10 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
                 </div>
               ) : (
                 <>
-                  <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                  <SlideInLabel className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
                     Timeline
-                  </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">Drop highlights</h2>
+                  </SlideInLabel>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight"><Typewriter text="Drop highlights" /></h2>
                   <div className="mt-8 space-y-8">
                     {timelineProducts.map((product, index) => (
                       <div
@@ -2660,9 +2744,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
                             </div>
                           </div>
                           <div>
-                            <h3 className="text-lg font-semibold">{product.name}</h3>
+                            <h3 className="text-lg font-semibold"><Typewriter text={product.name} /></h3>
                             <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>
-                              {product.description || 'A focused essential designed to keep your trading desk clean, calm, and efficient.'}
+                              <FallingWords text={product.description || 'A focused essential designed to keep your trading desk clean, calm, and efficient.'} delay={0.1} />
                             </p>
                           </div>
                         </div>
@@ -2690,9 +2774,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       <div className="mx-auto w-full max-w-7xl px-5 sm:px-8 py-20 lg:py-28">
         {/* Section Header */}
         <div className="mb-16 text-center">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-black/45">Expand Your Collection</p>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-black">Custom Print & Digital Art</h2>
-          <p className="mt-3 text-sm sm:text-base text-black/60 max-w-xl mx-auto">Professional printing services and premium digital artwork</p>
+          <SlideInLabel className="text-[11px] uppercase tracking-[0.28em] text-black/45">Expand Your Collection</SlideInLabel>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-black"><Typewriter text="Custom Print & Digital Art" /></h2>
+          <p className="mt-3 text-sm sm:text-base text-black/60 max-w-xl mx-auto"><FallingWords text="Professional printing services and premium digital artwork" /></p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
@@ -2716,19 +2800,20 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     if (!vip && (!variant || variant.inventory_count <= 0)) return;
 
     if (method === 'cart') {
-      if (vip && !variant) {
+      if (vip) {
         const syntheticVariant = {
           id: `vip-${expandedProduct.id}`,
-          name: 'Default',
-          price_adjustment: 0,
+          name: (variant as any)?.name || 'Default',
+          price_adjustment: (variant as any)?.price_adjustment || 0,
           inventory_count: 999,
           sort_order: 0,
         };
         addItem(expandedProduct, syntheticVariant as any, 1);
         setExpandedProduct(null);
-      } else {
-        confirmExpandedAdd();
+        return;
       }
+
+      confirmExpandedAdd();
       return;
     }
 
@@ -3006,21 +3091,21 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
                   loading="eager"
                   decoding="async"
                 />
-                <p className="text-[11px] uppercase tracking-[0.32em]" style={{ color: heroMetaColor }}>
+                <SlideInLabel className="text-[11px] uppercase tracking-[0.32em]" style={{ color: heroMetaColor }}>
                   BullMoney Store
-                </p>
+                </SlideInLabel>
               </div>
               <h1
                 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight"
                 style={{ color: heroTitleColor, textShadow: heroTitleShadow }}
               >
-                Premium trading essentials, built for focus.
+                <Typewriter text="Premium trading essentials, built for focus." />
               </h1>
               <p
                 className="mt-4 max-w-2xl text-sm sm:text-base"
                 style={{ color: heroBodyColor, textShadow: heroBodyShadow }}
               >
-              Clean materials, calm layouts, and purposeful gear for traders who value clarity.
+              <FallingWords text="Clean materials, calm layouts, and purposeful gear for traders who value clarity." delay={0.3} />
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3 pointer-events-auto sm:flex-row lg:flex-col lg:items-start lg:w-full">
               <button
@@ -3046,6 +3131,8 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         </div>
       </section>
       )}
+
+      <StoreAboutTimeline />
 
       {dashboardsSection}
 

@@ -58,9 +58,26 @@ export const LinkPreview = ({
 
   const [isMounted, setIsMounted] = React.useState(false);
 
+  // Track whether device supports touch (mobile)
+  const [isTouchDevice, setIsTouchDevice] = React.useState(false);
+  const triggerRef = React.useRef<HTMLAnchorElement>(null);
+
   React.useEffect(() => {
     setIsMounted(true);
+    setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
   }, []);
+
+  // Close preview when tapping outside on mobile
+  React.useEffect(() => {
+    if (!isTouchDevice || !isOpen) return;
+    const handleTouchOutside = (e: TouchEvent) => {
+      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("touchstart", handleTouchOutside);
+    return () => document.removeEventListener("touchstart", handleTouchOutside);
+  }, [isTouchDevice, isOpen]);
 
   const springConfig = { stiffness: 100, damping: 15 };
   const x = useMotionValue(0);
@@ -72,6 +89,16 @@ export const LinkPreview = ({
     const eventOffsetX = event.clientX - targetRect.left;
     const offsetFromCenter = (eventOffsetX - targetRect.width / 2) / 2; // Reduce the effect to make it subtle
     x.set(offsetFromCenter);
+  };
+
+  // On mobile: first tap opens preview, second tap navigates
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isTouchDevice) return;
+    if (!isOpen) {
+      e.preventDefault();
+      setOpen(true);
+    }
+    // If already open, let the default link navigation happen
   };
 
   return (
@@ -90,12 +117,18 @@ export const LinkPreview = ({
       <HoverCardPrimitive.Root
         openDelay={50}
         closeDelay={100}
+        open={isOpen}
         onOpenChange={(open) => {
-          setOpen(open);
+          // On desktop, let Radix control open/close normally
+          if (!isTouchDevice) {
+            setOpen(open);
+          }
         }}
       >
         <HoverCardPrimitive.Trigger
+          ref={triggerRef}
           onMouseMove={handleMouseMove}
+          onTouchEnd={handleTouchEnd}
           className={cn("text-black dark:text-white", className)}
           href={url}
         >

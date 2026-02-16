@@ -249,6 +249,7 @@ export function CryptoPaymentModal({
 
   const cryptoAmount = selectedCoin ? convertUsdToCrypto(priceUSD * quantity, selectedCoin) : null;
   const coinInfo = AVAILABLE_COINS.find((c) => c.coin === selectedCoin);
+  const productSubtitleIsComingSoon = /coming\s+soon/i.test(productName);
 
   if (!mounted || !isOpen) return null;
 
@@ -259,7 +260,7 @@ export function CryptoPaymentModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-99999 flex items-center justify-center p-4"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.90)', backdropFilter: 'blur(12px)' }}
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)', backdropFilter: 'blur(12px)' }}
         onClick={onClose}
       >
         <motion.div
@@ -267,29 +268,29 @@ export function CryptoPaymentModal({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.92, opacity: 0, y: 20 }}
           transition={{ type: 'spring', duration: 0.5 }}
-          className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10"
-          style={{ backgroundColor: 'rgb(10, 10, 10)' }}
+          className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-black/10"
+          style={{ backgroundColor: '#ffffff' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Shimmer top border */}
           <div className="absolute top-0 left-0 right-0 h-px overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent store-shimmer-border" />
+            <div className="absolute inset-0 bg-linear-to-r from-transparent via-black/20 to-transparent store-shimmer-border" />
           </div>
 
           {/* Header */}
-          <div className="sticky top-0 z-10 flex items-center justify-between p-5 border-b border-white/10" style={{ backgroundColor: 'rgb(10, 10, 10)' }}>
+          <div className="sticky top-0 z-10 flex items-center justify-between p-5 border-b border-black/10" style={{ backgroundColor: '#ffffff' }}>
             <div className="flex items-center gap-3">
               {step !== 'method' && step !== 'confirm' && (
                 <motion.button
                   onClick={goBack}
-                  className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-xl hover:bg-black/5 transition-colors"
                   whileTap={{ scale: 0.9 }}
                 >
-                  <ArrowLeft className="w-5 h-5 text-white" />
+                  <ArrowLeft className="w-5 h-5 text-black" />
                 </motion.button>
               )}
               <div>
-                <h2 className="text-lg font-bold text-white">
+                <h2 className="text-lg font-bold text-black">
                   {step === 'method' && 'Pay with Crypto'}
                   {step === 'coin' && 'Select Cryptocurrency'}
                   {step === 'network' && 'Select Network'}
@@ -297,26 +298,34 @@ export function CryptoPaymentModal({
                   {step === 'confirm' && 'Payment Submitted'}
                   {step === 'onramp' && 'Buy Crypto'}
                 </h2>
-                <p className="text-sm text-white/50">{productName}</p>
+                <p
+                  className={
+                    productSubtitleIsComingSoon
+                      ? 'text-sm text-black/70 inline-flex items-center rounded-full bg-black/5 border border-black/10 px-2 py-0.5'
+                      : 'text-sm text-black/60'
+                  }
+                >
+                  {productName}
+                </p>
               </div>
             </div>
             <motion.button
               onClick={onClose}
-              className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+              className="p-2 rounded-xl hover:bg-black/5 transition-colors"
               whileTap={{ scale: 0.9 }}
             >
-              <X className="w-5 h-5 text-white" />
+              <X className="w-5 h-5 text-black" />
             </motion.button>
           </div>
 
           {/* Price Summary Bar */}
           {step !== 'confirm' && (
-            <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
-              <span className="text-white/60 text-sm">Total</span>
+            <div className="px-5 py-3 border-b border-black/10 flex items-center justify-between bg-black/2">
+              <span className="text-black/60 text-sm">Total</span>
               <div className="flex items-center gap-3">
-                <span className="text-white font-bold text-lg">{formatPrice(priceUSD * quantity)}</span>
+                <span className="text-black font-bold text-lg">{formatPrice(priceUSD * quantity)}</span>
                 {cryptoAmount !== null && coinInfo && (
-                  <span className="text-sm font-medium px-2 py-1 rounded-lg" style={{ backgroundColor: `${coinInfo.color}20`, color: coinInfo.color }}>
+                  <span className="text-sm font-medium px-2 py-1 rounded-lg" style={{ backgroundColor: 'rgba(0,0,0,0.04)', color: '#111111', border: '1px solid rgba(0,0,0,0.10)' }}>
                     ≈ {cryptoAmount < 0.001 ? cryptoAmount.toFixed(8) : cryptoAmount < 1 ? cryptoAmount.toFixed(6) : cryptoAmount.toFixed(4)} {selectedCoin}
                   </span>
                 )}
@@ -339,21 +348,21 @@ export function CryptoPaymentModal({
                   {/* Direct Send */}
                   <button
                     onClick={() => setStep('coin')}
-                    className="w-full p-5 rounded-xl border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all text-left group"
+                    className="w-full p-5 rounded-xl border border-black/10 hover:border-black/20 bg-black/2 hover:bg-black/5 transition-all text-left group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                        <Wallet className="w-6 h-6 text-white" />
+                      <div className="w-12 h-12 rounded-xl bg-black/5 border border-black/10 flex items-center justify-center">
+                        <Wallet className="w-6 h-6 text-black" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-base group-hover:text-blue-400 transition-colors">Send Crypto Directly</h3>
-                        <p className="text-white/50 text-sm">Send from Exodus, Binance, MetaMask, or any wallet</p>
+                        <h3 className="text-black font-semibold text-base transition-colors">Send Crypto Directly</h3>
+                        <p className="text-black/60 text-sm">Send from Exodus, Binance, MetaMask, or any wallet</p>
                       </div>
-                      <ChevronDown className="w-5 h-5 text-white/30 -rotate-90 group-hover:text-white/60 transition-colors" />
+                      <ChevronDown className="w-5 h-5 text-black/40 -rotate-90 group-hover:text-black/70 transition-colors" />
                     </div>
                     <div className="flex flex-wrap gap-2 mt-3 pl-16">
                       {AVAILABLE_COINS.map((c) => (
-                        <span key={c.coin} className="px-2 py-0.5 text-xs rounded-full border border-white/10" style={{ color: c.color }}>
+                        <span key={c.coin} className="px-2 py-0.5 text-xs rounded-full border border-black/10" style={{ color: '#111111' }}>
                           {c.symbol} {c.coin}
                         </span>
                       ))}
@@ -363,29 +372,29 @@ export function CryptoPaymentModal({
                   {/* Buy Crypto & Pay */}
                   <button
                     onClick={() => setStep('onramp')}
-                    className="w-full p-5 rounded-xl border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all text-left group"
+                    className="w-full p-5 rounded-xl border border-black/10 hover:border-black/20 bg-black/2 hover:bg-black/5 transition-all text-left group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                        <CreditCard className="w-6 h-6 text-white" />
+                      <div className="w-12 h-12 rounded-xl bg-black/5 border border-black/10 flex items-center justify-center">
+                        <CreditCard className="w-6 h-6 text-black" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-base group-hover:text-green-400 transition-colors">Buy Crypto & Pay</h3>
-                        <p className="text-white/50 text-sm">Purchase crypto via MoonPay or Paybis with card</p>
+                        <h3 className="text-black font-semibold text-base transition-colors">Buy Crypto & Pay</h3>
+                        <p className="text-black/60 text-sm">Purchase crypto via MoonPay or Paybis with card</p>
                       </div>
-                      <ChevronDown className="w-5 h-5 text-white/30 -rotate-90 group-hover:text-white/60 transition-colors" />
+                      <ChevronDown className="w-5 h-5 text-black/40 -rotate-90 group-hover:text-black/70 transition-colors" />
                     </div>
                   </button>
 
                   {/* Info */}
-                  <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                    <Shield className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-black/2 border border-black/10">
+                    <Shield className="w-5 h-5 text-black/60 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm text-blue-300 font-medium">Secure & Verified</p>
-                      <p className="text-xs text-blue-300/60 mt-1">
+                      <p className="text-sm text-black font-medium">Secure & Verified</p>
+                      <p className="text-xs text-black/60 mt-1">
                         All transactions are verified on-chain. Your payment will be confirmed within minutes after network confirmation.
                       </p>
-                      <a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline mt-1 inline-block">
+                      <a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-xs text-black/70 hover:text-black underline mt-1 inline-block">
                         New to crypto? Read our beginner's guide →
                       </a>
                     </div>
@@ -410,7 +419,7 @@ export function CryptoPaymentModal({
                       <button
                         key={coin.coin}
                         onClick={() => handleSelectCoin(coin.coin)}
-                        className="w-full p-4 rounded-xl border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all flex items-center gap-4 group"
+                        className="w-full p-4 rounded-xl border border-black/10 hover:border-black/20 bg-black/2 hover:bg-black/5 transition-all flex items-center gap-4 group"
                       >
                         <div
                           className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
@@ -420,22 +429,22 @@ export function CryptoPaymentModal({
                         </div>
                         <div className="flex-1 text-left">
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-semibold">{coin.name}</span>
-                            <span className="text-white/40 text-sm">{coin.coin}</span>
+                            <span className="text-black font-semibold">{coin.name}</span>
+                            <span className="text-black/60 text-sm">{coin.coin}</span>
                           </div>
                           {price && (
-                            <p className="text-white/50 text-xs">
+                            <p className="text-black/60 text-xs">
                               1 {coin.coin} = ${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                             </p>
                           )}
                         </div>
                         <div className="text-right">
                           {cryptoAmt !== null ? (
-                            <p className="text-white font-medium text-sm">
+                            <p className="text-black font-medium text-sm">
                               {cryptoAmt < 0.001 ? cryptoAmt.toFixed(8) : cryptoAmt < 1 ? cryptoAmt.toFixed(6) : cryptoAmt.toFixed(4)} {coin.coin}
                             </p>
                           ) : (
-                            <div className="w-16 h-4 bg-white/10 rounded animate-pulse" />
+                            <div className="w-16 h-4 bg-black/10 rounded animate-pulse" />
                           )}
                         </div>
                       </button>
@@ -443,7 +452,7 @@ export function CryptoPaymentModal({
                   })}
 
                   {pricesLoading && (
-                    <div className="flex items-center justify-center gap-2 py-4 text-white/40 text-sm">
+                    <div className="flex items-center justify-center gap-2 py-4 text-black/60 text-sm">
                       <RefreshCw className="w-4 h-4 animate-spin" />
                       Loading live prices...
                     </div>
@@ -460,14 +469,14 @@ export function CryptoPaymentModal({
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-3"
                 >
-                  <p className="text-white/60 text-sm mb-4">
-                    Select which network to send <span className="text-white font-medium">{selectedCoin}</span> on:
+                  <p className="text-black/60 text-sm mb-4">
+                    Select which network to send <span className="text-black font-medium">{selectedCoin}</span> on:
                   </p>
                   {getWalletsForCoin(selectedCoin).map((wallet) => (
                     <button
                       key={wallet.id}
                       onClick={() => handleSelectNetwork(wallet)}
-                      className="w-full p-4 rounded-xl border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all flex items-center gap-4 group"
+                      className="w-full p-4 rounded-xl border border-black/10 hover:border-black/20 bg-black/2 hover:bg-black/5 transition-all flex items-center gap-4 group"
                     >
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold uppercase"
@@ -476,10 +485,10 @@ export function CryptoPaymentModal({
                         {wallet.exchange === 'exodus' ? 'EX' : wallet.exchange === 'binance' ? 'BN' : 'BS'}
                       </div>
                       <div className="flex-1 text-left">
-                        <span className="text-white font-semibold text-sm">{wallet.network}</span>
-                        <p className="text-white/40 text-xs mt-0.5 truncate">{wallet.address.slice(0, 8)}...{wallet.address.slice(-6)}</p>
+                        <span className="text-black font-semibold text-sm">{wallet.network}</span>
+                        <p className="text-black/60 text-xs mt-0.5 truncate">{wallet.address.slice(0, 8)}...{wallet.address.slice(-6)}</p>
                       </div>
-                      <span className="text-xs text-white/30 capitalize px-2 py-1 rounded-lg bg-white/5">{wallet.exchange}</span>
+                      <span className="text-xs text-black/60 capitalize px-2 py-1 rounded-lg bg-black/5 border border-black/10">{wallet.exchange}</span>
                     </button>
                   ))}
 
@@ -502,8 +511,8 @@ export function CryptoPaymentModal({
                   className="space-y-5"
                 >
                   {/* Timer */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                    <div className="flex items-center gap-2 text-sm text-white/60">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-black/2 border border-black/10">
+                    <div className="flex items-center gap-2 text-sm text-black/60">
                       <Clock className="w-4 h-4" />
                       <span>Price locked for</span>
                     </div>
@@ -513,17 +522,17 @@ export function CryptoPaymentModal({
                   </div>
 
                   {/* Amount to send */}
-                  <div className="text-center p-5 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-white/50 text-sm mb-2">Send exactly</p>
+                  <div className="text-center p-5 rounded-xl bg-black/2 border border-black/10">
+                    <p className="text-black/60 text-sm mb-2">Send exactly</p>
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-3xl font-bold" style={{ color: coinInfo?.color }}>
+                      <span className="text-3xl font-bold" style={{ color: '#111111' }}>
                         {cryptoAmount !== null
                           ? (cryptoAmount < 0.001 ? cryptoAmount.toFixed(8) : cryptoAmount < 1 ? cryptoAmount.toFixed(6) : cryptoAmount.toFixed(4))
                           : '—'}
                       </span>
-                      <span className="text-xl text-white/60">{selectedCoin}</span>
+                      <span className="text-xl text-black/60">{selectedCoin}</span>
                     </div>
-                    <p className="text-white/40 text-sm mt-1">≈ ${(priceUSD * quantity).toFixed(2)} USD</p>
+                    <p className="text-black/60 text-sm mt-1">≈ ${(priceUSD * quantity).toFixed(2)} USD</p>
                     <button
                       onClick={() => {
                         if (cryptoAmount !== null) {
@@ -532,15 +541,15 @@ export function CryptoPaymentModal({
                           toast.success('Amount copied!');
                         }
                       }}
-                      className="mt-2 text-xs text-white/40 hover:text-white/60 transition-colors flex items-center gap-1 mx-auto"
+                      className="mt-2 text-xs text-black/60 hover:text-black transition-colors flex items-center gap-1 mx-auto"
                     >
                       <Copy className="w-3 h-3" /> Copy amount
                     </button>
                   </div>
 
                   {/* QR Code + Address */}
-                  <div className="flex flex-col items-center gap-4 p-5 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-white/50 text-sm">To this address ({selectedWallet.network})</p>
+                  <div className="flex flex-col items-center gap-4 p-5 rounded-xl bg-black/2 border border-black/10">
+                    <p className="text-black/60 text-sm">To this address ({selectedWallet.network})</p>
                     
                     {/* QR Code */}
                     <div className="bg-white p-3 rounded-xl">
@@ -555,18 +564,18 @@ export function CryptoPaymentModal({
                     </div>
 
                     {/* Address with copy */}
-                    <div className="w-full flex items-center gap-2 bg-black/50 rounded-xl border border-white/10 p-3">
-                      <code className="flex-1 text-xs text-white/80 break-all font-mono leading-relaxed">
+                    <div className="w-full flex items-center gap-2 bg-black/5 rounded-xl border border-black/10 p-3">
+                      <code className="flex-1 text-xs text-black/80 break-all font-mono leading-relaxed">
                         {selectedWallet.address}
                       </code>
                       <button
                         onClick={handleCopyAddress}
-                        className="shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                        className="shrink-0 p-2 rounded-lg hover:bg-black/5 transition-colors"
                       >
                         {copied ? (
-                          <Check className="w-4 h-4 text-green-400" />
+                          <Check className="w-4 h-4 text-black" />
                         ) : (
-                          <Copy className="w-4 h-4 text-white/60" />
+                          <Copy className="w-4 h-4 text-black/70" />
                         )}
                       </button>
                     </div>
@@ -576,7 +585,7 @@ export function CryptoPaymentModal({
                       href={selectedWallet.addressExplorerUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/60 transition-colors"
+                      className="flex items-center gap-1.5 text-xs text-black/60 hover:text-black transition-colors"
                     >
                       <ExternalLink className="w-3 h-3" />
                       View on explorer
@@ -585,36 +594,36 @@ export function CryptoPaymentModal({
 
                   {/* Email for Receipt */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">
-                      Email Address <span className="text-white/40">(for invoice & updates)</span>
+                    <label className="text-sm font-medium text-black">
+                      Email Address <span className="text-black/60">(for invoice & updates)</span>
                     </label>
                     <input
                       type="email"
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
                       placeholder="your@email.com"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20"
+                      className="w-full px-4 py-3 rounded-xl bg-black/3 border border-black/10 text-black text-sm placeholder-black/30 focus:outline-none focus:border-black/30 focus:ring-1 focus:ring-black/10"
                     />
-                    <p className="text-xs text-white/30">
+                    <p className="text-xs text-black/60">
                       You'll receive your invoice and payment status updates here.
                     </p>
                   </div>
 
                   {/* Transaction Hash Input */}
                   <div className="space-y-3">
-                    <label className="text-sm font-medium text-white">
-                      Transaction Hash <span className="text-white/40">(after sending)</span>
+                    <label className="text-sm font-medium text-black">
+                      Transaction Hash <span className="text-black/60">(after sending)</span>
                     </label>
                     <input
                       type="text"
                       value={txHash}
                       onChange={(e) => setTxHash(e.target.value)}
                       placeholder="Paste your transaction hash here..."
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 font-mono"
+                      className="w-full px-4 py-3 rounded-xl bg-black/3 border border-black/10 text-black text-sm placeholder-black/30 focus:outline-none focus:border-black/30 focus:ring-1 focus:ring-black/10 font-mono"
                     />
-                    <p className="text-xs text-white/30">
+                    <p className="text-xs text-black/60">
                       Find this in your wallet's transaction history after sending.
-                      {' '}<a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Need help? Read our full crypto guide →</a>
+                      {' '}<a href="/crypto-guide" target="_blank" rel="noopener noreferrer" className="text-black/70 hover:text-black underline">Need help? Read our full crypto guide →</a>
                     </p>
                   </div>
 
@@ -622,13 +631,13 @@ export function CryptoPaymentModal({
                   <motion.button
                     onClick={handleSubmitPayment}
                     disabled={!txHash.trim() || paymentSubmitting}
-                    className="w-full py-4 rounded-xl font-bold text-white text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    style={{ backgroundColor: txHash.trim() ? 'rgb(25, 86, 180)' : 'rgb(50, 50, 50)' }}
+                    className="w-full py-4 rounded-xl font-bold text-black text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-black/15"
+                    style={{ backgroundColor: txHash.trim() ? '#ffffff' : 'rgba(0,0,0,0.04)' }}
                     whileHover={txHash.trim() ? { scale: 1.02 } : {}}
                     whileTap={txHash.trim() ? { scale: 0.98 } : {}}
                   >
                     {paymentSubmitting ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                     ) : (
                       <>
                         <Zap className="w-5 h-5" />
@@ -638,9 +647,9 @@ export function CryptoPaymentModal({
                   </motion.button>
 
                   {/* Warning */}
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-                    <AlertCircle className="w-4 h-4 text-yellow-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-yellow-300/80">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-black/2 border border-black/10">
+                    <AlertCircle className="w-4 h-4 text-black/60 mt-0.5 shrink-0" />
+                    <p className="text-xs text-black/70">
                       Send the <strong>exact amount</strong> shown above. Sending a different amount may delay order processing. Only send <strong>{selectedCoin}</strong> on the <strong>{selectedWallet.network}</strong> network.
                     </p>
                   </div>
@@ -656,13 +665,13 @@ export function CryptoPaymentModal({
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="text-center py-8 space-y-6"
                 >
-                  <div className="w-20 h-20 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
-                    <Check className="w-10 h-10 text-green-400" />
+                  <div className="w-20 h-20 mx-auto rounded-full bg-black/5 flex items-center justify-center border border-black/10">
+                    <Check className="w-10 h-10 text-black" />
                   </div>
                   
                   <div>
-                    <h3 className="text-2xl font-bold text-white">Payment Submitted!</h3>
-                    <p className="text-white/60 mt-2 text-sm max-w-sm mx-auto">
+                    <h3 className="text-2xl font-bold text-black">Payment Submitted!</h3>
+                    <p className="text-black/60 mt-2 text-sm max-w-sm mx-auto">
                       We're verifying your transaction on the {selectedWallet?.network || 'blockchain'}. 
                       You'll receive a confirmation email once verified.
                     </p>
@@ -670,7 +679,7 @@ export function CryptoPaymentModal({
 
                   {/* Live Status Tracker */}
                   {paymentStatus && (
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 max-w-sm mx-auto space-y-2">
+                    <div className="p-3 rounded-xl bg-black/2 border border-black/10 max-w-sm mx-auto space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className={`font-medium ${
                           paymentStatus.status === 'confirmed' ? 'text-green-400' :
@@ -680,12 +689,12 @@ export function CryptoPaymentModal({
                           {paymentStatus.message || paymentStatus.status}
                         </span>
                         {paymentStatus.confirmations != null && paymentStatus.requiredConfirmations && (
-                          <span className="text-white/40">
+                          <span className="text-black/60">
                             {paymentStatus.confirmations}/{paymentStatus.requiredConfirmations}
                           </span>
                         )}
                       </div>
-                      <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="w-full h-1.5 rounded-full bg-black/10 overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ${
                             paymentStatus.status === 'confirmed' ? 'bg-green-500' :
@@ -696,7 +705,7 @@ export function CryptoPaymentModal({
                         />
                       </div>
                       {!paymentStatus.isTerminal && (
-                        <p className="text-[10px] text-white/30 flex items-center gap-1 justify-center">
+                        <p className="text-[10px] text-black/60 flex items-center gap-1 justify-center">
                           <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Auto-updating
                         </p>
                       )}
@@ -704,9 +713,9 @@ export function CryptoPaymentModal({
                   )}
 
                   {txHash && (
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 max-w-sm mx-auto">
-                      <p className="text-xs text-white/40 mb-1">Transaction Hash</p>
-                      <code className="text-xs text-white/70 break-all font-mono">{txHash}</code>
+                    <div className="p-3 rounded-xl bg-black/2 border border-black/10 max-w-sm mx-auto">
+                      <p className="text-xs text-black/60 mb-1">Transaction Hash</p>
+                      <code className="text-xs text-black/80 break-all font-mono">{txHash}</code>
                     </div>
                   )}
 
@@ -716,7 +725,7 @@ export function CryptoPaymentModal({
                         href={selectedWallet.explorerUrl(txHash)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors"
+                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-black/5 hover:bg-black/10 text-black text-sm font-medium transition-colors"
                       >
                         <ExternalLink className="w-4 h-4" />
                         Track on Explorer
@@ -726,15 +735,14 @@ export function CryptoPaymentModal({
                     <div>
                       <button
                         onClick={onClose}
-                        className="px-8 py-3 rounded-xl text-white font-bold text-sm transition-colors"
-                        style={{ backgroundColor: 'rgb(25, 86, 180)' }}
+                        className="px-8 py-3 rounded-xl text-black font-bold text-sm transition-colors bg-white border border-black/15 hover:bg-black/5"
                       >
                         Done
                       </button>
                     </div>
                   </div>
 
-                  <p className="text-xs text-white/30 max-w-xs mx-auto">
+                  <p className="text-xs text-black/60 max-w-xs mx-auto">
                     Typical verification time: 5-30 minutes depending on network congestion
                   </p>
                 </motion.div>
@@ -749,7 +757,7 @@ export function CryptoPaymentModal({
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
                 >
-                  <p className="text-white/60 text-sm mb-2">
+                  <p className="text-black/60 text-sm mb-2">
                     Don't have crypto? Buy it instantly with your card, then send it to complete your purchase.
                   </p>
 
@@ -766,37 +774,36 @@ export function CryptoPaymentModal({
                           toast.success(`Opening ${provider.name}... After purchasing, come back and send crypto directly.`);
                         }
                       }}
-                      className="w-full p-5 rounded-xl border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all text-left group"
+                      className="w-full p-5 rounded-xl border border-black/10 hover:border-black/20 bg-black/2 hover:bg-black/5 transition-all text-left group"
                     >
                       <div className="flex items-center gap-4">
                         <div
-                          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-                          style={{ backgroundColor: provider.color }}
+                          className="w-12 h-12 rounded-xl flex items-center justify-center text-black font-bold text-lg bg-black/5 border border-black/10"
                         >
                           {provider.name[0]}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold group-hover:text-blue-400 transition-colors">{provider.name}</h3>
-                          <p className="text-white/50 text-sm">{provider.description}</p>
+                          <h3 className="text-black font-semibold transition-colors">{provider.name}</h3>
+                          <p className="text-black/60 text-sm">{provider.description}</p>
                         </div>
-                        <ExternalLink className="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" />
+                        <ExternalLink className="w-5 h-5 text-black/40 group-hover:text-black/70 transition-colors" />
                       </div>
                     </button>
                   ))}
 
-                  <div className="border-t border-white/10 pt-4 mt-4">
-                    <p className="text-white/50 text-sm mb-3">After purchasing crypto:</p>
-                    <ol className="space-y-2 text-sm text-white/40">
+                  <div className="border-t border-black/10 pt-4 mt-4">
+                    <p className="text-black/60 text-sm mb-3">After purchasing crypto:</p>
+                    <ol className="space-y-2 text-sm text-black/60">
                       <li className="flex items-start gap-2">
-                        <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs text-white shrink-0">1</span>
+                        <span className="w-5 h-5 rounded-full bg-black/5 flex items-center justify-center text-xs text-black shrink-0">1</span>
                         <span>Buy crypto on MoonPay or Paybis</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs text-white shrink-0">2</span>
+                        <span className="w-5 h-5 rounded-full bg-black/5 flex items-center justify-center text-xs text-black shrink-0">2</span>
                         <span>Send it to your personal wallet (Exodus, Binance, etc.)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs text-white shrink-0">3</span>
+                        <span className="w-5 h-5 rounded-full bg-black/5 flex items-center justify-center text-xs text-black shrink-0">3</span>
                         <span>Come back here and use &quot;Send Crypto Directly&quot;</span>
                       </li>
                     </ol>
@@ -804,7 +811,7 @@ export function CryptoPaymentModal({
 
                   <button
                     onClick={() => setStep('coin')}
-                    className="w-full py-3 rounded-xl border border-white/20 hover:border-white/40 text-white text-sm font-medium transition-colors"
+                    className="w-full py-3 rounded-xl border border-black/15 hover:border-black/30 text-black text-sm font-medium transition-colors bg-white hover:bg-black/5"
                   >
                     I already have crypto → Send directly
                   </button>
