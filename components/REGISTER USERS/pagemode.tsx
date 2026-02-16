@@ -1084,7 +1084,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         window.history.replaceState({}, '', window.location.pathname);
       }
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- WELCOME AUDIO: Play once on page load (no loop) ---
   useEffect(() => {

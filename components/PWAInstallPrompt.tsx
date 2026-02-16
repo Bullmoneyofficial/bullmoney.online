@@ -5,6 +5,41 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
+function InlineShieldIcon({ color }: { color: string }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={{
+        width: 14,
+        height: 14,
+        display: 'block',
+        flexShrink: 0,
+        opacity: 0.98,
+      }}
+    >
+      <path
+        d="M12 2L20 6V12C20 16.97 16.87 21.5 12 22C7.13 21.5 4 16.97 4 12V6L12 2Z"
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 12L11 14L15 10"
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 interface PWAInstallPromptProps {
   onInstall?: () => void;
   onDismiss?: () => void;
@@ -189,20 +224,23 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       return;
     }
 
-    if (typeof window !== 'undefined' && (window as any).showInstallPrompt) {
-      (window as any).showInstallPrompt();
-      setIsVisible(false);
-      setShowIOSHelp(false);
-      setShowOpenInBrowserHelp(false);
-      setShowAndroidHelp(false);
-      setShowDesktopHelp(false);
-      setDesktopHelpText('');
-      onInstall?.();
-      return;
+    if (typeof window !== 'undefined' && typeof (window as any).showInstallPrompt === 'function') {
+      const didPrompt = Boolean((window as any).showInstallPrompt());
+      if (didPrompt) {
+        setIsVisible(false);
+        setShowIOSHelp(false);
+        setShowOpenInBrowserHelp(false);
+        setShowAndroidHelp(false);
+        setShowDesktopHelp(false);
+        setDesktopHelpText('');
+        onInstall?.();
+        return;
+      }
+      // If the browser refuses to show the native install prompt (common), fall through to help.
     }
 
-    // iOS Safari fallback: show instructions
-    if (platform.isIOS && platform.isSafari) {
+    // iOS fallback: show A2HS instructions (native install prompt API isn't available on iOS)
+    if (platform.isIOS) {
       setShowIOSHelp(true);
       return;
     }
@@ -229,6 +267,11 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       setShowDesktopHelp(true);
       return;
     }
+
+    // Generic fallback for any other/unknown platform or browser.
+    setDesktopHelpText('If you don’t see an install option, this browser may not support installation. Try Chrome/Edge, or on iPhone/iPad use Share → “Add to Home Screen”.');
+    setShowDesktopHelp(true);
+    return;
   }, [
     onInstall,
     platform.isAndroid,
@@ -259,7 +302,9 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
   const primaryLabel = platform.isInAppBrowser
     ? 'Open'
-    : (platform.isIOS && platform.isSafari ? 'Add' : 'Install');
+    : (platform.isIOS ? 'Add' : 'Install');
+
+  const showOfflineInstallerBadge = !platform.isInAppBrowser;
 
   const titleText = platform.isInAppBrowser
     ? 'Open in browser'
@@ -397,15 +442,49 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                       fontWeight: 700,
                       cursor: 'pointer',
                       letterSpacing: '-0.01em',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
-                    aria-label={primaryLabel}
+                    aria-label={showOfflineInstallerBadge ? `${primaryLabel} (Offline installer)` : primaryLabel}
                   >
-                    {primaryLabel}
+                    {showOfflineInstallerBadge ? (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <InlineShieldIcon color="#ffffff" />
+                        <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '-0.01em' }}>{primaryLabel}</span>
+                        <span
+                          style={{
+                            marginLeft: 2,
+                            padding: '2px 7px',
+                            borderRadius: 9999,
+                            border: '1px solid rgba(255,255,255,0.35)',
+                            background: 'rgba(255,255,255,0.08)',
+                            fontSize: 9,
+                            fontWeight: 800,
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                            lineHeight: 1.1,
+                          }}
+                        >
+                          Offline
+                        </span>
+                      </span>
+                    ) : (
+                      primaryLabel
+                    )}
                   </button>
                 </div>
               </div>
 
-              {platform.isIOS && platform.isSafari && showIOSHelp && (
+              {platform.isIOS && showIOSHelp && (
                 <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.35)', marginTop: 8, lineHeight: 1.35 }}>
                   iPhone/iPad: tap Share, then “Add to Home Screen”.
                 </div>

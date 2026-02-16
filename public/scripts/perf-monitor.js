@@ -86,13 +86,18 @@
     deferredPrompt = null;
   });
 
-  w.showInstallPrompt = function() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        log('[PWA] User choice:', choiceResult.outcome);
-        deferredPrompt = null;
-      });
-    }
-  };
+  // Only define this bridge if another script (e.g. app/layout.tsx) hasn't already provided one.
+  if (typeof w.showInstallPrompt !== 'function') {
+    w.showInstallPrompt = function() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          log('[PWA] User choice:', choiceResult.outcome);
+          deferredPrompt = null;
+        });
+        return true;
+      }
+      return false;
+    };
+  }
 })();

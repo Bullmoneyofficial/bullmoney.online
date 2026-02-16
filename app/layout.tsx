@@ -254,7 +254,7 @@ export default function RootLayout({
       :root{--app-vh:1vh;}
       html,body{background:#000000!important;}
       
-      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;background-color:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),background-color .55s cubic-bezier(.22,1,.36,1);overflow:hidden;will-change:opacity,transform,background-color;transform-origin:50% 50%;}
+      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:var(--app-height,calc(var(--vh,1vh)*100));min-height:var(--app-height,calc(var(--vh,1vh)*100));min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;background-color:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),background-color .55s cubic-bezier(.22,1,.36,1);overflow:hidden;will-change:opacity,transform,background-color;transform-origin:50% 50%;}
       /* Lock viewport while splash is active — overrides scroll fixes below */
       html:has(#bm-splash:not(.hide)),html:has(#bm-splash:not(.hide)) body{overflow:hidden!important;height:100%!important;position:static!important;}
       @supports not (selector(:has(*))){html:not(.bm-splash-done),html:not(.bm-splash-done) body{overflow:hidden!important;height:100%!important;}}
@@ -302,8 +302,8 @@ export default function RootLayout({
 
       /* Loading bar */
       #bm-splash .bm-bar-outer{width:200px;height:2px;border-radius:2px;background:rgba(0,0,0,.06);overflow:hidden;margin-top:8px;position:relative;}
-      #bm-splash .bm-bar-outer::after{content:"";position:absolute;inset:0;transform:translate3d(-130%,0,0);background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);}
-      #bm-splash .bm-bar-inner{width:0%;height:100%;border-radius:2px;background:linear-gradient(90deg,#18181b,#3f3f46,#18181b);transition:width .3s ease-out,opacity .3s ease-out;}
+      #bm-splash .bm-bar-outer::after{content:"";position:absolute;inset:0;transform:translate3d(-130%,0,0);background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:bm-bar-sheen 1.15s linear infinite;opacity:.85;}
+      #bm-splash .bm-bar-inner{width:0%;height:100%;border-radius:2px;background:linear-gradient(90deg,#18181b 0%,#3f3f46 35%,#a1a1aa 50%,#3f3f46 65%,#18181b 100%);background-size:240% 100%;animation:bm-bar-flow .95s linear infinite;transition:width .3s ease-out,opacity .3s ease-out;}
 
       /* Loading steps */
       #bm-splash .bm-steps{display:flex;flex-direction:column;gap:6px;margin-top:20px;position:relative;z-index:10;}
@@ -698,12 +698,19 @@ export default function RootLayout({
       #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
       #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
 
+      /* In-app webviews (Instagram/TikTok/Facebook etc): keep splash reliable by disabling heavy animations */
+      #bm-splash.bm-splash-lite .bm-orb{display:none!important;}
+      #bm-splash.bm-splash-lite .bm-bar-outer::after{animation:none!important;opacity:.35!important;}
+      #bm-splash.bm-splash-lite .bm-bar-inner{animation:none!important;background:#18181b!important;}
+      #bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle{animation:none!important;background-color:#000000!important;}
+      #bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:none!important;filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;-webkit-filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;}
+
 
       /* === Splash Finale: logo grows to playing-card size, all else disappears === */
       #bm-splash.bm-splash-finale{justify-content:center;align-items:center;background:#0a0a0a;background-color:#0a0a0a;}
       #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:transform!important;--bm-finale-scale:1;transform:translateX(-15px) scale(var(--bm-finale-scale))!important;transition:transform .8s cubic-bezier(.22,1,.36,1),width .8s cubic-bezier(.22,1,.36,1),height .8s cubic-bezier(.22,1,.36,1)!important;}
       /* Use filter invert() so the inline SVG (black) can become white on dark bg (Safari-friendly) */
-      #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));}
+      #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));-webkit-filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));}
       /* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS */
       #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
       #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}
@@ -717,6 +724,9 @@ export default function RootLayout({
       #bm-splash.bm-splash-finale::after{animation:bm-finale-fadeout .25s ease-out forwards!important;}
 
       @keyframes bm-finale-fadeout{0%{opacity:1}100%{opacity:0;visibility:hidden}}
+
+      @keyframes bm-bar-flow{0%{background-position:0% 50%}100%{background-position:240% 50%}}
+      @keyframes bm-bar-sheen{0%{transform:translate3d(-130%,0,0)}100%{transform:translate3d(130%,0,0)}}
 
       @keyframes bm-finale-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
       /* Smooth off-black↔off-white cycle with long dwell at endpoints */
@@ -1000,6 +1010,50 @@ export default function RootLayout({
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `window.__BM_SW_ENABLED__=${swEnabled};window.__BM_ENABLE_ROUTE_PREFETCH__=${routePrefetchEnabled};window.__BM_VAPID_KEY__='${process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""}';window.__BM_SCRIPTS_VIA_NEXTJS__=true;`
+          }}
+        />
+        {/* PWA install prompt capture: must run early so `beforeinstallprompt` isn't missed */}
+        <Script
+          id="pwa-install-capture"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                try{
+                  if(typeof window==='undefined') return;
+                  // If perf-monitor (or another script) already installed this bridge, don't double-bind.
+                  if(window.__BM_PWA_INSTALL_CAPTURED__) return;
+                  window.__BM_PWA_INSTALL_CAPTURED__ = true;
+
+                  var deferredPrompt = null;
+                  window.addEventListener('beforeinstallprompt', function(e){
+                    try{ e.preventDefault(); } catch(_) {}
+                    deferredPrompt = e;
+                    try{ window.__BM_PWA_INSTALL_AVAILABLE__ = true; } catch(_) {}
+                    try{ window.dispatchEvent(new CustomEvent('pwa-install-available')); } catch(_) {}
+                  });
+
+                  window.addEventListener('appinstalled', function(){ deferredPrompt = null; });
+
+                  // Always provide a deterministic API: returns true if we actually called prompt().
+                  window.showInstallPrompt = function(){
+                    try{
+                      if(!deferredPrompt) return false;
+                      deferredPrompt.prompt();
+                      if(deferredPrompt.userChoice && typeof deferredPrompt.userChoice.then === 'function'){
+                        deferredPrompt.userChoice.then(function(){ deferredPrompt = null; });
+                      } else {
+                        deferredPrompt = null;
+                      }
+                      return true;
+                    } catch(_) {
+                      deferredPrompt = null;
+                      return false;
+                    }
+                  };
+                } catch(_) {}
+              })();
+            `
           }}
         />
         <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />

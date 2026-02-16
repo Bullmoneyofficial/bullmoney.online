@@ -43,6 +43,11 @@
   var splashStartAt = Date.now();
   var finaleStarted = false;
   var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
+  // In-app webviews can be fragile with filter/keyframe-heavy animations.
+  // Enable a lite mode to keep the splash reliable.
+  try {
+    if (isInAppBrowser) splash.classList.add('bm-splash-lite');
+  } catch (e) {}
   var minVisibleMs = isInAppBrowser ? 400 : 200;
   var mem = (navigator && navigator.deviceMemory) ? navigator.deviceMemory : 0;
   var lowMemory = mem > 0 && mem <= 4;
@@ -475,6 +480,23 @@
       // Kill any running intro animation
       logoWrap.style.animation = 'none';
 
+      // Finale snap: blur → sharp timed to land at the end of the grow.
+      // Keep this on the wrapper so it doesn't fight SVG filter (invert/glow).
+      try {
+        var snapPrefersReduced = false;
+        if (window.matchMedia) {
+          snapPrefersReduced = !!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        }
+        if (!snapPrefersReduced) {
+          logoWrap.style.filter = 'blur(8px)';
+          logoWrap.style.webkitFilter = 'blur(8px)';
+          // Ensure blur applies before we start transitioning it away
+          void logoWrap.offsetHeight;
+        }
+      } catch (e) {
+        // noop
+      }
+
       // Prefer animating via CSS variable (lets layout CSS keep transform ownership),
       // but provide a Safari-safe fallback by animating transform directly.
       var supportsCssVars = false;
@@ -499,6 +521,24 @@
         }
       } catch (e) {
         // Fallback: if setProperty fails for any reason, do nothing.
+      }
+
+      // Snap to sharp near the end of the grow.
+      try {
+        var snapPrefersReduced2 = false;
+        if (window.matchMedia) {
+          snapPrefersReduced2 = !!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        }
+        if (!snapPrefersReduced2) {
+          setTimeout(function() {
+            if (!splash || splash.classList.contains('hide') || !logoWrap) return;
+            logoWrap.style.transition = (logoWrap.style.transition ? (logoWrap.style.transition + ',') : '') + 'filter 260ms cubic-bezier(.22,1,.36,1)';
+            logoWrap.style.filter = 'blur(0px)';
+            logoWrap.style.webkitFilter = 'blur(0px)';
+          }, 650);
+        }
+      } catch (e) {
+        // noop
       }
 
       // After the grow finishes, keep the logo subtly animating in its big state.
