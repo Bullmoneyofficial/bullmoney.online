@@ -36,15 +36,16 @@ export function UltimateHub() {
   const pathname = usePathname();
   const isStorePage = pathname.startsWith('/store');
 
-  // Check if Ultimate Hub should be shown on store pages - default to TRUE (show unless explicitly disabled)
-  const [showOnStore, setShowOnStore] = useState(true);
+  // Check if Ultimate Hub should be shown on store pages - default to FALSE (hide unless explicitly enabled)
+  const [showOnStore, setShowOnStore] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     // Load stored preference
     const stored = localStorage.getItem('store_show_ultimate_hub');
-    setShowOnStore(stored !== 'false'); // Default to true for backward compatibility
+    // Default to false (hidden) — only show when explicitly enabled
+    setShowOnStore(stored === 'true');
 
     // Listen for toggle changes from StoreHeader
     const handleToggleEvent = (event: Event) => {
@@ -55,7 +56,7 @@ export function UltimateHub() {
         return;
       }
       const stored = localStorage.getItem('store_show_ultimate_hub');
-      setShowOnStore(stored !== 'false');
+      setShowOnStore(stored === 'true');
     };
 
     window.addEventListener('store_ultimate_hub_toggle', handleToggleEvent);

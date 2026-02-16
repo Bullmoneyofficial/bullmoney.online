@@ -143,6 +143,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
+  const [ultimateHubPrefLoaded, setUltimateHubPrefLoaded] = useState(false);
   const [showAudioWidget, setShowAudioWidget] = useState(true);
   const [audioWidgetPrefLoaded, setAudioWidgetPrefLoaded] = useState(false);
   const [gamesManualOpen, setGamesManualOpen] = useState(false);
@@ -275,6 +276,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       const stored = localStorage.getItem('store_show_ultimate_hub');
       // Default to false (hide) unless explicitly enabled
       setShowUltimateHub(stored === 'true');
+      setUltimateHubPrefLoaded(true);
     }
   }, []);
 
@@ -289,10 +291,11 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   // Persist and broadcast Ultimate Hub changes after render
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (!ultimateHubPrefLoaded) return;
     localStorage.setItem('store_show_ultimate_hub', String(showUltimateHub));
     window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: showUltimateHub }));
     window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
-  }, [showUltimateHub]);
+  }, [showUltimateHub, ultimateHubPrefLoaded]);
 
   // Persist and broadcast Theme Picker changes after render
   useEffect(() => {
@@ -318,6 +321,26 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
     window.addEventListener('store_theme_picker_toggle', handleThemeToggle);
     return () => window.removeEventListener('store_theme_picker_toggle', handleThemeToggle);
+  }, []);
+
+  // Sync Ultimate Hub button state with external toggles (e.g. main navbar)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHubToggle = (event: Event) => {
+      const detailValue = (event as CustomEvent<boolean>).detail;
+      if (typeof detailValue === 'boolean') {
+        setShowUltimateHub(detailValue);
+        setUltimateHubPrefLoaded(true);
+        return;
+      }
+      const stored = localStorage.getItem('store_show_ultimate_hub');
+      setShowUltimateHub(stored === 'true');
+      setUltimateHubPrefLoaded(true);
+    };
+
+    window.addEventListener('store_ultimate_hub_toggle', handleHubToggle);
+    return () => window.removeEventListener('store_ultimate_hub_toggle', handleHubToggle);
   }, []);
 
   // Load Audio Widget preference
@@ -532,6 +555,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       const newValue = typeof nextValue === 'boolean' ? nextValue : !prev;
       return newValue;
     });
+    setUltimateHubPrefLoaded(true);
   }, []);
 
   const toggleUltimateHub = useCallback(() => {

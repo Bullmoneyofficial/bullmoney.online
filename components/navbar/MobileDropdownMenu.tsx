@@ -66,9 +66,9 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     const { setChartNewsOpen } = useChartNewsUI();
     const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
     
-    // Toggle states for Theme Picker and Ultimate Hub - default ON for app pages
+    // Toggle states for Theme Picker and Ultimate Hub - default OFF until user explicitly enables
     const [showThemePicker, setShowThemePicker] = useState(true);
-    const [showUltimateHub, setShowUltimateHub] = useState(true);
+    const [showUltimateHub, setShowUltimateHub] = useState(false);
     
     // Load toggle preferences from localStorage & sync theme picker modal
     useEffect(() => {
@@ -78,19 +78,23 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
         const themeValue = storedTheme !== 'false';
         setShowThemePicker(themeValue);
         setThemePickerModalOpen(themeValue);
-        // Ultimate Hub reads stored preference (default ON)
+        // Ultimate Hub reads stored preference (default OFF)
         const storedHub = localStorage.getItem('store_show_ultimate_hub');
-        setShowUltimateHub(storedHub !== 'false');
+        setShowUltimateHub(storedHub === 'true');
       }
     }, [setThemePickerModalOpen]);
     
     // Listen for external toggle changes (e.g. from store header)
     useEffect(() => {
-      const handleHubToggle = () => {
-        if (typeof window !== 'undefined') {
-          const stored = localStorage.getItem('store_show_ultimate_hub');
-          setShowUltimateHub(stored !== 'false');
+      const handleHubToggle = (event: Event) => {
+        if (typeof window === 'undefined') return;
+        const detailValue = (event as CustomEvent<boolean>).detail;
+        if (typeof detailValue === 'boolean') {
+          setShowUltimateHub(detailValue);
+          return;
         }
+        const stored = localStorage.getItem('store_show_ultimate_hub');
+        setShowUltimateHub(stored === 'true');
       };
       const handleThemeToggle = () => {
         if (typeof window !== 'undefined') {

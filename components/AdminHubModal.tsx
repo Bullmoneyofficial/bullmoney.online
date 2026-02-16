@@ -55,11 +55,19 @@ type RowProps = {
 };
 
 const Row: React.FC<RowProps> = ({ title, subtitle, meta, isEditing, onEdit, onDelete }) => (
-  <div className={`flex items-center justify-between rounded-lg border px-3 py-2.5 gap-3 transition-colors ${
-    isEditing
-      ? "border-blue-500/50 bg-blue-950/30 ring-1 ring-blue-500/20"
-      : "border-slate-800 bg-slate-900/70"
-  }`}>
+  <div
+    role="button"
+    tabIndex={0}
+    onClick={onEdit}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') onEdit();
+    }}
+    className={`flex items-center justify-between rounded-lg border px-3 py-2.5 gap-3 transition-colors cursor-pointer select-none ${
+      isEditing
+        ? "border-blue-500/50 bg-blue-950/30 ring-1 ring-blue-500/20"
+        : "border-slate-800 bg-slate-900/70"
+    }`}
+  >
     <div className="min-w-0 flex-1">
       <div className="text-white font-semibold text-sm truncate">{title}</div>
       {subtitle ? <div className="text-slate-300 text-xs truncate">{subtitle}</div> : null}
@@ -67,7 +75,11 @@ const Row: React.FC<RowProps> = ({ title, subtitle, meta, isEditing, onEdit, onD
     </div>
     <div className="flex items-center gap-2 shrink-0">
       <button
-        onClick={onEdit}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit();
+        }}
         className={`p-2 rounded-md border transition-colors ${
           isEditing
             ? "bg-blue-500/30 hover:bg-blue-500/40 border-blue-400/50 text-blue-200"
@@ -78,7 +90,11 @@ const Row: React.FC<RowProps> = ({ title, subtitle, meta, isEditing, onEdit, onD
         {isEditing ? <X className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
       </button>
       <button
-        onClick={onDelete}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
         className="p-2 rounded-md bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 transition-colors"
         title="Delete"
       >

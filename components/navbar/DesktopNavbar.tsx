@@ -67,7 +67,7 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
     
     // Toggle states for Theme Picker and Ultimate Hub - default OFF until user explicitly enables
     const [showThemePicker, setShowThemePicker] = useState(false);
-    const [showUltimateHub, setShowUltimateHub] = useState(true);
+    const [showUltimateHub, setShowUltimateHub] = useState(false);
     
     // Load toggle preferences from localStorage & sync theme picker modal
     useEffect(() => {
@@ -78,17 +78,22 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         setShowThemePicker(themeValue);
         setThemePickerModalOpen(themeValue);
         const storedHub = localStorage.getItem('store_show_ultimate_hub');
-        setShowUltimateHub(storedHub !== 'false');
+        // Default to false (hidden) — only show when explicitly enabled
+        setShowUltimateHub(storedHub === 'true');
       }
     }, [setThemePickerModalOpen]);
     
     // Listen for external toggle changes
     useEffect(() => {
-      const handleHubToggle = () => {
-        if (typeof window !== 'undefined') {
-          const stored = localStorage.getItem('store_show_ultimate_hub');
-          setShowUltimateHub(stored !== 'false');
+      const handleHubToggle = (event: Event) => {
+        if (typeof window === 'undefined') return;
+        const detailValue = (event as CustomEvent<boolean>).detail;
+        if (typeof detailValue === 'boolean') {
+          setShowUltimateHub(detailValue);
+          return;
         }
+        const stored = localStorage.getItem('store_show_ultimate_hub');
+        setShowUltimateHub(stored === 'true');
       };
       const handleThemeToggle = () => {
         if (typeof window !== 'undefined') {
