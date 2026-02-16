@@ -41,6 +41,8 @@ import {
   Settings2,
   Columns,
   Grid3X3,
+  Search,
+  UserCheck,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import { renderEmailTemplate, DEFAULT_STYLES, type EmailTemplateData, type EmailStyles } from "@/lib/email-template-renderer";
@@ -231,6 +233,13 @@ export default function EmailAdminPanel() {
   const [recruitsCount, setRecruitsCount] = useState(0);
   const [styleTab, setStyleTab] = useState<"colors" | "typography" | "layout" | "buttons">("colors");
   const [showStyleEditor, setShowStyleEditor] = useState(false);
+  // Recruit selector state
+  const [showRecipientSelector, setShowRecipientSelector] = useState(false);
+  const [allRecruits, setAllRecruits] = useState<{ email: string; full_name?: string; is_vip?: boolean; status?: string }[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set());
+  const [recipientSearch, setRecipientSearch] = useState("");
+  const [loadingRecruits, setLoadingRecruits] = useState(false);
+  const [sendingToSelected, setSendingToSelected] = useState(false);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -388,9 +397,64 @@ export default function EmailAdminPanel() {
     }
   }, [supabase]);
 
+  // Load all recruits with emails for the selector
+  const loadAllRecruits = useCallback(async () => {
+    setLoadingRecruits(true);
+    try {
+      const { data, error } = await supabase
+        .from("recruits")
+        .select("email, full_name, is_vip, status")
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      
+      if (!error && data) {
+        setAllRecruits(data.filter((r: any) => r.email));
+      }
+    } catch (err) {
+      console.error("Load all recruits error:", err);
+    } finally {
+      setLoadingRecruits(false);
+    }
+  }, [supabase]);
+
   useEffect(() => {
     loadRecruitsCount();
-  }, [loadRecruitsCount]);
+    loadAllRecruits();
+  }, [loadRecruitsCount, loadAllRecruits]);
+
+  // Filtered recruits for search
+  const filteredRecruits = useMemo(() => {
+    if (!recipientSearch.trim()) return allRecruits;
+    const q = recipientSearch.toLowerCase();
+    return allRecruits.filter(
+      (r) =>
+        r.email.toLowerCase().includes(q) ||
+        (r.full_name && r.full_name.toLowerCase().includes(q))
+    );
+  }, [allRecruits, recipientSearch]);
+
+  // Toggle a recruit's selection
+  const toggleRecipient = useCallback((email: string) => {
+    setSelectedRecipients((prev) => {
+      const next = new Set(prev);
+      if (next.has(email)) next.delete(email);
+      else next.add(email);
+      return next;
+    });
+  }, []);
+
+  // Select / deselect all visible
+  const selectAllVisible = useCallback(() => {
+    setSelectedRecipients((prev) => {
+      const next = new Set(prev);
+      filteredRecruits.forEach((r) => next.add(r.email));
+      return next;
+    });
+  }, [filteredRecruits]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedRecipients(new Set());
+  }, []);
 
   // Content block management
   const addContentBlock = useCallback((type: string) => {
@@ -576,6 +640,44 @@ export default function EmailAdminPanel() {
     }
   }, [editForm.name, editForm.subject, previewHtml, recruitsCount, showToast, loadRecruitsCount]);
 
+  // Send email to selected recruits only
+  const sendToSelected = useCallback(async () => {
+    if (selectedRecipients.size === 0) {
+      showToast("Select at least one recipient");
+      return;
+    }
+    if (!editForm.subject || !previewHtml) {
+      showToast("Template subject and preview content required");
+      return;
+    }
+    if (!confirm(`Send "${editForm.name || 'Email'}" to ${selectedRecipients.size} selected recipient${selectedRecipients.size > 1 ? 's' : ''}?`)) return;
+
+    setSendingToSelected(true);
+    try {
+      const response = await fetch("/api/email/blast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customHtml: previewHtml,
+          customSubject: editForm.subject,
+          target: "selected",
+          selectedEmails: Array.from(selectedRecipients),
+        }),
+      });
+
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+
+      showToast(`Sent to ${result.sent || 0} of ${selectedRecipients.size} selected!`);
+    } catch (err: any) {
+      const errorMsg = err?.message || err?.error_description || JSON.stringify(err) || "Unknown error";
+      console.error("Send to selected error:", errorMsg);
+      showToast(`Send failed: ${errorMsg}`);
+    } finally {
+      setSendingToSelected(false);
+    }
+  }, [selectedRecipients, editForm.name, editForm.subject, previewHtml, showToast]);
+
   const currentDeviceWidth = DEVICE_PRESETS.find(d => d.id === previewDevice)?.width || 600;
 
   return (
@@ -634,7 +736,19 @@ export default function EmailAdminPanel() {
                   </span>
                   
                   <div className="flex items-center gap-2">
-                    {/* Send Now Button */}
+                    {/* Send to Selected Button */}
+                    {selectedRecipients.size > 0 && (
+                      <button
+                        onClick={sendToSelected}
+                        disabled={sendingToSelected || !previewHtml || !editForm.subject}
+                        className="px-3 py-1.5 text-xs rounded-md bg-purple-600 text-white flex items-center gap-1.5 disabled:opacity-50 hover:bg-purple-500 transition-colors shadow-lg shadow-purple-600/20"
+                        title={`Send to ${selectedRecipients.size} selected recipients`}
+                      >
+                        <UserCheck className={`w-3 h-3 ${sendingToSelected ? "animate-pulse" : ""}`} />
+                        {sendingToSelected ? "Sending..." : `Send to ${selectedRecipients.size} selected`}
+                      </button>
+                    )}
+                    {/* Send to All Button */}
                     <button
                       onClick={sendToAllRecruits}
                       disabled={sendingToRecruits || !previewHtml || !editForm.subject}
@@ -642,7 +756,7 @@ export default function EmailAdminPanel() {
                       title={!previewHtml ? "Add content to preview first" : !editForm.subject ? "Add email subject first" : `Send to ${recruitsCount} recruits`}
                     >
                       <Send className={`w-3 h-3 ${sendingToRecruits ? "animate-pulse" : ""}`} />
-                      {sendingToRecruits ? "Sending..." : `Send to ${recruitsCount}`}
+                      {sendingToRecruits ? "Sending..." : `All ${recruitsCount}`}
                     </button>
                     
                     {/* Style Editor Toggle */}
@@ -1525,7 +1639,7 @@ export default function EmailAdminPanel() {
                 )}
               </div>
 
-              {/* Send to All Recruits */}
+              {/* Send to Recruits — with individual selection */}
               <div className="p-4 rounded-xl border border-green-500/30 bg-linear-to-br from-green-900/20 to-slate-800/40">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -1535,16 +1649,179 @@ export default function EmailAdminPanel() {
                       Send to Recruits
                     </div>
                   </div>
-                  <span className="text-xs text-slate-400">{recruitsCount} users</span>
+                  <div className="flex items-center gap-2">
+                    {selectedRecipients.size > 0 && (
+                      <span className="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded-full font-bold">
+                        {selectedRecipients.size} selected
+                      </span>
+                    )}
+                    <span className="text-xs text-slate-400">{recruitsCount} total</span>
+                  </div>
                 </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-col gap-2 mb-3">
+                  <button
+                    onClick={sendToAllRecruits}
+                    disabled={sendingToRecruits || !editForm.slug}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-green-600 text-white flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-green-500 transition-colors"
+                  >
+                    <Send className={`w-4 h-4 ${sendingToRecruits ? "animate-pulse" : ""}`} />
+                    {sendingToRecruits ? "Sending..." : `Send to All ${recruitsCount} Recruits`}
+                  </button>
+                  <button
+                    onClick={sendToSelected}
+                    disabled={sendingToSelected || selectedRecipients.size === 0 || !previewHtml || !editForm.subject}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg bg-purple-600 text-white flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-purple-500 transition-colors"
+                  >
+                    <UserCheck className={`w-4 h-4 ${sendingToSelected ? "animate-pulse" : ""}`} />
+                    {sendingToSelected ? "Sending..." : selectedRecipients.size > 0
+                      ? `Send to ${selectedRecipients.size} Selected`
+                      : "Select recipients below"}
+                  </button>
+                </div>
+
+                {/* Recipient selector toggle */}
                 <button
-                  onClick={sendToAllRecruits}
-                  disabled={sendingToRecruits || !editForm.slug}
-                  className="w-full px-4 py-2.5 text-sm rounded-lg bg-green-600 text-white flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-green-500 transition-colors"
+                  onClick={() => { setShowRecipientSelector(!showRecipientSelector); if (!showRecipientSelector && allRecruits.length === 0) loadAllRecruits(); }}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-xs text-slate-300 hover:bg-slate-700/60 transition-colors"
                 >
-                  <Send className={`w-4 h-4 ${sendingToRecruits ? "animate-pulse" : ""}`} />
-                  {sendingToRecruits ? "Sending..." : `Send "${editForm.name || 'Template'}" to All ${recruitsCount} Recruits`}
+                  <span className="flex items-center gap-2">
+                    <Users className="w-3 h-3 text-purple-400" />
+                    {showRecipientSelector ? "Hide" : "Choose"} Individual Recipients
+                  </span>
+                  {showRecipientSelector ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                 </button>
+
+                {/* Recipient selector panel */}
+                {showRecipientSelector && (
+                  <div className="mt-3 rounded-lg border border-slate-700 bg-slate-900/80 overflow-hidden">
+                    {/* Search + actions bar */}
+                    <div className="p-2.5 border-b border-slate-700 space-y-2">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
+                        <input
+                          type="text"
+                          value={recipientSearch}
+                          onChange={(e) => setRecipientSearch(e.target.value)}
+                          placeholder="Search by email or name..."
+                          className="w-full bg-slate-800 border border-slate-700 rounded-md pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={selectAllVisible}
+                            className="px-2 py-1 text-[10px] rounded border border-slate-700 text-slate-400 hover:text-white hover:border-purple-500 transition-colors"
+                          >
+                            Select all {filteredRecruits.length > 0 ? `(${filteredRecruits.length})` : ""}
+                          </button>
+                          <button
+                            onClick={deselectAll}
+                            className="px-2 py-1 text-[10px] rounded border border-slate-700 text-slate-400 hover:text-white hover:border-red-500 transition-colors"
+                          >
+                            Deselect all
+                          </button>
+                          <button
+                            onClick={loadAllRecruits}
+                            disabled={loadingRecruits}
+                            className="px-2 py-1 text-[10px] rounded border border-slate-700 text-slate-400 hover:text-white transition-colors"
+                          >
+                            <RefreshCw className={`w-3 h-3 inline ${loadingRecruits ? "animate-spin" : ""}`} />
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-slate-500">
+                          {filteredRecruits.length} shown · {selectedRecipients.size} selected
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Recruit list */}
+                    <div className="max-h-[240px] overflow-y-auto divide-y divide-slate-800 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                      {loadingRecruits ? (
+                        <div className="p-6 text-center text-slate-500 text-xs">
+                          <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2" />
+                          Loading recruits...
+                        </div>
+                      ) : filteredRecruits.length === 0 ? (
+                        <div className="p-6 text-center text-slate-500 text-xs">
+                          {recipientSearch ? "No recruits match your search" : "No recruits found"}
+                        </div>
+                      ) : (
+                        filteredRecruits.map((recruit) => {
+                          const isSelected = selectedRecipients.has(recruit.email);
+                          return (
+                            <button
+                              key={recruit.email}
+                              onClick={() => toggleRecipient(recruit.email)}
+                              className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                                isSelected
+                                  ? "bg-purple-950/30 hover:bg-purple-950/40"
+                                  : "hover:bg-slate-800/60"
+                              }`}
+                            >
+                              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                                isSelected
+                                  ? "bg-purple-600 border-purple-500"
+                                  : "border-slate-600 bg-transparent"
+                              }`}>
+                                {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs text-white truncate">{recruit.email}</span>
+                                  {recruit.is_vip && (
+                                    <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                                  )}
+                                </div>
+                                {recruit.full_name && (
+                                  <span className="text-[10px] text-slate-500 truncate block">{recruit.full_name}</span>
+                                )}
+                              </div>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                                recruit.status === "active" ? "bg-green-900/40 text-green-400"
+                                  : recruit.status === "pending" ? "bg-yellow-900/40 text-yellow-400"
+                                  : "bg-slate-800 text-slate-500"
+                              }`}>
+                                {recruit.status || "—"}
+                              </span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Selected summary */}
+                    {selectedRecipients.size > 0 && (
+                      <div className="p-2.5 border-t border-slate-700 bg-purple-950/20">
+                        <p className="text-[10px] text-purple-300 mb-1.5">
+                          {selectedRecipients.size} recipient{selectedRecipients.size > 1 ? "s" : ""} selected:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {Array.from(selectedRecipients).slice(0, 8).map((email) => (
+                            <span
+                              key={email}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-900/40 border border-purple-700/40 rounded text-[9px] text-purple-200"
+                            >
+                              {email.length > 20 ? email.slice(0, 20) + "…" : email}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); toggleRecipient(email); }}
+                                className="text-purple-400 hover:text-white"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </span>
+                          ))}
+                          {selectedRecipients.size > 8 && (
+                            <span className="text-[9px] text-purple-400 px-1.5 py-0.5">
+                              +{selectedRecipients.size - 8} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Footer & Settings */}

@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 
 import os from 'os';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
 // Platform and architecture detection for optimizations
 const platform = os.platform(); // 'darwin', 'win32', 'linux'

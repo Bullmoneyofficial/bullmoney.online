@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   BarChart3,
   ClipboardList,
+  Clock,
   Coins,
   Crown,
   Database,
@@ -311,11 +312,16 @@ export function AdminHubModal({
   const adminEmailEnv = normalizeEmail(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [activeTab, setActiveTab] = useState<
-    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store" | "crypto" | "crypto_refunds" | "network"
+    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store" | "store_settings" | "crypto" | "crypto_refunds" | "network"
   >("products");
   const [tabsListOpen, setTabsListOpen] = useState(false);
   const [affiliateView, setAffiliateView] = useState<"calculator" | "admin" | "qr-posters" | "content-editor">("calculator");
   const [storeView, setStoreView] = useState<"analytics" | "promos" | "rewards" | "messages">("analytics");
+  const [storeDisplayMode, setStoreDisplayMode] = useState<"global" | "vip" | "timer">("global");
+  const [displayModeLoading, setDisplayModeLoading] = useState(false);
+  const [timerEnd, setTimerEnd] = useState<string>("");
+  const [timerHeadline, setTimerHeadline] = useState<string>("Something big is coming");
+  const [timerSubtext, setTimerSubtext] = useState<string>("New products dropping soon. Stay tuned.");
   const [busy, setBusy] = useState(false);
   const isSyncing = useRef(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -435,6 +441,21 @@ export function AdminHubModal({
     setToast(msg);
     setTimeout(() => setToast(null), 3200);
   }, []);
+
+  const getAdminHeaders = useCallback(() => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (adminEmailEnv) headers["x-admin-email"] = adminEmailEnv;
+    if (typeof window !== "undefined") {
+      const token =
+        localStorage.getItem("adminToken") ||
+        localStorage.getItem("crypto_admin_token") ||
+        "";
+      if (token) headers["x-admin-token"] = token;
+    }
+    return headers;
+  }, [adminEmailEnv]);
 
   const loadFaqFromDb = useCallback(async () => {
     const { data, error } = await supabase
@@ -589,37 +610,6 @@ export function AdminHubModal({
     [supabase]
   );
 
-  const upsertPrimaryProductImage = useCallback(
-    async (productId: string, imageUrl: string, altText: string) => {
-      if (!imageUrl) return;
-
-      const { data: existing } = await supabase
-        .from("product_images")
-        .select("id")
-        .eq("product_id", productId)
-        .eq("is_primary", true)
-        .maybeSingle();
-
-      if (existing?.id) {
-        await supabase
-          .from("product_images")
-          .update({ url: imageUrl, alt_text: altText, sort_order: 0, is_primary: true })
-          .eq("id", existing.id);
-      } else {
-        await supabase
-          .from("product_images")
-          .insert({
-            product_id: productId,
-            url: imageUrl,
-            alt_text: altText,
-            sort_order: 0,
-            is_primary: true,
-          });
-      }
-    },
-    [supabase]
-  );
-
   const refreshVipProducts = useCallback(async () => {
     const { data, error } = await supabase
       .from("bullmoney_vip")
@@ -691,6 +681,56 @@ export function AdminHubModal({
     else showError(`Recruits load failed: ${error.message}`);
   }, [supabase, showError]);
 
+  // Store display mode fetch
+  const fetchDisplayMode = useCallback(async () => {
+    try {
+      const res = await fetch('/api/store/settings/display-mode');
+      const data = await res.json();
+      if (data?.mode) {
+        setStoreDisplayMode(data.mode);
+        if (data.timer_end) setTimerEnd(data.timer_end);
+        if (data.timer_headline) setTimerHeadline(data.timer_headline);
+        if (data.timer_subtext) setTimerSubtext(data.timer_subtext);
+      }
+    } catch (err) {
+      console.error('Failed to fetch display mode:', err);
+    }
+  }, []);
+
+  // Store display mode setter (supports all 3 modes)
+  const changeDisplayMode = useCallback(async (newMode: 'global' | 'vip' | 'timer') => {
+    setDisplayModeLoading(true);
+    try {
+      const payload: Record<string, unknown> = { mode: newMode };
+      if (newMode === 'timer') {
+        if (!timerEnd) {
+          showError('Please set a countdown end date/time before enabling Timer mode.');
+          setDisplayModeLoading(false);
+          return;
+        }
+        payload.timer_end = timerEnd;
+        payload.timer_headline = timerHeadline;
+        payload.timer_subtext = timerSubtext;
+      }
+      const res = await fetch('/api/store/settings/display-mode', {
+        method: 'PUT',
+        headers: getAdminHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok && data?.success) {
+        setStoreDisplayMode(newMode);
+        showToast(data.message || `Store switched to ${newMode} mode`);
+      } else {
+        showError(data?.error || 'Failed to update display mode');
+      }
+    } catch (err) {
+      showError('Failed to update display mode');
+    } finally {
+      setDisplayModeLoading(false);
+    }
+  }, [timerEnd, timerHeadline, timerSubtext, getAdminHeaders, showToast, showError]);
+
   const syncTick = useCallback(async () => {
     if (isSyncing.current) return; // Prevent overlapping fetches during rapid polling
     isSyncing.current = true;
@@ -702,11 +742,12 @@ export function AdminHubModal({
         refreshLivestream(),
         refreshAnalyses(),
         refreshRecruits(),
+        fetchDisplayMode(),
       ]);
     } finally {
       isSyncing.current = false;
     }
-  }, [refreshProducts, refreshVipProducts, refreshServices, refreshLivestream, refreshAnalyses, refreshRecruits]);
+  }, [refreshProducts, refreshVipProducts, refreshServices, refreshLivestream, refreshAnalyses, refreshRecruits, fetchDisplayMode]);
 
   const loadAll = useCallback(async () => {
     if (!isAdmin) {
@@ -731,7 +772,7 @@ export function AdminHubModal({
   // CRUD HELPERS
   // -----------------------------------------------------------------------
   const upsertProduct = useCallback(async () => {
-    const isUpdate = Boolean(productForm.id);
+    const isUpdate = Boolean(productForm.id && productForm.id !== "__closed__");
     const trimmedName = productForm.name.trim();
     if (!trimmedName) {
       showError("Product name is required.");
@@ -763,40 +804,37 @@ export function AdminHubModal({
       },
     } as any;
 
-    let productId = productForm.id;
-    let error;
+    const productId = productForm.id;
+    const response = await fetch("/api/store/admin/products/manage", {
+      method: isUpdate ? "PATCH" : "POST",
+      headers: getAdminHeaders(),
+      body: JSON.stringify({
+        id: isUpdate ? productId : undefined,
+        payload,
+        imageUrl: productForm.imageUrl,
+      }),
+    });
 
-    if (isUpdate) {
-      ({ error } = await supabase.from("products").update(payload).eq("id", productId));
-    } else {
-      const { data: inserted, error: insertError } = await supabase
-        .from("products")
-        .insert(payload)
-        .select("id")
-        .single();
-      error = insertError;
-      productId = inserted?.id || "";
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      showError(`Save product failed: ${result?.error || "Unknown error"}`);
+      return;
     }
 
-    if (!error && productId) {
-      await upsertPrimaryProductImage(productId, productForm.imageUrl, trimmedName);
-      showToast("Saved product");
-      setProductForm({
-        id: "",
-        name: "",
-        description: "",
-        price: "0",
-        category: "",
-        imageUrl: "",
-        buyUrl: "",
-        visible: true,
-        displayOrder: 0,
-      });
-      refreshProducts();
-    } else if (error) {
-      showError(`Save product failed: ${error.message}`);
-    }
-  }, [productForm, products, resolveCategoryId, supabase, refreshProducts, showToast, showError, upsertPrimaryProductImage]);
+    showToast("Saved product");
+    setProductForm({
+      id: "",
+      name: "",
+      description: "",
+      price: "0",
+      category: "",
+      imageUrl: "",
+      buyUrl: "",
+      visible: true,
+      displayOrder: 0,
+    });
+    refreshProducts();
+  }, [productForm, products, resolveCategoryId, refreshProducts, showToast, showError, getAdminHeaders]);
 
   const upsertVipProduct = useCallback(async () => {
     let parsedPlanOptions: any[] = [];
@@ -845,11 +883,20 @@ export function AdminHubModal({
 
   const removeProduct = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from("products").delete().eq("id", id);
-      if (error) showError(`Delete product failed: ${error.message}`);
-      else refreshProducts();
+      const response = await fetch(`/api/store/admin/products/manage?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: getAdminHeaders(),
+      });
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        showError(`Delete product failed: ${result?.error || "Unknown error"}`);
+        return;
+      }
+
+      refreshProducts();
     },
-    [supabase, refreshProducts, showError]
+    [refreshProducts, showError, getAdminHeaders]
   );
 
   const removeVipProduct = useCallback(
@@ -2095,6 +2142,7 @@ export function AdminHubModal({
     { key: 'affiliate', label: 'Affiliate Admin', icon: <Users className="w-4 h-4" /> },
     { key: 'email', label: 'Emails', icon: <Mail className="w-4 h-4" /> },
     { key: 'store', label: 'Store Analytics', icon: <ShoppingBag className="w-4 h-4" /> },
+    { key: 'store_settings', label: 'Store Display', icon: <SettingsIcon /> },
     { key: 'crypto', label: 'Crypto Payments', icon: <Coins className="w-4 h-4" /> },
     { key: 'crypto_refunds', label: 'Crypto Refunds', icon: <RotateCcw className="w-4 h-4" /> },
     { key: 'faq', label: 'FAQ Editor', icon: <HelpCircle className="w-4 h-4" /> },
@@ -2255,6 +2303,173 @@ export function AdminHubModal({
                         {storeView === "promos" && <StorePromoManager />}
                         {storeView === "rewards" && <RewardsAdminPanel />}
                         {storeView === "messages" && <NewsletterMessagesPanel />}
+                      </div>
+                    )}
+                    {activeTab === "store_settings" && (
+                      <div className="space-y-6">
+                        <div className="p-4 rounded-xl border border-slate-700 bg-slate-900/70">
+                          <h3 className="text-white font-semibold text-base mb-1">Store Display Mode</h3>
+                          <p className="text-slate-400 text-sm mb-4">
+                            Control what all users see on the store page. This changes the store for everyone visiting the website.
+                          </p>
+
+                          {/* Current status indicator */}
+                          <div className="flex items-center gap-3 mb-5">
+                            <div className={`w-3 h-3 rounded-full ${
+                              storeDisplayMode === 'vip'
+                                ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]'
+                                : storeDisplayMode === 'timer'
+                                  ? 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.5)]'
+                                  : 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]'
+                            }`} />
+                            <div>
+                              <span className="text-white font-medium text-sm">
+                                {storeDisplayMode === 'vip' ? 'VIP Products Only'
+                                  : storeDisplayMode === 'timer' ? 'Countdown Timer Active'
+                                  : 'Global Products (All Users)'}
+                              </span>
+                              <p className="text-slate-500 text-xs mt-0.5">
+                                {storeDisplayMode === 'vip'
+                                  ? 'Store is showing VIP products from the bullmoney_vip table to all visitors'
+                                  : storeDisplayMode === 'timer'
+                                    ? 'All products are hidden — visitors see a countdown timer teaser'
+                                    : 'Store is showing regular products from the products table to all visitors'
+                                }
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Mode selector cards */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {/* Global card */}
+                            <button
+                              onClick={() => changeDisplayMode('global')}
+                              disabled={displayModeLoading || storeDisplayMode === 'global'}
+                              className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                storeDisplayMode === 'global'
+                                  ? 'border-emerald-400 bg-emerald-950/30 ring-1 ring-emerald-400/20'
+                                  : 'border-slate-700 bg-slate-800/50 hover:border-emerald-600 hover:bg-emerald-950/10 cursor-pointer'
+                              } ${displayModeLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <Package className="w-5 h-5 text-emerald-400" />
+                                <span className="text-white text-sm font-bold">Global</span>
+                                {storeDisplayMode === 'global' && (
+                                  <span className="ml-auto text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                                )}
+                              </div>
+                              <p className="text-slate-400 text-xs leading-relaxed">Shows regular store products to all visitors</p>
+                            </button>
+
+                            {/* VIP card */}
+                            <button
+                              onClick={() => changeDisplayMode('vip')}
+                              disabled={displayModeLoading || storeDisplayMode === 'vip'}
+                              className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                storeDisplayMode === 'vip'
+                                  ? 'border-amber-400 bg-amber-950/30 ring-1 ring-amber-400/20'
+                                  : 'border-slate-700 bg-slate-800/50 hover:border-amber-600 hover:bg-amber-950/10 cursor-pointer'
+                              } ${displayModeLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <Crown className="w-5 h-5 text-amber-400" />
+                                <span className="text-white text-sm font-bold">VIP</span>
+                                {storeDisplayMode === 'vip' && (
+                                  <span className="ml-auto text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                                )}
+                              </div>
+                              <p className="text-slate-400 text-xs leading-relaxed">Shows VIP products to all visitors</p>
+                            </button>
+
+                            {/* Timer card */}
+                            <button
+                              onClick={() => changeDisplayMode('timer')}
+                              disabled={displayModeLoading || storeDisplayMode === 'timer'}
+                              className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                storeDisplayMode === 'timer'
+                                  ? 'border-purple-400 bg-purple-950/30 ring-1 ring-purple-400/20'
+                                  : 'border-slate-700 bg-slate-800/50 hover:border-purple-600 hover:bg-purple-950/10 cursor-pointer'
+                              } ${displayModeLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <Clock className="w-5 h-5 text-purple-400" />
+                                <span className="text-white text-sm font-bold">Timer</span>
+                                {storeDisplayMode === 'timer' && (
+                                  <span className="ml-auto text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                                )}
+                              </div>
+                              <p className="text-slate-400 text-xs leading-relaxed">Hides all products &amp; shows a countdown timer teaser</p>
+                            </button>
+                          </div>
+
+                          {displayModeLoading && (
+                            <div className="flex items-center justify-center gap-2 mt-3 text-slate-400 text-sm">
+                              <RefreshCw className="w-4 h-4 animate-spin" /> Switching mode...
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Timer configuration panel */}
+                        <div className={`p-4 rounded-xl border transition-all ${
+                          storeDisplayMode === 'timer'
+                            ? 'border-purple-600 bg-purple-950/20'
+                            : 'border-slate-700 bg-slate-900/70'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Clock className="w-4 h-4 text-purple-400" />
+                            <h3 className="text-white font-semibold text-sm">Countdown Timer Settings</h3>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-slate-400 text-xs block mb-1.5">Timer End Date &amp; Time</label>
+                              <input
+                                type="datetime-local"
+                                value={timerEnd ? new Date(timerEnd).toISOString().slice(0, 16) : ''}
+                                onChange={(e) => setTimerEnd(e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm w-full focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-slate-400 text-xs block mb-1.5">Headline</label>
+                              <input
+                                type="text"
+                                value={timerHeadline}
+                                onChange={(e) => setTimerHeadline(e.target.value)}
+                                placeholder="Something big is coming"
+                                className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm w-full focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-slate-400 text-xs block mb-1.5">Subtext</label>
+                              <input
+                                type="text"
+                                value={timerSubtext}
+                                onChange={(e) => setTimerSubtext(e.target.value)}
+                                placeholder="New products dropping soon. Stay tuned."
+                                className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm w-full focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none"
+                              />
+                            </div>
+
+                            {storeDisplayMode === 'timer' && (
+                              <button
+                                onClick={() => changeDisplayMode('timer')}
+                                disabled={displayModeLoading}
+                                className="bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold px-5 py-2.5 rounded-lg transition-all disabled:opacity-50"
+                              >
+                                {displayModeLoading ? 'Saving...' : 'Update Timer Settings'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-lg border border-slate-800 bg-slate-900/50">
+                          <p className="text-xs text-slate-500">
+                            All settings take effect immediately for every visitor. <strong className="text-slate-400">Global</strong> shows regular products. <strong className="text-slate-400">VIP</strong> shows VIP products from <span className="text-slate-300">bullmoney_vip</span>. <strong className="text-slate-400">Timer</strong> hides all products and shows a fullscreen countdown timer to tease upcoming drops.
+                          </p>
+                        </div>
                       </div>
                     )}
                     {activeTab === "affiliate" && (

@@ -547,8 +547,92 @@ type StudioOpts = {
   productType?: string;
 };
 
+// ---- Countdown Timer Component ----
+function CountdownTimer({ targetDate }: { targetDate: string | null }) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [expired, setExpired] = useState(false);
 
+  useEffect(() => {
+    if (!targetDate) return;
 
+    const calc = () => {
+      const now = Date.now();
+      const end = new Date(targetDate).getTime();
+      const diff = end - now;
+
+      if (diff <= 0) {
+        setExpired(true);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      setExpired(false);
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      });
+    };
+
+    calc();
+    const interval = setInterval(calc, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  if (!targetDate) {
+    return (
+      <p className="text-white/40 text-sm">Timer not configured yet.</p>
+    );
+  }
+
+  if (expired) {
+    return (
+      <div className="text-center">
+        <p className="text-2xl font-bold text-white animate-pulse">It&apos;s time!</p>
+        <p className="text-white/50 text-sm mt-2">New products are on the way. Refresh the page soon.</p>
+      </div>
+    );
+  }
+
+  const blocks = [
+    { label: 'Days', value: timeLeft.days },
+    { label: 'Hours', value: timeLeft.hours },
+    { label: 'Minutes', value: timeLeft.minutes },
+    { label: 'Seconds', value: timeLeft.seconds },
+  ];
+
+  return (
+    <div className="flex items-center justify-center gap-3 sm:gap-5">
+      {blocks.map((block, i) => (
+        <div key={block.label} className="flex items-center gap-3 sm:gap-5">
+          <div className="flex flex-col items-center">
+            <div
+              className="relative w-[72px] h-[88px] sm:w-[90px] sm:h-[110px] rounded-2xl flex items-center justify-center overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(147,51,234,0.15) 0%, rgba(79,70,229,0.1) 100%)',
+                border: '1px solid rgba(147,51,234,0.25)',
+                boxShadow: '0 8px 32px rgba(147,51,234,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
+              }}
+            >
+              <span className="text-3xl sm:text-4xl font-bold text-white tabular-nums" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                {String(block.value).padStart(2, '0')}
+              </span>
+              {/* Center line accent */}
+              <div className="absolute left-0 right-0 top-1/2 h-px bg-white/5" />
+            </div>
+            <span className="text-[10px] sm:text-xs text-white/40 uppercase tracking-widest mt-2 font-medium">
+              {block.label}
+            </span>
+          </div>
+          {i < blocks.length - 1 && (
+            <span className="text-2xl sm:text-3xl text-white/20 font-light mb-6">:</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 
 export function StorePageClient({ routeBase = '/store', syncUrl = true, showProductSections = true }: StorePageProps) {
@@ -593,6 +677,10 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [storeDisplayMode, setStoreDisplayMode] = useState<'global' | 'vip' | 'timer'>('global');
+  const [timerEnd, setTimerEnd] = useState<string | null>(null);
+  const [timerHeadline, setTimerHeadline] = useState('Something big is coming');
+  const [timerSubtext, setTimerSubtext] = useState('New products dropping soon. Stay tuned.');
 
   const [expandedProduct, setExpandedProduct] = useState<ProductWithDetails | null>(null);
   const [viewerProduct, setViewerProduct] = useState<ProductWithDetails | null>(null);
@@ -950,7 +1038,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const fetchProducts = useCallback(async (
     pageNum: number,
     append: boolean,
-    signal?: AbortSignal
+    trades?: AbortSignal
   ) => {
     if (pageNum === 1) {
       setLoading(true);
@@ -968,8 +1056,27 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       if (filters.sort_by) params.set('sort_by', filters.sort_by);
       if (debouncedSearch) params.set('search', debouncedSearch);
 
-      const response = await fetch(`/api/store/products?${params.toString()}`, { signal });
-      const data: PaginatedResponse<ProductWithDetails> = await response.json();
+      const response = await fetch(`/api/store/products?${params.toString()}`, { trades });
+      const data = await response.json();
+
+      // Check for timer mode from API
+      if (data.display_mode === 'timer') {
+        setStoreDisplayMode('timer');
+        setTimerEnd(data.timer_end || null);
+        setTimerHeadline(data.timer_headline || 'Something big is coming');
+        setTimerSubtext(data.timer_subtext || 'New products dropping soon. Stay tuned.');
+        setProducts([]);
+        setTotal(0);
+        setHasMore(false);
+        return;
+      }
+
+      // Track display mode for VIP badge
+      if (data.display_mode) {
+        setStoreDisplayMode(data.display_mode);
+      } else {
+        setStoreDisplayMode('global');
+      }
 
       if (append) {
         setProducts((prev) => [...prev, ...(data.data || [])]);
@@ -1419,7 +1526,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   useEffect(() => {
     if (!showProducts) return;
     const controller = new AbortController();
-    fetchProducts(1, false, controller.signal);
+    fetchProducts(1, false, controller.trades);
     return () => controller.abort();
   }, [fetchProducts, showProducts]);
 
@@ -1777,7 +1884,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
           </p>
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Market intelligence.</h2>
           <p className="text-sm sm:text-base max-w-2xl" style={{ color: 'rgba(0,0,0,0.6)' }}>
-            A streamlined look at quotes, headlines, and community signals tailored for the store.
+            A streamlined look at quotes, headlines, and community trades tailored for the store.
           </p>
         </div>
 
@@ -1798,7 +1905,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-1">
           <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Community Signals</h3>
+              <h3 className="text-sm font-semibold">Community</h3>
               <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
                 Live
               </span>
@@ -2073,7 +2180,59 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       </div>
     </section>
   );
-  const productsSectionBlock = showProducts ? (
+
+  // ---- Countdown Timer Section (timer mode) ----
+  const timerSectionBlock = storeDisplayMode === 'timer' ? (
+    <section
+      data-apple-section
+      style={{ backgroundColor: 'rgb(0,0,0)' }}
+    >
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-5 py-20 text-center relative overflow-hidden">
+        {/* Animated background glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20"
+            style={{
+              background: 'radial-gradient(circle, rgba(147,51,234,0.4) 0%, rgba(79,70,229,0.2) 40%, transparent 70%)',
+              animation: 'pulse 4s ease-in-out infinite',
+            }}
+          />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-15"
+            style={{
+              background: 'radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 60%)',
+              animation: 'pulse 3s ease-in-out infinite 1s',
+            }}
+          />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-2xl">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8">
+            <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+            <span className="text-white/70 text-xs font-medium tracking-wider uppercase">Coming Soon</span>
+          </div>
+
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight" style={{ lineHeight: 1.1 }}>
+            {timerHeadline}
+          </h2>
+          <p className="text-white/50 text-base sm:text-lg mb-10 max-w-md mx-auto">
+            {timerSubtext}
+          </p>
+
+          {/* Countdown boxes */}
+          <CountdownTimer targetDate={timerEnd} />
+        </div>
+
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; }
+            50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.25; }
+          }
+        `}</style>
+      </div>
+    </section>
+  ) : null;
+
+  const productsSectionBlock = showProducts && storeDisplayMode !== 'timer' ? (
     <>
       <section
         data-apple-section
@@ -2849,6 +3008,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       <StoreNetworkShowcase />
 
       {/* Products section — full width, no columns */}
+      {timerSectionBlock}
       {productsSectionBlock}
 
       {!isDesktop && featuresSection}

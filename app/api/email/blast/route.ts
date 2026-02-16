@@ -22,12 +22,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       templateSlug, 
-      target = 'recruits', // recruits, vip, newsletter, all
+      target = 'recruits', // recruits, vip, newsletter, all, selected
       limit = 500, // Safety limit
       // Direct send mode - bypasses database lookup, sends exactly what's provided
       customHtml,
       customSubject,
       templateData, // Full template object for rendering per-recipient
+      selectedEmails, // Array of specific emails to send to (target="selected")
     } = body;
 
     // Must have either templateSlug or custom content
@@ -75,6 +76,11 @@ export async function POST(request: NextRequest) {
 
     // Fetch target audience emails
     let emails: string[] = [];
+
+    // Selected mode: use the provided email list directly
+    if (target === 'selected' && Array.isArray(selectedEmails) && selectedEmails.length > 0) {
+      emails = selectedEmails.filter((e: string) => typeof e === 'string' && e.includes('@'));
+    }
     
     if (target === 'recruits' || target === 'all') {
       // Get all recruits emails
