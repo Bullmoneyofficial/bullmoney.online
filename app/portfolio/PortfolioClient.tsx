@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
-import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, stagger, useAnimate } from "framer-motion";
+import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, stagger, useAnimate, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 
 // ---------- Lazy-loaded heavy components ----------
@@ -12,6 +12,25 @@ import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
 import { Timeline } from "@/components/ui/timeline";
 import { LinkPreview } from "@/components/ui/link-preview";
+
+// ============================================================================
+// Mobile detection hook - small viewports or touch devices
+// ============================================================================
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const isSmallViewport = window.innerWidth < 768;
+      const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+      setIsMobile(isSmallViewport || isTouch);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
 
 // ============================================================================
 // Typewriter Hook
@@ -298,10 +317,11 @@ const TIMELINE_DATA = [
 
 function HeroSection() {
   const ref = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, 300]);
-  const opacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, isMobile ? 0 : 300]);
+  const opacity = useTransform(scrollYProgress, [0, 0.4], [1, isMobile ? 1 : 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, isMobile ? 1 : 0.95]);
 
   const roles = ["Software Engineer", "Trader", "Entrepreneur", "CEO of BullMoney"];
   const [roleIdx, setRoleIdx] = useState(0);
@@ -312,7 +332,7 @@ function HeroSection() {
 
   return (
     <section ref={ref} style={{ backgroundColor: "#000000" }}
-      className="relative w-full md:min-h-[100vh] flex items-center md:justify-center overflow-x-hidden py-20">
+      className="relative w-full min-h-fit md:min-h-screen flex items-center md:justify-center py-6 sm:py-16 md:py-20">
       {/* Full-bleed particles */}
       <div className="absolute inset-0 z-0">
         <Particles particleCount={180} particleSpread={10} speed={0.05}
@@ -341,7 +361,7 @@ function HeroSection() {
       <motion.div style={{ y, opacity, scale }} className="relative z-10 text-center px-4 w-full max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 30, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1, ease: [0.25, 0.4, 0.25, 1] }}>
-          <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full mb-12"
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full mb-4 sm:mb-12"
             style={{ border: "1px solid rgba(59,130,246,0.4)", backgroundColor: "rgba(59,130,246,0.08)", backdropFilter: "blur(10px)" }}>
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#3b82f6", boxShadow: "0 0 10px #3b82f6" }} />
             <motion.span key={roleIdx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -354,13 +374,13 @@ function HeroSection() {
 
         <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.4, 0.25, 1] }}
-          className="text-7xl sm:text-8xl md:text-[10rem] font-black tracking-tighter leading-[0.85]">
+          className="text-5xl sm:text-8xl md:text-[10rem] font-black tracking-tighter leading-[0.85]">
           <span style={{ color: "#ffffff" }}>Justin</span>
         </motion.h1>
 
         <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="mt-4 text-4xl sm:text-5xl md:text-7xl font-black tracking-tight">
+          className="mt-2 sm:mt-4 text-2xl sm:text-5xl md:text-7xl font-black tracking-tight">
           <span style={{
             background: "linear-gradient(135deg, #60a5fa 0%, #22d3ee 35%, #a78bfa 65%, #60a5fa 100%)",
             backgroundSize: "200% 200%",
@@ -373,7 +393,7 @@ function HeroSection() {
 
         <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-10 text-lg md:text-2xl max-w-3xl mx-auto leading-relaxed font-light"
+          className="mt-4 sm:mt-10 text-sm sm:text-lg md:text-2xl max-w-3xl mx-auto leading-relaxed font-light"
           style={{ color: "#a1a1aa" }}>
           Building the future of trading technology. Full-stack engineer by craft,
           trader by passion, entrepreneur by nature.
@@ -381,8 +401,8 @@ function HeroSection() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="mt-14 flex flex-wrap items-center justify-center gap-6">
-          <a href="#projects" className="group relative inline-flex items-center justify-center overflow-hidden rounded-full px-12 py-5 font-bold text-white text-lg transition-all duration-300">
+          className="mt-6 sm:mt-14 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+          <a href="#projects" className="group relative inline-flex items-center justify-center overflow-hidden rounded-full px-8 py-3 sm:px-12 sm:py-5 font-bold text-white text-base sm:text-lg transition-all duration-300">
             <span className="absolute inset-0" style={{ background: "linear-gradient(135deg, #2563eb, #0891b2)" }} />
             <span className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
               style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4, #3b82f6)", backgroundSize: "200% 100%", animation: "shimmer 2s linear infinite" }} />
@@ -406,9 +426,9 @@ function HeroSection() {
         </motion.div>
       </motion.div>
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator - hidden on mobile carousel */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} transition={{ delay: 2 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
+        className="hidden sm:block absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
         <motion.div animate={{ y: [0, 12, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           className="w-8 h-14 rounded-full flex items-start justify-center p-2"
           style={{ border: "2px solid rgba(59,130,246,0.3)" }}>
@@ -527,7 +547,7 @@ function InstagramShowcase() {
                 className="w-full border-0"
                 style={{ minHeight: "450px", background: "#000" }}
                 loading="lazy"
-                allowtransparency="true"
+                allowTransparency={true}
                 scrolling="no"
                 title={`Instagram post from @${activeAccount?.handle}`}
               />
@@ -848,7 +868,7 @@ function AboutSection() {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[135vh] py-16 sm:py-24 md:py-36 lg:py-52 flex flex-col overflow-x-hidden">
+    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[135vh] py-6 sm:py-16 md:py-36 lg:py-52 flex flex-col">
       {/* Decorative backgrounds (clipped) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.06, 0.1, 0.06] }}
@@ -861,12 +881,12 @@ function AboutSection() {
 
       <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         {/* ---- Top: Bio + Stats (original layout) ---- */}
-        <div className="grid md:grid-cols-[1.2fr_1fr] gap-16 md:gap-24 items-center">
+        <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-24 items-center">
           <div>
             <motion.div initial={{ opacity: 0, x: -50 }} animate={inView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.8 }}>
               <span style={{ color: "#60a5fa" }} className="text-sm font-bold tracking-[0.3em] uppercase">About Me</span>
-              <h2 className="mt-6 text-5xl md:text-7xl font-black leading-[1.05]" style={{ color: "#ffffff" }}>
+              <h2 className="mt-3 sm:mt-6 text-3xl sm:text-5xl md:text-7xl font-black leading-[1.05]" style={{ color: "#ffffff" }}>
                 More Than a{" "}
                 <span style={{
                   background: "linear-gradient(135deg, #60a5fa, #22d3ee, #a78bfa)",
@@ -877,21 +897,21 @@ function AboutSection() {
 
             <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.2 }}>
-              <div className="mt-10 leading-relaxed text-lg md:text-xl" style={{ color: "#d4d4d8" }}>
+              <div className="mt-4 sm:mt-10 leading-relaxed text-sm sm:text-lg md:text-xl" style={{ color: "#d4d4d8" }}>
                 I&apos;m a self-taught software engineer, active trader, and entrepreneur who turned a passion for technology and markets into{" "}
-                <LinkPreview url="https://www.bullmoney.shop" className="!font-bold underline underline-offset-4 decoration-2 hover:no-underline transition-all" style={{ color: "#60a5fa", textDecorationColor: "rgba(59,130,246,0.4)" }}>
+                <LinkPreview url="https://www.bullmoney.shop" className="!font-bold underline underline-offset-4 decoration-2 hover:no-underline transition-all text-blue-400 decoration-blue-500/40">
                   BullMoney
                 </LinkPreview>{" "}
                 - a complete trading ecosystem. But there&apos;s way more to me than code and charts.
               </div>
-              <p className="mt-6 leading-relaxed text-lg" style={{ color: "#a1a1aa" }}>
+              <p className="mt-3 sm:mt-6 leading-relaxed text-sm sm:text-lg" style={{ color: "#a1a1aa" }}>
                 I love sports - F1, football (Hala Madrid forever), staying active and competitive. I&apos;m into graphic design, video editing, and being social. I&apos;m always bettering my knowledge because I genuinely believe there&apos;s more to life. Every day is a chance to level up.
               </p>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-12 flex flex-wrap gap-4">
+              className="mt-6 sm:mt-12 flex flex-wrap gap-4">
               <MovingBorderButton borderRadius="1.5rem" containerClassName="!h-auto !w-auto"
                 className="!text-base !px-8 !py-4 !font-bold"
                 style={{ backgroundColor: "#000000", color: "#ffffff" }}
@@ -908,7 +928,7 @@ function AboutSection() {
           </div>
 
           {/* Stats - now broader personal stats */}
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5">
             {[
               { label: "Platform", value: "Bull", valueBold: "Money", sub: "CEO & Founder" },
               { label: "Components", value: 200, suffix: "+", sub: "Hand-crafted" },
@@ -922,7 +942,7 @@ function AboutSection() {
                 animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
                 transition={{ delay: 0.3 + i * 0.12, duration: 0.6, ease: [0.25, 0.4, 0.25, 1] }}
                 whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
-                className="relative rounded-2xl p-7 overflow-hidden cursor-default group"
+                className="relative rounded-2xl p-4 sm:p-7 overflow-hidden cursor-default group"
                 style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(59,130,246,0.12)" }}>
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500"
                   style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.12), rgba(6,182,212,0.06))", boxShadow: "0 0 40px rgba(59,130,246,0.08) inset" }} />
@@ -951,7 +971,7 @@ function AboutSection() {
 
 function HobbiesSectionWrapper() {
   return (
-    <section style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[190vh] py-16 sm:py-20 md:py-24 lg:py-36 flex flex-col md:justify-center overflow-x-hidden">
+    <section style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[190vh] py-6 sm:py-16 md:py-24 lg:py-36 flex flex-col md:justify-center">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(34,211,238,0.2), transparent)" }} />
@@ -969,7 +989,7 @@ function HobbiesSectionWrapper() {
 
 function InstagramSectionWrapper() {
   return (
-    <section style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[190vh] py-16 sm:py-20 md:py-24 lg:py-36 flex flex-col md:justify-center overflow-x-hidden">
+    <section style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[190vh] py-6 sm:py-16 md:py-24 lg:py-36 flex flex-col md:justify-center">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(240,148,51,0.2), transparent)" }} />
@@ -1061,12 +1081,13 @@ function TiltCard3D({ children, className = "", style = {}, glowColor = "#22c55e
 function TradingIdentitySection() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const parallaxY = useTransform(scrollYProgress, [0, 1], [80, -80]);
-  const parallaxScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.95, 1, 0.98]);
+  const parallaxY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [80, -80]);
+  const parallaxScale = useTransform(scrollYProgress, [0, 0.5, 1], isMobile ? [1, 1, 1] : [0.95, 1, 0.98]);
 
   return (
-    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[190vh] py-16 sm:py-20 md:py-36 lg:py-48 flex flex-col md:justify-center overflow-x-hidden">
+    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[190vh] py-6 sm:py-16 md:py-36 lg:py-48 flex flex-col md:justify-center">
       {/* Decorative backgrounds (clipped) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 opacity-[0.03] z-[2]"
@@ -1086,7 +1107,7 @@ function TradingIdentitySection() {
       <motion.div style={{ y: parallaxY, scale: parallaxScale }} className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         {/* Header with 3D text effect */}
         <motion.div initial={{ opacity: 0, y: 50, rotateX: 10 }} animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
-          transition={{ duration: 1, ease: [0.25, 0.4, 0.25, 1] }} className="mb-20"
+          transition={{ duration: 1, ease: [0.25, 0.4, 0.25, 1] }} className="mb-8 sm:mb-20"
           style={{ perspective: 1000 }}>
           <motion.span style={{ color: "#4ade80" }}
             className="text-sm font-bold tracking-[0.3em] uppercase inline-block"
@@ -1094,7 +1115,7 @@ function TradingIdentitySection() {
             transition={{ duration: 1.2, delay: 0.2 }}>
             The Trader
           </motion.span>
-          <h2 className="mt-5 text-5xl md:text-7xl font-black" style={{ color: "#ffffff" }}>
+          <h2 className="mt-3 sm:mt-5 text-3xl sm:text-5xl md:text-7xl font-black" style={{ color: "#ffffff" }}>
             Trading{" "}
             <motion.span
               animate={inView ? { backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] } : {}}
@@ -1139,7 +1160,7 @@ function TradingIdentitySection() {
         </motion.div>
 
         {/* Markets breakdown - 3D perspective cards */}
-        <div className="mb-20 relative">
+        <div className="mb-8 sm:mb-20 relative">
           <motion.h3 initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: 0.3 }} className="text-2xl font-black mb-8" style={{ color: "#ffffff" }}>
             Markets I Trade
@@ -1185,7 +1206,7 @@ function TradingIdentitySection() {
         </div>
 
         {/* Key trading stats - 3D floating cards */}
-        <div className="mb-20">
+        <div className="mb-8 sm:mb-20">
           <motion.h3 initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: 0.4 }} className="text-2xl font-black mb-8" style={{ color: "#ffffff" }}>
             By the Numbers
@@ -1267,7 +1288,7 @@ function TradingIdentitySection() {
         {/* CTA */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.8, duration: 0.7 }}
-          className="mt-16 flex flex-wrap gap-4">
+          className="mt-8 sm:mt-16 flex flex-wrap gap-4">
           <MovingBorderButton borderRadius="1.5rem" containerClassName="!h-auto !w-auto"
             className="!text-base !px-8 !py-4 !font-bold"
             style={{ backgroundColor: "#000000", color: "#ffffff" }}
@@ -1316,7 +1337,7 @@ function MentorSection() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[190vh] py-20 sm:py-24 md:py-36 lg:py-48 flex flex-col md:justify-center overflow-x-hidden">
+    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[190vh] py-6 sm:py-16 md:py-36 lg:py-48 flex flex-col md:justify-center">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(251,146,60,0.3), transparent)" }} />
@@ -1327,7 +1348,7 @@ function MentorSection() {
       <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }} className="mb-12 sm:mb-16 md:mb-20">
+          transition={{ duration: 0.7 }} className="mb-6 sm:mb-12 md:mb-20">
           <span style={{ color: "#fb923c" }} className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">The Mentor</span>
           <h2 className="mt-3 sm:mt-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black" style={{ color: "#ffffff" }}>
             Teaching &{" "}
@@ -1447,7 +1468,7 @@ function MentorSection() {
         {/* CTA */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.9, duration: 0.6 }}
-          className="mt-16 flex flex-wrap gap-4">
+          className="mt-8 sm:mt-16 flex flex-wrap gap-4">
           <MovingBorderButton borderRadius="1.5rem" containerClassName="!h-auto !w-auto"
             className="!text-base !px-8 !py-4 !font-bold"
             style={{ backgroundColor: "#000000", color: "#ffffff" }}
@@ -1475,7 +1496,7 @@ function SkillsSection() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[100vh] py-20 sm:py-24 md:py-36 lg:py-48 flex flex-col md:justify-center overflow-x-hidden">
+    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-screen py-6 sm:py-16 md:py-36 lg:py-48 flex flex-col md:justify-center">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(6,182,212,0.2), transparent)" }} />
@@ -1487,7 +1508,7 @@ function SkillsSection() {
 
       <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }} className="text-center mb-12 sm:mb-16 md:mb-20">
+          transition={{ duration: 0.7 }} className="text-center mb-6 sm:mb-12 md:mb-20">
           <span style={{ color: "#60a5fa" }} className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">Expertise</span>
           <h2 className="mt-3 sm:mt-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black" style={{ color: "#ffffff" }}>
             Skills &{" "}
@@ -1544,7 +1565,7 @@ function ProjectsSection() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section id="projects" ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[220vh] py-20 sm:py-24 md:py-36 lg:py-48 flex flex-col md:justify-center overflow-x-hidden">
+    <section id="projects" ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[220vh] py-6 sm:py-16 md:py-36 lg:py-48 flex flex-col md:justify-center">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.2), transparent)" }} />
@@ -1552,7 +1573,7 @@ function ProjectsSection() {
 
       <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }} className="text-center mb-12 sm:mb-16 md:mb-20">
+          transition={{ duration: 0.7 }} className="text-center mb-6 sm:mb-12 md:mb-20">
           <span style={{ color: "#60a5fa" }} className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">Portfolio</span>
           <h2 className="mt-3 sm:mt-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black" style={{ color: "#ffffff" }}>
             What I&apos;ve{" "}
@@ -1652,12 +1673,13 @@ const DEV_PHILOSOPHY = [
 function DeveloperDNASection() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const parallaxY = useTransform(scrollYProgress, [0, 1], [60, -60]);
-  const parallaxScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.96, 1, 0.98]);
+  const parallaxY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 0] : [60, -60]);
+  const parallaxScale = useTransform(scrollYProgress, [0, 0.5, 1], isMobile ? [1, 1, 1] : [0.96, 1, 0.98]);
 
   return (
-    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[190vh] py-20 sm:py-24 md:py-36 lg:py-48 flex flex-col md:justify-center overflow-x-hidden">
+    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[190vh] py-6 sm:py-16 md:py-36 lg:py-48 flex flex-col md:justify-center">
       {/* Decorative backgrounds (clipped) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 opacity-[0.02]"
@@ -1677,7 +1699,7 @@ function DeveloperDNASection() {
       <motion.div style={{ y: parallaxY, scale: parallaxScale }} className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         {/* Header with 3D text */}
         <motion.div initial={{ opacity: 0, y: 50, rotateX: 10 }} animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
-          transition={{ duration: 1, ease: [0.25, 0.4, 0.25, 1] }} className="mb-12 sm:mb-16 md:mb-20"
+          transition={{ duration: 1, ease: [0.25, 0.4, 0.25, 1] }} className="mb-6 sm:mb-12 md:mb-20"
           style={{ perspective: 1000 }}>
           <motion.span style={{ color: "#60a5fa" }}
             className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase inline-block"
@@ -1813,7 +1835,7 @@ function DeveloperDNASection() {
         {/* Contribution-style visual bar with 3D flip animation */}
         <motion.div initial={{ opacity: 0, y: 30, rotateX: 5 }} animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
           transition={{ delay: 0.7, duration: 0.8 }}
-          className="rounded-2xl p-4 sm:p-6 md:p-8 mb-12 sm:mb-16 md:mb-20 relative overflow-hidden group"
+          className="rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-12 md:mb-20 relative overflow-hidden group"
           style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(96,165,250,0.1)", backdropFilter: "blur(10px)", boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"
             style={{ background: "radial-gradient(circle at 50% 0%, rgba(34,197,94,0.06), transparent 70%)" }} />
@@ -1840,7 +1862,7 @@ function DeveloperDNASection() {
         {/* CTA */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.9, duration: 0.6 }}
-          className="mt-16 flex flex-wrap gap-4">
+          className="mt-8 sm:mt-16 flex flex-wrap gap-4">
           <MovingBorderButton borderRadius="1.5rem" containerClassName="!h-auto !w-auto"
             className="!text-base !px-8 !py-4 !font-bold"
             style={{ backgroundColor: "#000000", color: "#ffffff" }}
@@ -1868,7 +1890,7 @@ function BullMoneyShowcase() {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="relative w-full md:min-h-[190vh] py-20 sm:py-24 md:py-36 lg:py-56 flex flex-col md:justify-center overflow-x-hidden" style={{ backgroundColor: "#000000" }}>
+    <section ref={ref} className="relative w-full min-h-fit md:min-h-[190vh] py-6 sm:py-16 md:py-36 lg:py-56 flex flex-col md:justify-center" style={{ backgroundColor: "#000000" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 8, repeat: Infinity }}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[800px] md:w-[1200px] h-[300px] sm:h-[800px] md:h-[1200px] rounded-full z-[1]"
@@ -1915,7 +1937,7 @@ function BullMoneyShowcase() {
           </motion.p>
 
           {/* Feature grid - full width */}
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+          <div className="mt-10 sm:mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
             {[
               { label: "Live Charts", desc: "TradingView integration", icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6", href: "/" },
               { label: "Courses", desc: "Video education", icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z", href: "/designs" },
@@ -1947,8 +1969,8 @@ function BullMoneyShowcase() {
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 1, duration: 0.6 }}
-            className="mt-16 flex flex-wrap items-center justify-center gap-6">
-            <a href="/" className="group relative inline-flex items-center justify-center overflow-hidden rounded-full px-12 py-5 font-bold text-white text-lg">
+            className="mt-8 sm:mt-16 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+            <a href="/" className="group relative inline-flex items-center justify-center overflow-hidden rounded-full px-8 py-3 sm:px-12 sm:py-5 font-bold text-white text-base sm:text-lg">
               <span className="absolute inset-0" style={{ background: "linear-gradient(135deg, #2563eb, #0891b2)" }} />
               <span className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                 style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4, #3b82f6)", backgroundSize: "200% 100%", animation: "shimmer 2s linear infinite" }} />
@@ -1982,7 +2004,7 @@ function JourneySection() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section ref={ref} className="relative w-full md:min-h-[190vh] py-16 sm:py-20 md:py-32 lg:py-40 flex flex-col overflow-x-hidden" style={{ backgroundColor: "#000000" }}>
+    <section ref={ref} className="relative w-full min-h-fit md:min-h-[190vh] py-6 sm:py-16 md:py-32 lg:py-40 flex flex-col" style={{ backgroundColor: "#000000" }}>
       <style jsx>{`
         section :global(.bg-white),
         section :global(.dark\\:bg-neutral-950) { background-color: #000000 !important; }
@@ -2026,7 +2048,7 @@ function QuickLinksSection() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[150vh] py-20 sm:py-24 md:py-36 lg:py-48 flex flex-col md:justify-center overflow-x-hidden">
+    <section ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[150vh] py-6 sm:py-16 md:py-36 lg:py-48 flex flex-col md:justify-center">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.2), transparent)" }} />
@@ -2034,7 +2056,7 @@ function QuickLinksSection() {
 
       <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }} className="text-center mb-12 sm:mb-16 md:mb-20">
+          transition={{ duration: 0.6 }} className="text-center mb-6 sm:mb-12 md:mb-20">
           <span style={{ color: "#60a5fa" }} className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">Navigate</span>
           <h2 className="mt-3 sm:mt-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black" style={{ color: "#ffffff" }}>
             Explore the{" "}
@@ -2089,7 +2111,7 @@ function FooterSection() {
   const inView = useInView(ref, { once: true });
 
   return (
-    <footer ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full md:min-h-[50vh] py-16 sm:py-20 md:py-32 lg:py-40 flex flex-col md:justify-center overflow-x-hidden">
+    <footer ref={ref} style={{ backgroundColor: "#000000" }} className="relative w-full min-h-fit md:min-h-[50vh] py-6 sm:py-16 md:py-32 lg:py-40 flex flex-col md:justify-center">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.2), transparent)" }} />
@@ -2104,13 +2126,13 @@ function FooterSection() {
               Together
             </span>
           </h3>
-          <p className="mt-6 sm:mt-8 max-w-xl mx-auto text-base sm:text-lg" style={{ color: "#a1a1aa" }}>
+          <p className="mt-3 sm:mt-8 max-w-xl mx-auto text-sm sm:text-lg" style={{ color: "#a1a1aa" }}>
             Whether you want to join the BullMoney community, collaborate on a project,
             or connect - I&apos;m always open to new opportunities.
           </p>
 
-          <div className="mt-8 sm:mt-12 flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <a href="/socials" className="group relative inline-flex items-center justify-center overflow-hidden rounded-full px-12 py-5 font-bold text-white text-lg">
+          <div className="mt-5 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+            <a href="/socials" className="group relative inline-flex items-center justify-center overflow-hidden rounded-full px-8 py-3 sm:px-12 sm:py-5 font-bold text-white text-base sm:text-lg">
               <span className="absolute inset-0" style={{ background: "linear-gradient(135deg, #2563eb, #0891b2)" }} />
               <span className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                 style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4, #3b82f6)", backgroundSize: "200% 100%", animation: "shimmer 2s linear infinite" }} />
@@ -2126,7 +2148,7 @@ function FooterSection() {
             </HoverBorderGradient>
           </div>
 
-          <div className="mt-20 flex items-center justify-center gap-8 text-sm flex-wrap">
+          <div className="mt-10 sm:mt-20 flex items-center justify-center gap-4 sm:gap-8 text-sm flex-wrap">
             {[
               { label: "BullMoney", href: "/" },
               { label: "Store", href: "/store" },
@@ -2144,7 +2166,7 @@ function FooterSection() {
             ))}
           </div>
 
-          <p className="mt-12 text-xs" style={{ color: "#27272a" }}>
+          <p className="mt-6 sm:mt-12 text-xs" style={{ color: "#27272a" }}>
             &copy; {new Date().getFullYear()} Justin - BullMoney. All rights reserved.
           </p>
         </motion.div>
@@ -2154,25 +2176,212 @@ function FooterSection() {
 }
 
 // ============================================================================
+// Mobile Carousel Section Labels
+// ============================================================================
+
+const SECTION_LABELS = [
+  "Hero", "About", "Hobbies", "Instagram", "Trading",
+  "Mentor", "Skills", "Projects", "Dev DNA",
+  "BullMoney", "Journey", "Links", "Footer",
+];
+
+// ============================================================================
+// Mobile Carousel Wrapper
+// ============================================================================
+
+function MobileCarousel({ children }: { children: React.ReactNode }) {
+  const sections = React.Children.toArray(children);
+  const [active, setActive] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const total = sections.length;
+
+  const goTo = useCallback((idx: number) => {
+    setActive(Math.max(0, Math.min(total - 1, idx)));
+    // Scroll to top when changing sections
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [total]);
+
+  const prev = useCallback(() => goTo(active - 1), [active, goTo]);
+  const next = useCallback(() => goTo(active + 1), [active, goTo]);
+
+  // Swipe detection — only horizontal swipes change section
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchStart.current) return;
+      const dx = e.changedTouches[0].clientX - touchStart.current.x;
+      const dy = e.changedTouches[0].clientY - touchStart.current.y;
+      // Only horizontal swipe changes section (must be clearly horizontal)
+      if (Math.abs(dx) > 100 && Math.abs(dx) > Math.abs(dy) * 3) {
+        if (dx < 0) next();
+        else prev();
+      }
+      touchStart.current = null;
+    };
+
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [next, prev]);
+
+  // Keyboard nav
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") prev();
+      else if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [prev, next]);
+
+  return (
+    <div ref={containerRef} className="fixed inset-0 w-full h-full" style={{ backgroundColor: "#000000" }}>
+      {/* Current section content - scrollable vertically */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          ref={scrollRef}
+          key={active}
+          initial={{ opacity: 0, x: 60 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -60 }}
+          transition={{ duration: 0.35, ease: [0.25, 0.4, 0.25, 1] }}
+          className="w-full h-full overflow-x-hidden"
+          style={{
+            overflowY: "scroll",
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-y",
+            overscrollBehavior: "contain",
+          }}
+        >
+          {sections[active]}
+          {/* Spacer so content isn't hidden behind bottom nav */}
+          <div style={{ height: 80 }} aria-hidden />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Left Arrow */}
+      {active > 0 && (
+        <button
+          onClick={prev}
+          className="fixed left-2 top-1/2 -translate-y-1/2 z-[100] w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-90"
+          style={{ backgroundColor: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)" }}
+          aria-label="Previous section"
+        >
+          <svg className="w-5 h-5" style={{ color: "#60a5fa" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      )}
+
+      {/* Right Arrow */}
+      {active < total - 1 && (
+        <button
+          onClick={next}
+          className="fixed right-2 top-1/2 -translate-y-1/2 z-[100] w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-90"
+          style={{ backgroundColor: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)" }}
+          aria-label="Next section"
+        >
+          <svg className="w-5 h-5" style={{ color: "#60a5fa" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
+
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-[100] pb-[env(safe-area-inset-bottom,8px)]" style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.95) 30%)" }}>
+        {/* Section label */}
+        <div className="text-center mb-2">
+          <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: "#60a5fa" }}>
+            {SECTION_LABELS[active] || `Section ${active + 1}`}
+          </span>
+          <span className="text-[10px] ml-2" style={{ color: "#52525b" }}>
+            {active + 1}/{total}
+          </span>
+        </div>
+
+        {/* Dots */}
+        <div className="flex items-center justify-center gap-1.5 px-4 pb-2">
+          {sections.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className="transition-all duration-300"
+              style={{
+                width: i === active ? 20 : 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: i === active ? "#3b82f6" : "rgba(255,255,255,0.15)",
+                boxShadow: i === active ? "0 0 8px rgba(59,130,246,0.5)" : "none",
+              }}
+              aria-label={`Go to ${SECTION_LABELS[i] || `section ${i + 1}`}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // Main Portfolio Component
 // ============================================================================
 
 export default function PortfolioClient() {
-  return (
-    <main className="min-h-screen w-full overflow-x-hidden" style={{ backgroundColor: "#000000", color: "#ffffff" }}>
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-        @keyframes gradientShift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        body { background-color: #000000 !important; }
-        ::selection { background-color: rgba(59,130,246,0.3); color: #ffffff; }
-      `}</style>
+  const isMobile = useIsMobile();
 
+  const globalStyles = (
+    <style jsx global>{`
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+      body { background-color: #000000 !important; }
+      ::selection { background-color: rgba(59,130,246,0.3); color: #ffffff; }
+    `}</style>
+  );
+
+  // Mobile: carousel mode
+  if (isMobile) {
+    return (
+      <div className="w-full" style={{ backgroundColor: "#000000", color: "#ffffff" }}>
+        {globalStyles}
+        <MobileCarousel>
+          <HeroSection />
+          <AboutSection />
+          <HobbiesSectionWrapper />
+          <InstagramSectionWrapper />
+          <TradingIdentitySection />
+          <MentorSection />
+          <SkillsSection />
+          <ProjectsSection />
+          <DeveloperDNASection />
+          <BullMoneyShowcase />
+          <JourneySection />
+          <QuickLinksSection />
+          <FooterSection />
+        </MobileCarousel>
+      </div>
+    );
+  }
+
+  // Desktop: normal vertical scroll
+  return (
+    <main className="min-h-screen w-full overflow-x-hidden" style={{ backgroundColor: "#000000", color: "#ffffff", WebkitOverflowScrolling: "touch" }}>
+      {globalStyles}
       <HeroSection />
       <AboutSection />
       <HobbiesSectionWrapper />

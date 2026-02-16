@@ -26,9 +26,9 @@ import { cn } from "@/lib/utils";
 
 // Constants
 const LOGO_URL = "/bullmoney-logo.png";
-const BASE_URL = typeof window !== "undefined" 
-  ? window.location.origin 
-  : (process.env.NEXT_PUBLIC_BASE_URL || "https://bullmoney.online");
+const BASE_URL = process.env.NODE_ENV === "development"
+  ? "http://localhost:3000"
+  : "https://bullmoney.online";
 
 interface AffiliateRecord {
   id: string | number;

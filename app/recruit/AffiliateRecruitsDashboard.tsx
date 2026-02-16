@@ -359,26 +359,20 @@ export default function AffiliateRecruitsDashboard({
   }, [lastUpdatedAt]);
 
   const appBaseUrl = useMemo(() => {
-    // Client-side: Use window.location.origin (most reliable in browser)
-    if (typeof window !== 'undefined' && window.location?.origin) {
-      const url = window.location.origin.replace(/\/$/, '');
-      console.log('[AffiliateRecruitsDashboard] Base URL from window.location.origin:', url);
-      return url;
+    // ALWAYS use the canonical production domain for referral/QR links
+    // so they work correctly regardless of which domain the affiliate
+    // is currently browsing from (Vercel preview URLs, localhost, etc.)
+    const CANONICAL_DOMAIN = 'https://bullmoney.online';
+
+    if (process.env.NODE_ENV === 'development') {
+      // In development, use localhost so devs can test locally
+      const devUrl = 'http://localhost:3000';
+      console.log('[AffiliateRecruitsDashboard] Base URL (dev):', devUrl);
+      return devUrl;
     }
 
-    // Server/SSR: Try environment variables
-    const envBase = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
-    if (envBase && envBase.trim()) {
-      const normalized = envBase.trim().replace(/\/$/, '');
-      const url = normalized.startsWith('http') ? normalized : `https://${normalized}`;
-      console.log('[AffiliateRecruitsDashboard] Base URL from environment:', url);
-      return url;
-    }
-
-    // Fallback for development
-    const fallback = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://bullmoney.online';
-    console.log('[AffiliateRecruitsDashboard] Base URL fallback:', fallback);
-    return fallback;
+    console.log('[AffiliateRecruitsDashboard] Base URL (canonical):', CANONICAL_DOMAIN);
+    return CANONICAL_DOMAIN;
   }, []);
 
   const currentWeekKey = useMemo(() => getIsoWeekKey(), []);
