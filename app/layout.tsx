@@ -260,12 +260,12 @@ export default function RootLayout({
       @supports not (selector(:has(*))){html:not(.bm-splash-done),html:not(.bm-splash-done) body{overflow:hidden!important;height:100%!important;}}
       #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);animation:none!important;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);}
 
-      /* Safari/iOS fallback: reduce compositor stress + stabilize viewport sizing */
+      /* Safari/iOS fallback: reduce compositor stress only in lite mode */
       html.is-safari #bm-splash,html.is-ios-safari #bm-splash{left:0;right:0;width:100%;height:100%;min-height:100vh;min-height:-webkit-fill-available;transform:translateZ(0);-webkit-transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
-      html.is-safari #bm-splash::before,html.is-safari #bm-splash::after,html.is-ios-safari #bm-splash::before,html.is-ios-safari #bm-splash::after{animation:none!important;filter:none!important;}
-      html.is-safari #bm-splash .bm-orb,html.is-ios-safari #bm-splash .bm-orb{display:none;}
-      html.is-safari #bm-splash .bm-status,html.is-ios-safari #bm-splash .bm-status{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
-      html.is-safari #bm-splash .bm-logo-wrap,html.is-safari #bm-splash .bm-progress-wrap,html.is-ios-safari #bm-splash .bm-logo-wrap,html.is-ios-safari #bm-splash .bm-progress-wrap{animation:none!important;}
+      html.is-safari #bm-splash.bm-splash-lite::before,html.is-safari #bm-splash.bm-splash-lite::after,html.is-ios-safari #bm-splash.bm-splash-lite::before,html.is-ios-safari #bm-splash.bm-splash-lite::after{animation:none!important;filter:none!important;}
+      html.is-safari #bm-splash.bm-splash-lite .bm-orb,html.is-ios-safari #bm-splash.bm-splash-lite .bm-orb{display:none;}
+      html.is-safari #bm-splash.bm-splash-lite .bm-status,html.is-ios-safari #bm-splash.bm-splash-lite .bm-status{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+      html.is-safari #bm-splash.bm-splash-lite .bm-logo-wrap,html.is-safari #bm-splash.bm-splash-lite .bm-progress-wrap,html.is-ios-safari #bm-splash.bm-splash-lite .bm-logo-wrap,html.is-ios-safari #bm-splash.bm-splash-lite .bm-progress-wrap{animation:none!important;}
 
       /* Subtle radial gradient overlay */
       #bm-splash::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0.02) 0%,rgba(255,255,255,0) 70%);z-index:0;}
@@ -711,6 +711,10 @@ export default function RootLayout({
       #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:transform!important;--bm-finale-scale:1;transform:translateX(-15px) scale(var(--bm-finale-scale))!important;transition:transform .8s cubic-bezier(.22,1,.36,1),width .8s cubic-bezier(.22,1,.36,1),height .8s cubic-bezier(.22,1,.36,1)!important;}
       /* Use filter invert() so the inline SVG (black) can become white on dark bg (Safari-friendly) */
       #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));-webkit-filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));}
+      /* In-app: force white finale + black logo (no invert/glow, no bg animation) */
+      html.is-in-app-browser #bm-splash.bm-splash-finale{background:#ffffff!important;background-color:#ffffff!important;}
+      html.is-in-app-browser #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;background:#ffffff!important;background-color:#ffffff!important;}
+      html.is-in-app-browser #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:none!important;-webkit-filter:none!important;}
       /* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS */
       #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
       #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}

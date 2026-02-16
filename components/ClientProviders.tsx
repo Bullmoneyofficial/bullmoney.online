@@ -199,8 +199,11 @@ export function ClientProviders({ children, modal, splashFinished = false }: Cli
   const allowMobileComponents = allowMobileLazy || !isMobileViewport;
   const { masterMuted } = useAudioSettings();
   useUIState();
+  const initialShowAudioWidget = typeof window !== 'undefined'
+    ? window.location.pathname !== '/'
+    : true;
   const [audioWidgetReady] = useState(true);
-  const [showAudioWidget, setShowAudioWidget] = useState(true);
+  const [showAudioWidget, setShowAudioWidget] = useState(initialShowAudioWidget);
   const canMountAudioWidget = audioWidgetReady && showAudioWidget && splashFinished;
 
   useEffect(() => {
@@ -208,6 +211,9 @@ export function ClientProviders({ children, modal, splashFinished = false }: Cli
 
     const readValue = () => {
       const stored = window.localStorage.getItem('store_show_audio_widget');
+      if (stored === null && window.location.pathname === '/') {
+        return false;
+      }
       return stored !== 'false';
     };
 

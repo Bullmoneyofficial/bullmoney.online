@@ -41,18 +41,28 @@
   var minDigitMs = 25;
   var ninetyStallStart = null;
   var splashStartAt = Date.now();
-  var finaleStarted = false;
   var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
-  // In-app webviews can be fragile with filter/keyframe-heavy animations.
-  // Enable a lite mode to keep the splash reliable.
-  try {
-    if (isInAppBrowser) splash.classList.add('bm-splash-lite');
-  } catch (e) {}
-  var minVisibleMs = isInAppBrowser ? 1400 : 200;
+  var finaleStarted = false;
+  var finaleStartedAt = 0;
+  var minFinaleMs = isInAppBrowser ? 1200 : 650;
   var mem = (navigator && navigator.deviceMemory) ? navigator.deviceMemory : 0;
   var lowMemory = mem > 0 && mem <= 4;
+  var prefersReduced = false;
+  try {
+    if (window.matchMedia) {
+      prefersReduced = !!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+  } catch (e) {}
+
+  // In-app webviews can be fragile with filter/keyframe-heavy animations.
+  // Only enable lite mode when reduced motion or low-memory is detected.
+  try {
+    if (lowMemory || prefersReduced) splash.classList.add('bm-splash-lite');
+  } catch (e) {}
+
+  var minVisibleMs = isInAppBrowser ? 2200 : 200;
   var constrainedSplash = isInAppBrowser || lowMemory;
-  var maxSplashMs = constrainedSplash ? (isInAppBrowser ? 6000 : 4500) : 6000;
+  var maxSplashMs = constrainedSplash ? (isInAppBrowser ? 10000 : 6000) : 8000;
   var loadAudio = null;
   var interactionBound = false;
   var lifecycleBound = false;
@@ -447,6 +457,7 @@
   function startFinale() {
     if (finaleStarted) return;
     finaleStarted = true;
+    finaleStartedAt = Date.now();
     targetPct = 100;
     if (!splash || splash.classList.contains('hide')) { hide(); return; }
     
@@ -589,6 +600,13 @@
 
   function hide() {
     var elapsed = Date.now() - splashStartAt;
+    if (finaleStartedAt) {
+      var finaleElapsed = Date.now() - finaleStartedAt;
+      if (finaleElapsed < minFinaleMs) {
+        setTimeout(hide, minFinaleMs - finaleElapsed);
+        return;
+      }
+    }
     if (elapsed < minVisibleMs) {
       setTimeout(hide, minVisibleMs - elapsed);
       return;

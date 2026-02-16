@@ -25,13 +25,33 @@ const toInstagramEmbed = (url: string) => {
   return clean.includes("/embed") ? clean : `${clean}/embed/`;
 };
 
+const toYouTubeEmbed = (url: string) => {
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{6,})/);
+  if (!match) return url;
+  return `https://www.youtube.com/embed/${match[1]}`;
+};
+
+const toTikTokEmbed = (url: string) => {
+  const match = url.match(/video\/(\d+)/);
+  if (!match) return url;
+  return `https://www.tiktok.com/embed/${match[1]}`;
+};
+
+const buildEmbedUrl = (platform: string, url: string) => {
+  if (!url) return url;
+  const normalized = platform.toLowerCase();
+  if (normalized === "instagram") return toInstagramEmbed(url);
+  if (normalized === "youtube") return toYouTubeEmbed(url);
+  if (normalized === "tiktok") return toTikTokEmbed(url);
+  return url;
+};
+
 export async function GET() {
   const supabase = createServerSupabase();
 
   const { data: accountsData, error: accountsError } = await supabase
     .from("network_accounts")
     .select("id, platform, handle, label, color, profile_url, sort_order, is_active")
-    .eq("platform", "instagram")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
@@ -63,6 +83,8 @@ export async function GET() {
   const responseAccounts = accounts.map((account) => {
     const accountPosts = postsByAccount.get(account.id) || [];
     return {
+      id: account.id,
+      platform: account.platform,
       handle: account.handle,
       label: account.label,
       color: account.color,
@@ -70,7 +92,7 @@ export async function GET() {
       posts: accountPosts.map((post) => ({
         id: post.id,
         postUrl: post.post_url,
-        embedUrl: toInstagramEmbed(post.post_url),
+        embedUrl: buildEmbedUrl(account.platform, post.post_url),
         isExample: false,
       })),
     };

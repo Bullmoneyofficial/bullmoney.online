@@ -358,7 +358,7 @@ function HeroSection() {
       <div className="absolute inset-0 z-[1] opacity-[0.03]"
         style={{ backgroundImage: "linear-gradient(rgba(59,130,246,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
-      <motion.div style={{ y, opacity, scale }} className="relative z-10 text-center px-4 w-full max-w-6xl mx-auto">
+      <motion.div style={{ y, opacity, scale }} className="relative z-[40] text-center px-4 w-full max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 30, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1, ease: [0.25, 0.4, 0.25, 1] }}>
           <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full mb-4 sm:mb-12"
@@ -531,7 +531,7 @@ function InstagramShowcase() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4"
       >
         {hasRealPosts ? (
           // Real Instagram post embeds via iframes
@@ -769,7 +769,7 @@ function HobbiesGrid() {
       </div>
 
       {/* Main grid - image cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-3">
         {HOBBIES.map((hobby, i) => (
           <motion.div key={hobby.label}
             initial={{ opacity: 0, y: 30, scale: 0.9 }}
@@ -879,7 +879,7 @@ function AboutSection() {
           style={{ background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.15) 20%, rgba(59,130,246,0.3) 50%, rgba(59,130,246,0.15) 80%, transparent 100%)" }} />
       </div>
 
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <div className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         {/* ---- Top: Bio + Stats (original layout) ---- */}
         <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-24 items-center">
           <div>
@@ -928,7 +928,7 @@ function AboutSection() {
           </div>
 
           {/* Stats - now broader personal stats */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-5">
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-2 sm:gap-5">
             {[
               { label: "Platform", value: "Bull", valueBold: "Money", sub: "CEO & Founder" },
               { label: "Components", value: 200, suffix: "+", sub: "Hand-crafted" },
@@ -976,7 +976,7 @@ function HobbiesSectionWrapper() {
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(34,211,238,0.2), transparent)" }} />
       </div>
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <div className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <HobbiesGrid />
       </div>
     </section>
@@ -994,7 +994,7 @@ function InstagramSectionWrapper() {
         <div className="absolute top-0 left-0 right-0 h-px z-[5]"
           style={{ background: "linear-gradient(90deg, transparent, rgba(240,148,51,0.2), transparent)" }} />
       </div>
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <div className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <InstagramShowcase />
       </div>
     </section>
@@ -1104,7 +1104,7 @@ function TradingIdentitySection() {
           style={{ background: "radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%)", filter: "blur(30px)" }} />
       </div>
 
-      <motion.div style={{ y: parallaxY, scale: parallaxScale }} className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <motion.div style={{ y: parallaxY, scale: parallaxScale }} className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         {/* Header with 3D text effect */}
         <motion.div initial={{ opacity: 0, y: 50, rotateX: 10 }} animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
           transition={{ duration: 1, ease: [0.25, 0.4, 0.25, 1] }} className="mb-8 sm:mb-20"
@@ -1162,28 +1162,28 @@ function TradingIdentitySection() {
         {/* Markets breakdown - 3D perspective cards */}
         <div className="mb-8 sm:mb-20 relative">
           <motion.h3 initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ delay: 0.3 }} className="text-2xl font-black mb-8" style={{ color: "#ffffff" }}>
+            transition={{ delay: 0.3 }} className="text-lg sm:text-2xl font-black mb-3 sm:mb-8" style={{ color: "#ffffff" }}>
             Markets I Trade
           </motion.h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4" style={{ perspective: 1000 }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4" style={{ perspective: 1000 }}>
             {MARKETS_TRADED.map((market, i) => (
               <TiltCard3D key={market.name} glowColor={market.color}
-                className="relative rounded-2xl p-6 text-center group cursor-default"
+                className="relative rounded-xl sm:rounded-2xl p-3 sm:p-6 text-center group cursor-default"
                 style={{ backgroundColor: "rgba(255,255,255,0.02)", border: `1px solid ${market.color}20`, backdropFilter: "blur(10px)" }}>
                 <motion.div
                   initial={{ opacity: 0, y: 40, rotateY: -20 }}
                   animate={inView ? { opacity: 1, y: 0, rotateY: 0 } : {}}
                   transition={{ delay: 0.3 + i * 0.12, duration: 0.8, ease: [0.25, 0.4, 0.25, 1] }}>
                   {/* SVG icon instead of emoji */}
-                  <motion.div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                  <motion.div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl mx-auto mb-2 sm:mb-4 flex items-center justify-center"
                     whileHover={{ rotate: [0, -5, 5, 0], scale: 1.15, transition: { duration: 0.4 } }}
                     style={{ backgroundColor: `${market.color}12`, border: `1px solid ${market.color}25`, boxShadow: `0 4px 20px ${market.color}10` }}>
-                    <svg className="w-6 h-6" style={{ color: market.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 sm:w-6 sm:h-6" style={{ color: market.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={market.icon} />
                     </svg>
                   </motion.div>
-                  <p className="font-black text-lg group-hover:scale-105 transition-transform duration-300" style={{ color: "#ffffff" }}>{market.name}</p>
-                  <p className="text-xs mt-1 mb-4" style={{ color: "#71717a" }}>{market.pairs}</p>
+                  <p className="font-black text-sm sm:text-lg group-hover:scale-105 transition-transform duration-300" style={{ color: "#ffffff" }}>{market.name}</p>
+                  <p className="text-[10px] sm:text-xs mt-0.5 sm:mt-1 mb-2 sm:mb-4" style={{ color: "#71717a" }}>{market.pairs}</p>
                   {/* Animated progress bar */}
                   <div className="h-2.5 rounded-full overflow-hidden relative" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
                     <motion.div initial={{ width: 0 }}
@@ -1208,10 +1208,10 @@ function TradingIdentitySection() {
         {/* Key trading stats - 3D floating cards */}
         <div className="mb-8 sm:mb-20">
           <motion.h3 initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ delay: 0.4 }} className="text-2xl font-black mb-8" style={{ color: "#ffffff" }}>
+            transition={{ delay: 0.4 }} className="text-lg sm:text-2xl font-black mb-3 sm:mb-8" style={{ color: "#ffffff" }}>
             By the Numbers
           </motion.h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5" style={{ perspective: 1200 }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-5" style={{ perspective: 1200 }}>
             {[
               { label: "Years Trading", value: 4, suffix: "+", color: "#22c55e", icon: TRADING_ICONS.clock },
               { label: "Markets Covered", value: 4, suffix: "", color: "#3b82f6", icon: TRADING_ICONS.stocks },
@@ -1224,7 +1224,7 @@ function TradingIdentitySection() {
                 transition={{ delay: 0.5 + i * 0.12, duration: 0.7, ease: [0.25, 0.4, 0.25, 1] }}
                 whileHover={{ y: -10, scale: 1.05, rotateY: 5, transition: { duration: 0.3 } }}
                 whileTap={{ scale: 0.97 }}
-                className="rounded-2xl p-6 text-center relative overflow-hidden group cursor-default"
+                className="rounded-xl sm:rounded-2xl p-3 sm:p-6 text-center relative overflow-hidden group cursor-default"
                 style={{ backgroundColor: "rgba(255,255,255,0.02)", border: `1px solid ${stat.color}15`, backdropFilter: "blur(10px)", boxShadow: "0 4px 24px rgba(0,0,0,0.2)" }}>
                 {/* Hover gradient */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"
@@ -1236,7 +1236,7 @@ function TradingIdentitySection() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={stat.icon} />
                   </svg>
                 </div>
-                <p className="text-4xl font-black relative z-10" style={{ color: stat.color }}>
+                <p className="text-xl sm:text-4xl font-black relative z-10" style={{ color: stat.color }}>
                   <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                 </p>
                 <p className="text-sm mt-2 font-medium relative z-10" style={{ color: "#71717a" }}>{stat.label}</p>
@@ -1247,10 +1247,10 @@ function TradingIdentitySection() {
 
         {/* Trading principles - staggered 3D cards */}
         <motion.h3 initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
-          transition={{ delay: 0.5 }} className="text-2xl font-black mb-8" style={{ color: "#ffffff" }}>
+          transition={{ delay: 0.5 }} className="text-lg sm:text-2xl font-black mb-3 sm:mb-8" style={{ color: "#ffffff" }}>
           My Trading Rules
         </motion.h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5" style={{ perspective: 1000 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-5" style={{ perspective: 1000 }}>
           {TRADING_PRINCIPLES.map((principle, i) => (
             <motion.div key={principle.title}
               initial={{ opacity: 0, y: 40, rotateX: 10 }}
@@ -1258,7 +1258,7 @@ function TradingIdentitySection() {
               transition={{ delay: 0.5 + i * 0.1, duration: 0.7, ease: [0.25, 0.4, 0.25, 1] }}
               whileHover={{ y: -8, scale: 1.03, rotateY: 3, boxShadow: "0 25px 50px rgba(34,197,94,0.1)", transition: { duration: 0.3 } }}
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl p-6 group cursor-default relative overflow-hidden"
+              className="rounded-xl sm:rounded-2xl p-3 sm:p-6 group cursor-default relative overflow-hidden"
               style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(34,197,94,0.1)", backdropFilter: "blur(10px)" }}>
               {/* Animated gradient border on hover */}
               <motion.div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500"
@@ -1345,7 +1345,7 @@ function MentorSection() {
           style={{ background: "radial-gradient(circle, #f97316 0%, transparent 70%)" }} />
       </div>
 
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <div className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7 }} className="mb-6 sm:mb-12 md:mb-20">
@@ -1372,7 +1372,7 @@ function MentorSection() {
         </motion.div>
 
         {/* Mentor stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 mb-12 md:mb-20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-5 mb-6 sm:mb-12 md:mb-20">
           {[
             { label: "Students Taught", value: 200, suffix: "+", color: "#f97316" },
             { label: "Course Lessons", value: 30, suffix: "+", color: "#fbbf24" },
@@ -1385,11 +1385,11 @@ function MentorSection() {
               transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
               whileHover={{ y: -6, scale: 1.04, transition: { duration: 0.3 } }}
               whileTap={{ scale: 0.97 }}
-              className="rounded-2xl p-6 text-center group cursor-default relative overflow-hidden"
+              className="rounded-xl sm:rounded-2xl p-3 sm:p-6 text-center group cursor-default relative overflow-hidden"
               style={{ backgroundColor: "rgba(255,255,255,0.02)", border: `1px solid ${stat.color}15` }}>
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"
                 style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}12, transparent 70%)` }} />
-              <p className="text-4xl font-black relative z-10" style={{ color: stat.color }}>
+              <p className="text-xl sm:text-4xl font-black relative z-10" style={{ color: stat.color }}>
                 <AnimatedCounter value={stat.value} suffix={stat.suffix} />
               </p>
               <p className="text-sm mt-2 font-medium relative z-10" style={{ color: "#71717a" }}>{stat.label}</p>
@@ -1399,10 +1399,10 @@ function MentorSection() {
 
         {/* What students learn */}
         <motion.h3 initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.4 }} className="text-2xl font-black mb-8" style={{ color: "#ffffff" }}>
+          transition={{ delay: 0.4 }} className="text-lg sm:text-2xl font-black mb-3 sm:mb-8" style={{ color: "#ffffff" }}>
           What You&apos;ll Learn
         </motion.h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-5 mb-8 sm:mb-16">
           {WHAT_STUDENTS_LEARN.map((item, i) => (
             <motion.div key={item.title}
               initial={{ opacity: 0, y: 30 }}
@@ -1410,7 +1410,7 @@ function MentorSection() {
               transition={{ delay: 0.4 + i * 0.08, duration: 0.6 }}
               whileHover={{ y: -6, scale: 1.02, transition: { duration: 0.25 } }}
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl p-6 group cursor-default relative overflow-hidden"
+              className="rounded-xl sm:rounded-2xl p-3 sm:p-6 group cursor-default relative overflow-hidden"
               style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(249,115,22,0.1)" }}>
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"
                 style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.06), transparent, rgba(249,115,22,0.03))" }} />
@@ -1433,10 +1433,10 @@ function MentorSection() {
 
         {/* Teaching approach cards */}
         <motion.h3 initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.6 }} className="text-2xl font-black mb-8" style={{ color: "#ffffff" }}>
+          transition={{ delay: 0.6 }} className="text-lg sm:text-2xl font-black mb-3 sm:mb-8" style={{ color: "#ffffff" }}>
           How I Teach
         </motion.h3>
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-5">
           {[
             { title: "Video Courses", desc: "Structured, recorded lessons you can watch at your own pace. From beginner to advanced, covering everything from basics to complex strategies.", icon: MENTOR_ICONS.video, color: "#f97316" },
             { title: "Live Signals & Analysis", desc: "Real-time trade ideas with full breakdowns sent to VIP members. See exactly how I analyse and enter trades in real market conditions.", icon: MENTOR_ICONS.signal, color: "#fbbf24" },
@@ -1452,15 +1452,15 @@ function MentorSection() {
               style={{ backgroundColor: "rgba(255,255,255,0.02)", border: `1px solid ${approach.color}15` }}>
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"
                 style={{ background: `radial-gradient(circle at 50% 30%, ${approach.color}10, transparent 70%)` }} />
-              <motion.div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center relative z-10"
+              <motion.div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl mx-auto mb-2 sm:mb-4 flex items-center justify-center relative z-10"
                 whileHover={{ rotate: [0, -5, 5, 0], scale: 1.15, transition: { duration: 0.4 } }}
                 style={{ backgroundColor: `${approach.color}10`, border: `1px solid ${approach.color}20`, boxShadow: `0 4px 20px ${approach.color}10` }}>
                 <svg className="w-6 h-6" style={{ color: approach.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={approach.icon} />
                 </svg>
               </motion.div>
-              <h4 className="font-black text-lg mb-3 group-hover:text-orange-400 transition-colors duration-300 relative z-10" style={{ color: "#ffffff" }}>{approach.title}</h4>
-              <p className="text-sm leading-relaxed relative z-10" style={{ color: "#a1a1aa" }}>{approach.desc}</p>
+              <h4 className="font-black text-sm sm:text-lg mb-1.5 sm:mb-3 group-hover:text-orange-400 transition-colors duration-300 relative z-10" style={{ color: "#ffffff" }}>{approach.title}</h4>
+              <p className="text-xs sm:text-sm leading-relaxed relative z-10" style={{ color: "#a1a1aa" }}>{approach.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -1506,7 +1506,7 @@ function SkillsSection() {
           style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }} />
       </div>
 
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <div className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7 }} className="text-center mb-6 sm:mb-12 md:mb-20">
           <span style={{ color: "#60a5fa" }} className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">Expertise</span>
@@ -1521,7 +1521,7 @@ function SkillsSection() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-x-8 sm:gap-x-12 md:gap-x-16 gap-y-6 sm:gap-y-8 md:gap-y-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-12 md:gap-x-16 gap-y-3 sm:gap-y-8 md:gap-y-10">
           {SKILLS.map((skill, i) => (
             <motion.div key={skill.name}
               initial={{ opacity: 0, x: i % 2 === 0 ? -50 : 50 }}
@@ -1571,7 +1571,7 @@ function ProjectsSection() {
           style={{ background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.2), transparent)" }} />
       </div>
 
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <div className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7 }} className="text-center mb-6 sm:mb-12 md:mb-20">
           <span style={{ color: "#60a5fa" }} className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">Portfolio</span>
@@ -1584,7 +1584,7 @@ function ProjectsSection() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-5 md:gap-6">
           {PROJECTS.map((project, i) => (
             <motion.a key={project.title} href={project.link}
               initial={{ opacity: 0, y: 50 }}
@@ -1696,7 +1696,7 @@ function DeveloperDNASection() {
           style={{ background: "radial-gradient(circle, rgba(167,139,250,0.1) 0%, transparent 70%)", filter: "blur(35px)" }} />
       </div>
 
-      <motion.div style={{ y: parallaxY, scale: parallaxScale }} className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <motion.div style={{ y: parallaxY, scale: parallaxScale }} className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         {/* Header with 3D text */}
         <motion.div initial={{ opacity: 0, y: 50, rotateX: 10 }} animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
           transition={{ duration: 1, ease: [0.25, 0.4, 0.25, 1] }} className="mb-6 sm:mb-12 md:mb-20"
@@ -1726,7 +1726,7 @@ function DeveloperDNASection() {
         </motion.div>
 
         {/* Code stats - 3D perspective cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-12 md:mb-20" style={{ perspective: 1200 }}>
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-1.5 sm:gap-4 mb-6 sm:mb-12 md:mb-20" style={{ perspective: 1200 }}>
           {[
             { label: "Components Built", value: 200, suffix: "+", color: "#60a5fa", icon: DEV_ICONS.cube },
             { label: "API Endpoints", value: 65, suffix: "+", color: "#22c55e", icon: DEV_ICONS.server },
@@ -1750,7 +1750,7 @@ function DeveloperDNASection() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={stat.icon} />
                 </svg>
               </div>
-              <p className="text-3xl md:text-4xl font-black relative z-10" style={{ color: stat.color }}>
+              <p className="text-3xl md:text-xl sm:text-4xl font-black relative z-10" style={{ color: stat.color }}>
                 <AnimatedCounter value={stat.value} suffix={stat.suffix} />
               </p>
               <p className="text-xs mt-2 font-medium relative z-10" style={{ color: "#71717a" }}>{stat.label}</p>
@@ -1763,7 +1763,7 @@ function DeveloperDNASection() {
           transition={{ delay: 0.3 }} className="text-lg sm:text-2xl font-black mb-6 sm:mb-8" style={{ color: "#ffffff" }}>
           Tech Stack
         </motion.h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-12 md:mb-20" style={{ perspective: 1000 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-5 mb-6 sm:mb-12 md:mb-20" style={{ perspective: 1000 }}>
           {TECH_STACK.map((category, i) => (
             <motion.div key={category.category}
               initial={{ opacity: 0, y: 40, rotateX: 10 }}
@@ -1771,7 +1771,7 @@ function DeveloperDNASection() {
               transition={{ delay: 0.3 + i * 0.1, duration: 0.7, ease: [0.25, 0.4, 0.25, 1] }}
               whileHover={{ y: -8, scale: 1.03, rotateY: 3, transition: { duration: 0.3 } }}
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl p-6 group cursor-default relative overflow-hidden"
+              className="rounded-xl sm:rounded-2xl p-3 sm:p-6 group cursor-default relative overflow-hidden"
               style={{ backgroundColor: "rgba(255,255,255,0.02)", border: `1px solid ${category.color}15`, backdropFilter: "blur(10px)" }}>
               {/* Hover gradient */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"
@@ -1802,10 +1802,10 @@ function DeveloperDNASection() {
           transition={{ delay: 0.5 }} className="text-lg sm:text-2xl font-black mb-6 sm:mb-8" style={{ color: "#ffffff" }}>
           How I Build
         </motion.h3>
-        <div className="grid md:grid-cols-2 gap-4 sm:gap-5 mb-12 md:mb-16" style={{ perspective: 1000 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-5 mb-6 sm:mb-12 md:mb-16" style={{ perspective: 1000 }}>
           {DEV_PHILOSOPHY.map((item, i) => (
             <TiltCard3D key={item.title} glowColor="#60a5fa"
-              className="rounded-2xl p-6 group cursor-default relative overflow-hidden"
+              className="rounded-xl sm:rounded-2xl p-3 sm:p-6 group cursor-default relative overflow-hidden"
               style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(96,165,250,0.1)", backdropFilter: "blur(10px)" }}>
               <motion.div
                 initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
@@ -1814,17 +1814,17 @@ function DeveloperDNASection() {
                 {/* Hover gradient */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"
                   style={{ background: "linear-gradient(135deg, rgba(96,165,250,0.08), transparent, rgba(96,165,250,0.04))" }} />
-                <div className="flex items-start gap-4 relative z-10">
-                  <motion.div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                <div className="flex items-start gap-2 sm:gap-4 relative z-10">
+                  <motion.div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0"
                     whileHover={{ rotate: 360, transition: { duration: 0.6 } }}
                     style={{ backgroundColor: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", boxShadow: "0 0 20px rgba(96,165,250,0.08)" }}>
-                    <svg className="w-5 h-5" style={{ color: "#60a5fa" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "#60a5fa" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
                     </svg>
                   </motion.div>
                   <div>
-                    <h4 className="font-bold text-lg mb-2 group-hover:text-blue-400 transition-colors duration-300" style={{ color: "#ffffff" }}>{item.title}</h4>
-                    <p className="text-sm leading-relaxed" style={{ color: "#a1a1aa" }}>{item.desc}</p>
+                    <h4 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2 group-hover:text-blue-400 transition-colors duration-300" style={{ color: "#ffffff" }}>{item.title}</h4>
+                    <p className="text-xs sm:text-sm leading-relaxed" style={{ color: "#a1a1aa" }}>{item.desc}</p>
                   </div>
                 </div>
               </motion.div>
@@ -1903,7 +1903,7 @@ function BullMoneyShowcase() {
           style={{ backgroundImage: "linear-gradient(rgba(59,130,246,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.6) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
       </div>
 
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <div className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <motion.div initial={{ opacity: 0, y: 60 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1 }} className="text-center">
 
@@ -1937,7 +1937,7 @@ function BullMoneyShowcase() {
           </motion.p>
 
           {/* Feature grid - full width */}
-          <div className="mt-10 sm:mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+          <div className="mt-6 sm:mt-20 grid grid-cols-4 md:grid-cols-4 gap-1.5 sm:gap-4 w-full">
             {[
               { label: "Live Charts", desc: "TradingView integration", icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6", href: "/" },
               { label: "Courses", desc: "Video education", icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z", href: "/designs" },
@@ -2024,7 +2024,7 @@ function JourneySection() {
       <div className="w-full max-w-7xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7 }}
-          className="relative z-20 px-4 sm:px-6 md:px-12 pt-16 sm:pt-20 md:pt-28">
+          className="relative z-[40] px-4 sm:px-6 md:px-12 pt-16 sm:pt-20 md:pt-28">
           <span style={{ color: "#60a5fa" }} className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">My Journey</span>
           <h2 className="mt-3 sm:mt-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black" style={{ color: "#ffffff" }}>
             Time<span style={{ background: "linear-gradient(135deg, #60a5fa, #22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>line</span>
@@ -2054,7 +2054,7 @@ function QuickLinksSection() {
           style={{ background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.2), transparent)" }} />
       </div>
 
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
+      <div className="relative z-[40] w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }} className="text-center mb-6 sm:mb-12 md:mb-20">
           <span style={{ color: "#60a5fa" }} className="text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">Navigate</span>
@@ -2064,7 +2064,7 @@ function QuickLinksSection() {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-4 md:gap-5">
           {NAV_LINKS.map((link, i) => (
             <motion.a key={link.label} href={link.href}
               initial={{ opacity: 0, y: 30 }}
@@ -2117,7 +2117,7 @@ function FooterSection() {
           style={{ background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.2), transparent)" }} />
       </div>
 
-      <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-6 md:px-12 text-center">
+      <div className="relative z-[40] max-w-5xl mx-auto px-4 sm:px-6 md:px-12 text-center">
         <motion.div initial={{ opacity: 0, y: 40 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}>
           <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black" style={{ color: "#ffffff" }}>
@@ -2255,17 +2255,18 @@ function MobileCarousel({ children }: { children: React.ReactNode }) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -60 }}
           transition={{ duration: 0.35, ease: [0.25, 0.4, 0.25, 1] }}
-          className="w-full h-full overflow-x-hidden"
+          className="w-full h-full overflow-x-hidden z-[50]"
           style={{
             overflowY: "scroll",
             WebkitOverflowScrolling: "touch",
             touchAction: "pan-y",
             overscrollBehavior: "contain",
+            position: "relative",
           }}
         >
           {sections[active]}
           {/* Spacer so content isn't hidden behind bottom nav */}
-          <div style={{ height: 80 }} aria-hidden />
+          <div style={{ height: 56 }} aria-hidden />
         </motion.div>
       </AnimatePresence>
 
@@ -2273,7 +2274,7 @@ function MobileCarousel({ children }: { children: React.ReactNode }) {
       {active > 0 && (
         <button
           onClick={prev}
-          className="fixed left-2 top-1/2 -translate-y-1/2 z-[100] w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-90"
+          className="fixed left-2 top-1/2 -translate-y-1/2 z-[9999] w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-90"
           style={{ backgroundColor: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)" }}
           aria-label="Previous section"
         >
@@ -2287,7 +2288,7 @@ function MobileCarousel({ children }: { children: React.ReactNode }) {
       {active < total - 1 && (
         <button
           onClick={next}
-          className="fixed right-2 top-1/2 -translate-y-1/2 z-[100] w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-90"
+          className="fixed right-2 top-1/2 -translate-y-1/2 z-[9999] w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-90"
           style={{ backgroundColor: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)" }}
           aria-label="Next section"
         >
@@ -2298,19 +2299,19 @@ function MobileCarousel({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] pb-[env(safe-area-inset-bottom,8px)]" style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.95) 30%)" }}>
-        {/* Section label */}
-        <div className="text-center mb-2">
-          <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: "#60a5fa" }}>
+      <div className="fixed bottom-0 left-0 right-0 z-[9999] pb-[env(safe-area-inset-bottom,4px)]" style={{ backgroundColor: "rgba(0,0,0,0.92)", borderTop: "1px solid rgba(59,130,246,0.1)" }}>
+        {/* Section label + dots in one row */}
+        <div className="flex items-center justify-center gap-2 px-4 py-1.5">
+          <span className="text-[9px] font-bold tracking-[0.15em] uppercase shrink-0" style={{ color: "#60a5fa" }}>
             {SECTION_LABELS[active] || `Section ${active + 1}`}
           </span>
-          <span className="text-[10px] ml-2" style={{ color: "#52525b" }}>
+          <span className="text-[9px] shrink-0" style={{ color: "#52525b" }}>
             {active + 1}/{total}
           </span>
         </div>
 
         {/* Dots */}
-        <div className="flex items-center justify-center gap-1.5 px-4 pb-2">
+        <div className="flex items-center justify-center gap-1 px-4 pb-1.5">
           {sections.map((_, i) => (
             <button
               key={i}

@@ -7,6 +7,7 @@ import {
   Coins,
   Crown,
   Database,
+  Globe,
   Mail,
   Package,
   RefreshCw,
@@ -37,6 +38,7 @@ import CryptoPaymentsAdminPanel from "@/components/CryptoPaymentsAdminPanel";
 import CryptoRefundsAdminPanel from "@/components/CryptoRefundsAdminPanel";
 import AffiliateQRPosterPanel from "@/components/admin/AffiliateQRPosterPanel";
 import AffiliateContentAdminPanel from "@/components/admin/AffiliateContentAdminPanel";
+import NetworkAdminPanel from "@/components/admin/NetworkAdminPanel";
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // Generate a reasonably unique id when inserting rows from the client
@@ -44,6 +46,14 @@ const safeId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 
 type RowProps = {
   title: string;
@@ -301,7 +311,7 @@ export function AdminHubModal({
   const adminEmailEnv = normalizeEmail(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [activeTab, setActiveTab] = useState<
-    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store" | "crypto" | "crypto_refunds"
+    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store" | "crypto" | "crypto_refunds" | "network"
   >("products");
   const [tabsListOpen, setTabsListOpen] = useState(false);
   const [affiliateView, setAffiliateView] = useState<"calculator" | "admin" | "qr-posters" | "content-editor">("calculator");
@@ -524,21 +534,91 @@ export function AdminHubModal({
   const refreshProducts = useCallback(async () => {
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select("*, category:categories(id, name, slug), images:product_images(url, is_primary, sort_order)")
       .order("created_at", { ascending: false });
     if (!error) {
       setProducts(
-        (data || []).map((p: any) => ({
-          ...p,
-          id: p._id || p.id,
-          imageUrl: p.image_url,
-          buyUrl: p.buy_url,
-        }))
+        (data || []).map((p: any) => {
+          const images = Array.isArray(p.images) ? p.images : [];
+          const primaryImage =
+            images.find((img: any) => img.is_primary) ||
+            images.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))[0];
+          const categoryLabel = p.category?.name || p.category?.slug || "";
+
+          return {
+            ...p,
+            id: p.id,
+            price: p.base_price ?? 0,
+            category: categoryLabel,
+            image_url: primaryImage?.url || "",
+            imageUrl: primaryImage?.url || "",
+            buy_url: p.buy_url || "",
+            buyUrl: p.buy_url || "",
+            visible: p.status === "ACTIVE",
+            display_order: p.details?.display_order ?? 0,
+          };
+        })
       );
     } else {
       showError(`Products load failed: ${error.message}`);
     }
   }, [supabase, showError]);
+
+  const resolveCategoryId = useCallback(
+    async (categoryValue: string) => {
+      const trimmed = categoryValue.trim();
+      if (!trimmed) return null;
+
+      const slug = slugify(trimmed);
+      const { data: bySlug } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (bySlug?.id) return bySlug.id;
+
+      const { data: byName } = await supabase
+        .from("categories")
+        .select("id")
+        .ilike("name", `%${trimmed}%`)
+        .maybeSingle();
+
+      return byName?.id || null;
+    },
+    [supabase]
+  );
+
+  const upsertPrimaryProductImage = useCallback(
+    async (productId: string, imageUrl: string, altText: string) => {
+      if (!imageUrl) return;
+
+      const { data: existing } = await supabase
+        .from("product_images")
+        .select("id")
+        .eq("product_id", productId)
+        .eq("is_primary", true)
+        .maybeSingle();
+
+      if (existing?.id) {
+        await supabase
+          .from("product_images")
+          .update({ url: imageUrl, alt_text: altText, sort_order: 0, is_primary: true })
+          .eq("id", existing.id);
+      } else {
+        await supabase
+          .from("product_images")
+          .insert({
+            product_id: productId,
+            url: imageUrl,
+            alt_text: altText,
+            sort_order: 0,
+            is_primary: true,
+          });
+      }
+    },
+    [supabase]
+  );
 
   const refreshVipProducts = useCallback(async () => {
     const { data, error } = await supabase
@@ -651,25 +731,55 @@ export function AdminHubModal({
   // CRUD HELPERS
   // -----------------------------------------------------------------------
   const upsertProduct = useCallback(async () => {
-    const id = productForm.id || safeId();
+    const isUpdate = Boolean(productForm.id);
+    const trimmedName = productForm.name.trim();
+    if (!trimmedName) {
+      showError("Product name is required.");
+      return;
+    }
+
+    const existing = products.find((p) => p.id === productForm.id);
+    const displayOrder = Number(productForm.displayOrder || 0);
+    const categoryId = productForm.category
+      ? await resolveCategoryId(productForm.category)
+      : (existing?.category_id || null);
+
+    if (productForm.category && !categoryId) {
+      showError(`Category not found: ${productForm.category}`);
+      return;
+    }
+
     const payload = {
-      _id: id,
-      name: productForm.name,
-      description: productForm.description,
-      price: Number(productForm.price || 0),
-      category: productForm.category || "General",
-      image_url: productForm.imageUrl,
-      buy_url: productForm.buyUrl,
-      visible: !!productForm.visible,
-      display_order: Number(productForm.displayOrder || 0),
+      name: trimmedName,
+      slug: isUpdate && existing?.slug ? existing.slug : slugify(trimmedName),
+      description: productForm.description || null,
+      base_price: Number(productForm.price || 0),
+      category_id: categoryId,
+      status: productForm.visible ? "ACTIVE" : "DRAFT",
+      buy_url: productForm.buyUrl || null,
+      details: {
+        ...(existing?.details || {}),
+        display_order: displayOrder,
+      },
     } as any;
 
-    const query = productForm.id
-      ? supabase.from("products").update(payload).eq("_id", id)
-      : supabase.from("products").insert(payload);
+    let productId = productForm.id;
+    let error;
 
-    const { error } = await query;
-    if (!error) {
+    if (isUpdate) {
+      ({ error } = await supabase.from("products").update(payload).eq("id", productId));
+    } else {
+      const { data: inserted, error: insertError } = await supabase
+        .from("products")
+        .insert(payload)
+        .select("id")
+        .single();
+      error = insertError;
+      productId = inserted?.id || "";
+    }
+
+    if (!error && productId) {
+      await upsertPrimaryProductImage(productId, productForm.imageUrl, trimmedName);
       showToast("Saved product");
       setProductForm({
         id: "",
@@ -683,10 +793,10 @@ export function AdminHubModal({
         displayOrder: 0,
       });
       refreshProducts();
-    } else {
+    } else if (error) {
       showError(`Save product failed: ${error.message}`);
     }
-  }, [productForm, supabase, refreshProducts, showToast, showError]);
+  }, [productForm, products, resolveCategoryId, supabase, refreshProducts, showToast, showError, upsertPrimaryProductImage]);
 
   const upsertVipProduct = useCallback(async () => {
     let parsedPlanOptions: any[] = [];
@@ -735,7 +845,7 @@ export function AdminHubModal({
 
   const removeProduct = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from("products").delete().eq("_id", id);
+      const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) showError(`Delete product failed: ${error.message}`);
       else refreshProducts();
     },
@@ -989,14 +1099,14 @@ export function AdminHubModal({
         )}
 
         {products.map((p) => {
-          const pid = p._id || p.id;
+          const pid = p.id;
           const isEditing = productForm.id === pid;
           const media = <ImagePreview src={p.image_url || p.imageUrl} alt={`Product image: ${p.name || pid}`} />;
           return (
             <div key={pid} className="space-y-2">
               <Row
-                title={`${p.name} (${p.category || "N/A"})`}
-                subtitle={`${useCurrencyLocaleStore.getState().formatPrice(p.price ?? 0)} • Visible: ${p.visible ? "yes" : "no"}`}
+                title={`${p.name} (${p.category || "Uncategorized"})`}
+                subtitle={`${useCurrencyLocaleStore.getState().formatPrice(p.price ?? 0)} • Status: ${p.status || (p.visible ? "ACTIVE" : "DRAFT")}`}
                 meta={p.buy_url || p.buyUrl ? "Buy URL" : undefined}
                 isEditing={isEditing}
                 onEdit={() => {
@@ -1011,8 +1121,8 @@ export function AdminHubModal({
                       category: p.category || "",
                       imageUrl: p.image_url || p.imageUrl || "",
                       buyUrl: p.buy_url || p.buyUrl || "",
-                      visible: Boolean(p.visible),
-                      displayOrder: Number(p.display_order || 0),
+                      visible: p.status ? p.status === "ACTIVE" : Boolean(p.visible),
+                      displayOrder: Number(p.display_order || p.details?.display_order || 0),
                     });
                   }
                 }}
@@ -1988,6 +2098,7 @@ export function AdminHubModal({
     { key: 'crypto', label: 'Crypto Payments', icon: <Coins className="w-4 h-4" /> },
     { key: 'crypto_refunds', label: 'Crypto Refunds', icon: <RotateCcw className="w-4 h-4" /> },
     { key: 'faq', label: 'FAQ Editor', icon: <HelpCircle className="w-4 h-4" /> },
+    { key: 'network', label: 'Network', icon: <Globe className="w-4 h-4" /> },
   ];
 
   const activeTabLabel = TAB_DEFS.find(t => t.key === activeTab)?.label || 'Sections';
@@ -2032,7 +2143,7 @@ export function AdminHubModal({
         </button>
 
         {tabsListOpen ? (
-          <div className="mt-2 grid gap-1">
+          <div className="mt-2 grid gap-1 max-h-80 overflow-y-auto">
             {TAB_DEFS.map((tab) => {
               const isActive = tab.key === activeTab;
               return (
@@ -2093,6 +2204,7 @@ export function AdminHubModal({
                     {activeTab === "course" && <CourseAdminPanel />}
                     {activeTab === "faq" && renderFaq()}
                     {activeTab === "email" && <EmailAdminPanel />}
+                    {activeTab === "network" && <NetworkAdminPanel />}
                     {activeTab === "crypto" && <CryptoPaymentsAdminPanel />}
                     {activeTab === "crypto_refunds" && <CryptoRefundsAdminPanel />}
                     {activeTab === "store" && (

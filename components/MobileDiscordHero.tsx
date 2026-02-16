@@ -4001,6 +4001,7 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
   const [loading, setLoading] = useState(true);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showNewShopModal, setShowNewShopModal] = useState(false);
+  const [showUltimateHub, setShowUltimateHub] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Use UIStateContext for proper modal management (mutual exclusion)
@@ -4026,6 +4027,29 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const readPref = () => {
+      const stored = localStorage.getItem('store_show_ultimate_hub');
+      return stored === 'true';
+    };
+
+    setShowUltimateHub(readPref());
+
+    const handleHubToggle = (event: Event) => {
+      const detailValue = (event as CustomEvent<boolean>).detail;
+      if (typeof detailValue === 'boolean') {
+        setShowUltimateHub(detailValue);
+        return;
+      }
+      setShowUltimateHub(readPref());
+    };
+
+    window.addEventListener('store_ultimate_hub_toggle', handleHubToggle);
+    return () => window.removeEventListener('store_ultimate_hub_toggle', handleHubToggle);
   }, []);
   
   // Fetch videos from Supabase livestream_videos table
@@ -4138,7 +4162,7 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
       </div>
 
       {/* Ultimate Hub - Renders its own backdrop/drawer via UnifiedHubPanel */}
-      <UltimateHub />
+      {showUltimateHub && <UltimateHub />}
 
       {/* Products Modal - Support drawer style */}
       <AnimatePresence>

@@ -347,8 +347,10 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('store_show_audio_widget');
-      const shouldShow = stored !== 'false';
-      // Default to true (visible) unless explicitly disabled
+      const shouldShow = stored === null && window.location.pathname === '/'
+        ? false
+        : stored !== 'false';
+      // Default to off on home page; otherwise visible unless explicitly disabled
       setShowAudioWidget(shouldShow);
       setAudioWidgetOpen(shouldShow);
       setAudioWidgetPrefLoaded(true);
