@@ -42,6 +42,13 @@
   var ninetyStallStart = null;
   var splashStartAt = Date.now();
   var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
+  if (!isInAppBrowser) {
+    try {
+      var ua = String((navigator && navigator.userAgent) || '').toLowerCase();
+      isInAppBrowser = /(fban|fbav|instagram|line\b|tiktok|telegram|wechat|wv|webview|micromessenger|gsa|snapchat|linkedinapp|pinterest|duckduckgo|twitter|x)/.test(ua);
+      if (isInAppBrowser) document.documentElement.classList.add('is-in-app-browser');
+    } catch (e) {}
+  }
   var finaleStarted = false;
   var finaleStartedAt = 0;
   var minFinaleMs = isInAppBrowser ? 1200 : 650;

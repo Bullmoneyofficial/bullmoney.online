@@ -1554,16 +1554,33 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     setDebouncedSearch('');
   }, []);
 
+  const isVipProduct = useCallback((product: ProductWithDetails) => {
+    return Boolean((product as any).buy_url || (product as any)._source === 'vip' || (product.details as any)?.buy_url);
+  }, []);
+
   const canAddToCart = useCallback((product: ProductWithDetails) => {
+    if (isVipProduct(product)) return true;
     const variant = product.variants?.[0];
     return Boolean(variant && variant.inventory_count > 0);
-  }, []);
+  }, [isVipProduct]);
 
   const handleAddToCart = useCallback((product: ProductWithDetails) => {
     const variant = product.variants?.[0];
+    if (isVipProduct(product)) {
+      // VIP products use a synthetic variant for cart
+      const syntheticVariant = variant || {
+        id: `vip-${product.id}`,
+        name: 'Default',
+        price_adjustment: 0,
+        inventory_count: 999,
+        sort_order: 0,
+      };
+      addItem(product, syntheticVariant as any, 1);
+      return;
+    }
     if (!variant || variant.inventory_count <= 0) return;
     addItem(product, variant, 1);
-  }, [addItem]);
+  }, [addItem, isVipProduct]);
 
   const handleAddClick = useCallback((product: ProductWithDetails) => {
     const desktopNow = typeof window !== 'undefined'
@@ -1585,16 +1602,28 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const handleCheckoutAction = useCallback(async () => {
     if (!checkoutProduct) return;
     const variant = checkoutProduct.variants?.[0];
-    if (!variant || variant.inventory_count <= 0) return;
+    const vip = isVipProduct(checkoutProduct);
+    if (!vip && (!variant || variant.inventory_count <= 0)) return;
 
     if (paymentMethod === 'cart') {
-      addItem(checkoutProduct, variant, 1);
+      if (vip) {
+        const syntheticVariant = variant || {
+          id: `vip-${checkoutProduct.id}`,
+          name: 'Default',
+          price_adjustment: 0,
+          inventory_count: 999,
+          sort_order: 0,
+        };
+        addItem(checkoutProduct, syntheticVariant as any, 1);
+      } else {
+        addItem(checkoutProduct, variant!, 1);
+      }
       setCheckoutOpen(false);
       return;
     }
 
     if (paymentMethod === 'whop') {
-      const buyUrl = (checkoutProduct.details as { buy_url?: string } | undefined)?.buy_url;
+      const buyUrl = (checkoutProduct as any).buy_url || (checkoutProduct.details as { buy_url?: string } | undefined)?.buy_url;
       const checkoutUrl = buyUrl || `https://whop.com/checkout/${checkoutProduct.slug}`;
       window.open(checkoutUrl, '_blank');
       setCheckoutOpen(false);
@@ -1625,7 +1654,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         console.error('Skrill checkout error:', error);
       }
     }
-  }, [addItem, checkoutProduct, paymentMethod]);
+  }, [addItem, checkoutProduct, isVipProduct, paymentMethod]);
 
   const hasActiveFilters = checkActiveFilters(filters, debouncedSearch);
   const featuredProducts = useMemo(() => products.slice(0, 4), [products]);
@@ -1866,11 +1895,13 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
   const expandedVariant = expandedProduct?.variants?.[0];
   const expandedInventory = expandedVariant?.inventory_count;
-  const expandedInStock = expandedProduct ? canAddToCart(expandedProduct) : false;
-  const expandedBuyUrl = (expandedProduct?.details as { buy_url?: string } | undefined)?.buy_url;
+  const expandedIsVip = expandedProduct ? isVipProduct(expandedProduct) : false;
+  const expandedInStock = expandedProduct ? (expandedIsVip || canAddToCart(expandedProduct)) : false;
+  const expandedBuyUrl = (expandedProduct as any)?.buy_url || (expandedProduct?.details as { buy_url?: string } | undefined)?.buy_url;
   const expandedDetailsHref = expandedBuyUrl || '/VIP';
   const checkoutVariant = checkoutProduct?.variants?.[0];
-  const checkoutInStock = Boolean(checkoutVariant && checkoutVariant.inventory_count > 0);
+  const checkoutIsVip = checkoutProduct ? isVipProduct(checkoutProduct) : false;
+  const checkoutInStock = checkoutIsVip || Boolean(checkoutVariant && checkoutVariant.inventory_count > 0);
   const checkoutPrice = checkoutProduct ? checkoutProduct.base_price + (checkoutVariant?.price_adjustment || 0) : 0;
   const dashboardsSection = (
     <section
@@ -2681,15 +2712,28 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const handleExpandedBuy = useCallback(async (method: typeof paymentMethod) => {
     if (!expandedProduct) return;
     const variant = expandedProduct.variants?.[0];
-    if (!variant || variant.inventory_count <= 0) return;
+    const vip = isVipProduct(expandedProduct);
+    if (!vip && (!variant || variant.inventory_count <= 0)) return;
 
     if (method === 'cart') {
-      confirmExpandedAdd();
+      if (vip && !variant) {
+        const syntheticVariant = {
+          id: `vip-${expandedProduct.id}`,
+          name: 'Default',
+          price_adjustment: 0,
+          inventory_count: 999,
+          sort_order: 0,
+        };
+        addItem(expandedProduct, syntheticVariant as any, 1);
+        setExpandedProduct(null);
+      } else {
+        confirmExpandedAdd();
+      }
       return;
     }
 
     if (method === 'whop') {
-      const buyUrl = (expandedProduct.details as { buy_url?: string } | undefined)?.buy_url;
+      const buyUrl = (expandedProduct as any).buy_url || (expandedProduct.details as { buy_url?: string } | undefined)?.buy_url;
       const checkoutUrl = buyUrl || `https://whop.com/checkout/${expandedProduct.slug}`;
       window.open(checkoutUrl, '_blank');
       setExpandedProduct(null);
@@ -2720,7 +2764,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         console.error('Skrill checkout error:', error);
       }
     }
-  }, [confirmExpandedAdd, expandedProduct]);
+  }, [addItem, confirmExpandedAdd, expandedProduct, isVipProduct]);
 
   if (showLoader) {
     return (
@@ -2848,9 +2892,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-3 text-xs" style={{ color: 'rgba(0,0,0,0.6)' }}>
                   {expandedVariant?.name && <span>{expandedVariant.name}</span>}
-                  {expandedInventory !== undefined && (
+                  {(expandedInventory !== undefined || expandedIsVip) && (
                     <span className={`rounded-full px-2 py-1 ${expandedInStock ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                      {expandedInStock ? `${Math.max(0, expandedInventory)} in stock` : 'Out of stock'}
+                      {expandedInStock ? (expandedIsVip ? 'Available' : `${Math.max(0, expandedInventory!)} in stock`) : 'Out of stock'}
                     </span>
                   )}
                 </div>

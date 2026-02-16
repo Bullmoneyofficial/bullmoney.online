@@ -24,6 +24,7 @@ import {
   Users,
   HelpCircle,
   ShoppingBag,
+  Upload,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
@@ -55,6 +56,9 @@ const slugify = (value: string) =>
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+
+const MAX_IMAGE_SIZE = 200 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
 
 type RowProps = {
   title: string;
@@ -329,6 +333,8 @@ export function AdminHubModal({
   const [authChecked, setAuthChecked] = useState(false);
   const [pagemodeAuthorized, setPagemodeAuthorized] = useState(false);
   const [pagemodeChecked, setPagemodeChecked] = useState(false);
+  const [productImageUploading, setProductImageUploading] = useState(false);
+  const [vipImageUploading, setVipImageUploading] = useState(false);
   const isDevBypass = process.env.NODE_ENV === "development";
   const isAdmin = isDevBypass || ((authorized || pagemodeAuthorized) && (authChecked || pagemodeChecked));
   const accessCheckComplete = isDevBypass || authChecked || pagemodeChecked;
@@ -441,6 +447,68 @@ export function AdminHubModal({
     setToast(msg);
     setTimeout(() => setToast(null), 3200);
   }, []);
+
+  const uploadAdminImage = useCallback(
+    async (file: File, folder: string) => {
+      if (file.size > MAX_IMAGE_SIZE) {
+        showError("Image must be less than 200MB.");
+        return "";
+      }
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        showError("Unsupported image type. Use JPG, PNG, WebP, GIF, or AVIF.");
+        return "";
+      }
+
+      const fileExt = file.name.split(".").pop() || "jpg";
+      const baseName = slugify(file.name.replace(/\.[^/.]+$/, "")) || "image";
+      const fileName = `${folder}/${safeId()}-${baseName}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("store-products")
+        .upload(fileName, file, { cacheControl: "3600", upsert: true, contentType: file.type });
+
+      if (uploadError) {
+        showError("Image upload failed.");
+        return "";
+      }
+
+      const { data } = supabase.storage.from("store-products").getPublicUrl(fileName);
+      return data?.publicUrl || "";
+    },
+    [supabase, showError]
+  );
+
+  const handleProductImageFile = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      setProductImageUploading(true);
+      const url = await uploadAdminImage(file, "admin-products");
+      if (url) {
+        setProductForm((f) => ({ ...f, imageUrl: url }));
+        showToast("Product image uploaded.");
+      }
+      setProductImageUploading(false);
+      event.target.value = "";
+    },
+    [uploadAdminImage, showToast]
+  );
+
+  const handleVipImageFile = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      setVipImageUploading(true);
+      const url = await uploadAdminImage(file, "admin-vip");
+      if (url) {
+        setVipForm((f) => ({ ...f, imageUrl: url }));
+        showToast("VIP image uploaded.");
+      }
+      setVipImageUploading(false);
+      event.target.value = "";
+    },
+    [uploadAdminImage, showToast]
+  );
 
   const getAdminHeaders = useCallback(() => {
     const headers: Record<string, string> = {
@@ -1319,6 +1387,21 @@ export function AdminHubModal({
         placeholder="Image URL"
         className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white"
       />
+      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+        <label className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm cursor-pointer md:text-xs md:px-2 md:py-1">
+          <Upload className="w-4 h-4 md:w-3 md:h-3" />
+          <span>{productImageUploading ? "Uploading..." : "Upload image"}</span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            onChange={handleProductImageFile}
+            className="hidden"
+            disabled={productImageUploading}
+          />
+        </label>
+        <span className="text-[11px] text-slate-400">Max 200MB</span>
+      </div>
+      <ImagePreview src={productForm.imageUrl} alt="Product image preview" />
       <input
         value={productForm.buyUrl}
         onChange={(e) => setProductForm((f) => ({ ...f, buyUrl: e.target.value }))}
@@ -1387,6 +1470,21 @@ export function AdminHubModal({
           placeholder="Image URL (Whop)"
           className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white"
         />
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+          <label className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm cursor-pointer md:text-xs md:px-2 md:py-1">
+            <Upload className="w-4 h-4 md:w-3 md:h-3" />
+            <span>{vipImageUploading ? "Uploading..." : "Upload image"}</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+              onChange={handleVipImageFile}
+              className="hidden"
+              disabled={vipImageUploading}
+            />
+          </label>
+          <span className="text-[11px] text-slate-400">Max 200MB</span>
+        </div>
+        <ImagePreview src={vipForm.imageUrl} alt="VIP image preview" />
         <input
           value={vipForm.buyUrl}
           onChange={(e) => setVipForm((f) => ({ ...f, buyUrl: e.target.value }))}

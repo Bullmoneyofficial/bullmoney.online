@@ -616,7 +616,8 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
         toast.error('Failed to initiate Skrill checkout');
       }
     } else {
-      const whopLink = `https://whop.com/checkout/${product.slug}`;
+      const buyUrl = (product as any).buy_url || (product.details as any)?.buy_url;
+      const whopLink = buyUrl || `https://whop.com/checkout/${product.slug}`;
       window.open(whopLink, '_blank');
       toast.success(`Opening ${paymentMethod} checkout`);
     }
@@ -1261,18 +1262,35 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           color: isLiked ? undefined : 'rgba(255,255,255,0.6)'
         }}
       >
-        <svg className="absolute -top-3 left-1/2 -translate-x-1/2" width="30" height="10" viewBox="0 0 30 10" fill="none">
-          <path
-            d="M0 5 L5 5 L7 2 L9 8 L11 1 L13 7 L15 3 L17 6 L19 5 L23 5 L25 3 L27 6 L30 5"
-            stroke={isLiked ? '#38bdf8' : '#3b82f6'}
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="heart-ecg-line"
-            fill="none"
-          />
+        <svg
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ zIndex: 2 }}
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <defs>
+            <clipPath id="ecg-heart-clip">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </clipPath>
+          </defs>
+          <g clipPath="url(#ecg-heart-clip)">
+            <path
+              d="M2 12h4l2-4 3 8 3-12 3 8 2-4h4"
+              stroke={isLiked ? '#38bdf8' : '#3b82f6'}
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="heart-ecg-line"
+              fill="none"
+            />
+          </g>
         </svg>
-        <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`} style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined} />
+        <Heart
+          className={`relative z-0 w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`}
+          style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined}
+        />
       </button>
     </div>
   );

@@ -453,13 +453,31 @@ export function CartDrawer() {
                     </div>
                     <button
                       type="button"
-                      disabled
+                      onClick={() => {
+                        if (items.length === 0) return;
+                        // Find the best Whop/buy URL from cart items
+                        // VIP products have buy_url at top level or in details
+                        for (const item of items) {
+                          const p = item.product as any;
+                          const buyUrl = p.buy_url || p.details?.buy_url;
+                          if (buyUrl) {
+                            window.open(buyUrl, '_blank', 'noopener');
+                            return;
+                          }
+                        }
+                        // Fallback: use the first item's slug on Whop
+                        const slug = primaryItem?.product.slug || primaryItem?.product.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        if (slug) {
+                          window.open(`https://whop.com/checkout/${slug}`, '_blank', 'noopener');
+                        }
+                      }}
+                      disabled={items.length === 0}
                       className="w-full h-12 md:h-14 rounded-xl font-medium
-                               flex items-center justify-center gap-2 transition-all"
-                      style={{ background: 'rgba(0,0,0,0.08)', color: 'rgba(0,0,0,0.4)' }}
+                               flex items-center justify-center gap-2 transition-all border border-black/10 disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff' }}
                     >
                       <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
-                      Whop - Soon
+                      Checkout on Whop
                     </button>
                     <button
                       type="button"
