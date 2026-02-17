@@ -336,6 +336,7 @@ export function AdminHubModal({
   const [authChecked, setAuthChecked] = useState(false);
   const [pagemodeAuthorized, setPagemodeAuthorized] = useState(false);
   const [pagemodeChecked, setPagemodeChecked] = useState(false);
+  const [adminAccessToken, setAdminAccessToken] = useState<string>("");
   const [productImageUploading, setProductImageUploading] = useState(false);
   const [vipImageUploading, setVipImageUploading] = useState(false);
   const isDevBypass = process.env.NODE_ENV === "development";
@@ -518,6 +519,14 @@ export function AdminHubModal({
       "Content-Type": "application/json",
     };
     if (adminEmailEnv) headers["x-admin-email"] = adminEmailEnv;
+
+    // Prefer a real Supabase session access token when available.
+    // (Validated server-side via supabase.auth.getUser(token))
+    if (adminAccessToken) {
+      headers["x-admin-token"] = adminAccessToken;
+      return headers;
+    }
+
     if (typeof window !== "undefined") {
       const token =
         localStorage.getItem("adminToken") ||
@@ -526,7 +535,7 @@ export function AdminHubModal({
       if (token) headers["x-admin-token"] = token;
     }
     return headers;
-  }, [adminEmailEnv]);
+  }, [adminEmailEnv, adminAccessToken]);
 
   const loadFaqFromDb = useCallback(async () => {
     const { data, error } = await supabase
@@ -575,11 +584,13 @@ export function AdminHubModal({
       const { data, error } = await supabase.auth.getSession();
       if (error) console.error("Auth session error", error.message);
       evaluate(data?.session?.user?.email || null);
+      setAdminAccessToken(data?.session?.access_token || "");
       setAuthChecked(true);
     };
     run();
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       evaluate(session?.user?.email || null);
+      setAdminAccessToken(session?.access_token || "");
     });
     return () => {
       mounted = false;

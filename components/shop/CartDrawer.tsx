@@ -165,10 +165,24 @@ export function CartDrawer() {
             onClick={(e) => e.stopPropagation()}
             className={
               isDesktop
-                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
-                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
+                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col max-h-[90vh] overflow-hidden'
+                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col overflow-hidden'
             }
-            style={{ zIndex: CART_DRAWER_PANEL_Z_INDEX, color: '#1d1d1f', backgroundColor: '#ffffff', colorScheme: 'light' as const }}
+            style={{
+              zIndex: CART_DRAWER_PANEL_Z_INDEX,
+              color: '#1d1d1f',
+              backgroundColor: '#ffffff',
+              colorScheme: 'light' as const,
+              ...(isDesktop
+                ? null
+                : {
+                    // In-app browsers (IG/TikTok/Telegram webviews) can report a smaller visual viewport.
+                    // Force a stable full-height panel so the footer/buttons don't get clipped.
+                    height: '100dvh',
+                    maxHeight: '100dvh',
+                    minHeight: '100vh',
+                  }),
+            }}
           >
             {/* Header with Back Button */}
             <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">
@@ -329,7 +343,19 @@ export function CartDrawer() {
 
             {/* Footer with Summary - Safe area for mobile */}
             {items.length > 0 && (
-              <div className="border-t border-black/10 p-4 md:p-6 space-y-3 md:space-y-4 pb-safe">
+              <div
+                className="border-t border-black/10 p-4 md:p-6 space-y-3 md:space-y-4"
+                style={{
+                  // Prevent the bottom action buttons from being hidden behind mobile browser UI.
+                  // Use inline env() so we don't depend on global utility classes.
+                  paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)',
+                  // If the footer content is taller than the available viewport (common in webviews),
+                  // allow the footer itself to scroll so checkout buttons remain reachable.
+                  maxHeight: isDesktop ? undefined : '60dvh',
+                  overflowY: isDesktop ? 'visible' : 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                }}
+              >
                 {/* Summary Lines */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between" style={{ color: 'rgba(0,0,0,0.6)' }}>

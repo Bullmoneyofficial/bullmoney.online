@@ -9,11 +9,21 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8554647051:AAE-FBW
 // Configure VAPID lazily to avoid build-time errors
 let vapidConfigured = false;
 
+function normalizeVapidKey(value: string) {
+  return (value || '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/\s+/g, '')
+    .replace(/=+$/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+}
+
 function configureVapid() {
   if (vapidConfigured) return true;
   
-  const VAPID_PUBLIC_KEY = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').replace(/=+$/, '');
-  const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || '').replace(/=+$/, '');
+  const VAPID_PUBLIC_KEY = normalizeVapidKey(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '');
+  const VAPID_PRIVATE_KEY = normalizeVapidKey(process.env.VAPID_PRIVATE_KEY || '');
   const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
 
   try {

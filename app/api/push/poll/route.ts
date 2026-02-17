@@ -11,10 +11,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 
-// Configuration from environment
-const VAPID_PUBLIC_KEY = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').replace(/=+$/, '');
-const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || '').replace(/=+$/, '');
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
+let vapidConfigured = false;
+
+function normalizeVapidKey(value: string) {
+  return (value || '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/\s+/g, '')
+    .replace(/=+$/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+}
+
+function configureVapid() {
+  if (vapidConfigured) return true;
+
+  const VAPID_PUBLIC_KEY = normalizeVapidKey(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '');
+  const VAPID_PRIVATE_KEY = normalizeVapidKey(process.env.VAPID_PRIVATE_KEY || '');
+  const VAPID_SUBJECT = (process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com').trim();
+
+  try {
+    if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+      webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+      vapidConfigured = true;
+      return true;
+    }
+  } catch (e) {
+    console.warn('VAPID setup skipped:', (e as Error).message);
+  }
+  return false;
+}
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -28,15 +54,6 @@ const CHANNEL_MAP: Record<string, { name: string; channel: string; priority: str
   'bullmoneyshop': { name: 'BULLMONEY NEWS', channel: 'shop', priority: 'normal' },
   '-1003442830926': { name: 'VIP TRADES', channel: 'trades', priority: 'high' },
 };
-
-// Configure web-push
-try {
-  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-  }
-} catch (e) {
-  console.warn('VAPID setup skipped:', (e as Error).message);
-}
 
 // Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -203,7 +220,7 @@ async function getSubscribers(channel: string = 'trades'): Promise<any[]> {
 }
 
 async function sendPush(subscriber: any, payload: any): Promise<boolean> {
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+  if (!configureVapid()) {
     console.error('VAPID keys not configured');
     return false;
   }
