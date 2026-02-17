@@ -733,6 +733,7 @@ export default function RootLayout({
       @keyframes bm-bar-sheen{0%{transform:translate3d(-130%,0,0)}100%{transform:translate3d(130%,0,0)}}
 
       @keyframes bm-finale-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+      @keyframes bm-finale-float-y{0%,100%{transform:translate3d(0,-10px,0)}50%{transform:translate3d(0,10px,0)}}
       /* Smooth off-black↔off-white cycle with long dwell at endpoints */
       @keyframes bm-finale-bg{0%,12%{background-color:#0a0a0a}30%{background-color:#222}50%{background-color:#777}70%{background-color:#ccc}88%,100%{background-color:#f2f2f2}}
       @keyframes bm-finale-filter-contrast{
@@ -749,15 +750,15 @@ export default function RootLayout({
       @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
 
       @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-logo-wrap svg,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
-      @media(min-width:768px){#bm-splash .bm-logo-wrap{width:216px;height:216px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}\n      @media(min-width:768px){#bm-splash.bm-splash-finale .bm-logo-wrap{width:380px;height:380px;}}
+      @media(min-width:768px){#bm-splash .bm-logo-wrap{width:216px;height:216px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}\n      @media(min-width:768px){#bm-splash.bm-splash-finale .bm-logo-wrap{width:380px;height:380px;}#bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:bm-finale-float-y 1.5s ease-in-out infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}}
         ` }} />
         {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
-        <script src="/scripts/splash-init.js" />
+        <Script id="splash-init" src="/scripts/splash-init.js" strategy="beforeInteractive" />
         {/* UNIVERSAL COMPATIBILITY LAYER: Polyfills + feature detection for ALL devices worldwide
             MUST load BEFORE other BMBRAIN scripts — provides Element.closest, CustomEvent, Promise,
             fetch, IntersectionObserver polyfills + safe storage for private browsing + CSS fixes
             for Samsung Internet, UC Browser, Huawei Browser, Opera Mini, MIUI Browser, etc. */}
-        <script src="/scripts/BMBRAIN/compat-layer.js" />
+        <Script id="compat-layer" src="/scripts/BMBRAIN/compat-layer.js" strategy="beforeInteractive" />
         {/* Cache validation (deferred to avoid blocking first paint) */}
         <Script
           id="cache-buster"

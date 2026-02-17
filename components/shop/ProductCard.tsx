@@ -333,10 +333,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   const [isHovered, setIsHovered] = useState(false);
 
-  const isVipProduct = useMemo(() => {
-    return Boolean((product as any).buy_url || (product as any)._source === 'vip' || (product.details as any)?.buy_url);
-  }, [product]);
-
   // Per-instance random float params (stable across renders)
   const floatVars = useMemo(() => ({
     '--f-dur': `${3.8 + Math.random() * 2.4}s`,
@@ -354,7 +350,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
   const isScrolling = useRef(false);
-  const { addItem, openCart, getItemCount, vipShippingCharged, loadVipShippingSetting } = useCartStore();
+  const { addItem, openCart, getItemCount } = useCartStore();
   const { toggleItem, hasItem: isWishlisted } = useWishlistStore();
   const isLiked = isWishlisted(product.id);
   const itemCount = getItemCount();
@@ -363,13 +359,9 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const comparePrice = product.compare_at_price;
   const hasDiscount = comparePrice && comparePrice > price;
   const discount = hasDiscount ? Math.round((1 - price / comparePrice) * 100) : 0;
+  
+  const isInStock = (product.total_inventory || 0) > 0;
   const defaultVariant = product.variants?.[0];
-
-  const stockVariant = selectedVariant || defaultVariant;
-  const inventoryFromData = stockVariant?.inventory_count ?? product.total_inventory;
-  const hasInventoryInfo = inventoryFromData !== null && inventoryFromData !== undefined;
-  const isInStock = hasInventoryInfo ? Number(inventoryFromData) > 0 : true;
-  const isAvailable = isVipProduct || isInStock;
   
 
 
@@ -402,7 +394,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
 
   useEffect(() => {
     setMounted(true);
-    loadVipShippingSetting();
     // Inject heart pulse + premium card styles once globally
     const styleId = 'heart-pulse-global-style';
     if (!document.getElementById(styleId)) {
@@ -513,49 +504,29 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const handleQuickAdd = useCallback(async (e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-
-    const variantForCart = selectedVariant || defaultVariant;
-
-    if (!isAvailable) {
+    
+    if (!defaultVariant) {
+      toast.error('Please select options on the product page');
+      return;
+    }
+    
+    if (!isInStock) {
       toast.error('Out of stock');
       return;
     }
-
-    const fallbackVariant = {
-      id: `default-${product.id}`,
-      name: 'Default',
-      price_adjustment: 0,
-      inventory_count: 999,
-      sort_order: 0,
-    };
-
-    const vipSyntheticVariant = {
-      id: `vip-${product.id}`,
-      name: (variantForCart as any)?.name || 'Default',
-      price_adjustment: (variantForCart as any)?.price_adjustment || 0,
-      inventory_count: 999,
-      sort_order: 0,
-    };
-
-    const cartVariant = (
-      isVipProduct
-        ? (!variantForCart || (variantForCart as any).inventory_count <= 0 ? vipSyntheticVariant : variantForCart)
-        : (variantForCart || fallbackVariant)
-    ) as any;
 
     setIsAdding(true);
     
     // Small delay for animation
     await new Promise(resolve => setTimeout(resolve, 150));
-
-    addItem(product, cartVariant, 1);
-    openCart();
+    
+    addItem(product, defaultVariant, 1);
     toast.success('Added to cart', {
       icon: <ShoppingBag className="w-4 h-4" />,
     });
     
     setIsAdding(false);
-  }, [selectedVariant, defaultVariant, isVipProduct, isAvailable, addItem, openCart, product]);
+  }, [defaultVariant, isInStock, addItem, product]);
 
   const handleLike = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -746,12 +717,12 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                 <span className="relative z-10 tracking-wide">-{discount}%</span>
               </span>
             )}
-            {!isAvailable && (
+            {!isInStock && (
               <span className="px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs rounded-full shadow-lg font-semibold" style={{ backgroundColor: 'rgba(0,0,0,0.95)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
                 Sold out
               </span>
             )}
-            {product.featured && isAvailable && (
+            {product.featured && isInStock && (
               <span 
                 className="relative px-2 md:px-3 py-0.5 md:py-1 bg-black text-white text-[10px] md:text-xs font-bold rounded-full overflow-hidden shadow-lg card-badge"
                 style={{ border: '1px solid rgba(255,255,255,0.15)' }}
@@ -834,7 +805,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
-            className={`fixed inset-0 z-2147483647 flex items-stretch justify-end bg-white/80 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
+            className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-white/80 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -870,7 +841,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
-            className={`relative w-full h-dvh max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
+            className={`relative w-full h-[100dvh] max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -956,14 +927,12 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                     <div className="rounded-2xl border border-black/10 bg-white p-4 text-sm">
                       <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Availability</p>
                       <p className="mt-1 font-medium text-black">
-                        {isAvailable ? 'In stock and ready to ship' : 'Out of stock'}
+                        {isInStock ? 'In stock and ready to ship' : 'Out of stock'}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-black/10 bg-white p-4 text-sm">
                       <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Delivery</p>
-                      <p className="mt-1 font-medium text-black">
-                        {isVipProduct && !vipShippingCharged ? 'VIP shipping cost is off' : 'Free standard shipping over $150'}
-                      </p>
+                      <p className="mt-1 font-medium text-black">Free standard shipping over $150</p>
                     </div>
                   </div>
                 </div>
@@ -1033,19 +1002,21 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                     </div>
                   )}
 
-                  {detailRows.length > 0 && (
-                    <div className="rounded-2xl border border-black/10 bg-white p-4">
-                      <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Highlights</p>
-                      <div className="mt-3 space-y-2 text-sm text-black/70">
-                        {detailRows.slice(0, 6).map((row) => (
+                  <div className="rounded-2xl border border-black/10 bg-white p-4">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Highlights</p>
+                    <div className="mt-3 space-y-2 text-sm text-black/70">
+                      {detailRows.length > 0 ? (
+                        detailRows.slice(0, 6).map((row) => (
                           <div key={row.label} className="flex items-center justify-between gap-3">
                             <span className="text-black/60">{row.label}</span>
                             <span className="font-medium text-black">{row.value}</span>
                           </div>
-                        ))}
-                      </div>
+                        ))
+                      ) : (
+                        <p className="text-black/60">Premium materials, refined fit, and elevated everyday comfort.</p>
+                      )}
                     </div>
-                  )}
+                  </div>
 
                   {fullDescription && fullDescription !== overviewText && (
                     <div className="rounded-2xl border border-black/10 bg-white p-4">
@@ -1071,10 +1042,10 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (!isAvailable) return;
+                        if (!isInStock) return;
                         setShowCryptoCheckout((prev) => !prev);
                       }}
-                      disabled={!isAvailable}
+                      disabled={!isInStock}
                       className="w-full py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm font-semibold border border-black/10 bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed"
                       style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                     >
@@ -1185,7 +1156,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                               handleDirectCheckout(payMethod === 'whop' ? 'Whop' : 'Skrill');
                             }
                           }}
-                          disabled={payMethod === 'stripe' || payMethod === 'skrill' || !isAvailable}
+                          disabled={payMethod === 'stripe' || payMethod === 'skrill' || !isInStock}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                           className={`w-full py-3.5 rounded-b-2xl transition-all flex items-center justify-center gap-2 text-sm font-semibold border border-t-0 border-black/10 ${
                             payMethod === 'stripe' || payMethod === 'skrill'

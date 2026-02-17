@@ -1836,6 +1836,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 pointerEvents: 'none', // Allow Spline interaction, UI elements override
                 zIndex: UI_Z_INDEX.PAGEMODE,
                 backgroundColor: 'transparent',
+                color: '#000',
                 ...(iosInAppShieldStyle ?? {}),
               }}
             >
@@ -1853,9 +1854,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'relative', zIndex: 10, paddingTop: 56, paddingBottom: 24, textAlign: 'center', pointerEvents: 'none', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}
+                style={{ position: 'relative', zIndex: 10, paddingTop: 56, paddingBottom: 24, textAlign: 'center', pointerEvents: 'none', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif', backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
               >
-                <h1 style={{ fontSize: 24, fontWeight: 600, color: '#fff', letterSpacing: '-0.03em' }}>
+                <h1 style={{ fontSize: 24, fontWeight: 600, color: '#000', letterSpacing: '-0.03em' }}>
                   BullMoney
                 </h1>
               </motion.div>
@@ -1886,7 +1887,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.96, y: 1 }}
                     className="btn-3d-primary"
-                    style={{ width: '100%', padding: '12px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, background: '#000', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)' }}
+                    style={{ width: '100%', padding: '12px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, background: '#fff', color: '#000', border: '1px solid rgba(0,0,0,0.15)', cursor: 'pointer', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.12)' }}
                   >
                     Continue
                   </motion.button>

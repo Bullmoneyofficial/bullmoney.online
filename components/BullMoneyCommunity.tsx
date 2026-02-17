@@ -36,7 +36,7 @@ const COMMUNITY_CHANNELS = [
   { key: "shop",   label: "NEWS & SHOP",  username: "Bullmoneyshop",     handle: "@Bullmoneyshop",    isPrivate: false, scheme: "red"    as const },
   { key: "main",   label: "LIVESTREAMS",  username: "bullmoneyfx",       handle: "@bullmoneyfx",      isPrivate: false, scheme: "blue"   as const },
   { key: "vip",    label: "VIP TRADES",   username: "+yW5jIfxJpv9hNmY0", handle: "VIP Group",         isPrivate: true,  scheme: "purple" as const },
-  { key: "vip2",   label: "VIP ALERTS",   username: "+uvegzpHfYdU2ZTZk", handle: "VIP Alerts",        isPrivate: true,  scheme: "purple" as const },
+  { key: "vip2",   label: "VIP SETUPS",   username: "+uvegzpHfYdU2ZTZk", handle: "VIP Setups",        isPrivate: true,  scheme: "purple" as const },
 ] as const;
 
 type ChannelKey = typeof COMMUNITY_CHANNELS[number]["key"];

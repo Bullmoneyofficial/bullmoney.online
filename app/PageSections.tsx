@@ -728,7 +728,7 @@ const UnifiedSettingsModal = memo(function UnifiedSettingsModal({
   
   // Telegram group options
   const telegramGroups = [
-    { id: 'vip', label: 'VIP Signals', icon: Zap },
+    { id: 'vip', label: 'VIP Setups', icon: Zap },
     { id: 'free', label: 'Free Signals', icon: Users },
     { id: 'signals', label: 'General Signals', icon: Bell },
     { id: 'analysis', label: 'Market Analysis', icon: BarChart3 },

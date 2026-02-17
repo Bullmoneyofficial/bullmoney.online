@@ -108,7 +108,7 @@ export function SocialsDrawer() {
 
   const channels = useMemo(() => {
     // Keep ordering consistent and simple for drawer UX
-    const order: ChannelKey[] = ['trades', 'main', 'shop', 'vip2', 'vip'];
+    const order: ChannelKey[] = ['trades', 'main', 'shop', 'vip'];
     return order.filter((key) => Boolean((TELEGRAM_CHANNELS as any)?.[key]));
   }, []);
 

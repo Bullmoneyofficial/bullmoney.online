@@ -364,7 +364,7 @@ const storeReminder30DayEmails: { subject: string; getContent: (firstName: strin
         </p>
         <div style="background: #0a0a0a; border-radius: 16px; padding: 24px; margin-bottom: 24px; text-align: left;">
           <p style="color: #fff; font-size: 15px; margin: 8px 0;"><strong style="color: ${BRAND_BLUE};">🛒</strong> <a href="${STORE_URL}" style="${LINK_STYLE}">New arrivals in the store</a></p>
-          <p style="color: #fff; font-size: 15px; margin: 8px 0;"><strong style="color: ${BRAND_BLUE};">📊</strong> <a href="${VIP_URL}" style="${LINK_STYLE}">Fresh VIP signals daily</a></p>
+          <p style="color: #fff; font-size: 15px; margin: 8px 0;"><strong style="color: ${BRAND_BLUE};">📊</strong> <a href="${VIP_URL}" style="${LINK_STYLE}">Fresh VIP setups daily</a></p>
           <p style="color: #fff; font-size: 15px; margin: 8px 0;"><strong style="color: ${BRAND_BLUE};">📚</strong> <a href="${COURSE_URL}" style="${LINK_STYLE}">Updated course content</a></p>
           <p style="color: #fff; font-size: 15px; margin: 8px 0;"><strong style="color: ${BRAND_BLUE};">💰</strong> <a href="${AFFILIATE_URL}" style="${LINK_STYLE}">Earn with referrals</a></p>
         </div>

@@ -1159,6 +1159,92 @@ export default function AffiliateRecruitsDashboard({
       : canvas.toDataURL('image/png');
   };
 
+  const createBusinessCardDataUrl = async (format: 'png' | 'jpeg'): Promise<string> => {
+    const qrCanvas = getQrCanvas();
+    if (!qrCanvas) throw new Error('QR canvas not available');
+
+    return new Promise((resolve, reject) => {
+      const templateImg = new Image();
+      templateImg.crossOrigin = 'anonymous';
+      templateImg.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = templateImg.naturalWidth;
+        canvas.height = templateImg.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('Canvas context unavailable')); return; }
+
+        // Draw the business card template
+        ctx.drawImage(templateImg, 0, 0);
+
+        // QR code overlay position — precisely aligned to the QR box in the template
+        // Template QR is at right side of card: x≈815-1000, y≈1015-1180 (detected via pixel analysis)
+        const qrX = 795;
+        const qrY = 985;
+        const qrSize = 215;
+        const padding = 8;
+
+        // White background behind QR for clean overlay
+        const radius = 16;
+        ctx.fillStyle = '#f5f5f5';
+        ctx.beginPath();
+        ctx.roundRect(qrX - padding, qrY - padding, qrSize + padding * 2, qrSize + padding * 2, radius);
+        ctx.fill();
+
+        // Draw the affiliate's unique QR code over the template QR
+        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+
+        // Draw affiliate code and name below the card content
+        const codeLabel = (myTrackingCode && myTrackingCode !== 'Loading...' && myTrackingCode !== 'No Code Found')
+          ? myTrackingCode.toUpperCase()
+          : 'PARTNER';
+        ctx.save();
+        ctx.font = 'bold 28px Inter, Arial, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 5;
+        ctx.fillText(`Code: ${codeLabel}`, 60, 1310);
+        // Also draw affiliate name if available
+        if (affiliateDisplayName && affiliateDisplayName !== 'Affiliate') {
+          ctx.font = '600 24px Inter, Arial, sans-serif';
+          ctx.fillText(affiliateDisplayName, 60, 1345);
+        }
+        ctx.restore();
+
+        resolve(format === 'jpeg'
+          ? canvas.toDataURL('image/jpeg', 0.95)
+          : canvas.toDataURL('image/png'));
+      };
+      templateImg.onerror = () => reject(new Error('Failed to load business card template'));
+      templateImg.src = '/F39D4E5B-1521-401C-9788-C44AA3A574FF.JPG';
+    });
+  };
+
+  const handleDownloadBusinessCard = async (format: 'png' | 'jpeg') => {
+    try {
+      const dataUrl = await createBusinessCardDataUrl(format);
+      const fileCode = (myTrackingCode && myTrackingCode !== 'Loading...' && myTrackingCode !== 'No Code Found')
+        ? myTrackingCode.trim()
+        : 'partner';
+      const ext = format === 'jpeg' ? 'jpg' : 'png';
+      const anchor = document.createElement('a');
+      anchor.href = dataUrl;
+      anchor.download = `bullmoney-business-card-${fileCode}.${ext}`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    } catch (error) {
+      console.error('Business card download failed:', error);
+      setErrorMsg('Could not download business card.');
+      setTimeout(() => setErrorMsg(null), 2500);
+    }
+  };
+
+  const handleAutoSaveBusinessCards = async () => {
+    await handleDownloadBusinessCard('png');
+    await handleDownloadBusinessCard('jpeg');
+  };
+
   const handleDownloadQrProfileImage = (format: 'png' | 'jpeg') => {
     try {
       const dataUrl = createQrProfileCardDataUrl(format);
@@ -2374,14 +2460,14 @@ export default function AffiliateRecruitsDashboard({
 
                 <button
                   type="button"
-                  onClick={handleAutoSaveQrProfileImages}
+                  onClick={handleAutoSaveBusinessCards}
                   className="inline-flex rounded-xl border border-black/20 bg-white p-2 hover:bg-black/5 transition-colors"
-                  title="Tap to auto-save PNG and JPEG"
+                  title="Tap to auto-save Business Card PNG and JPEG"
                 >
                   <QRCodeSVG value={referralLink} size={210} includeMargin />
                 </button>
 
-                <p className="mt-2 text-[11px] font-medium text-black/55">Tap QR to auto-save PNG + JPEG</p>
+                <p className="mt-2 text-[11px] font-medium text-black/55">Tap QR to auto-save Business Cards</p>
 
                 <p className="mt-4 text-sm font-semibold text-black break-all">{shortReferralDisplay}</p>
                 <p className="mt-1 text-xs text-black/55">{bullMoneyShortInfo}</p>
@@ -2410,9 +2496,13 @@ export default function AffiliateRecruitsDashboard({
                 </div>
 
                 <div className="text-xs font-semibold text-black/60 uppercase tracking-wide">Download Options</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <button type="button" onClick={() => handleDownloadBusinessCard('png')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Save Business Card (PNG)</button>
+                  <button type="button" onClick={() => handleDownloadBusinessCard('jpeg')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Save Business Card (JPEG)</button>
+                  <button type="button" onClick={handleDownloadQrCode} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors col-span-1 md:col-span-2">Download QR Code Only (PNG)</button>
+                </div>
+                <div className="text-xs font-semibold text-black/60 uppercase tracking-wide mt-3">More Formats</div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  <button type="button" onClick={() => handleDownloadQrProfileImage('png')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">PNG</button>
-                  <button type="button" onClick={() => handleDownloadQrProfileImage('jpeg')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">JPEG</button>
                   <button type="button" onClick={handleDownloadQrProfileSvg} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">SVG</button>
                   <button type="button" onClick={() => handleDownloadQrProfileDataFile('csv')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Excel</button>
                   <button type="button" onClick={() => handleDownloadQrProfileDataFile('doc')} className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-black/20 bg-white hover:bg-black/5 transition-colors">Word</button>

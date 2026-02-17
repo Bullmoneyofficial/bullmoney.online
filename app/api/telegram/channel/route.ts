@@ -16,11 +16,13 @@ const CHANNELS = {
   main: { username: 'bullmoneyfx', name: 'BullMoney FX', isPrivate: false },
   shop: { username: 'Bullmoneyshop', name: 'BullMoney Shop', isPrivate: false },
   vip: { username: '+yW5jIfxJpv9hNmY0', name: 'VIP Trades', isPrivate: true },
+  vip2: { username: '+uvegzpHfYdU2ZTZk', name: 'VIP Setups', isPrivate: true },
 };
 
 // Mr.Bullmoney Bot Token - @MrBullmoneybot
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const VIP_CHANNEL_ID = process.env.VIP_CHANNEL_ID;
+const VIP_SETUPS_CHANNEL_ID = process.env.VIP_SETUPS_CHANNEL_ID || process.env.VIP_SIGNALS_CHANNEL_ID || process.env.VIP2_CHANNEL_ID;
 const DEBUG_API_LOGS = process.env.DEBUG_API_LOGS === 'true';
 
 const logInfo = (...args: unknown[]) => {
@@ -36,11 +38,23 @@ const logWarn = (...args: unknown[]) => {
 };
 
 
-// In-memory cache for VIP messages (persists during server runtime)
-let vipMessagesCache: TelegramPost[] = [];
-let lastFetchTime = 0;
-const CACHE_DURATION = 15000; // 15 seconds — VIP messages don't change that fast
-let vipFetchInFlight: Promise<TelegramPost[]> | null = null;
+type PrivateChannelKey = 'vip' | 'vip2';
+
+const PRIVATE_CHANNEL_IDS: Record<PrivateChannelKey, string | undefined> = {
+  vip: VIP_CHANNEL_ID,
+  vip2: VIP_SETUPS_CHANNEL_ID,
+};
+
+const PRIVATE_CHANNEL_META: Record<PrivateChannelKey, { handle: string; name: string }> = {
+  vip: { handle: '+yW5jIfxJpv9hNmY0', name: 'VIP Trades' },
+  vip2: { handle: '+uvegzpHfYdU2ZTZk', name: 'VIP Setups' },
+};
+
+// In-memory cache for private channel messages (persists during server runtime)
+const privateMessagesCache: Record<PrivateChannelKey, TelegramPost[]> = { vip: [], vip2: [] };
+const privateLastFetchTime: Record<PrivateChannelKey, number> = { vip: 0, vip2: 0 };
+const PRIVATE_CACHE_DURATION = 15000; // 15 seconds — private messages don't change that fast
+const privateFetchInFlight: Partial<Record<PrivateChannelKey, Promise<TelegramPost[]>>> = {};
 
 // Cache webhook status to avoid repeated network calls
 let webhookStatusCache: { active: boolean; url: string | null; fetchedAt: number } | null = null;
@@ -87,34 +101,39 @@ async function getWebhookStatus() {
 }
 
 // Fetch VIP messages directly from Telegram Bot API
-async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
+function normalizeChatId(chatId: string) {
+  return String(chatId || '').replace('-100', '').replace('-', '');
+}
+
+async function fetchPrivateMessagesFromTelegram(channelKey: PrivateChannelKey): Promise<TelegramPost[]> {
   const now = Date.now();
-  if (vipMessagesCache.length > 0 && now - lastFetchTime < CACHE_DURATION) {
-    return vipMessagesCache;
+  const cached = privateMessagesCache[channelKey];
+  if (cached.length > 0 && now - privateLastFetchTime[channelKey] < PRIVATE_CACHE_DURATION) {
+    return cached;
   }
 
-  if (vipFetchInFlight) {
-    return vipFetchInFlight;
+  if (privateFetchInFlight[channelKey]) {
+    return privateFetchInFlight[channelKey]!;
   }
 
-  vipFetchInFlight = (async () => {
+  privateFetchInFlight[channelKey] = (async () => {
     try {
-      logInfo('[TG VIP] Fetching messages from Telegram Bot API...');
+      logInfo(`[TG ${channelKey}] Fetching messages from Telegram Bot API...`);
 
       if (!TELEGRAM_BOT_TOKEN) {
         if (DEBUG_API_LOGS) {
-          console.error('[TG VIP] TELEGRAM_BOT_TOKEN not configured');
+          console.error(`[TG ${channelKey}] TELEGRAM_BOT_TOKEN not configured`);
         }
-        return vipMessagesCache;
+        return privateMessagesCache[channelKey];
       }
 
       // First check if webhook is active
       const webhookStatus = await getWebhookStatus();
 
       if (webhookStatus.active) {
-        logWarn('[TG VIP] Webhook is active:', webhookStatus.url);
+        logWarn(`[TG ${channelKey}] Webhook is active:`, webhookStatus.url);
         // When webhook is active, getUpdates will not return messages.
-        return vipMessagesCache;
+        return privateMessagesCache[channelKey];
       }
 
       // Use getUpdates to fetch channel posts
@@ -126,35 +145,48 @@ async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
       });
       const data = await response.json();
 
-      logInfo('[TG VIP] getUpdates response:', data.ok, 'total updates:', data.result?.length || 0);
+      logInfo(`[TG ${channelKey}] getUpdates response:`, data.ok, 'total updates:', data.result?.length || 0);
 
       if (!data.ok) {
         if (DEBUG_API_LOGS) {
-          console.error('[TG VIP] API Error:', data.description);
+          console.error(`[TG ${channelKey}] API Error:`, data.description);
         }
-        return vipMessagesCache;
+        return privateMessagesCache[channelKey];
       }
 
       const updates = data.result || [];
+      const expectedChannelId = PRIVATE_CHANNEL_IDS[channelKey];
+      const expectedNormalized = expectedChannelId ? normalizeChatId(expectedChannelId) : null;
       const channelPosts = updates
         .map((u: any) => u.channel_post || u.edited_channel_post)
         .filter(Boolean)
         .filter((post: any) => {
-          if (!VIP_CHANNEL_ID) return true;
-          const expected = VIP_CHANNEL_ID.replace('-100', '').replace('-', '');
-          const actual = String(post.chat?.id || '').replace('-100', '').replace('-', '');
-          return expected && actual ? expected === actual : true;
+          // Prefer exact chat_id match when configured (recommended).
+          if (expectedNormalized) {
+            const actual = normalizeChatId(String(post.chat?.id || ''));
+            return expectedNormalized && actual ? expectedNormalized === actual : true;
+          }
+
+          // Fallback heuristic when env var isn't set: attempt to filter by chat title.
+          const title = String(post.chat?.title || '').toLowerCase();
+          if (!title) return true;
+          if (channelKey === 'vip2') {
+            return title.includes('signal') || title.includes('setup') || title.includes('alert');
+          }
+          return title.includes('trade');
         });
 
-      logInfo('[TG VIP] Found', channelPosts.length, 'channel posts');
+      logInfo(`[TG ${channelKey}] Found`, channelPosts.length, 'channel posts');
 
       if (channelPosts.length === 0) {
         // Return cached messages if no new updates
-        return vipMessagesCache;
+        return privateMessagesCache[channelKey];
       }
 
       // Process channel posts into our format
       const newPosts: TelegramPost[] = [];
+
+      const privateMeta = PRIVATE_CHANNEL_META[channelKey];
 
       for (const post of channelPosts) {
         const messageText = post.text || post.caption || '';
@@ -171,42 +203,42 @@ async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
           date: formatDate(messageDate),
           views: undefined,
           hasMedia,
-          channel: '+yW5jIfxJpv9hNmY0',
-          channelName: 'VIP Trades',
+          channel: privateMeta.handle,
+          channelName: privateMeta.name,
         });
       }
 
       // Merge new posts with cache, avoiding duplicates
-      const existingIds = new Set(vipMessagesCache.map(p => p.id));
+      const existingIds = new Set(privateMessagesCache[channelKey].map(p => p.id));
       for (const post of newPosts) {
         if (!existingIds.has(post.id)) {
-          vipMessagesCache.unshift(post); // Add to beginning (newest first)
+          privateMessagesCache[channelKey].unshift(post); // Add to beginning (newest first)
         }
       }
 
       // Keep only last 50 messages in cache
-      vipMessagesCache = vipMessagesCache.slice(0, 50);
+      privateMessagesCache[channelKey] = privateMessagesCache[channelKey].slice(0, 50);
 
       // DON'T confirm updates - keep them available for next fetch
       // This way messages persist in Telegram's queue
 
-      logInfo('[TG VIP] Total cached messages:', vipMessagesCache.length);
+      logInfo(`[TG ${channelKey}] Total cached messages:`, privateMessagesCache[channelKey].length);
 
-      return vipMessagesCache;
+      return privateMessagesCache[channelKey];
     } catch (error) {
       if (DEBUG_API_LOGS) {
-        console.error('[TG VIP] Error fetching from Telegram:', error);
+        console.error(`[TG ${channelKey}] Error fetching from Telegram:`, error);
       }
-      return vipMessagesCache; // Return cached on error
+      return privateMessagesCache[channelKey]; // Return cached on error
     } finally {
-      lastFetchTime = Date.now();
+      privateLastFetchTime[channelKey] = Date.now();
     }
   })();
 
   try {
-    return await vipFetchInFlight;
+    return await privateFetchInFlight[channelKey]!;
   } finally {
-    vipFetchInFlight = null;
+    privateFetchInFlight[channelKey] = undefined;
   }
 }
 
@@ -220,7 +252,8 @@ export async function GET(request: NextRequest) {
     // For private VIP channel, fetch directly from Telegram Bot API
     if (channel.isPrivate) {
       logInfo('[Telegram API] Fetching VIP messages directly from Telegram Bot');
-      return await getVIPMessagesDirectFromTelegram(channel.username, channel.name);
+      const privateKey: PrivateChannelKey = channelParam === 'vip2' ? 'vip2' : 'vip';
+      return await getPrivateMessagesDirectFromTelegram(privateKey, channel.username, channel.name);
     }
     
     // For public channels, scrape from Telegram - minimal cache for fast updates
@@ -332,15 +365,15 @@ export async function GET(request: NextRequest) {
 }
 
 // Fetch VIP messages directly from Telegram Bot API (no database)
-async function getVIPMessagesDirectFromTelegram(channelUsername: string, channelName: string) {
+async function getPrivateMessagesDirectFromTelegram(channelKey: PrivateChannelKey, channelUsername: string, channelName: string) {
   try {
-    logInfo('[VIP Direct] Fetching VIP messages directly from Telegram...');
+    logInfo(`[VIP Direct] Fetching ${channelKey} messages directly from Telegram...`);
     
     // Check webhook status first
     const webhookStatus = await getWebhookStatus();
     
     // Fetch messages from Telegram (or DB fallback if webhook is active)
-    let posts = await fetchVIPMessagesFromTelegram();
+    let posts = await fetchPrivateMessagesFromTelegram(channelKey);
     
     logInfo('[VIP Direct] Got', posts.length, 'messages from Telegram');
     
@@ -384,7 +417,7 @@ async function getVIPMessagesDirectFromTelegram(channelUsername: string, channel
     }
     return NextResponse.json({
       success: true,
-      posts: vipMessagesCache.slice(0, 10), // Return cached on error
+      posts: privateMessagesCache[channelKey].slice(0, 10), // Return cached on error
       channel: channelUsername,
       channelName: channelName,
       lastUpdated: new Date().toISOString(),

@@ -4,6 +4,26 @@
     if (!splash) return false;
     if (window.__BM_SPLASH_STARTED__) return true;
     window.__BM_SPLASH_STARTED__ = true;
+  // Some browsers/webviews throw when passing options objects to addEventListener.
+  // Also, with streamed HTML, #bm-splash can exist before its child nodes are parsed.
+  var supportsPassive = false;
+  try {
+    var opts = Object.defineProperty({}, 'passive', { get: function(){ supportsPassive = true; } });
+    window.addEventListener('bm-passive-test', function(){}, opts);
+    window.removeEventListener('bm-passive-test', function(){}, opts);
+  } catch (e) {}
+  var passiveOpts = supportsPassive ? { passive: true } : false;
+
+  function safeOn(target, type, handler, options) {
+    if (!target || !target.addEventListener) return;
+    try { target.addEventListener(type, handler, options); }
+    catch (e1) { try { target.addEventListener(type, handler, false); } catch (e2) {} }
+  }
+  function safeOff(target, type, handler, options) {
+    if (!target || !target.removeEventListener) return;
+    try { target.removeEventListener(type, handler, options); }
+    catch (e1) { try { target.removeEventListener(type, handler, false); } catch (e2) {} }
+  }
   var raf = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(cb){ return setTimeout(cb, 16); };
   var caf = window.cancelAnimationFrame ? window.cancelAnimationFrame.bind(window) : function(id){ clearTimeout(id); };
   var hardFailTimer = null;
@@ -169,17 +189,17 @@
   function bindLifecycleSoundRetry() {
     if (lifecycleBound) return;
     lifecycleBound = true;
-    window.addEventListener('pageshow', onLifecycleRetry, { passive: true });
-    window.addEventListener('focus', onLifecycleRetry, { passive: true });
-    document.addEventListener('visibilitychange', onLifecycleRetry, { passive: true });
+    safeOn(window, 'pageshow', onLifecycleRetry, passiveOpts);
+    safeOn(window, 'focus', onLifecycleRetry, passiveOpts);
+    safeOn(document, 'visibilitychange', onLifecycleRetry, passiveOpts);
   }
 
   function unbindLifecycleSoundRetry() {
     if (!lifecycleBound) return;
     lifecycleBound = false;
-    window.removeEventListener('pageshow', onLifecycleRetry);
-    window.removeEventListener('focus', onLifecycleRetry);
-    document.removeEventListener('visibilitychange', onLifecycleRetry);
+    safeOff(window, 'pageshow', onLifecycleRetry, passiveOpts);
+    safeOff(window, 'focus', onLifecycleRetry, passiveOpts);
+    safeOff(document, 'visibilitychange', onLifecycleRetry, passiveOpts);
   }
 
   function unbindInteractionSoundRetry() {
@@ -213,7 +233,20 @@
   }
 
   // Update progress display (safe — these elements have suppressHydrationWarning)
+  function ensureSplashEls() {
+    // Rebind if the script ran before the splash children were parsed.
+    if (!progressEl || (progressEl && progressEl.isConnected === false)) progressEl = document.getElementById('bm-splash-pct');
+    if (!barEl || (barEl && barEl.isConnected === false)) barEl = document.getElementById('bm-splash-bar');
+    if (!statusEl || (statusEl && statusEl.isConnected === false)) statusEl = document.getElementById('bm-splash-status');
+    if (!stepsEl || (stepsEl && stepsEl.isConnected === false)) stepsEl = document.getElementById('bm-splash-steps');
+    if ((!stepEls || !stepEls.length) && stepsEl && stepsEl.querySelectorAll) {
+      stepEls = stepsEl.querySelectorAll('.bm-step');
+    }
+  }
   function updateProgress(pct) {
+    if (!progressEl || !barEl || !statusEl || !stepsEl || !stepEls || !stepEls.length) {
+      ensureSplashEls();
+    }
     progress = Math.max(0, Math.min(pct, 100));
     var targetDisplay = Math.floor(progress + 0.35);
     if (progress < 100 && targetDisplay > 99) targetDisplay = 99;
@@ -287,6 +320,7 @@
 
   function applyStep(idx) {
     currentStep = idx;
+    if (!statusEl) ensureSplashEls();
     if (STEPS[idx]) encryptText(statusEl, STEPS[idx]);
   }
 
@@ -670,8 +704,8 @@
       var elapsed = Date.now() - splashStartAt;
       if (elapsed > maxSplashMs) forceHide();
     };
-    window.addEventListener('visibilitychange', visibilityWatchdog, { passive: true });
-    window.addEventListener('pageshow', visibilityWatchdog, { passive: true });
+    safeOn(window, 'visibilitychange', visibilityWatchdog, passiveOpts);
+    safeOn(window, 'pageshow', visibilityWatchdog, passiveOpts);
 
     // Safety net: ensure exit even in constrained webviews
     setTimeout(function() {
@@ -716,18 +750,42 @@
 
   observeSplashInsertion();
 
-  window.addEventListener('pageshow', function() {
-    if (run() && timer) clearInterval(timer);
-  }, { once: true, passive: true });
+  try {
+    window.addEventListener('pageshow', function() {
+      if (run() && timer) clearInterval(timer);
+    }, { once: true, passive: true });
+  } catch (e) {
+    try {
+      window.addEventListener('pageshow', function() {
+        if (run() && timer) clearInterval(timer);
+      }, false);
+    } catch (e2) {}
+  }
 
-  window.addEventListener('load', function() {
-    if (run() && timer) clearInterval(timer);
-  }, { once: true, passive: true });
+  try {
+    window.addEventListener('load', function() {
+      if (run() && timer) clearInterval(timer);
+    }, { once: true, passive: true });
+  } catch (e) {
+    try {
+      window.addEventListener('load', function() {
+        if (run() && timer) clearInterval(timer);
+      }, false);
+    } catch (e2) {}
+  }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      if (run()) clearInterval(timer);
-    }, { once: true });
+    try {
+      document.addEventListener('DOMContentLoaded', function() {
+        if (run()) clearInterval(timer);
+      }, { once: true });
+    } catch (e) {
+      try {
+        document.addEventListener('DOMContentLoaded', function() {
+          if (run()) clearInterval(timer);
+        }, false);
+      } catch (e2) {}
+    }
   } else {
     if (run()) clearInterval(timer);
   }

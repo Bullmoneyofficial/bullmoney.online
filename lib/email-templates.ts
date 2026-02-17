@@ -663,7 +663,7 @@ export function weeklyDigestEmail(
             <div style="font-size: 32px; font-weight: 700; color: ${BRAND_BLUE};">
               ${stats.vipSignals || 0}
             </div>
-            <p style="color: #888; margin: 4px 0 0 0; font-size: 13px;"><a href="${VIP_URL}" style="${LINK_STYLE}">VIP Signals</a> Sent</p>
+            <p style="color: #888; margin: 4px 0 0 0; font-size: 13px;"><a href="${VIP_URL}" style="${LINK_STYLE}">VIP Setups</a> Sent</p>
           </td>
         </tr>
       </table>

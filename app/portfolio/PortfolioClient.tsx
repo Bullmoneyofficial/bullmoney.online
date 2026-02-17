@@ -184,7 +184,7 @@ const PROJECTS = [
   {
     title: "BullMoney Online",
     subtitle: "Trading Platform",
-    description: "The flagship - a full-stack trading community with live TradingView charts, VIP signals, trading journal, real-time market ticker, news feeds, and multi-language support.",
+    description: "The flagship - a full-stack trading community with live TradingView charts, VIP setups, trading journal, real-time market ticker, news feeds, and multi-language support.",
     tags: ["Next.js 16", "TypeScript", "WebSockets", "TradingView", "Framer Motion"],
     link: "/",
     gradient: "from-blue-600/20 via-cyan-600/10 to-transparent",
@@ -1293,7 +1293,7 @@ function TradingIdentitySection() {
             className="!text-base !px-8 !py-4 !font-bold"
             style={{ backgroundColor: "#000000", color: "#ffffff" }}
             as="a" {...({ href: "/VIP" } as any)}>
-            Join VIP Signals &rarr;
+            Join VIP Setups &rarr;
           </MovingBorderButton>
           <MovingBorderButton borderRadius="1.5rem" containerClassName="!h-auto !w-auto"
             className="!text-base !px-8 !py-4 !font-bold"
@@ -1932,7 +1932,7 @@ function BullMoneyShowcase() {
           <motion.p initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
             transition={{ delay: 0.5, duration: 0.8 }}
             className="mt-8 max-w-3xl mx-auto leading-relaxed text-lg" style={{ color: "#a1a1aa" }}>
-            Everything a trader needs under one roof. Live market data, VIP signals, educational courses,
+            Everything a trader needs under one roof. Live market data, VIP setups, educational courses,
             community hub, integrated store, crypto payments, gaming, and more - all designed and built from scratch.
           </motion.p>
 
@@ -1943,7 +1943,7 @@ function BullMoneyShowcase() {
               { label: "Courses", desc: "Video education", icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z", href: "/designs" },
               { label: "Store", desc: "E-commerce", icon: "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z", href: "/store" },
               { label: "Community", desc: "Global network", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", href: "/socials" },
-              { label: "VIP Signals", desc: "Premium access", icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z", href: "/VIP" },
+              { label: "VIP Setups", desc: "Premium access", icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z", href: "/VIP" },
               { label: "Games", desc: "Entertainment", icon: "M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z", href: "/games" },
               { label: "Crypto Pay", desc: "Web3 payments", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", href: "/store" },
               { label: "Analytics", desc: "Full dashboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", href: "/" },

@@ -41,7 +41,7 @@ export const TELEGRAM_CHANNELS = {
   main: { name: 'LIVESTREAMS', handle: 'bullmoneyfx', icon: MessageCircle, color: 'blue', requiresVip: false },
   shop: { name: 'NEWS', handle: 'Bullmoneyshop', icon: ShoppingBag, color: 'emerald', requiresVip: false },
   vip: { name: 'VIP TRADES', handle: '+yW5jIfxJpv9hNmY0', icon: Crown, color: 'blue', requiresVip: true, isPrivate: true },
-  vip2: { name: 'VIP SIGNALS', handle: '+uvegzpHfYdU2ZTZk', icon: Crown, color: 'blue', requiresVip: true, isPrivate: true },
+  vip2: { name: 'VIP SETUPS', handle: '+uvegzpHfYdU2ZTZk', icon: Crown, color: 'blue', requiresVip: true, isPrivate: true },
 } as const;
 
 // Extended channel type that includes admin
@@ -54,7 +54,7 @@ export const EXTENDED_CHANNEL_KEYS: ExtendedChannelKey[] = ['trades', 'shop', 'v
 export const EXTENDED_CHANNELS: { [key in ExtendedChannelKey]?: { name: string; icon: typeof TrendingUp; color: string; requiresVip?: boolean; isAdmin?: boolean } } = {
   trades: { name: 'FREE GROUPS', icon: TrendingUp, color: 'blue' },
   shop: { name: 'NEWS', icon: Newspaper, color: 'blue' },
-  vip2: { name: 'VIP SIGNALS', icon: Crown, color: 'blue', requiresVip: true },
+  vip2: { name: 'VIP SETUPS', icon: Crown, color: 'blue', requiresVip: true },
   vip: { name: 'VIP GROUP', icon: Crown, color: 'blue', requiresVip: true },
   admin: { name: 'ADMIN', icon: Shield, color: 'blue', isAdmin: true },
 };

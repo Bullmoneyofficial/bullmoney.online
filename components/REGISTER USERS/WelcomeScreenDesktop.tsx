@@ -349,7 +349,8 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
           height: '100vh',
           // Allow pointer events to pass through to Spline, but UI elements capture them
           pointerEvents: 'none',
-          backgroundColor: hideBackground ? 'transparent' : '#000', // Prevent white flash unless parent provides background
+          backgroundColor: hideBackground ? 'transparent' : '#000',
+          color: hideBackground ? '#000' : '#fff',
           zIndex: UI_Z_INDEX.PAGEMODE,
         }}
       >
@@ -424,28 +425,34 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                 onClick={handleUserInteraction}
               style={{
                 pointerEvents: 'auto',
-                background: 'rgba(0, 0, 0, 0.3)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                boxShadow: '0 8px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(255, 255, 255, 0.12)',
+                background: hideBackground ? '#fff' : 'rgba(0, 0, 0, 0.3)',
+                backdropFilter: hideBackground ? undefined : 'blur(16px)',
+                WebkitBackdropFilter: hideBackground ? undefined : 'blur(16px)',
+                boxShadow: hideBackground
+                  ? '0 8px 40px rgba(0, 0, 0, 0.10), inset 0 0 0 1px rgba(0, 0, 0, 0.06)'
+                  : '0 8px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(255, 255, 255, 0.12)',
+                border: hideBackground ? '1px solid rgba(0,0,0,0.10)' : undefined,
               }}
             >
               {/* Card Header - Only show on smaller desktop */}
               <div className="lg:hidden text-center mb-6">
-                <h1 className="text-2xl font-black tracking-tight neon-title-desktop">
+                <h1
+                  className="text-2xl font-black tracking-tight neon-title-desktop"
+                  style={{ color: hideBackground ? '#000' : undefined, textShadow: hideBackground ? 'none' : undefined, animation: hideBackground ? 'none' : undefined }}
+                >
                   BULLMONEY
                 </h1>
-                <p className="text-xs text-white/50 mt-1.5">
+                <p className="text-xs text-white/50 mt-1.5" style={{ color: hideBackground ? 'rgba(0,0,0,0.55)' : undefined }}>
                   The Ultimate Trading Hub
                 </p>
               </div>
 
               {/* Action Header */}
               <div className="text-center mb-6 lg:mb-8">
-                <h2 className="text-xl xl:text-2xl font-bold text-white mb-1.5">
+                <h2 className="text-xl xl:text-2xl font-bold text-white mb-1.5" style={{ color: hideBackground ? '#000' : '#fff' }}>
                   Get Started
                 </h2>
-                <p className="text-white/50 text-xs xl:text-sm">
+                <p className="text-white/50 text-xs xl:text-sm" style={{ color: hideBackground ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.5)' }}>
                   Choose how you want to continue
                 </p>
               </div>
@@ -459,10 +466,15 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   whileTap={{ scale: 0.98 }}
                   className="w-full py-3.5 xl:py-4 rounded-xl font-bold text-base xl:text-lg tracking-wide transition-all flex items-center justify-center gap-3 text-white"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.6) 100%)',
-                    backdropFilter: 'blur(8px)',
-                    boxShadow: '0 4px 30px rgba(255, 255, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    color: hideBackground ? '#000' : '#fff',
+                    background: hideBackground
+                      ? '#fff'
+                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.6) 100%)',
+                    backdropFilter: hideBackground ? undefined : 'blur(8px)',
+                    boxShadow: hideBackground
+                      ? '0 6px 24px rgba(0, 0, 0, 0.10)'
+                      : '0 4px 30px rgba(255, 255, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    border: hideBackground ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255, 255, 255, 0.3)',
                   }}
                 >
                   <span>Create Account</span>
@@ -476,9 +488,10 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   whileTap={{ scale: 0.98 }}
                   className="w-full py-3.5 xl:py-4 rounded-xl font-bold text-base xl:text-lg tracking-wide transition-all flex items-center justify-center gap-3 text-white"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(6px)',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: hideBackground ? '#000' : '#fff',
+                    background: hideBackground ? '#fff' : 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: hideBackground ? undefined : 'blur(6px)',
+                    border: hideBackground ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255, 255, 255, 0.25)',
                   }}
                 >
                   <span>Login</span>
@@ -487,9 +500,9 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
 
                 {/* Divider */}
                 <div className="flex items-center gap-4 my-1">
-                  <div className="flex-1 h-px bg-white/5" />
-                  <span className="text-white/20 text-xs">or</span>
-                  <div className="flex-1 h-px bg-white/5" />
+                  <div className="flex-1 h-px bg-white/5" style={{ backgroundColor: hideBackground ? 'rgba(0,0,0,0.08)' : undefined }} />
+                  <span className="text-white/20 text-xs" style={{ color: hideBackground ? 'rgba(0,0,0,0.35)' : undefined }}>or</span>
+                  <div className="flex-1 h-px bg-white/5" style={{ backgroundColor: hideBackground ? 'rgba(0,0,0,0.08)' : undefined }} />
                 </div>
 
                 {/* Guest Button - Tertiary glass */}
@@ -498,9 +511,10 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   whileTap={{ scale: 0.98 }}
                   className="w-full py-3 rounded-xl font-medium text-sm xl:text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white/50"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    backdropFilter: 'blur(4px)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    color: hideBackground ? 'rgba(0,0,0,0.60)' : 'rgba(255,255,255,0.5)',
+                    background: hideBackground ? '#fff' : 'rgba(255, 255, 255, 0.03)',
+                    backdropFilter: hideBackground ? undefined : 'blur(4px)',
+                    border: hideBackground ? '1px solid rgba(0,0,0,0.10)' : '1px solid rgba(255, 255, 255, 0.05)',
                   }}
                 >
                   <User className="w-4 h-4 xl:w-5 xl:h-5" />
@@ -509,12 +523,16 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
               </div>
 
               {/* Footer Note */}
-              <p className="text-center text-white/30 text-[11px] mt-5 xl:mt-6">
+              <p
+                className="text-center text-white/30 text-[11px] mt-5 xl:mt-6"
+                style={{ color: hideBackground ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.3)' }}
+              >
                 By continuing, you agree to our{' '}
                 <button 
                   type="button"
                   onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
                   className="text-white/70 hover:text-white underline underline-offset-2 transition-colors"
+                  style={{ color: hideBackground ? 'rgba(0,0,0,0.70)' : undefined }}
                 >
                   Terms of Service
                 </button>
@@ -523,6 +541,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   type="button"
                   onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
                   className="text-white/70 hover:text-white underline underline-offset-2 transition-colors"
+                  style={{ color: hideBackground ? 'rgba(0,0,0,0.70)' : undefined }}
                 >
                   Privacy Policy
                 </button>
@@ -531,6 +550,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   type="button"
                   onClick={() => { setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }}
                   className="text-white/70 hover:text-white underline underline-offset-2 transition-colors"
+                  style={{ color: hideBackground ? 'rgba(0,0,0,0.70)' : undefined }}
                 >
                   Disclaimer
                 </button>

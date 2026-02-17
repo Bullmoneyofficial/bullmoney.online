@@ -88,11 +88,63 @@ export default function AffiliateQRPosterPanel() {
   const [copiedCode, setCopiedCode] = useState(false);
   const [editingQrUrl, setEditingQrUrl] = useState("");
   const [showQrEditor, setShowQrEditor] = useState(false);
+  const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   
   // Refs
   const posterRef = useRef<HTMLDivElement>(null);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const hiddenCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Bulk download all affiliate QR codes as individual PNGs
+  const handleBulkDownloadAllQRCodes = useCallback(async () => {
+    if (affiliates.length === 0) {
+      showToast('No affiliates to download', 'error');
+      return;
+    }
+    setBulkDownloading(true);
+    setBulkProgress({ current: 0, total: affiliates.length });
+    try {
+      for (let i = 0; i < affiliates.length; i++) {
+        const affiliate = affiliates[i];
+        const code = affiliate.affiliate_code || 'no-code';
+        const link = affiliate.custom_referral_link || `${BASE_URL}/register?ref=${code}`;
+
+        // Create offscreen canvas for QR
+        const qrCanvas = document.createElement('canvas');
+        qrCanvas.width = 512;
+        qrCanvas.height = 512;
+        // Use a temporary container to render QRCodeCanvas
+        const container = document.createElement('div');
+        container.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+        document.body.appendChild(container);
+
+        // Render QR via canvas API
+        const { default: QRCodeLib } = await import('qrcode');
+        await QRCodeLib.toCanvas(qrCanvas, link, { width: 512, margin: 2 });
+
+        const dataUrl = qrCanvas.toDataURL('image/png');
+        const anchor = document.createElement('a');
+        anchor.href = dataUrl;
+        anchor.download = `bullmoney-qr-${code}.png`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        document.body.removeChild(container);
+
+        setBulkProgress({ current: i + 1, total: affiliates.length });
+        // Small delay to prevent browser blocking multiple downloads
+        await new Promise(r => setTimeout(r, 300));
+      }
+      showToast(`Downloaded ${affiliates.length} QR codes`, 'success');
+    } catch (err) {
+      console.error('Bulk QR download failed:', err);
+      showToast('Bulk download failed', 'error');
+    } finally {
+      setBulkDownloading(false);
+      setBulkProgress({ current: 0, total: 0 });
+    }
+  }, [affiliates]);
 
   // Fetch affiliates
   const fetchAffiliates = useCallback(async () => {
@@ -476,12 +528,24 @@ export default function AffiliateQRPosterPanel() {
           <h2 className="text-xl font-bold text-black">QR Code & Poster Manager</h2>
           <p className="text-sm text-black/50">Create, customize, and send affiliate QR posters</p>
         </div>
-        <button
-          onClick={fetchAffiliates}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-black/20 bg-white hover:bg-black/5 text-sm font-medium transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleBulkDownloadAllQRCodes}
+            disabled={bulkDownloading || loading || affiliates.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-black/20 bg-black text-white text-sm font-medium hover:bg-black/90 transition-colors disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            {bulkDownloading
+              ? `Downloading ${bulkProgress.current}/${bulkProgress.total}...`
+              : `Download All QR Codes (${affiliates.length})`}
+          </button>
+          <button
+            onClick={fetchAffiliates}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-black/20 bg-white hover:bg-black/5 text-sm font-medium transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

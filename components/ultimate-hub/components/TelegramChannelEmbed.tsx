@@ -118,7 +118,7 @@ export const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onN
       ? `https://t.me/${channelConfig.handle}` 
       : `https://t.me/${channelConfig.handle}`;
     
-    const isVipChannel = channel === 'vip';
+    const isVipChannel = channel === 'vip' || channel === 'vip2';
     
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4">
@@ -139,16 +139,16 @@ export const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onN
         )}
         <p className="text-[11px] text-black/50 mb-1 text-center">
           {isVipChannel && effectiveIsVip 
-            ? 'VIP signals syncing from Telegram...' 
+            ? 'VIP setups syncing from Telegram...' 
             : isVipChannel 
-              ? 'VIP signals available in Telegram' 
+              ? 'VIP setups available in Telegram' 
               : 'No messages yet'}
         </p>
         <p className="text-[9px] text-black/40 mb-3 text-center max-w-[200px]">
           {isVipChannel && effectiveIsVip
             ? statusMessage || 'Post a message in the VIP channel to see it here. Make sure @MrBullmoneybot is admin.'
             : isVipChannel 
-              ? 'Join the VIP Telegram channel for live trading signals and premium analysis.'
+              ? 'Join the VIP Telegram channel for live trading setups and premium analysis.'
               : 'Messages will appear here once available.'}
         </p>
         {!isVipChannel && (
