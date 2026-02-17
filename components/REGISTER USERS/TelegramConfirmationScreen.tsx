@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Send, Loader2, Check, Gift, TrendingUp, Video, Bell, Newspaper, Lock, Unlock, Sparkles } from 'lucide-react';
+import { Send, Loader2, Check, Gift, TrendingUp, Video, Bell, Newspaper, Lock, Unlock, Sparkles, Copy, Link2, Share2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -112,6 +112,36 @@ interface TelegramConfirmationScreenProps {
   neonIconClass: string;
 }
 
+// Robust clipboard copy with fallback for Telegram in-app browser & WebViews
+// Same approach as pagemode copyCode
+const robustCopy = async (text: string): Promise<boolean> => {
+  if (!text) return false;
+  try {
+    if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {}
+    }
+    // Fallback: textarea method (works in Telegram browser, iOS Safari, etc.)
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;z-index:-1;';
+    document.body.appendChild(textarea);
+    const range = document.createRange();
+    range.selectNodeContents(textarea);
+    const selection = window.getSelection();
+    if (selection) { selection.removeAllRanges(); selection.addRange(range); }
+    textarea.setSelectionRange(0, textarea.value.length);
+    const success = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return success;
+  } catch {
+    return false;
+  }
+};
+
 export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProps> = ({
   onUnlock,
   onConfirmationClicked,
@@ -122,6 +152,25 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
   const [timeRemaining, setTimeRemaining] = useState(MINIMUM_WAIT_TIME / 1000);
   const [canUnlock, setCanUnlock] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+
+  // Detect in-app browsers (Instagram, Telegram, TikTok, etc.) where tabs don't work
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      const ua = navigator.userAgent || '';
+      const inApp = /Instagram|FBAN|FBAV|TikTok|musical_ly|Line\/|GSA|Twitter|Snapchat|LinkedInApp|wv\)|Telegram/i.test(ua);
+      setIsInAppBrowser(inApp);
+    }
+  }, []);
+
+  const handleCopy = async (text: string, label: string) => {
+    const ok = await robustCopy(text);
+    if (ok) {
+      setCopiedItem(label);
+      setTimeout(() => setCopiedItem(null), 1500);
+    }
+  };
 
   useEffect(() => {
     if (!joinedTelegram) return;
@@ -209,49 +258,120 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
           </p>
         </div>
         
-        {/* Benefits grid */}
+        {/* Benefits grid → swaps to broker setup info after joining Telegram */}
         <div className="relative z-10 w-full bg-neutral-900/60 backdrop-blur-sm rounded-xl border border-white/40 p-4 space-y-3 neon-container">
-          <div className="flex items-center gap-2 text-center justify-center">
-            <Gift className="w-4 h-4 text-white neon-icon" />
-            <span className="text-xs md:text-sm font-semibold text-white neon-text">What You're Unlocking:</span>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            {UNLOCK_BENEFITS.map((benefit, index) => (
-              <div 
-                key={benefit.label}
-                className={cn(
-                  "flex items-center gap-2 p-2 rounded-lg bg-white/10/30 border border-white/30 transition-all duration-300 neon-border",
-                  joinedTelegram && "border-white/50 bg-white/10 neon-border-strong"
-                )}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <benefit.icon className={cn("w-4 h-4 flex-shrink-0 neon-icon", benefit.color)} />
-                <span className="text-xs text-white font-medium neon-text">{benefit.label}</span>
-                {joinedTelegram && (
-                  <Check className="w-3 h-3 text-white ml-auto checkmark-pop neon-icon" />
-                )}
+          {canUnlock ? (
+            <>
+              <div className="flex items-center gap-2 text-center justify-center">
+                <Sparkles className="w-4 h-4 text-white neon-icon" />
+                <span className="text-xs md:text-sm font-semibold text-white neon-text">Broker Setup</span>
               </div>
-            ))}
-          </div>
-          
-          {/* Website access highlight */}
-          <div className={cn(
-            "flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all duration-500",
-            joinedTelegram 
-              ? "bg-linear-to-r from-white/20 to-white/20 border-white/60 neon-border-strong" 
-              : "bg-linear-to-r from-white/10 to-white/10 border-white/40 neon-border"
-          )}>
-            {joinedTelegram ? (
-              <Unlock className="w-4 h-4 text-white neon-icon" />
-            ) : (
-              <Lock className="w-4 h-4 text-white animate-pulse neon-icon-pulse" />
-            )}
-            <span className="text-xs md:text-sm font-bold text-white neon-text">
-              {joinedTelegram ? "Website Access Unlocked!" : "+ Full Website Access"}
-            </span>
-            {joinedTelegram && <Sparkles className="w-4 h-4 text-white neon-icon" />}
-          </div>
+              {isInAppBrowser && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-500/20 border border-amber-400/40 px-3 py-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <p className="text-[10px] leading-relaxed text-amber-200">
+                    You're in an in-app browser. Copy the links below and open them in <span className="font-bold text-white">Chrome</span> or <span className="font-bold text-white">Safari</span> to sign up.
+                  </p>
+                </div>
+              )}
+              <p className="text-[11px] leading-relaxed text-white/80 text-center">
+                {isInAppBrowser ? (
+                  <>Copy each broker link & code below, then open them in your <span className="font-semibold text-white">real browser</span> (Chrome/Safari) to sign up. Click <span className="font-semibold text-white">"Enter Bull Money"</span> when done.</>
+                ) : (
+                  <>When you click <span className="font-semibold text-white">"Enter Bull Money"</span>, your broker accounts will open in background tabs. This gets everyone set up with MT5 accounts (demo or real) so trading is easy and ready to go.</>
+                )}
+              </p>
+              <div className="space-y-1.5">
+                {/* XM */}
+                <div className="rounded-lg bg-white/10 border border-white/20 px-3 py-2 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-white/70">XM Partner Code</span>
+                    <span className="text-xs font-bold text-white neon-text">X3R7P</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button onClick={() => handleCopy('X3R7P', 'xm-code')} className={cn("flex-1 flex items-center justify-center gap-1 rounded-md border border-white/15 py-1 transition-all", copiedItem === 'xm-code' ? 'bg-green-500/30' : 'bg-white/10 hover:bg-white/20')}>
+                      {copiedItem === 'xm-code' ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-white/70" />}
+                      <span className="text-[10px] text-white/70">{copiedItem === 'xm-code' ? 'Copied!' : 'Copy Code'}</span>
+                    </button>
+                    <button onClick={() => handleCopy('https://affs.click/t5wni', 'xm-link')} className={cn("flex-1 flex items-center justify-center gap-1 rounded-md border border-white/15 py-1 transition-all", copiedItem === 'xm-link' ? 'bg-green-500/30' : 'bg-white/10 hover:bg-white/20')}>
+                      {copiedItem === 'xm-link' ? <Check className="w-3 h-3 text-green-400" /> : <Link2 className="w-3 h-3 text-white/70" />}
+                      <span className="text-[10px] text-white/70">{copiedItem === 'xm-link' ? 'Copied!' : 'Copy Link'}</span>
+                    </button>
+                    <button onClick={() => { if (navigator.share) { navigator.share({ title: 'XM Broker Signup', text: 'Sign up with XM using partner code: X3R7P', url: 'https://affs.click/t5wni' }).catch(() => {}); } else { handleCopy('Sign up with XM using partner code: X3R7P — https://affs.click/t5wni', 'xm-share'); } }} className="flex items-center justify-center rounded-md bg-white/10 hover:bg-white/20 border border-white/15 px-2 py-1 transition-all">
+                      {copiedItem === 'xm-share' ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3 text-white/70" />}
+                    </button>
+                  </div>
+                </div>
+                {/* Vantage */}
+                <div className="rounded-lg bg-white/10 border border-white/20 px-3 py-2 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-white/70">Vantage Partner Code</span>
+                    <span className="text-xs font-bold text-white neon-text">BULLMONEY</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button onClick={() => handleCopy('BULLMONEY', 'v-code')} className={cn("flex-1 flex items-center justify-center gap-1 rounded-md border border-white/15 py-1 transition-all", copiedItem === 'v-code' ? 'bg-green-500/30' : 'bg-white/10 hover:bg-white/20')}>
+                      {copiedItem === 'v-code' ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-white/70" />}
+                      <span className="text-[10px] text-white/70">{copiedItem === 'v-code' ? 'Copied!' : 'Copy Code'}</span>
+                    </button>
+                    <button onClick={() => handleCopy('https://vigco.co/iQbe2u', 'v-link')} className={cn("flex-1 flex items-center justify-center gap-1 rounded-md border border-white/15 py-1 transition-all", copiedItem === 'v-link' ? 'bg-green-500/30' : 'bg-white/10 hover:bg-white/20')}>
+                      {copiedItem === 'v-link' ? <Check className="w-3 h-3 text-green-400" /> : <Link2 className="w-3 h-3 text-white/70" />}
+                      <span className="text-[10px] text-white/70">{copiedItem === 'v-link' ? 'Copied!' : 'Copy Link'}</span>
+                    </button>
+                    <button onClick={() => { if (navigator.share) { navigator.share({ title: 'Vantage Broker Signup', text: 'Sign up with Vantage using partner code: BULLMONEY', url: 'https://vigco.co/iQbe2u' }).catch(() => {}); } else { handleCopy('Sign up with Vantage using partner code: BULLMONEY — https://vigco.co/iQbe2u', 'v-share'); } }} className="flex items-center justify-center rounded-md bg-white/10 hover:bg-white/20 border border-white/15 px-2 py-1 transition-all">
+                      {copiedItem === 'v-share' ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3 text-white/70" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-white/50 text-center">
+                Use these codes when signing up so your trading is linked and ready to go.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-center justify-center">
+                <Gift className="w-4 h-4 text-white neon-icon" />
+                <span className="text-xs md:text-sm font-semibold text-white neon-text">What You're Unlocking:</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                {UNLOCK_BENEFITS.map((benefit, index) => (
+                  <div 
+                    key={benefit.label}
+                    className={cn(
+                      "flex items-center gap-2 p-2 rounded-lg bg-white/10/30 border border-white/30 transition-all duration-300 neon-border",
+                      joinedTelegram && "border-white/50 bg-white/10 neon-border-strong"
+                    )}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <benefit.icon className={cn("w-4 h-4 shrink-0 neon-icon", benefit.color)} />
+                    <span className="text-xs text-white font-medium neon-text">{benefit.label}</span>
+                    {joinedTelegram && (
+                      <Check className="w-3 h-3 text-white ml-auto checkmark-pop neon-icon" />
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Website access highlight */}
+              <div className={cn(
+                "flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all duration-500",
+                joinedTelegram 
+                  ? "bg-linear-to-r from-white/20 to-white/20 border-white/60 neon-border-strong" 
+                  : "bg-linear-to-r from-white/10 to-white/10 border-white/40 neon-border"
+              )}>
+                {joinedTelegram ? (
+                  <Unlock className="w-4 h-4 text-white neon-icon" />
+                ) : (
+                  <Lock className="w-4 h-4 text-white animate-pulse neon-icon-pulse" />
+                )}
+                <span className="text-xs md:text-sm font-bold text-white neon-text">
+                  {joinedTelegram ? "Website Access Unlocked!" : "+ Full Website Access"}
+                </span>
+                {joinedTelegram && <Sparkles className="w-4 h-4 text-white neon-icon" />}
+              </div>
+            </>
+          )}
         </div>
         
         {/* Action area */}
@@ -289,6 +409,19 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
             onClick={() => {
               // Mark telegram as confirmed so it never shows again on reloads
               localStorage.setItem("bullmoney_telegram_confirmed", "true");
+              // Auto-copy partner codes
+              robustCopy('X3R7P');
+              // Only open broker tabs in real browsers — in-app browsers can't handle multiple tabs
+              if (!isInAppBrowser) {
+                const xmTab = window.open('https://affs.click/t5wni', '_blank');
+                try { xmTab?.blur(); window.focus(); } catch {}
+                setTimeout(() => {
+                  const vTab = window.open('https://vigco.co/iQbe2u', '_blank');
+                  try { vTab?.blur(); window.focus(); } catch {}
+                }, 600);
+              }
+              localStorage.setItem('bullmoney_xm_redirect_done', 'true');
+              // Unlock and show the real Bull Money home page
               onConfirmationClicked();
               onUnlock();
             }}

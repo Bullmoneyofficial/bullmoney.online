@@ -573,86 +573,52 @@ function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageCli
     const now = Date.now();
     let shouldForceLoader = false;
     const forceReasons: string[] = [];
-    let shouldResetPagemode = false;
 
-    // ===== Refresh/session-based loader triggers =====
+    // ===== Simple random v3 loader on reload =====
     try {
       const sessionCountKey = "bullmoney_refresh_count";
-      const refreshTimesKey = "bullmoney_refresh_times";
-      const rapidShownKey = "bullmoney_refresh_rapid_last";
-
-      const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-      const buildShowIndices = () => {
-        const showCount = getRandomInt(2, 4);
-        const set = new Set<number>();
-        while (set.size < showCount) {
-          set.add(getRandomInt(1, 10));
-        }
-        return Array.from(set);
-      };
 
       // Session refresh counter
       const sessionCount = Number(safeGetSession(sessionCountKey) || "0") + 1;
       safeSetSession(sessionCountKey, String(sessionCount));
 
-      // If user refreshes more than 15 times in this session,
-      // force the welcome/pagemode screen to show again.
-      if (sessionCount > 15) {
-        shouldResetPagemode = true;
-        forceReasons.push(`refresh_over_15_${sessionCount}`);
+      // After 5 reloads in a session, clear non-auth caches
+      if (sessionCount >= 5) {
+        const AUTH_PRESERVE_KEYS = [
+          'bullmoney_session', 'bullmoney_pagemode_completed',
+          'bullmoney_loader_completed', 'bullmoney_telegram_confirmed',
+          'bullmoney_muted', 'bullmoney_xm_redirect_done',
+          'supabase.auth.token', 'sb-', 'bullmoney_user',
+          'bullmoney_auth', 'bullmoney_login', 'bullmoney_token',
+        ];
+        const keysToKeep: Record<string, string> = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+          if (AUTH_PRESERVE_KEYS.some(pk => key === pk || key.startsWith(pk))) {
+            keysToKeep[key] = localStorage.getItem(key) || '';
+          }
+        }
+        localStorage.clear();
+        Object.entries(keysToKeep).forEach(([k, v]) => localStorage.setItem(k, v));
+        safeSetSession(sessionCountKey, "0");
+        console.log('[Page] 5+ reloads - cleared cache (auth preserved)');
       }
 
-      // Track refresh timestamps for rapid-refresh detection (2-minute window)
-      const rawTimes = safeGetSession(refreshTimesKey);
-      const parsedTimes = JSON.parse(rawTimes || "[]");
-      const times = Array.isArray(parsedTimes) ? parsedTimes : [];
-      const recentTimes = (times as number[]).filter(t => now - t <= 120000);
-      recentTimes.push(now);
-      safeSetSession(refreshTimesKey, JSON.stringify(recentTimes));
-
-      const lastRapidShown = Number(safeGetSession(rapidShownKey) || "0");
-      const rapidCooldownMs = 120000;
-      if (recentTimes.length >= 3 && now - lastRapidShown >= rapidCooldownMs) {
+      // ~20% random chance to show v3 loader on reload
+      if (Math.random() < 0.20) {
         shouldForceLoader = true;
-        forceReasons.push("rapid_refresh_3_in_2min");
-        safeSetSession(rapidShownKey, String(now));
+        forceReasons.push('random_20_percent');
       }
     } catch (error) {
       console.warn('[Page] Refresh trigger check failed', error);
     }
 
-    // ===== Daily 23:59:50 TTL trigger =====
-    try {
-      const dailyKey = "bullmoney_loader_daily_last";
-      const lastDaily = Number(safeGetLocal(dailyKey) || "0");
-      const target = new Date(now);
-      target.setHours(23, 59, 50, 0);
-      const targetTime = target.getTime();
-
-      if (now >= targetTime && lastDaily < targetTime) {
-        shouldForceLoader = true;
-        forceReasons.push("daily_23_59_50");
-        safeSetLocal(dailyKey, String(targetTime));
-      }
-    } catch (error) {
-      console.warn('[Page] Daily trigger check failed', error);
-    }
-
-    console.log('[Page] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, shouldResetPagemode, forceReasons });
+    console.log('[Page] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, forceReasons });
 
     // CRITICAL: Pagemode/welcome screen MUST always show first
-    // MultiStepLoaderv3Simple should ONLY show after pagemode has been completed at least once
-    // Additionally: if the user refreshes the page more than 10 times
-    // in a single session, re-show the pagemode welcome experience.
-    if (shouldResetPagemode) {
-      try {
-        safeRemoveLocal("bullmoney_pagemode_completed");
-      } catch {
-        // Ignore storage errors; still fall back to pagemode view
-      }
-      console.log('[Page] Refresh count > 10 - re-showing pagemode welcome');
-      setCurrentView('pagemode');
-    } else if (!hasCompletedPagemode && !hasSession) {
+    // MultiStepLoaderv3Simple shows randomly on ~20% of reloads for returning users
+    if (!hasCompletedPagemode && !hasSession) {
       // First time visitor - always show pagemode welcome screen first
       console.log('[Page] First time visitor - showing pagemode');
       setCurrentView('pagemode');
@@ -668,8 +634,8 @@ function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageCli
         setCurrentView('telegram');
       }
     } else if (shouldForceLoader && (hasSession || hasCompletedPagemode === "true")) {
-      // Only force loader if user has already completed pagemode
-      console.log('[Page] Forcing loader due to refresh policy (pagemode already completed)');
+      // Random v3 loader trigger (~20% chance on reload)
+      console.log('[Page] Random v3 loader trigger');
       setCurrentView('loader');
     } else if (hasSession || hasCompletedPagemode === "true") {
       // User completed pagemode but not loader yet - show loader
@@ -758,6 +724,21 @@ function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageCli
   const handleTelegramUnlock = useCallback(() => {
     safeSetLocal("bullmoney_loader_completed", "true");
     safeSetLocal("bullmoney_telegram_confirmed", "true");
+    // Open broker signups in background tabs for new users — user stays on Bull Money
+    const alreadyRedirected = safeGetLocal('bullmoney_xm_redirect_done');
+    if (alreadyRedirected !== 'true') {
+      try {
+        navigator.clipboard.writeText('X3R7P').catch(() => {});
+      } catch {}
+      const xmTab = window.open('https://affs.click/t5wni', '_blank');
+      try { xmTab?.blur(); window.focus(); } catch {}
+      setTimeout(() => {
+        const vTab = window.open('https://vigco.co/iQbe2u', '_blank');
+        try { vTab?.blur(); window.focus(); } catch {}
+      }, 600);
+      safeSetLocal('bullmoney_xm_redirect_done', 'true');
+    }
+    // Show the real Bull Money home page
     setV2Unlocked(true);
     setCurrentView('content');
   }, [setV2Unlocked]);

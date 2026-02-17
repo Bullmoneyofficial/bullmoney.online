@@ -355,18 +355,28 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const isLiked = isWishlisted(product.id);
   const itemCount = getItemCount();
 
+  // VIP product detection — VIP products always treated as in stock
+  const isVip = useMemo(() => Boolean(
+    (product as any).buy_url || 
+    (product as any)._source === 'vip' || 
+    (product.details as any)?.buy_url
+  ), [product]);
+
   const price = product.base_price;
   const comparePrice = product.compare_at_price;
   const hasDiscount = comparePrice && comparePrice > price;
   const discount = hasDiscount ? Math.round((1 - price / comparePrice) * 100) : 0;
   
-  const isInStock = (product.total_inventory || 0) > 0;
+  const isInStock = isVip || (product.total_inventory || 0) > 0;
   const defaultVariant = product.variants?.[0];
   
 
 
   const overviewText = product.short_description || product.description || product.seo_description || '';
   const fullDescription = product.description || product.seo_description || product.short_description || '';
+
+  // Internal/VIP fields to exclude from highlights
+  const HIDDEN_DETAIL_KEYS = ['material', 'weight', 'dimensions', 'care_instructions', 'rating_stats', 'buy_url', '_source', 'whop_id', 'whop_plan_id', 'external_url', 'source', 'source_id', 'source_type'];
 
   const detailRows = useMemo(() => {
     const details = product.details || {};
@@ -382,9 +392,11 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     if (details.care_instructions) rows.push({ label: 'Care', value: String(details.care_instructions) });
 
     Object.entries(details).forEach(([key, value]) => {
-      if (['material', 'weight', 'dimensions', 'care_instructions', 'rating_stats'].includes(key)) return;
+      if (HIDDEN_DETAIL_KEYS.includes(key)) return;
       if (value === null || value === undefined) return;
       if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        // Skip values that look like URLs or IDs (internal data)
+        if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('whop_'))) return;
         rows.push({ label: key.replace(/_/g, ' ').replace(/\b[a-z]/g, (char) => char.toUpperCase()), value: String(value) });
       }
     });
@@ -505,6 +517,25 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     e?.preventDefault();
     e?.stopPropagation();
     
+    // VIP products use a synthetic variant if no real variant exists
+    if (isVip) {
+      setIsAdding(true);
+      await new Promise(resolve => setTimeout(resolve, 150));
+      const variant = defaultVariant || {
+        id: `vip-${product.id}`,
+        name: 'Default',
+        price_adjustment: 0,
+        inventory_count: 999,
+        sort_order: 0,
+      };
+      addItem(product, variant as any, 1);
+      toast.success('Added to cart', {
+        icon: <ShoppingBag className="w-4 h-4" />,
+      });
+      setIsAdding(false);
+      return;
+    }
+
     if (!defaultVariant) {
       toast.error('Please select options on the product page');
       return;
@@ -526,7 +557,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     });
     
     setIsAdding(false);
-  }, [defaultVariant, isInStock, addItem, product]);
+  }, [defaultVariant, isInStock, isVip, addItem, product]);
 
   const handleLike = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -927,7 +958,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                     <div className="rounded-2xl border border-black/10 bg-white p-4 text-sm">
                       <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Availability</p>
                       <p className="mt-1 font-medium text-black">
-                        {isInStock ? 'In stock and ready to ship' : 'Out of stock'}
+                        {isVip ? 'Available' : isInStock ? 'In stock and ready to ship' : 'Out of stock'}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-black/10 bg-white p-4 text-sm">
@@ -1002,21 +1033,19 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                     </div>
                   )}
 
-                  <div className="rounded-2xl border border-black/10 bg-white p-4">
-                    <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Highlights</p>
-                    <div className="mt-3 space-y-2 text-sm text-black/70">
-                      {detailRows.length > 0 ? (
-                        detailRows.slice(0, 6).map((row) => (
+                  {detailRows.length > 0 && (
+                    <div className="rounded-2xl border border-black/10 bg-white p-4">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Highlights</p>
+                      <div className="mt-3 space-y-2 text-sm text-black/70">
+                        {detailRows.slice(0, 6).map((row) => (
                           <div key={row.label} className="flex items-center justify-between gap-3">
                             <span className="text-black/60">{row.label}</span>
                             <span className="font-medium text-black">{row.value}</span>
                           </div>
-                        ))
-                      ) : (
-                        <p className="text-black/60">Premium materials, refined fit, and elevated everyday comfort.</p>
-                      )}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {fullDescription && fullDescription !== overviewText && (
                     <div className="rounded-2xl border border-black/10 bg-white p-4">

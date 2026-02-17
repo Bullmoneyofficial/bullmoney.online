@@ -114,11 +114,18 @@ export function ProductInfo({ product }: ProductInfoProps) {
     }
   }, [searchParams, selectedVariant, autoAddTriggered, product, addItem, openCart]);
 
+  // VIP product detection — VIP products always treated as in stock
+  const isVip = Boolean(
+    (product as any).buy_url || 
+    (product as any)._source === 'vip' || 
+    (product.details as any)?.buy_url
+  );
+
   const price = product.base_price + (selectedVariant?.price_adjustment || 0);
   const comparePrice = product.compare_at_price;
   const hasDiscount = comparePrice && comparePrice > price;
-  const isInStock = selectedVariant ? selectedVariant.inventory_count > 0 : false;
-  const isLowStock = selectedVariant && selectedVariant.inventory_count <= selectedVariant.low_stock_threshold;
+  const isInStock = isVip || (selectedVariant ? selectedVariant.inventory_count > 0 : false);
+  const isLowStock = !isVip && selectedVariant && selectedVariant.inventory_count <= selectedVariant.low_stock_threshold;
   
   const isInCart = selectedVariant ? hasItem(product.id, selectedVariant.id) : false;
 
@@ -128,7 +135,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
-    const maxQuantity = selectedVariant?.inventory_count || 1;
+    const maxQuantity = isVip ? 99 : (selectedVariant?.inventory_count || 1);
     
     if (newQuantity >= 1 && newQuantity <= maxQuantity) {
       setQuantity(newQuantity);
@@ -136,6 +143,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
   };
 
   const handleAddToCart = () => {
+    if (isVip) {
+      // VIP products use synthetic variant if no real variant exists
+      const variant = selectedVariant || {
+        id: `vip-${product.id}`,
+        name: 'Default',
+        price_adjustment: 0,
+        inventory_count: 999,
+        sort_order: 0,
+      };
+      addItem(product, variant as any, quantity);
+      toast.success(`Added ${quantity} item${quantity > 1 ? 's' : ''} to cart`);
+      return;
+    }
+
     if (!selectedVariant) {
       toast.error('Please select all options');
       return;

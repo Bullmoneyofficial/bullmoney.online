@@ -12,6 +12,14 @@ import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/ty
 import { useHydrated, useIdleCallback } from '@/hooks/useHydrationOptimization';
 // ✅ LAZY: forceEnableScrolling (342 lines) loaded via import() in useEffect
 
+// ✅ PERF: Telegram gate for first-time store visitors
+const TelegramUnlockScreen = dynamic(
+  () => import("@/components/REGISTER USERS/TelegramConfirmationResponsive").then(mod => ({
+    default: mod.TelegramConfirmationResponsive,
+  })),
+  { ssr: false, loading: () => <div className="fixed inset-0 z-[99999] bg-black" /> }
+);
+
 // ✅ PERF: ProductCard (1,279 lines + framer-motion) lazy-loaded — not needed at compile time
 const ProductCard = dynamic(
   () => import('@/components/shop/ProductCard').then(m => ({ default: m.ProductCard })),
@@ -707,6 +715,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [studioState, setStudioState] = useState<{ open: boolean } & StudioOpts>({ open: false });
 
+  // ✅ Telegram gate — locks store for first-time visitors (mirrors home page behaviour)
+  const [showStoreTelegramGate, setShowStoreTelegramGate] = useState(false);
+
   const toggleDesktopMarketIntel = useCallback((key: keyof typeof desktopMarketIntelCollapsed) => {
     setDesktopMarketIntelCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
   }, []);
@@ -910,6 +921,14 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
   useEffect(() => {
     setHasMounted(true);
+
+    // Check if user has completed telegram confirmation — if not, show the gate
+    try {
+      const confirmed = localStorage.getItem('bullmoney_telegram_confirmed');
+      if (confirmed !== 'true') {
+        setShowStoreTelegramGate(true);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -2854,6 +2873,38 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       }
     }
   }, [addItem, confirmExpandedAdd, expandedProduct, isVipProduct]);
+
+  // ✅ Telegram gate unlock handler — mirrors HomePageClient behaviour
+  const handleStoreTelegramUnlock = useCallback(() => {
+    localStorage.setItem('bullmoney_telegram_confirmed', 'true');
+    // Open broker signups in background tabs for new users
+    const alreadyRedirected = localStorage.getItem('bullmoney_xm_redirect_done');
+    if (alreadyRedirected !== 'true') {
+      try { navigator.clipboard.writeText('X3R7P').catch(() => {}); } catch {}
+      const xmTab = window.open('https://affs.click/t5wni', '_blank');
+      try { xmTab?.blur(); window.focus(); } catch {}
+      setTimeout(() => {
+        const vTab = window.open('https://vigco.co/iQbe2u', '_blank');
+        try { vTab?.blur(); window.focus(); } catch {}
+      }, 600);
+      localStorage.setItem('bullmoney_xm_redirect_done', 'true');
+    }
+    setShowStoreTelegramGate(false);
+  }, []);
+
+  // Show telegram gate for first-time visitors — locks entire store
+  if (showStoreTelegramGate) {
+    return (
+      <div className="fixed inset-0 z-[99999] bg-black">
+        <TelegramUnlockScreen
+          onUnlock={handleStoreTelegramUnlock}
+          onConfirmationClicked={() => undefined}
+          isXM={false}
+          neonIconClass="neon-blue-icon"
+        />
+      </div>
+    );
+  }
 
   if (showLoader) {
     return (

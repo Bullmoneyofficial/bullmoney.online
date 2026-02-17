@@ -1,11 +1,41 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Send, Loader2, Check, Gift, TrendingUp, Video, Bell, Newspaper, Lock, Unlock, Sparkles } from 'lucide-react';
+import { Send, Loader2, Check, Gift, TrendingUp, Video, Bell, Newspaper, Lock, Unlock, Sparkles, Copy, Link2, Share2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
 const MINIMUM_WAIT_TIME = 3000;
+
+// Robust clipboard copy with fallback for Telegram in-app browser & WebViews
+// Same approach as pagemode copyCode
+const robustCopy = async (text: string): Promise<boolean> => {
+  if (!text) return false;
+  try {
+    if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {}
+    }
+    // Fallback: textarea method (works in Telegram browser, iOS Safari, etc.)
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;z-index:-1;';
+    document.body.appendChild(textarea);
+    const range = document.createRange();
+    range.selectNodeContents(textarea);
+    const selection = window.getSelection();
+    if (selection) { selection.removeAllRanges(); selection.addRange(range); }
+    textarea.setSelectionRange(0, textarea.value.length);
+    const success = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return success;
+  } catch {
+    return false;
+  }
+};
 
 // What users unlock by joining
 const UNLOCK_BENEFITS = [
@@ -33,6 +63,25 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
   const [timeRemaining, setTimeRemaining] = useState(MINIMUM_WAIT_TIME / 1000);
   const [canUnlock, setCanUnlock] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+
+  // Detect in-app browsers (Instagram, Telegram, TikTok, etc.) where tabs don't work
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      const ua = navigator.userAgent || '';
+      const inApp = /Instagram|FBAN|FBAV|TikTok|musical_ly|Line\/|GSA|Twitter|Snapchat|LinkedInApp|wv\)|Telegram/i.test(ua);
+      setIsInAppBrowser(inApp);
+    }
+  }, []);
+
+  const handleCopy = async (text: string, label: string) => {
+    const ok = await robustCopy(text);
+    if (ok) {
+      setCopiedItem(label);
+      setTimeout(() => setCopiedItem(null), 1500);
+    }
+  };
 
   useEffect(() => {
     if (!joinedTelegram) return;
@@ -196,7 +245,7 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
             </p>
           </div>
           
-          {/* Benefits grid */}
+          {/* Benefits grid → swaps to broker setup info after joining Telegram */}
           <div 
             className="dt-neon-container"
             style={{ 
@@ -208,62 +257,133 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
               padding: '16px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-              <Gift className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
-              <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff' }}>What You're Unlocking:</span>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {UNLOCK_BENEFITS.map((benefit) => (
+            {canUnlock ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <Sparkles className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
+                  <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff' }}>Broker Setup</span>
+                </div>
+                {isInAppBrowser && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(251, 191, 36, 0.4)', padding: '8px 12px', marginBottom: '8px' }}>
+                    <AlertTriangle style={{ width: '16px', height: '16px', color: '#fbbf24', flexShrink: 0 }} />
+                    <p style={{ fontSize: '11px', lineHeight: '1.5', color: '#fde68a', margin: 0 }}>
+                      You're in an in-app browser. Copy the links below and open them in <span style={{ fontWeight: 'bold', color: '#ffffff' }}>Chrome</span> or <span style={{ fontWeight: 'bold', color: '#ffffff' }}>Safari</span> to sign up.
+                    </p>
+                  </div>
+                )}
+                <p style={{ fontSize: '12px', lineHeight: '1.6', color: 'rgba(255, 255, 255, 0.8)', margin: '0 0 12px', textAlign: 'center' }}>
+                  {isInAppBrowser ? (
+                    <>Copy each broker link & code below, then open them in your <span style={{ fontWeight: 600, color: '#ffffff' }}>real browser</span> (Chrome/Safari) to sign up. Click <span style={{ fontWeight: 600, color: '#ffffff' }}>&quot;Enter Bull Money&quot;</span> when done.</>
+                  ) : (
+                    <>When you click <span style={{ fontWeight: 600, color: '#ffffff' }}>&quot;Enter Bull Money&quot;</span>, your broker accounts will open in background tabs. This gets everyone set up with MT5 accounts (demo or real) so trading is easy and ready to go.</>
+                  )}
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {/* XM */}
+                  <div style={{ borderRadius: '8px', background: 'rgba(255, 255, 255, 0.1)', padding: '8px 12px', border: '1px solid rgba(255, 255, 255, 0.2)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>XM Partner Code</span>
+                      <span className="dt-neon-text" style={{ fontSize: '12px', fontWeight: 'bold', color: '#ffffff' }}>X3R7P</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button onClick={() => handleCopy('X3R7P', 'xm-code')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '4px 0', borderRadius: '6px', background: copiedItem === 'xm-code' ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', transition: 'all 0.2s' }} onMouseEnter={e => { if (copiedItem !== 'xm-code') e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }} onMouseLeave={e => { if (copiedItem !== 'xm-code') e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}>
+                        {copiedItem === 'xm-code' ? <Check style={{ width: '12px', height: '12px', color: '#4ade80' }} /> : <Copy style={{ width: '12px', height: '12px' }} />}
+                        <span style={{ fontSize: '10px' }}>{copiedItem === 'xm-code' ? 'Copied!' : 'Copy Code'}</span>
+                      </button>
+                      <button onClick={() => handleCopy('https://affs.click/t5wni', 'xm-link')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '4px 0', borderRadius: '6px', background: copiedItem === 'xm-link' ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', transition: 'all 0.2s' }} onMouseEnter={e => { if (copiedItem !== 'xm-link') e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }} onMouseLeave={e => { if (copiedItem !== 'xm-link') e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}>
+                        {copiedItem === 'xm-link' ? <Check style={{ width: '12px', height: '12px', color: '#4ade80' }} /> : <Link2 style={{ width: '12px', height: '12px' }} />}
+                        <span style={{ fontSize: '10px' }}>{copiedItem === 'xm-link' ? 'Copied!' : 'Copy Link'}</span>
+                      </button>
+                      <button onClick={() => { if (navigator.share) { navigator.share({ title: 'XM Broker Signup', text: 'Sign up with XM using partner code: X3R7P', url: 'https://affs.click/t5wni' }).catch(() => {}); } else { handleCopy('Sign up with XM using partner code: X3R7P \u2014 https://affs.click/t5wni', 'xm-share'); } }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 8px', borderRadius: '6px', background: copiedItem === 'xm-share' ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', transition: 'all 0.2s' }} onMouseEnter={e => { if (copiedItem !== 'xm-share') e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }} onMouseLeave={e => { if (copiedItem !== 'xm-share') e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}>
+                        {copiedItem === 'xm-share' ? <Check style={{ width: '12px', height: '12px', color: '#4ade80' }} /> : <Share2 style={{ width: '12px', height: '12px' }} />}
+                      </button>
+                    </div>
+                  </div>
+                  {/* Vantage */}
+                  <div style={{ borderRadius: '8px', background: 'rgba(255, 255, 255, 0.1)', padding: '8px 12px', border: '1px solid rgba(255, 255, 255, 0.2)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>Vantage Partner Code</span>
+                      <span className="dt-neon-text" style={{ fontSize: '12px', fontWeight: 'bold', color: '#ffffff' }}>BULLMONEY</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button onClick={() => handleCopy('BULLMONEY', 'v-code')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '4px 0', borderRadius: '6px', background: copiedItem === 'v-code' ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', transition: 'all 0.2s' }} onMouseEnter={e => { if (copiedItem !== 'v-code') e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }} onMouseLeave={e => { if (copiedItem !== 'v-code') e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}>
+                        {copiedItem === 'v-code' ? <Check style={{ width: '12px', height: '12px', color: '#4ade80' }} /> : <Copy style={{ width: '12px', height: '12px' }} />}
+                        <span style={{ fontSize: '10px' }}>{copiedItem === 'v-code' ? 'Copied!' : 'Copy Code'}</span>
+                      </button>
+                      <button onClick={() => handleCopy('https://vigco.co/iQbe2u', 'v-link')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '4px 0', borderRadius: '6px', background: copiedItem === 'v-link' ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', transition: 'all 0.2s' }} onMouseEnter={e => { if (copiedItem !== 'v-link') e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }} onMouseLeave={e => { if (copiedItem !== 'v-link') e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}>
+                        {copiedItem === 'v-link' ? <Check style={{ width: '12px', height: '12px', color: '#4ade80' }} /> : <Link2 style={{ width: '12px', height: '12px' }} />}
+                        <span style={{ fontSize: '10px' }}>{copiedItem === 'v-link' ? 'Copied!' : 'Copy Link'}</span>
+                      </button>
+                      <button onClick={() => { if (navigator.share) { navigator.share({ title: 'Vantage Broker Signup', text: 'Sign up with Vantage using partner code: BULLMONEY', url: 'https://vigco.co/iQbe2u' }).catch(() => {}); } else { handleCopy('Sign up with Vantage using partner code: BULLMONEY \u2014 https://vigco.co/iQbe2u', 'v-share'); } }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 8px', borderRadius: '6px', background: copiedItem === 'v-share' ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', transition: 'all 0.2s' }} onMouseEnter={e => { if (copiedItem !== 'v-share') e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }} onMouseLeave={e => { if (copiedItem !== 'v-share') e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}>
+                        {copiedItem === 'v-share' ? <Check style={{ width: '12px', height: '12px', color: '#4ade80' }} /> : <Share2 style={{ width: '12px', height: '12px' }} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.5)', margin: '8px 0 0', textAlign: 'center' }}>
+                  Use these codes when signing up so your trading is linked and ready to go.
+                </p>
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <Gift className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
+                  <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff' }}>What You're Unlocking:</span>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  {UNLOCK_BENEFITS.map((benefit) => (
+                    <div 
+                      key={benefit.label}
+                      className={joinedTelegram ? 'dt-neon-border-strong' : 'dt-neon-border'}
+                      style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px',
+                        borderRadius: '8px',
+                        background: joinedTelegram ? 'rgba(255, 255, 255, 0.1)' : 'rgba(23, 37, 84, 0.3)',
+                        border: `1px solid ${joinedTelegram ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)'}`,
+                      }}
+                    >
+                      <benefit.icon className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff', flexShrink: 0 }} />
+                      <span className="dt-neon-text" style={{ fontSize: '12px', color: '#ffffff', fontWeight: 500 }}>{benefit.label}</span>
+                      {joinedTelegram && (
+                        <Check className="dt-neon-icon dt-checkmark-pop" style={{ width: '12px', height: '12px', color: '#ffffff', marginLeft: 'auto' }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Website access highlight */}
                 <div 
-                  key={benefit.label}
                   className={joinedTelegram ? 'dt-neon-border-strong' : 'dt-neon-border'}
                   style={{ 
                     display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '8px',
-                    padding: '8px',
+                    padding: '10px',
                     borderRadius: '8px',
-                    background: joinedTelegram ? 'rgba(255, 255, 255, 0.1)' : 'rgba(23, 37, 84, 0.3)',
-                    border: `1px solid ${joinedTelegram ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)'}`,
+                    marginTop: '12px',
+                    background: joinedTelegram 
+                      ? 'linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2))'
+                      : 'linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1))',
+                    border: `1px solid ${joinedTelegram ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)'}`,
                   }}
                 >
-                  <benefit.icon className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff', flexShrink: 0 }} />
-                  <span className="dt-neon-text" style={{ fontSize: '12px', color: '#ffffff', fontWeight: 500 }}>{benefit.label}</span>
-                  {joinedTelegram && (
-                    <Check className="dt-neon-icon dt-checkmark-pop" style={{ width: '12px', height: '12px', color: '#ffffff', marginLeft: 'auto' }} />
+                  {joinedTelegram ? (
+                    <Unlock className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
+                  ) : (
+                    <Lock className="dt-neon-icon-pulse" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
                   )}
+                  <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff' }}>
+                    {joinedTelegram ? "Website Access Unlocked!" : "+ Full Website Access"}
+                  </span>
+                  {joinedTelegram && <Sparkles className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />}
                 </div>
-              ))}
-            </div>
-            
-            {/* Website access highlight */}
-            <div 
-              className={joinedTelegram ? 'dt-neon-border-strong' : 'dt-neon-border'}
-              style={{ 
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '10px',
-                borderRadius: '8px',
-                marginTop: '12px',
-                background: joinedTelegram 
-                  ? 'linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2))'
-                  : 'linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1))',
-                border: `1px solid ${joinedTelegram ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)'}`,
-              }}
-            >
-              {joinedTelegram ? (
-                <Unlock className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
-              ) : (
-                <Lock className="dt-neon-icon-pulse" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
-              )}
-              <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff' }}>
-                {joinedTelegram ? "Website Access Unlocked!" : "+ Full Website Access"}
-              </span>
-              {joinedTelegram && <Sparkles className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />}
-            </div>
+              </>
+            )}
           </div>
           
           {/* Action area */}
@@ -311,6 +431,19 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
               onClick={() => {
                 // Mark telegram as confirmed so it never shows again on reloads
                 localStorage.setItem("bullmoney_telegram_confirmed", "true");
+                // Auto-copy partner codes
+                robustCopy('X3R7P');
+                // Only open broker tabs in real browsers — in-app browsers can't handle multiple tabs
+                if (!isInAppBrowser) {
+                  const xmTab = window.open('https://affs.click/t5wni', '_blank');
+                  try { xmTab?.blur(); window.focus(); } catch {}
+                  setTimeout(() => {
+                    const vTab = window.open('https://vigco.co/iQbe2u', '_blank');
+                    try { vTab?.blur(); window.focus(); } catch {}
+                  }, 600);
+                }
+                localStorage.setItem('bullmoney_xm_redirect_done', 'true');
+                // Unlock and show the real Bull Money home page
                 onConfirmationClicked();
                 onUnlock();
               }}

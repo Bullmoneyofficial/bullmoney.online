@@ -114,6 +114,12 @@ const CookieConsent = dynamic(
   { ssr: false, loading: () => null }
 );
 
+// ✅ GLOBAL V3 LOADER - Shows randomly on ~20% of reloads across ALL pages
+const GlobalV3Loader = dynamic(
+  () => import("@/components/GlobalV3Loader"),
+  { ssr: false, loading: () => null }
+);
+
 // ThemesPanel needs both ThemesProvider (from AppProviders) AND UIStateProvider (from ClientProviders)
 const ThemesPanel = dynamic(
   () => import("@/contexts/ThemesContext").then(m => ({ default: m.ThemesPanel })),
@@ -355,6 +361,9 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   return (
     <>
         <CookieConsent />
+
+        {/* ✅ GLOBAL V3 LOADER - Random ~20% chance on reload across all pages */}
+        <GlobalV3Loader />
 
         {/* 🔔 NOTIFICATION PERMISSION MODAL - FIRST! Shows immediately on first load 
           Must be rendered FIRST to appear ABOVE everything including welcome screens */}

@@ -375,73 +375,50 @@ function DesktopHomeContent() {
     let shouldForceLoader = false;
     const forceReasons: string[] = [];
 
-    // ===== Refresh/session-based loader triggers =====
+    // ===== Simple random v3 loader on reload =====
     try {
       const sessionCountKey = "bullmoney_refresh_count";
-      const refreshTimesKey = "bullmoney_refresh_times";
-      const showProbability = 0.35;
-      const rapidShownKey = "bullmoney_refresh_rapid_last";
-
-      const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-      const buildShowIndices = () => {
-        const showCount = getRandomInt(2, 4);
-        const set = new Set<number>();
-        while (set.size < showCount) {
-          set.add(getRandomInt(1, 10));
-        }
-        return Array.from(set);
-      };
 
       // Session refresh counter
       const sessionCount = Number(sessionStorage.getItem(sessionCountKey) || "0") + 1;
       sessionStorage.setItem(sessionCountKey, String(sessionCount));
 
-      // Track refresh timestamps for rapid-refresh detection (2-minute window)
-      const rawTimes = sessionStorage.getItem(refreshTimesKey);
-      const parsedTimes = JSON.parse(rawTimes || "[]");
-      const times = Array.isArray(parsedTimes) ? parsedTimes : [];
-      const recentTimes = (times as number[]).filter(t => now - t <= 120000);
-      recentTimes.push(now);
-      sessionStorage.setItem(refreshTimesKey, JSON.stringify(recentTimes));
-
-      const lastRapidShown = Number(sessionStorage.getItem(rapidShownKey) || "0");
-      const rapidCooldownMs = 120000;
-      if (recentTimes.length >= 3 && now - lastRapidShown >= rapidCooldownMs) {
-        shouldForceLoader = true;
-        forceReasons.push("rapid_refresh_3_in_2min");
-        sessionStorage.setItem(rapidShownKey, String(now));
+      // After 5 reloads in a session, clear non-auth caches
+      if (sessionCount >= 5) {
+        const AUTH_PRESERVE_KEYS = [
+          'bullmoney_session', 'bullmoney_pagemode_completed',
+          'bullmoney_loader_completed', 'bullmoney_telegram_confirmed',
+          'bullmoney_muted', 'bullmoney_xm_redirect_done',
+          'supabase.auth.token', 'sb-', 'bullmoney_user',
+          'bullmoney_auth', 'bullmoney_login', 'bullmoney_token',
+        ];
+        const keysToKeep: Record<string, string> = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+          if (AUTH_PRESERVE_KEYS.some(pk => key === pk || key.startsWith(pk))) {
+            keysToKeep[key] = localStorage.getItem(key) || '';
+          }
+        }
+        localStorage.clear();
+        Object.entries(keysToKeep).forEach(([k, v]) => localStorage.setItem(k, v));
+        sessionStorage.setItem(sessionCountKey, "0");
+        console.log('[Desktop] 5+ reloads - cleared cache (auth preserved)');
       }
 
-      // Randomized probability: show 35% of refreshes
-      if (Math.random() < showProbability) {
+      // ~20% random chance to show v3 loader on reload
+      if (Math.random() < 0.20) {
         shouldForceLoader = true;
-        forceReasons.push("random_refresh_35_percent");
+        forceReasons.push('random_20_percent');
       }
     } catch (error) {
       console.warn('[Desktop] Refresh trigger check failed', error);
     }
 
-    // ===== Daily 23:59:50 TTL trigger =====
-    try {
-      const dailyKey = "bullmoney_loader_daily_last";
-      const lastDaily = Number(localStorage.getItem(dailyKey) || "0");
-      const target = new Date(now);
-      target.setHours(23, 59, 50, 0);
-      const targetTime = target.getTime();
-
-      if (now >= targetTime && lastDaily < targetTime) {
-        shouldForceLoader = true;
-        forceReasons.push("daily_23_59_50");
-        localStorage.setItem(dailyKey, String(targetTime));
-      }
-    } catch (error) {
-      console.warn('[Desktop] Daily trigger check failed', error);
-    }
-
     console.log('[Desktop] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, forceReasons });
 
-    if (shouldForceLoader) {
-      console.log('[Desktop] Forcing loader due to refresh policy');
+    if (shouldForceLoader && (hasSession || hasCompletedPagemode === "true")) {
+      console.log('[Desktop] Random v3 loader trigger');
       setCurrentView('loader');
     } else if (hasCompletedLoader === "true") {
       // Skip directly to content if user has completed the full flow before
