@@ -1389,7 +1389,7 @@ interface CyclingBackgroundProps {
 }
 
 // All available effects list for mapping favorites to indices
-const ALL_EFFECTS: BackgroundEffect[] = ['spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'gridScan', 'ballpit', 'gridDistortion'];
+const ALL_EFFECTS: BackgroundEffect[] = ['gridScan', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'spline', 'ballpit', 'gridDistortion'];
 
 // Helper to get initial effect index from localStorage (runs only once)
 // FAVORITES PRIORITY: If user has favorites, ALWAYS show one of their favorites (100%)
@@ -1461,17 +1461,17 @@ const getInitialEffectIndex = (effectsLength: number, reloadsPerCycle: number): 
     if (!hasSessionStarted) {
       sessionStorage.setItem(sessionKey, Date.now().toString());
       if (isFirstEverLoad) {
-        // First ever load — skip Spline, show darkVeil (index 4)
+        // First ever load — skip GridScan, show darkVeil (index 4)
         const fallbackIndex = 4; // darkVeil
         localStorage.setItem('bg-effect-index', fallbackIndex.toString());
         localStorage.setItem('bg-reload-count', '0');
-        console.log('[CyclingBG] First ever visit — skipping Spline, showing darkVeil');
+        console.log('[CyclingBG] First ever visit — skipping GridScan, showing darkVeil');
         return fallbackIndex;
       }
-      // Returning session — show Spline
+      // Returning session — show GridScan
       localStorage.setItem('bg-effect-index', '0');
       localStorage.setItem('bg-reload-count', '0');
-      console.log('[CyclingBG] First session load - showing Spline (index 0)');
+      console.log('[CyclingBG] First session load - showing GridScan (index 0)');
       return 0;
     }
     
@@ -1486,16 +1486,16 @@ const getInitialEffectIndex = (effectsLength: number, reloadsPerCycle: number): 
     
     // Check if we should cycle to next effect
     if (reloadCount >= reloadsPerCycle) {
-      // SPLINE PRIORITY: 80% chance to show Spline, 20% chance for random other effect
+      // GRIDSCAN PRIORITY: 80% chance to show GridScan, 20% chance for random other effect
       const random = Math.random();
       if (random < 0.8) {
-        // 80% - Go back to Spline
+        // 80% - Go back to GridScan
         effectIndex = 0;
       } else {
-        // 20% - Pick a RANDOM non-Spline effect (never in order)
-        // Generate random index from 1 to effectsLength-1 (excluding Spline at 0)
-        const randomNonSplineIndex = Math.floor(Math.random() * (effectsLength - 1)) + 1;
-        effectIndex = randomNonSplineIndex;
+        // 20% - Pick a RANDOM non-GridScan effect (never in order)
+        // Generate random index from 1 to effectsLength-1 (excluding GridScan at 0)
+        const randomNonGridScanIndex = Math.floor(Math.random() * (effectsLength - 1)) + 1;
+        effectIndex = randomNonGridScanIndex;
       }
       reloadCount = 0;
     }
@@ -1504,11 +1504,11 @@ const getInitialEffectIndex = (effectsLength: number, reloadsPerCycle: number): 
     localStorage.setItem('bg-effect-index', effectIndex.toString());
     localStorage.setItem('bg-reload-count', reloadCount.toString());
     
-    console.log('[CyclingBG] Showing effect index:', effectIndex, '(0=Spline, 1=LiquidEther, etc)');
+    console.log('[CyclingBG] Showing effect index:', effectIndex, '(0=GridScan, 1=LiquidEther, etc)');
     return effectIndex;
   } catch (e) {
     console.error('[CyclingBG] Error:', e);
-    return 0; // Fallback - show Spline
+    return 0; // Fallback - show GridScan
   }
 };
 
@@ -2316,8 +2316,8 @@ const ColorPickerPanel = ({
 
 const CyclingBackground: React.FC<CyclingBackgroundProps> = ({ 
   reloadsPerCycle = 2, // Switch background every 2 reloads
-  // SPLINE FIRST (index 0) - prioritized 60% of the time
-  effects = ['spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'gridScan', 'ballpit', 'gridDistortion'],
+  // GRIDSCAN FIRST (index 0) - prioritized 60% of the time
+  effects = ['gridScan', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'spline', 'ballpit', 'gridDistortion'],
   videoId = 'jfKfPfyJRdk',
   videoLoading = false,
   videoError = false,
@@ -2364,6 +2364,51 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
     setColorMode(colorPrefs.mode);
     setCustomColor(colorPrefs.color);
     setShowGrayscale(colorPrefs.mode === 'grayscale');
+  }, []);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // DESKTOP ORCHESTRATOR INTEGRATION — Control Spline rendering
+  // Listen to hero-controller events for performance-based 3D management
+  // ═══════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleSplineEnable = () => {
+      setShowSpline(true);
+      console.log('[HeroDesktop] Orchestrator enabled Spline');
+    };
+
+    const handleSplineSuspend = (event: Event) => {
+      const detail = (event as CustomEvent).detail || {};
+      setShowSpline(false);
+      console.log('[HeroDesktop] Orchestrator suspended Spline -', detail.reason);
+    };
+
+    const handleSplineResume = () => {
+      setShowSpline(true);
+      console.log('[HeroDesktop] Orchestrator resumed Spline');
+    };
+
+    const handleQualityChange = (event: Event) => {
+      const detail = (event as CustomEvent).detail || {};
+      // Future: adjust Spline LOD/quality based on detail.quality
+      console.log('[HeroDesktop] Quality changed to:', detail.quality);
+    };
+
+    // Listen for orchestrator events (via custom events)
+    window.addEventListener('bm-hero:spline-enable', handleSplineEnable);
+    window.addEventListener('bm-hero:spline-suspend', handleSplineSuspend);
+    window.addEventListener('bm-hero:spline-resume', handleSplineResume);
+    window.addEventListener('bm-hero:spline-quality-low', () => handleQualityChange({ detail: { quality: 'low' } } as any));
+    window.addEventListener('bm-hero:spline-quality-high', () => handleQualityChange({ detail: { quality: 'high' } } as any));
+
+    return () => {
+      window.removeEventListener('bm-hero:spline-enable', handleSplineEnable);
+      window.removeEventListener('bm-hero:spline-suspend', handleSplineSuspend);
+      window.removeEventListener('bm-hero:spline-resume', handleSplineResume);
+      window.removeEventListener('bm-hero:spline-quality-low', () => {});
+      window.removeEventListener('bm-hero:spline-quality-high', () => {});
+    };
   }, []);
 
   // Show toast notification

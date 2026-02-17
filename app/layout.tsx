@@ -832,6 +832,7 @@ export default function RootLayout({
         {/* Targets: FCP <1.8s, LCP <2.5s, CLS <0.1, TTFB <0.8s              */}
         {/* These scripts self-gate to desktop only (>769px, non-mobile UA)    */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
+        <Script id="desktop-instant-hero" src="/scripts/desktop-instant-hero.js" strategy="beforeInteractive" />
         <Script id="desktop-fcp-optimizer" src="/scripts/desktop-fcp-optimizer.js" strategy="afterInteractive" />
         <Script id="desktop-lcp-optimizer" src="/scripts/desktop-lcp-optimizer.js" strategy="afterInteractive" />
         <Script id="desktop-cls-prevention" src="/scripts/desktop-cls-prevention.js" strategy="afterInteractive" />
@@ -844,6 +845,8 @@ export default function RootLayout({
         {/* ═══════════════════════════════════════════════════════════════════ */}
         <Script id="desktop-performance-tuning" src="/scripts/desktop-performance-tuning.js" strategy="afterInteractive" />
         <Script id="desktop-orchestrator" src="/scripts/desktop-orchestrator.js" strategy="afterInteractive" />
+        <Script id="desktop-hero-controller" src="/scripts/desktop-hero-controller.js" strategy="afterInteractive" />
+        <Script id="desktop-homepage-optimizer" src="/scripts/desktop-homepage-optimizer.js" strategy="afterInteractive" />
         <Script id="desktop-image-optimizer" src="/scripts/desktop-image-optimizer.js" strategy="afterInteractive" />
         <Script id="desktop-network-optimizer" src="/scripts/desktop-network-optimizer.js" strategy="afterInteractive" />
         <Script id="desktop-interaction-optimizer" src="/scripts/desktop-interaction-optimizer.js" strategy="afterInteractive" />

@@ -1417,8 +1417,6 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
           backgroundColor: '#ffffff',
           colorScheme: 'light' as const,
         }}
-        onMouseEnter={openDesktopMenu}
-        onMouseLeave={scheduleDesktopMenuClose}
       >
         <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
           <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
