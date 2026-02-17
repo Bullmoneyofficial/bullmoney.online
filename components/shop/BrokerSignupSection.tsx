@@ -3,6 +3,8 @@
 import { useState, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { ExternalLink, Copy, Check, ChevronRight, Shield, Zap, TrendingUp } from 'lucide-react';
+import { Typewriter, FallingWords, FallingTag, SlideInLabel } from '@/components/shop/StoreTextEffects';
+import { LinkPreview } from '@/components/ui/link-preview';
 
 // --- SAME BROKER LINKS & CODES AS components/REGISTER USERS/pagemode.tsx ---
 const BROKER_CONFIG = {
@@ -136,21 +138,28 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
       >
         {/* Header */}
         <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <p
+          <SlideInLabel
             style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.28em', fontWeight: 500, color: 'rgba(0,0,0,0.4)' }}
           >
             Create a broker / trading account
-          </p>
+          </SlideInLabel>
           <h2
             style={{ marginTop: 12, fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', fontWeight: 600, letterSpacing: '-0.025em', color: '#1D1D1F' }}
           >
-            BullMoney Brokers (Required)
+            <Typewriter text="BullMoney Brokers (Required)" />
           </h2>
           <p
             style={{ margin: '12px auto 0', maxWidth: 512, fontSize: 'clamp(0.875rem, 2vw, 1rem)', color: 'rgba(0,0,0,0.5)', lineHeight: 1.6 }}
           >
-            These are our official brokers. You must use the partner code when trading to join
-            the BullMoney community or keep access. Pick a broker, copy the code, and finish signup.
+            <FallingWords
+              text="These are our official brokers. You must use the partner code when trading to join the BullMoney community or keep access."
+              delay={0.15}
+            />{' '}
+            <span>Pick a broker, copy the code, and finish signup on{' '}
+              <LinkPreview url="https://www.bullmoney.online" className="!font-bold underline underline-offset-4 decoration-2 hover:no-underline transition-all !text-blue-500 decoration-blue-500/40">
+                bullmoney.online
+              </LinkPreview>.
+            </span>
           </p>
         </div>
 
@@ -201,112 +210,108 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
             const isActive = activeBroker === key;
             const isHover = hoverBroker === key;
             return (
-              <button
+              <LinkPreview
                 key={key}
-                type="button"
-                onClick={() => handleBrokerSwitch(key)}
-                onMouseEnter={() => setHoverBroker(key)}
-                onMouseLeave={() => setHoverBroker(null)}
-                style={{
-                  position: 'relative',
-                  borderRadius: 16,
-                  textAlign: 'left' as const,
-                  transition: 'all 0.3s ease',
-                  padding: '20px 22px',
-                  border: isActive
-                    ? `1.5px solid ${b.accentBorder}`
-                    : '1.5px solid rgba(0,0,0,0.06)',
-                  backgroundColor: isActive ? b.accent : isHover ? 'rgba(0,0,0,0.015)' : '#fff',
-                  boxShadow: isActive
-                    ? `0 4px 24px -6px ${b.accentBorder}`
-                    : '0 1px 3px rgba(0,0,0,0.04)',
-                  transform: isActive ? 'translateY(-2px)' : isHover ? 'translateY(-1px)' : 'none',
-                  cursor: 'pointer',
-                }}
+                url={b.link}
+                width={280}
+                height={175}
+                className="!text-inherit no-underline"
               >
-                {/* Active indicator dot */}
-                {isActive && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      right: 16,
-                      top: 16,
-                      height: 10,
-                      width: 10,
-                      borderRadius: '50%',
-                      backgroundColor: b.accentText,
-                      boxShadow: `0 0 8px ${b.accentText}40`,
-                    }}
-                  />
-                )}
-                
-                {/* Logo with shimmer background */}
                 <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.preventDefault(); handleBrokerSwitch(key); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleBrokerSwitch(key); } }}
+                  onMouseEnter={() => setHoverBroker(key)}
+                  onMouseLeave={() => setHoverBroker(null)}
                   style={{
-                    marginBottom: 16,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 12,
-                    overflow: 'hidden',
-                    width: 120,
-                    height: 60,
-                    background: key === 'XM' 
-                      ? 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #f87171 100%)'
-                      : 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)',
-                    boxShadow: key === 'XM'
-                      ? '0 4px 20px rgba(220, 38, 38, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
-                      : '0 4px 20px rgba(59, 130, 246, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)',
                     position: 'relative',
+                    borderRadius: 16,
+                    textAlign: 'left' as const,
+                    transition: 'all 0.3s ease',
+                    padding: '20px 22px',
+                    border: isActive
+                      ? `1.5px solid ${b.accentBorder}`
+                      : '1.5px solid rgba(0,0,0,0.06)',
+                    backgroundColor: isActive ? b.accent : isHover ? 'rgba(0,0,0,0.015)' : '#fff',
+                    boxShadow: isActive
+                      ? `0 4px 24px -6px ${b.accentBorder}`
+                      : '0 1px 3px rgba(0,0,0,0.04)',
+                    transform: isActive ? 'translateY(-2px)' : isHover ? 'translateY(-1px)' : 'none',
+                    cursor: 'pointer',
                   }}
                 >
-                  {/* Shimmer effect overlay */}
+                  {/* Active indicator dot */}
+                  {isActive && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: 16,
+                        top: 16,
+                        height: 10,
+                        width: 10,
+                        borderRadius: '50%',
+                        backgroundColor: b.accentText,
+                        boxShadow: `0 0 8px ${b.accentText}40`,
+                      }}
+                    />
+                  )}
+                  
+                  {/* Logo with shimmer background */}
                   <div
                     style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)',
-                      animation: 'bm-store-shimmer 2.5s infinite',
+                      marginBottom: 16,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      width: 120,
+                      height: 60,
+                      background: key === 'XM' 
+                        ? 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #f87171 100%)'
+                        : 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)',
+                      boxShadow: key === 'XM'
+                        ? '0 4px 20px rgba(220, 38, 38, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
+                        : '0 4px 20px rgba(59, 130, 246, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)',
+                      position: 'relative',
                     }}
-                  />
-                  <Image
-                    src={b.logo}
-                    alt={`${b.name} logo`}
-                    width={100}
-                    height={50}
-                    style={{ objectFit: 'contain', position: 'relative', zIndex: 10 }}
-                  />
-                </div>
-                
-                <h3
-                  style={{ fontSize: 18, fontWeight: 600, color: '#1D1D1F', letterSpacing: '-0.01em' }}
-                >
-                  {b.name}
-                </h3>
-                <p
-                  style={{ marginTop: 4, fontSize: 13, color: 'rgba(0,0,0,0.5)', lineHeight: 1.5 }}
-                >
-                  {b.description}
-                </p>
-                <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {b.features.map((f) => (
-                    <span
-                      key={f}
+                  >
+                    {/* Shimmer effect overlay */}
+                    <div
                       style={{
-                        borderRadius: 9999,
-                        padding: '2px 10px',
-                        fontSize: 10,
-                        fontWeight: 500,
-                        backgroundColor: isActive ? `${b.accentText}10` : 'rgba(0,0,0,0.03)',
-                        color: isActive ? b.accentText : 'rgba(0,0,0,0.45)',
-                        border: `1px solid ${isActive ? `${b.accentText}20` : 'rgba(0,0,0,0.05)'}`,
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)',
+                        animation: 'bm-store-shimmer 2.5s infinite',
                       }}
-                    >
-                      {f}
-                    </span>
-                  ))}
+                    />
+                    <Image
+                      src={b.logo}
+                      alt={`${b.name} logo`}
+                      width={100}
+                      height={50}
+                      style={{ objectFit: 'contain', position: 'relative', zIndex: 10 }}
+                    />
+                  </div>
+                  
+                  <h3
+                    style={{ fontSize: 18, fontWeight: 600, color: '#1D1D1F', letterSpacing: '-0.01em' }}
+                  >
+                    <Typewriter text={b.name} delay={0.1} />
+                  </h3>
+                  <p
+                    style={{ marginTop: 4, fontSize: 13, color: 'rgba(0,0,0,0.5)', lineHeight: 1.5 }}
+                  >
+                    <FallingWords text={b.description} delay={0.2} />
+                  </p>
+                  <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {b.features.map((f, fi) => (
+                      <FallingTag key={f} label={f} index={fi} />
+                    ))}
+                  </div>
                 </div>
-              </button>
+              </LinkPreview>
             );
           })}
         </div>
@@ -390,51 +395,69 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
                 </a>
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleBrokerClick}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                borderRadius: 9999,
-                padding: '12px 28px',
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#fff',
-                background: '#000',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)',
-                flexShrink: 0,
-              }}
+            <LinkPreview
+              url={broker.link}
+              width={280}
+              height={175}
+              className="!no-underline"
             >
-              Open {activeBroker} Account <ExternalLink style={{ width: 15, height: 15 }} />
-            </button>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.preventDefault(); handleBrokerClick(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleBrokerClick(); } }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  borderRadius: 9999,
+                  padding: '12px 28px',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: '#fff',
+                  background: '#000',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)',
+                  flexShrink: 0,
+                }}
+              >
+                Open {activeBroker} Account <ExternalLink style={{ width: 15, height: 15 }} />
+              </div>
+            </LinkPreview>
           </div>
         </div>
 
         <div style={{ margin: '24px auto 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-          <button
-            type="button"
-            onClick={handleSignupRedirect}
-            style={{
-              borderRadius: 9999,
-              padding: '10px 24px',
-              fontSize: 13,
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
-              cursor: 'pointer',
-              backgroundColor: '#fff',
-              border: '1px solid rgba(0,0,0,0.1)',
-              color: '#000',
-              boxShadow: '0 8px 24px -10px rgba(0,0,0,0.18)',
-            }}
+          <LinkPreview
+            url={broker.link}
+            width={280}
+            height={175}
+            className="!no-underline"
           >
-            Create BullMoney Account
-          </button>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.preventDefault(); handleSignupRedirect(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSignupRedirect(); } }}
+              style={{
+                borderRadius: 9999,
+                padding: '10px 24px',
+                fontSize: 13,
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
+                backgroundColor: '#fff',
+                border: '1px solid rgba(0,0,0,0.1)',
+                color: '#000',
+                boxShadow: '0 8px 24px -10px rgba(0,0,0,0.18)',
+              }}
+            >
+              Create BullMoney Account
+            </div>
+          </LinkPreview>
           <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>
             Use the same broker code to stay active in the community.
           </p>
@@ -446,13 +469,8 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
             { icon: Shield, label: 'Regulated Brokers' },
             { icon: Zap, label: 'Instant Access' },
             { icon: TrendingUp, label: 'No Payment Needed' },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Icon style={{ width: 16, height: 16, color: 'rgba(0,0,0,0.3)' }} />
-              <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(0,0,0,0.4)' }}>
-                {label}
-              </span>
-            </div>
+          ].map(({ icon: Icon, label }, i) => (
+            <FallingTag key={label} label={label} index={i} />
           ))}
         </div>
       </div>

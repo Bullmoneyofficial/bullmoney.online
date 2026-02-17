@@ -1036,193 +1036,21 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                   )}
 
                   <div className="space-y-3">
-                    <p className="text-sm font-semibold text-black">Checkout</p>
-
-                    <button
+                    <motion.button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (!isInStock) return;
-                        setShowCryptoCheckout((prev) => !prev);
+                        handleQuickAdd();
                       }}
                       disabled={!isInStock}
-                      className="w-full py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm font-semibold border border-black/10 bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed"
                       style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                    >
-                      <Wallet className="w-4 h-4" />
-                      <span>{showCryptoCheckout ? 'Hide Crypto Checkout' : 'Pay with Crypto'}</span>
-                    </button>
-
-                    <AnimatePresence initial={false}>
-                      {showCryptoCheckout && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="rounded-2xl border border-black/10 p-2 bg-white overflow-hidden"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                        >
-                          <CryptoCheckoutInline
-                            productName={product.name}
-                            productImage={product.primary_image}
-                            priceUSD={selectedVariant?.price || price}
-                            productId={product.id.toString()}
-                            variantId={selectedVariant?.id?.toString()}
-                            quantity={1}
-                            inline
-                            onClose={() => setShowCryptoCheckout(false)}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    <div className="w-full flex flex-col gap-0">
-                      <div
-                        className="grid grid-cols-4 w-full rounded-t-2xl overflow-hidden border border-black/10 border-b-0"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                      >
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCryptoCheckout(false); setPayMethod('cart'); }}
-                          className={`py-3 text-[10px] font-semibold transition-all flex flex-col items-center justify-center gap-0.5 ${
-                            payMethod === 'cart'
-                              ? 'bg-white text-black border border-black/20'
-                              : 'bg-white text-black/60 hover:text-black'
-                          }`}
-                          style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                        >
-                          <ShoppingBag className="w-4 h-4" />
-                          <span>Cart</span>
-                        </button>
-
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCryptoCheckout(false); setPayMethod('whop'); }}
-                          className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
-                            payMethod === 'whop'
-                              ? 'bg-white text-black border border-black/20'
-                              : 'bg-white text-black/60 hover:text-black'
-                          }`}
-                          style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                        >
-                          <WhopLogo className="w-5 h-5" />
-                          <span>Whop</span>
-                        </button>
-
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCryptoCheckout(false); setPayMethod('skrill'); }}
-                          className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
-                            payMethod === 'skrill'
-                              ? 'bg-white text-black border border-black/20'
-                              : 'bg-white text-black/50 hover:text-black'
-                          }`}
-                          style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                        >
-                          <SkrillLogo className="w-5 h-5" />
-                          <span>Skrill</span>
-                          <span className="text-[7px] opacity-50 leading-none -mt-0.5">Soon</span>
-                        </button>
-
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCryptoCheckout(false); setPayMethod('stripe'); }}
-                          className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
-                            payMethod === 'stripe'
-                              ? 'bg-white text-black border border-black/20'
-                              : 'bg-white text-black/50 hover:text-black'
-                          }`}
-                          style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                        >
-                          <StripeLogo className="w-5 h-5" />
-                          <span>Stripe</span>
-                          <span className="text-[7px] opacity-50 leading-none -mt-0.5">Soon</span>
-                        </button>
-                      </div>
-
-                      <AnimatePresence mode="wait">
-                        <motion.button
-                          key={payMethod}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (payMethod === 'cart') {
-                              handleQuickAdd();
-                            } else if (payMethod === 'stripe') {
-                              handleBuyNow();
-                            } else {
-                              handleDirectCheckout(payMethod === 'whop' ? 'Whop' : 'Skrill');
-                            }
-                          }}
-                          disabled={payMethod === 'stripe' || payMethod === 'skrill' || !isInStock}
-                          style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                          className={`w-full py-3.5 rounded-b-2xl transition-all flex items-center justify-center gap-2 text-sm font-semibold border border-t-0 border-black/10 ${
-                            payMethod === 'stripe' || payMethod === 'skrill'
-                              ? 'bg-white text-black/40 border border-black/10 cursor-not-allowed'
-                              : payMethod === 'cart'
-                                ? 'bg-white text-black border border-black/20 hover:border-black/40'
-                                : 'bg-white text-black hover:border-black/30'
-                          }`}
-                          whileHover={payMethod !== 'stripe' && payMethod !== 'skrill' ? { scale: 1.02 } : {}}
-                          whileTap={payMethod !== 'stripe' && payMethod !== 'skrill' ? { scale: 0.98 } : {}}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          {payMethod === 'whop' && (
-                            <>
-                              <WhopLogo className="w-5 h-5" />
-                              <span>Pay with Whop</span>
-                            </>
-                          )}
-                          {payMethod === 'skrill' && (
-                            <>
-                              <SkrillLogo className="w-5 h-5" />
-                              <span>Skrill — Coming Soon</span>
-                            </>
-                          )}
-                          {payMethod === 'cart' && (
-                            <>
-                              <ShoppingBag className="w-4 h-4" />
-                              <span>Add to Cart</span>
-                            </>
-                          )}
-                          {payMethod === 'stripe' && (
-                            <>
-                              <StripeLogo className="w-5 h-5" />
-                              <span>Stripe — Coming Soon</span>
-                            </>
-                          )}
-                        </motion.button>
-                      </AnimatePresence>
-                    </div>
-
-                    <motion.a
-                      href="/crypto-guide"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => { e.stopPropagation(); }}
-                      className="w-full py-2.5 bg-white text-black/70 hover:text-black text-xs font-medium rounded-xl transition-all flex items-center justify-center gap-2 border border-black/10"
-                      style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
+                      className="w-full py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm font-semibold border border-black/20 bg-white text-black hover:border-black/40 disabled:opacity-40 disabled:cursor-not-allowed"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Wallet className="w-3.5 h-3.5" />
-                      <span>How to Pay with Crypto</span>
-                    </motion.a>
-
-                    <div className="flex items-center justify-center gap-2 text-black/40 text-xs pt-2 flex-wrap">
-                      <span>Secure</span>
-                      <span>•</span>
-                      <span>Cards</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span className="hidden md:inline">Apple Pay</span>
-                      <span className="hidden md:inline">•</span>
-                      <span>Crypto</span>
-                    </div>
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>{isInStock ? 'Add to Cart' : 'Out of Stock'}</span>
+                    </motion.button>
                   </div>
                 </div>
               </div>

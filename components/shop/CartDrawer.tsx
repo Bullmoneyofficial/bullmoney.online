@@ -558,8 +558,9 @@ export function CartDrawer() {
     </AnimatePresence>
   );
 
-  // Use portal to render at document.body level, escaping stacking context
+  // Use portal to render at document.documentElement level (like StoreHeader menu),
+  // escaping ALL stacking contexts so the drawer always snaps on screen in view
   if (typeof document === 'undefined') return null;
 
-  return createPortal(drawerContent, document.body);
+  return createPortal(drawerContent, document.documentElement);
 }

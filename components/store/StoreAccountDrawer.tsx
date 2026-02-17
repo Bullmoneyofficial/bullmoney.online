@@ -120,7 +120,9 @@ export function StoreAccountDrawer({ isOpen, onClose }: StoreAccountDrawerProps)
     return null;
   }
 
-  return createPortal(drawerContent, document.body);
+  // Portal to document.documentElement (like StoreHeader menu) so the drawer
+  // always snaps on screen in view, escaping all stacking contexts
+  return createPortal(drawerContent, document.documentElement);
 }
 
 export default StoreAccountDrawer;

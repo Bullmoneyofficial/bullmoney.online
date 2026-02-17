@@ -152,7 +152,7 @@ export const LanguageToggle = memo(({
         <button
           onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); setSearch(''); }}
           onTouchEnd={(e) => { e.preventDefault(); setIsOpen(!isOpen); setSearch(''); }}
-          className="w-full flex items-center justify-between px-2.5 py-1.5 min-h-[30px] rounded-xl text-[11px] font-medium transition-all duration-200 whitespace-nowrap sm:px-3 sm:py-1.5 sm:min-h-[34px] sm:text-xs"
+          className="w-full flex items-center justify-between px-2 py-1 min-h-[26px] rounded-lg text-[9px] font-medium transition-all duration-200 whitespace-nowrap sm:px-2.5 sm:py-1 sm:min-h-[28px] sm:text-[10px]"
           style={{ 
             color: isLight ? '#111111' : '#ffffff',
             backgroundColor: isLight ? 'rgb(255, 255, 255)' : 'rgba(255, 255, 255, 0.05)',
@@ -161,14 +161,10 @@ export const LanguageToggle = memo(({
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4" strokeWidth={2} />
-            <span>Language & Currency</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">{currentLang.flag}</span>
-            <span className="text-xs" style={{ color: isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)' }}>{currentCurrency.code}</span>
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} style={{ color: isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)' }} />
+          <div className="flex items-center gap-1">
+            <span className="text-sm">{currentLang.flag}</span>
+            <span className="text-[9px]" style={{ color: isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)' }}>{currentCurrency.code}</span>
+            <ChevronDown className={`w-2.5 h-2.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} style={{ color: isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)' }} />
           </div>
         </button>
       ) : (
