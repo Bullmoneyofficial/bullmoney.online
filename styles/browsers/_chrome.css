@@ -29,6 +29,8 @@
     min-height: 100vh !important;
     position: relative !important;
     transform: none !important;
+    will-change: auto !important;
+    contain: none !important;
   }
   
   html.chrome-browser[data-games-page] body,
@@ -39,6 +41,8 @@
     min-height: 100vh !important;
     position: relative !important;
     transform: none !important;
+    will-change: auto !important;
+    contain: none !important;
   }
   
   /* Games page touch scroll: ensure backgrounds don't block scrolling */

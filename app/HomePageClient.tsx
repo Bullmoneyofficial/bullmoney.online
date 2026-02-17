@@ -832,14 +832,12 @@ function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageCli
 
       {currentView === 'content' && (
         <div className="relative min-h-screen w-full" style={{ 
-          overflowY: 'auto', 
+          overflowY: 'visible', 
           overflowX: 'hidden',
           height: 'auto',
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-y pan-x',
           scrollBehavior: 'auto',
-          willChange: 'scroll-position',
-          contain: 'layout style paint'
         }}>
           {/* Store Header as main navigation (Design/Trader toggle on app page) */}
           <StoreHeader heroModeOverride={appHeroMode} onHeroModeChangeOverride={handleAppHeroModeChange} />

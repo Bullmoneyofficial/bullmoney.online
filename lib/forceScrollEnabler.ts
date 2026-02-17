@@ -288,10 +288,12 @@ export function forceEnableScrolling() {
   const isVerticallyScrollable = (el: Element) => {
     const node = el as HTMLElement;
     if (!node) return false;
+    // PERF FIX: Check scrollHeight vs clientHeight FIRST (no layout cost if false).
+    // Only call getComputedStyle if the element actually has more content than its box.
+    if (node.scrollHeight <= node.clientHeight + 2) return false;
     const style = window.getComputedStyle(node);
     const overflowY = style.overflowY;
-    if (overflowY !== 'auto' && overflowY !== 'scroll' && overflowY !== 'overlay') return false;
-    return node.scrollHeight > node.clientHeight + 2;
+    return overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
   };
 
   const findScrollableAncestor = (target: EventTarget | null): HTMLElement | null => {
@@ -360,13 +362,27 @@ export function forceEnableScrolling() {
   }
 
   // Watch for style attribute changes that might disable scroll
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-        // Debounce: only check if styles change
-        requestAnimationFrame(enableScroll);
-      }
-    }
+  // PERF FIX: Heavy debounce to prevent Chrome layout thrashing.
+  // enableScroll() modifies styles → triggers observer → calls enableScroll() again.
+  // Without debounce this creates a reflow loop that makes Chrome scroll feel sluggish.
+  let mutationDebounceId: ReturnType<typeof setTimeout> | null = null;
+  let isScrolling = false;
+  let scrollEndTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Track scroll state so we don't run enableScroll during active scrolling
+  const onScrollStart = () => {
+    isScrolling = true;
+    if (scrollEndTimer) clearTimeout(scrollEndTimer);
+    scrollEndTimer = setTimeout(() => { isScrolling = false; }, 200);
+  };
+  window.addEventListener('scroll', onScrollStart, { passive: true });
+
+  const observer = new MutationObserver(() => {
+    // PERF: Skip mutations entirely while user is scrolling — this is the #1
+    // cause of Chrome scroll jank. enableScroll() forces layout recalculation.
+    if (isScrolling) return;
+    if (mutationDebounceId) clearTimeout(mutationDebounceId);
+    mutationDebounceId = setTimeout(enableScroll, 250);
   });
 
   observer.observe(document.documentElement, {
@@ -399,9 +415,18 @@ export function forceEnableScrolling() {
   // Cleanup function
   return () => {
     window.removeEventListener('wheel', onWheelCapture as any, true as any);
+    window.removeEventListener('scroll', onScrollStart);
     if (wheelRafId !== null) {
       cancelAnimationFrame(wheelRafId);
       wheelRafId = null;
+    }
+    if (mutationDebounceId) {
+      clearTimeout(mutationDebounceId);
+      mutationDebounceId = null;
+    }
+    if (scrollEndTimer) {
+      clearTimeout(scrollEndTimer);
+      scrollEndTimer = null;
     }
     observer.disconnect();
     if (clickTimeout) {

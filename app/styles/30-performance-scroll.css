@@ -4,8 +4,7 @@
    ============================================================================ */
 
 /* CRITICAL: Force GPU compositing for frequently painted elements */
-nav:not([data-apple-section]),
-footer,
+/* NOTE: Reduced scope — too many compositor layers hurts Chrome scroll perf */
 .modal,
 dialog,
 canvas,
@@ -16,12 +15,31 @@ video {
   -webkit-backface-visibility: hidden;
 }
 
+/* Chrome fix: don't force compositor layers on nav/footer — hurts scroll painting */
+html.chrome-browser nav:not([data-apple-section]),
+html.chrome-browser footer {
+  transform: none !important;
+  will-change: auto !important;
+}
+
 /* CRITICAL: Content visibility for off-screen optimization */
+/* NOTE: Only use on non-Chrome browsers. Chrome's content-visibility implementation
+   causes scroll height recalculation during scroll, leading to jank/jumpy scrolling.
+   Safari handles this much better natively. */
 section:not([data-store-page] section):not([data-store-page] *),
 article:not([data-store-page] article):not([data-store-page] *),
 .content-section:not([data-store-page] .content-section):not([data-store-page] *) {
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;
+}
+
+/* Disable content-visibility for Chrome/Chromium browsers — causes scroll jank */
+html.chrome-browser section:not([data-store-page] section):not([data-store-page] *),
+html.chrome-browser article:not([data-store-page] article):not([data-store-page] *),
+html.chrome-browser .content-section:not([data-store-page] .content-section):not([data-store-page] *) {
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
+  contain: none !important;
 }
 
 /* CRITICAL: Disable content-visibility on store page */
@@ -117,6 +135,7 @@ article:not([data-store-page] article):not([data-store-page] *),
    ============================================================================ */
 
 /* Large content sections get auto content-visibility */
+/* NOTE: Disabled for Chrome — see chrome-browser override below */
 .hero-section,
 .features-section,
 .testimonials-section,
@@ -125,6 +144,17 @@ article:not([data-store-page] article):not([data-store-page] *),
 [data-section] {
   content-visibility: auto;
   contain-intrinsic-size: auto 500px;
+}
+
+/* Chrome: disable content-visibility on named sections too */
+html.chrome-browser .hero-section,
+html.chrome-browser .features-section,
+html.chrome-browser .testimonials-section,
+html.chrome-browser .pricing-section,
+html.chrome-browser .footer-section,
+html.chrome-browser [data-section] {
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
 }
 
 /* Modal content - hidden until opened */
@@ -334,12 +364,12 @@ html.is-interacting .shimmer-border {
   /* Desktop scroll foundation */
   html {
     scroll-behavior: auto !important;
-    overflow-y: scroll !important;
+    overflow-y: auto !important;
     overscroll-behavior: auto;
   }
   
   body {
-    overflow-y: visible !important;
+    overflow-y: auto !important;
     overscroll-behavior: auto;
     /* Allow momentum scrolling on macOS */
     -webkit-overflow-scrolling: auto;
