@@ -1169,13 +1169,47 @@ const FaultyTerminal = ({
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
 
+  // RAF-based throttle for mousemove to avoid blocking scroll
+  const lastMouseMoveRef = useRef<{ x: number; y: number } | null>(null);
+  const mouseThrottleRAFRef = useRef<number | null>(null);
+  const isScrollingRef = useRef(false);
+
+  // Track when scrolling is active
+  useEffect(() => {
+    const handleScroll = () => {
+      isScrollingRef.current = true;
+      const timeout = setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 150);
+      return () => clearTimeout(timeout);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
+    // Skip mousemove processing during scroll (too laggy)
+    if (isScrollingRef.current) return;
+
     const ctn = containerRef.current;
     if (!ctn) return;
+    
     const rect = ctn.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = 1 - (e.clientY - rect.top) / rect.height;
-    mouseRef.current = { x, y };
+    
+    // Queue the update for next frame instead of processing immediately
+    lastMouseMoveRef.current = { x, y };
+    
+    if (mouseThrottleRAFRef.current === null) {
+      mouseThrottleRAFRef.current = requestAnimationFrame(() => {
+        if (lastMouseMoveRef.current) {
+          mouseRef.current = lastMouseMoveRef.current;
+        }
+        mouseThrottleRAFRef.current = null;
+      });
+    }
   }, []);
 
   // Touch support for Mobile
@@ -1268,6 +1302,11 @@ const FaultyTerminal = ({
     }
     return () => {
       cancelAnimationFrame(rafRef.current);
+      // Cleanup RAF throttle
+      if (mouseThrottleRAFRef.current !== null) {
+        cancelAnimationFrame(mouseThrottleRAFRef.current);
+        mouseThrottleRAFRef.current = null;
+      }
       resizeObserver.disconnect();
       if (mouseReact) {
         ctn.removeEventListener('mousemove', handleMouseMove);

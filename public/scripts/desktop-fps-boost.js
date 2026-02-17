@@ -71,7 +71,7 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-   * 2. GPU ACCELERATION & COMPOSITING CSS
+   * 2. GPU ACCELERATION & COMPOSITING CSS (Optimized for memory)
    * ═══════════════════════════════════════════════════════════════════ */
   function injectGPUStyles() {
     var style = d.createElement("style");
@@ -79,11 +79,9 @@
     style.textContent = [
       "@media (min-width: 769px) {",
 
-      // ── Force GPU compositing on animated/interactive elements ──
-      "  button, a, [role='button'], [role='tab'], [role='menuitem'],",
-      "  .cursor-pointer, [data-clickable],",
-      "  [class*='hover:'], [class*='transition'],",
-      "  [class*='animate-'], [class*='motion-'] {",
+      // ── GPU compositing ONLY on critical interactive elements (not all buttons) ──
+      "  [data-interactive], .glass-effect, .backdrop-blur-sm, .backdrop-blur-md,",
+      "  .backdrop-blur-lg, .gradient-shift, .floating, .fade-in-up {",
       "    will-change: transform, opacity;",
       "    transform: translateZ(0);",
       "    backface-visibility: hidden;",
@@ -102,18 +100,14 @@
       "    -webkit-overflow-scrolling: touch;",
       "  }",
 
-      // ── Promote fixed/sticky elements to their own layer ──
-      "  .fixed, .sticky, [class*='fixed'], [class*='sticky'],",
-      "  position\\:fixed, position\\:sticky,",
-      "  header, nav, footer,",
-      "  [class*='AppSupportButton'], [class*='UltimateHub'] {",
+      // ── Promote fixed/sticky header/nav to GPU layer (selective, not all fixed/sticky) ──
+      "  header, nav, footer {",
       "    will-change: transform;",
       "    transform: translateZ(0);",
       "  }",
 
       // ── Optimized containment (layout+paint, NOT strict — strict blocks scrolling) ──
-      "  [class*='skeleton'], [class*='Skeleton'],",
-      "  [class*='loading'], [class*='placeholder'] {",
+      "  .skeleton, .loading, .placeholder {",
       "    contain: layout paint;",
       "  }",
 
@@ -129,11 +123,9 @@
       "    will-change: auto;",
       "  }",
 
-      // ── High refresh rate optimizations ──
-      "  html.bm-high-fps * {",
+      // ── High refresh rate optimizations — only on critical animation elements ──
+      "  html.bm-high-fps [data-interactive], html.bm-high-fps .glass-effect {",
       "    scroll-behavior: smooth !important;",
-      "  }",
-      "  html.bm-high-fps [class*='transition'] {",
       "    transition-duration: 0.12s !important;",
       "  }",
 
@@ -174,10 +166,8 @@
       "  @keyframes bm-scale-in { from { opacity: 0; transform: scale(0.97) translateZ(0); } to { opacity: 1; transform: scale(1) translateZ(0); } }",
       "  @keyframes bm-slide-up { from { transform: translateY(100%) translateZ(0); } to { transform: translateY(0) translateZ(0); } }",
 
-      // ── Reduce repaints on scrolling containers ──
-      "  [class*='overflow-y'], [class*='overflow-x'],",
-      "  [class*='overflow-auto'], [class*='overflow-scroll'] {",
-      "    will-change: scroll-position;",
+      // ── Reduce repaints on scrolling containers (only critical ones) ──
+      ".scrollable, [data-scrollable], main, .content-area {",
       "    -webkit-overflow-scrolling: touch;",
       "  }",
 

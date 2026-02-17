@@ -86,6 +86,34 @@ function SplineWithAudioComponent({
   const dragStartPos = useRef({ x: 0, y: 0 });
   const totalDragDistance = useRef(0);
   const animationDuration = useRef(5000); // Default 5 second animation cycle
+  const rafIdRef = useRef<number | null>(null); // RAF throttle for mousemove
+  const pendingMouseMoveRef = useRef<{ x: number; y: number; rect: DOMRect } | null>(null);
+  const isScrollingRef = useRef(false);
+  
+  // Track when scrolling is active to avoid expensive calculations during scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      isScrollingRef.current = true;
+      const timeout = setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 150);
+      return () => clearTimeout(timeout);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Cleanup RAF throttle on unmount
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      pendingMouseMoveRef.current = null;
+    };
+  }, []);
   
   // Get global theme for potential audio profile syncing
   const { activeTheme } = useGlobalTheme();
@@ -327,40 +355,68 @@ function SplineWithAudioComponent({
       setDragVelocity({ x: 0, y: 0 });
       setDragTrail([]);
       setInteractionHint('');
+      // Cleanup RAF throttle
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      pendingMouseMoveRef.current = null;
       audioHandlers.onMouseLeave(e);
     },
     onMouseMove: (e: React.MouseEvent) => {
+      // Skip mousemove processing during scroll (too laggy)
+      if (isScrollingRef.current) return;
+      
       if (isDragging && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        // Instead of processing immediately, queue for next RAF (throttle to 16-33ms)
+        pendingMouseMoveRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          rect: containerRef.current.getBoundingClientRect(),
+        };
         
-        // Calculate velocity for cool effects
-        const vx = x - lastMousePos.current.x;
-        const vy = y - lastMousePos.current.y;
-        setDragVelocity({ x: vx, y: vy });
-        
-        // Calculate rotation based on drag direction
-        const rotation = Math.atan2(vy, vx) * (180 / Math.PI);
-        setDragRotation(rotation);
-        
-        // Timeline scrubbing - horizontal drag controls animation
-        // Scrub on ANY horizontal movement for better responsiveness
-        if (Math.abs(vx) > 1) {
-          scrubTimeline(vx);
-          setIsScrubbing(true);
-          setShowTimeline(true);
-          setInteractionHint(vx < 0 ? '⬅️ Rotating left' : '➡️ Rotating right');
+        if (rafIdRef.current === null) {
+          rafIdRef.current = requestAnimationFrame(() => {
+            const pending = pendingMouseMoveRef.current;
+            if (!pending) {
+              rafIdRef.current = null;
+              return;
+            }
+            
+            const x = pending.x - pending.rect.left;
+            const y = pending.y - pending.rect.top;
+            
+            // Calculate velocity for cool effects
+            const vx = x - lastMousePos.current.x;
+            const vy = y - lastMousePos.current.y;
+            setDragVelocity({ x: vx, y: vy });
+            
+            // Calculate rotation based on drag direction
+            const rotation = Math.atan2(vy, vx) * (180 / Math.PI);
+            setDragRotation(rotation);
+            
+            // Timeline scrubbing - horizontal drag controls animation
+            // Scrub on ANY horizontal movement for better responsiveness
+            if (Math.abs(vx) > 1) {
+              scrubTimeline(vx);
+              setIsScrubbing(true);
+              setShowTimeline(true);
+              setInteractionHint(vx < 0 ? '⬅️ Rotating left' : '➡️ Rotating right');
+            }
+            
+            // Add trail particle every few pixels
+            const distance = Math.sqrt(vx * vx + vy * vy);
+            if (distance > 8) {
+              addTrailParticle(x, y);
+            }
+            
+            // ALWAYS update position for accurate velocity calculation
+            lastMousePos.current = { x, y };
+            
+            rafIdRef.current = null;
+            pendingMouseMoveRef.current = null;
+          });
         }
-        
-        // Add trail particle every few pixels
-        const distance = Math.sqrt(vx * vx + vy * vy);
-        if (distance > 8) {
-          addTrailParticle(x, y);
-        }
-        
-        // ALWAYS update position for accurate velocity calculation
-        lastMousePos.current = { x, y };
       }
       audioHandlers.onMouseMove(e);
     },

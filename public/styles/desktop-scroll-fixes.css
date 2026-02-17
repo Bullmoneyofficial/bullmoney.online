@@ -1,0 +1,353 @@
+/* ═══════════════════════════════════════════════════════════════════ */
+/* CRITICAL SCROLL FIX - Desktop Optimized */
+/* Ensures scrolling works on ALL devices/browsers */
+/* Lazy-loaded to avoid blocking initial render */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/* BASE SCROLL ENABLEMENT - Works unless modal is actually open */
+html:not(:has([role="dialog"]:not([data-state="closed"]))),
+body:not(:has([role="dialog"]:not([data-state="closed"]))) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  touch-action: pan-y pan-x !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  scroll-behavior: auto !important;
+  position: relative !important;
+}
+
+/* Fallback for browsers without :has() support */
+@supports not (selector(:has(*))) {
+  html:not(.modal-open):not([data-modal-open="true"]),
+  body:not(.modal-open):not([data-modal-open="true"]) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    touch-action: pan-y pan-x !important;
+    position: relative !important;
+  }
+}
+
+/* Remove any blocking pointer events */
+html:not(:has([role="dialog"])), 
+body:not(:has([role="dialog"])), 
+#__next, #root {
+  pointer-events: auto !important;
+}
+
+/* iOS-specific scroll fixes - CRITICAL */
+@supports (-webkit-touch-callout: none) {
+  html:not(.modal-open), 
+  body:not(.modal-open) {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* Android-specific fixes - CRITICAL */
+@media (max-width: 768px) {
+  html:not(.modal-open) {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  body:not(.modal-open) {
+    overflow-y: auto !important;
+    position: relative !important;
+    min-height: 100vh !important;
+  }
+}
+
+/* Samsung Internet & Chrome Mobile fixes */
+@supports (-webkit-appearance: none) {
+  html:not(.modal-open), 
+  body:not(.modal-open) {
+    overflow-y: auto !important;
+    touch-action: pan-y pan-x !important;
+  }
+  
+  html.samsung-browser:not(.modal-open),
+  body.samsung-scroll:not(.modal-open) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    transform: none !important;
+  }
+  
+  html.chrome-browser:not(.modal-open),
+  body.chrome-scroll:not(.modal-open) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  html.safari-browser:not(.modal-open),
+  body.safari-scroll:not(.modal-open) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    transform: none !important;
+  }
+  
+  html.inapp-browser:not(.modal-open),
+  html.instagram-browser:not(.modal-open),
+  html.facebook-browser:not(.modal-open),
+  html.google-browser:not(.modal-open),
+  body.inapp-scroll:not(.modal-open) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    transform: none !important;
+  }
+}
+
+/* UC Browser / Huawei Browser / MIUI Browser scroll fixes */
+html.uc-browser:not(.modal-open),
+html.huawei-browser:not(.modal-open),
+html.miui-browser:not(.modal-open) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  touch-action: pan-y pan-x !important;
+  -webkit-overflow-scrolling: touch !important;
+  height: auto !important;
+  transform: none !important;
+}
+body.uc-browser:not(.modal-open),
+body.huawei-browser:not(.modal-open),
+body.miui-browser:not(.modal-open) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  height: auto !important;
+}
+
+/* Opera Mini - graceful degradation */
+html.opera-mini *,
+html.reduce-effects * {
+  animation-duration: 0.01s !important;
+  transition-duration: 0.01s !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.opera-mini .glass-effect,
+html.opera-mini .glassmorphism {
+  background: rgba(5,9,21,.9) !important;
+}
+
+/* Firefox Android specific fixes */
+@-moz-document url-prefix() {
+  html:not(.modal-open),
+  body:not(.modal-open) {
+    overflow-y: auto !important;
+    touch-action: pan-y pan-x !important;
+  }
+}
+
+/* Foldable device support (Galaxy Z Fold/Flip, Pixel Fold) */
+html.foldable-device {
+  --fold-width: env(viewport-segment-width 0 0, 100vw);
+}
+@media (horizontal-viewport-segments: 2) {
+  body { column-count: 2; column-gap: env(viewport-segment-left 1 0, 0px); }
+}
+
+/* PWA standalone mode */
+html.is-pwa body,
+html.standalone-mode body {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* MAC DESKTOP FIXES — Safari & Chrome on M1-M6 + Intel              */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+html[data-os="macos"]:not(.modal-open),
+html[data-os="macos"]:not(.modal-open) body {
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+html.mac-safari .backdrop-blur-sm,
+html.mac-safari .backdrop-blur-md,
+html.mac-safari .backdrop-blur-lg,
+html.mac-safari .backdrop-blur-xl {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
+html.mac-chrome .glass-effect,
+html.mac-chrome .glassmorphism {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Apple Silicon (M1-M6): higher quality effects */
+html.apple-silicon .particle-container,
+html.apple-silicon .aurora {
+  will-change: transform, opacity;
+}
+
+/* Intel Mac: reduce GPU load */
+html.intel-mac .particle-container { will-change: auto; }
+html.intel-mac .aurora { animation-duration: 8s !important; }
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* DESKTOP SCROLL & VIEWPORT — click, scroll, resize support         */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+html.is-desktop {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+html.is-desktop::-webkit-scrollbar { width: 8px; height: 8px; }
+html.is-desktop::-webkit-scrollbar-track { background: transparent; }
+html.is-desktop::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+html.is-desktop::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.3);
+  background-clip: content-box;
+}
+
+html.is-desktop body {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+html.is-desktop a,
+html.is-desktop button,
+html.is-desktop [role="button"] {
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a:hover, button:hover, [role="button"]:hover {
+    transition: all 0.15s ease;
+  }
+}
+
+/* Responsive breakpoint classes */
+html.vp-mobile body { font-size: 14px; }
+html.vp-ultrawide body { max-width: 2560px; margin: 0 auto; }
+
+/* Scroll direction classes */
+html.scroll-down .auto-hide-nav {
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+}
+html.scroll-up .auto-hide-nav,
+html.at-top .auto-hide-nav {
+  transform: translateY(0);
+  transition: transform 0.3s ease;
+}
+
+/* Page visibility: pause animations when hidden */
+html.page-hidden *,
+html.page-hidden *::before,
+html.page-hidden *::after {
+  animation-play-state: paused !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* UNIVERSAL TOUCH ENHANCEMENTS                                      */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+button, [role="button"], a, .no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+p, article, span, .selectable, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.scroll-container, [data-scroll], [role="listbox"], [role="menu"] {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.scroll-x, .overflow-x-auto, .overflow-x-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.scroll-x::-webkit-scrollbar { display: none; }
+
+html.keyboard-open body {
+  padding-bottom: var(--keyboard-height, 0px);
+}
+html.keyboard-open input:focus,
+html.keyboard-open textarea:focus {
+  scroll-margin-bottom: calc(var(--keyboard-height, 0px) + 20px);
+}
+
+main:not(:has([role="dialog"])), 
+[role="main"]:not(:has([role="dialog"])), 
+.page-container:not(:has([role="dialog"])) {
+  overflow-y: visible !important;
+  min-height: 100vh !important;
+}
+
+[data-games-page]:not(.modal-open),
+[data-design-page]:not(.modal-open),
+[data-store-page]:not(.modal-open),
+[data-app-page]:not(.modal-open) {
+  overflow-y: auto !important;
+  height: auto !important;
+  touch-action: pan-y pan-x !important;
+}
+
+body.modal-open:not(:has([role="dialog"]:not([data-state="closed"]))), 
+html.modal-open:not(:has([role="dialog"]:not([data-state="closed"]))) {
+  overflow-y: auto !important;
+  position: relative !important;
+  height: auto !important;
+  touch-action: pan-y pan-x !important;
+}
+
+html {
+  scroll-behavior: auto !important;
+}
+
+html.enable-smooth-scroll {
+  scroll-behavior: smooth !important;
+}
+
+iframe[src*="excalidraw"],
+iframe[title*="Canvas"],
+iframe[title*="Whiteboard"],
+[data-whiteboard-container] {
+  pointer-events: none !important;
+  touch-action: none !important;
+  scroll-margin-top: 100vh !important;
+  contain: strict !important;
+}
+
+iframe[src*="excalidraw"].active,
+iframe[title*="Canvas"].active,
+iframe[title*="Whiteboard"].active {
+  pointer-events: auto !important;
+  touch-action: auto !important;
+}

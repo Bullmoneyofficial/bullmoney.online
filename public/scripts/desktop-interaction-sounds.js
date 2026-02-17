@@ -332,8 +332,27 @@
 
   // HOVER: mouseenter on interactive elements (delegated)
   var hoverTarget = null;
+  var lastHoverCheck = 0;
+  var hoverCheckThrottle = 40; // Only check DOM every 40ms max
+  var isScrolling = false;
+  var scrollTimeout = null;
+
+  // Track when scrolling is active (disable hover sounds during scroll for performance)
+  window.addEventListener('scroll', function() {
+    isScrolling = true;
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(function() {
+      isScrolling = false;
+      scrollTimeout = null;
+    }, 150);
+  }, { passive: true });
+
   document.addEventListener("mouseover", function (e) {
-    if (!unlocked) return;
+    if (!unlocked || isScrolling) return; // Skip during scroll
+    var now = performance.now();
+    if (now - lastHoverCheck < hoverCheckThrottle) return; // Skip if checked too recently
+    lastHoverCheck = now;
+    
     var target = closestInteractive(e.target);
     if (target && target !== hoverTarget) {
       hoverTarget = target;
@@ -403,7 +422,18 @@
       clearInterval(syncTimer);
     }
   }, 2000);
-  // Stop checking after 30s
+  // Stop checking after 30s to avoid infinite polling
   setTimeout(function () { clearInterval(syncTimer); }, 30000);
+
+  // Clean up audio context on page hide to free memory
+  document.addEventListener("pagehide", function () {
+    try {
+      clearInterval(syncTimer);
+      if (audioCtx && audioCtx.close) {
+        audioCtx.close().catch(function () {});
+      }
+      audioCtx = null;
+    } catch (e) {}
+  }, { once: true });
 
 })();

@@ -310,386 +310,30 @@ export default function RootLayout({
       #bm-splash .bm-step{display:flex;align-items:center;gap:10px;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.05em;color:rgba(0,0,0,.25);transition:color .3s ease,opacity .3s ease,transform .3s ease;opacity:.5;transform:translateX(0);}
       #bm-splash .bm-step span:last-child{position:relative;display:inline-block;}
 
+      /* SCROLL FIXES: Lazy-loaded via external stylesheet to reduce inline CSS size */
+      /* See public/styles/desktop-scroll-fixes.css */
       /* ═══════════════════════════════════════════════════════════════════ */
-      /* CRITICAL SCROLL FIX - Ensures scrolling works on ALL devices/browsers */
-      /* Fixes: Chrome, Safari, iOS Safari, Android, Samsung Internet */
-      /* Updated 2026-02-13: Enhanced for games/design/store/app pages */
-      /* ═══════════════════════════════════════════════════════════════════ */
-      
-      /* BASE SCROLL ENABLEMENT - Works unless modal is actually open */
-      html:not(:has([role="dialog"]:not([data-state="closed"]))),
-      body:not(:has([role="dialog"]:not([data-state="closed"]))) {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        height: auto !important;
-        min-height: 100vh !important;
-        touch-action: pan-y pan-x !important;
-        -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior-y: contain !important;
-        scroll-behavior: auto !important;
-        position: relative !important;
-      }
-      
-      /* Fallback for browsers without :has() support */
-      @supports not (selector(:has(*))) {
-        html:not(.modal-open):not([data-modal-open="true"]),
-        body:not(.modal-open):not([data-modal-open="true"]) {
-          overflow-y: auto !important;
-          overflow-x: hidden !important;
-          height: auto !important;
-          min-height: 100vh !important;
-          touch-action: pan-y pan-x !important;
-          position: relative !important;
+      /* SPLASH ANIMATIONS: Optimized for desktop performance */
+      @media (min-width: 769px) {
+        /* On desktop: simplify animations to reduce GPU load */
+        #bm-splash .bm-bar-outer::after{
+          animation: none !important;
+          opacity: .35 !important;
+        }
+        #bm-splash .bm-bar-inner{
+          animation: none !important;
+          background: #18181b !important;
+        }
+        #bm-splash .bm-orb{
+          animation: none !important;
+          display: none !important;
+        }
+        #bm-splash::before,
+        #bm-splash::after {
+          animation: none !important;
         }
       }
       
-      /* Remove any blocking pointer events */
-      html:not(:has([role="dialog"])), 
-      body:not(:has([role="dialog"])), 
-      #__next, #root {
-        pointer-events: auto !important;
-      }
-      
-      /* iOS-specific scroll fixes - CRITICAL */
-      @supports (-webkit-touch-callout: none) {
-        html:not(.modal-open), 
-        body:not(.modal-open) {
-          -webkit-overflow-scrolling: touch !important;
-          overflow-y: auto !important;
-        }
-      }
-      
-      /* Android-specific fixes - CRITICAL */
-      @media (max-width: 768px) {
-        html:not(.modal-open) {
-          overflow-y: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-        }
-        body:not(.modal-open) {
-          overflow-y: auto !important;
-          position: relative !important;
-          min-height: 100vh !important;
-        }
-      }
-      
-      /* Samsung Internet & Chrome Mobile fixes */
-      @supports (-webkit-appearance: none) {
-        html:not(.modal-open), 
-        body:not(.modal-open) {
-          overflow-y: auto !important;
-          touch-action: pan-y pan-x !important;
-        }
-        
-        /* Samsung-specific scroll enhancements */
-        html.samsung-browser:not(.modal-open),
-        body.samsung-scroll:not(.modal-open) {
-          overflow-y: auto !important;
-          overflow-x: hidden !important;
-          touch-action: pan-y pan-x !important;
-          -webkit-overflow-scrolling: touch !important;
-          height: auto !important;
-          transform: none !important;
-        }
-        
-        /* Chrome/Chromium scroll enhancements */
-        html.chrome-browser:not(.modal-open),
-        body.chrome-scroll:not(.modal-open) {
-          overflow-y: auto !important;
-          overflow-x: hidden !important;
-          touch-action: pan-y pan-x !important;
-          -webkit-overflow-scrolling: touch !important;
-          height: auto !important;
-          transform: none !important;
-        }
-        
-        /* Safari scroll enhancements */
-        html.safari-browser:not(.modal-open),
-        body.safari-scroll:not(.modal-open) {
-          overflow-y: auto !important;
-          overflow-x: hidden !important;
-          touch-action: pan-y pan-x !important;
-          -webkit-overflow-scrolling: touch !important;
-          height: auto !important;
-          transform: none !important;
-        }
-        
-        /* In-app browser scroll enhancements */
-        html.inapp-browser:not(.modal-open),
-        html.instagram-browser:not(.modal-open),
-        html.facebook-browser:not(.modal-open),
-        html.google-browser:not(.modal-open),
-        body.inapp-scroll:not(.modal-open) {
-          overflow-y: auto !important;
-          overflow-x: hidden !important;
-          touch-action: pan-y pan-x !important;
-          -webkit-overflow-scrolling: touch !important;
-          height: auto !important;
-          transform: none !important;
-        }
-      }
-      
-      /* UC Browser / Huawei Browser / MIUI Browser scroll fixes */
-      html.uc-browser:not(.modal-open),
-      html.huawei-browser:not(.modal-open),
-      html.miui-browser:not(.modal-open) {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        touch-action: pan-y pan-x !important;
-        -webkit-overflow-scrolling: touch !important;
-        height: auto !important;
-        transform: none !important;
-      }
-      body.uc-browser:not(.modal-open),
-      body.huawei-browser:not(.modal-open),
-      body.miui-browser:not(.modal-open) {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch !important;
-        height: auto !important;
-      }
-      
-      /* Opera Mini - graceful degradation */
-      html.opera-mini *,
-      html.reduce-effects * {
-        animation-duration: 0.01s !important;
-        transition-duration: 0.01s !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-      }
-      html.opera-mini .glass-effect,
-      html.opera-mini .glassmorphism {
-        background: rgba(5,9,21,.9) !important;
-      }
-      
-      /* Firefox Android specific fixes */
-      @-moz-document url-prefix() {
-        html:not(.modal-open),
-        body:not(.modal-open) {
-          overflow-y: auto !important;
-          touch-action: pan-y pan-x !important;
-        }
-      }
-      
-      /* Foldable device support (Galaxy Z Fold/Flip, Pixel Fold) */
-      html.foldable-device {
-        --fold-width: env(viewport-segment-width 0 0, 100vw);
-      }
-      @media (horizontal-viewport-segments: 2) {
-        body { column-count: 2; column-gap: env(viewport-segment-left 1 0, 0px); }
-      }
-      
-      /* PWA standalone mode */
-      html.is-pwa body,
-      html.standalone-mode body {
-        padding-top: env(safe-area-inset-top, 0px) !important;
-        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-      }
-      
-      /* ═══════════════════════════════════════════════════════════════════ */
-      /* MAC DESKTOP FIXES — Safari & Chrome on M1-M6 + Intel              */
-      /* ═══════════════════════════════════════════════════════════════════ */
-      
-      /* Mac Safari: fix elastic overscroll color bleed */
-      html[data-os="macos"]:not(.modal-open),
-      html[data-os="macos"]:not(.modal-open) body {
-        overscroll-behavior-y: contain;
-        overscroll-behavior-x: none;
-      }
-      
-      /* Mac Safari: trackpad momentum scroll jitter fix */
-      html.mac-safari .backdrop-blur-sm,
-      html.mac-safari .backdrop-blur-md,
-      html.mac-safari .backdrop-blur-lg,
-      html.mac-safari .backdrop-blur-xl {
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
-        will-change: transform;
-      }
-      
-      /* Mac Chrome: prevent sub-pixel rendering artifacts on Retina */
-      html.mac-chrome .glass-effect,
-      html.mac-chrome .glassmorphism {
-        transform: translateZ(0);
-        backface-visibility: hidden;
-      }
-      
-      /* Apple Silicon (M1-M6): higher quality effects */
-      html.apple-silicon .particle-container,
-      html.apple-silicon .aurora {
-        will-change: transform, opacity;
-      }
-      
-      /* Intel Mac: reduce GPU load */
-      html.intel-mac .particle-container { will-change: auto; }
-      html.intel-mac .aurora { animation-duration: 8s !important; }
-      
-      /* ═══════════════════════════════════════════════════════════════════ */
-      /* DESKTOP SCROLL & VIEWPORT — click, scroll, resize support         */
-      /* ═══════════════════════════════════════════════════════════════════ */
-      
-      /* Desktop scrollbar styling */
-      html.is-desktop {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(255,255,255,0.15) transparent;
-      }
-      html.is-desktop::-webkit-scrollbar { width: 8px; height: 8px; }
-      html.is-desktop::-webkit-scrollbar-track { background: transparent; }
-      html.is-desktop::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.15);
-        border-radius: 4px;
-        border: 2px solid transparent;
-        background-clip: content-box;
-      }
-      html.is-desktop::-webkit-scrollbar-thumb:hover {
-        background: rgba(255,255,255,0.3);
-        background-clip: content-box;
-      }
-      
-      /* Desktop: always show scrollbar gutter to prevent layout shift */
-      html.is-desktop body {
-        overflow-y: scroll;
-        overflow-x: hidden;
-      }
-      
-      /* Desktop: proper click targets */
-      html.is-desktop a,
-      html.is-desktop button,
-      html.is-desktop [role="button"] {
-        cursor: pointer;
-      }
-      
-      /* Desktop hover effects (only with fine pointer) */
-      @media (hover: hover) and (pointer: fine) {
-        a:hover, button:hover, [role="button"]:hover {
-          transition: all 0.15s ease;
-        }
-      }
-      
-      
-      /* Responsive breakpoint classes from sw-touch.js */
-      html.vp-mobile body { font-size: 14px; }
-      html.vp-ultrawide body { max-width: 2560px; margin: 0 auto; }
-      
-      /* Scroll direction classes (for auto-hiding nav) */
-      html.scroll-down .auto-hide-nav {
-        transform: translateY(-100%);
-        transition: transform 0.3s ease;
-      }
-      html.scroll-up .auto-hide-nav,
-      html.at-top .auto-hide-nav {
-        transform: translateY(0);
-        transition: transform 0.3s ease;
-      }
-      
-      /* Page visibility: pause animations when hidden */
-      html.page-hidden *,
-      html.page-hidden *::before,
-      html.page-hidden *::after {
-        animation-play-state: paused !important;
-      }
-      
-      /* ═══════════════════════════════════════════════════════════════════ */
-      /* UNIVERSAL TOUCH ENHANCEMENTS                                      */
-      /* ═══════════════════════════════════════════════════════════════════ */
-      
-      /* Remove tap highlight on all devices */
-      html {
-        -webkit-tap-highlight-color: transparent;
-        -webkit-tap-highlight-color: rgba(0,0,0,0);
-      }
-      
-      
-      /* Prevent text selection on interactive elements */
-      button, [role="button"], a, .no-select {
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
-      }
-      
-      /* Allow text selection on content */
-      p, article, span, .selectable, [contenteditable] {
-        -webkit-user-select: text;
-        user-select: text;
-      }
-      
-      /* Momentum scrolling for containers */
-      .scroll-container, [data-scroll], [role="listbox"], [role="menu"] {
-        -webkit-overflow-scrolling: touch;
-        overflow-scrolling: touch;
-        overscroll-behavior: contain;
-      }
-      
-      /* Horizontal scroll containers */
-      .scroll-x, .overflow-x-auto, .overflow-x-scroll {
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
-        scrollbar-width: none;
-      }
-      .scroll-x::-webkit-scrollbar { display: none; }
-      
-      /* Virtual keyboard compensation */
-      html.keyboard-open body {
-        padding-bottom: var(--keyboard-height, 0px);
-      }
-      html.keyboard-open input:focus,
-      html.keyboard-open textarea:focus {
-        scroll-margin-bottom: calc(var(--keyboard-height, 0px) + 20px);
-      }
-      
-      /* Ensure all pages can scroll */
-      main:not(:has([role="dialog"])), 
-      [role="main"]:not(:has([role="dialog"])), 
-      .page-container:not(:has([role="dialog"])) {
-        overflow-y: visible !important;
-        min-height: 100vh !important;
-      }
-      
-      /* Page-specific scroll fixes */
-      [data-games-page]:not(.modal-open),
-      [data-design-page]:not(.modal-open),
-      [data-store-page]:not(.modal-open),
-      [data-app-page]:not(.modal-open) {
-        overflow-y: auto !important;
-        height: auto !important;
-        touch-action: pan-y pan-x !important;
-      }
-      
-      /* CRITICAL: Allow scroll when modal classes exist but no modal is open */
-      body.modal-open:not(:has([role="dialog"]:not([data-state="closed"]))), 
-      html.modal-open:not(:has([role="dialog"]:not([data-state="closed"]))) {
-        overflow-y: auto !important;
-        position: relative !important;
-        height: auto !important;
-        touch-action: pan-y pan-x !important;
-      }
-      
-      /* Ensure scroll position is maintained - AUTO to prevent unwanted smooth scrolling */
-      html {
-        scroll-behavior: auto !important;
-      }
-      
-      html.enable-smooth-scroll {
-        scroll-behavior: smooth !important;
-      }
-      
-      /* Whiteboard/Canvas iframe protection - prevents scroll snapping and auto-focus scroll */
-      iframe[src*="excalidraw"],
-      iframe[title*="Canvas"],
-      iframe[title*="Whiteboard"],
-      [data-whiteboard-container] {
-        pointer-events: none !important;
-        touch-action: none !important;
-        scroll-margin-top: 100vh !important;
-        contain: strict !important;
-      }
-      
-      iframe[src*="excalidraw"].active,
-      iframe[title*="Canvas"].active,
-      iframe[title*="Whiteboard"].active {
-        pointer-events: auto !important;
-        touch-action: auto !important;
-      }
-      /* ═══════════════════════════════════════════════════════════════════ */
       #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;transform:translateX(3px);}
       #bm-splash .bm-step.active span:last-child{background:linear-gradient(100deg,#0f0f12 0%,#3f3f46 35%,#0f0f12 70%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-step-sheen 1.4s ease-in-out infinite;}
       #bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}
@@ -715,11 +359,22 @@ export default function RootLayout({
       html.is-in-app-browser #bm-splash.bm-splash-finale{background:#ffffff!important;background-color:#ffffff!important;}
       html.is-in-app-browser #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;background:#ffffff!important;background-color:#ffffff!important;}
       html.is-in-app-browser #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:none!important;-webkit-filter:none!important;}
-      /* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS */
-      #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
-      #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}
-      /* Extra idle motion: spin + synced contrast/glow (doesn't fight wrapper transform/scale) */
-      #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{transform-origin:50% 50%;will-change:transform,filter;animation:bm-finale-spin 8s cubic-bezier(.4,0,.2,1) infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+      
+      /* DESKTOP OPTIMIZATION: Disable idle animations on desktop (>=769px) to reduce GPU load */
+      @media (min-width: 769px) {
+        #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;}
+        #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;animation:none!important;}
+        #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:none!important;}
+      }
+      
+      /* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS - Mobile/tablet only */
+      @media (max-width: 768px) {
+        #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+        #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}
+        /* Extra idle motion: spin + synced contrast/glow (doesn't fight wrapper transform/scale) */
+        #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{transform-origin:50% 50%;will-change:transform,filter;animation:bm-finale-spin 8s cubic-bezier(.4,0,.2,1) infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+      }
+      
       #bm-splash.bm-splash-finale .bm-title,
       #bm-splash.bm-splash-finale .bm-subtitle,
       #bm-splash.bm-splash-finale .bm-progress-wrap{animation:bm-finale-fadeout .35s cubic-bezier(.4,0,.2,1) forwards!important;pointer-events:none;}
@@ -952,6 +607,22 @@ export default function RootLayout({
         {/* Preload critical assets with proper priorities */}
         <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />
         
+        {/* Lazy-load desktop scroll fixes stylesheet via inline script for better control */}
+        <Script
+          id="load-scroll-fixes"
+          strategy="lazyOnload"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/styles/desktop-scroll-fixes.css';
+                document.head.appendChild(link);
+              })();
+            `
+          }}
+        />
+        
         {/* 
           PERFORMANCE FIX: Removed all Spline scene preload/prefetch tags.
           Scene1 (6.9MB) was being preloaded with HIGH priority, competing with 
@@ -1167,9 +838,22 @@ export default function RootLayout({
         <Script id="desktop-ttfb-optimizer" src="/scripts/desktop-ttfb-optimizer.js" strategy="afterInteractive" />
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* DESKTOP EXPERIENCE ENHANCEMENT SCRIPTS                             */}
+        {/* DESKTOP PERFORMANCE & OPTIMIZATION SCRIPTS (HIGH PRIORITY)          */}
+        {/* Runs after page interactive: tier detection, orchestrator, etc     */}
+        {/* Self-gate to desktop only (>769px, non-mobile UA)                   */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        <Script id="desktop-performance-tuning" src="/scripts/desktop-performance-tuning.js" strategy="afterInteractive" />
+        <Script id="desktop-orchestrator" src="/scripts/desktop-orchestrator.js" strategy="afterInteractive" />
+        <Script id="desktop-image-optimizer" src="/scripts/desktop-image-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-network-optimizer" src="/scripts/desktop-network-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-interaction-optimizer" src="/scripts/desktop-interaction-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-memory-optimizer" src="/scripts/desktop-memory-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-scroll-smoothness" src="/scripts/desktop-scroll-smoothness.js" strategy="afterInteractive" />
+        <Script id="desktop-fast-rendering" src="/scripts/desktop-fast-rendering.js" strategy="afterInteractive" />
+
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* DESKTOP EXPERIENCE ENHANCEMENT SCRIPTS (LOW PRIORITY)               */}
         {/* Interaction sounds, scroll physics + audio, stability shield       */}
-        {/* Self-gate to desktop only (>769px, non-mobile UA)                  */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
         <Script id="desktop-interaction-sounds" src="/scripts/desktop-interaction-sounds.js" strategy="lazyOnload" />
         <Script id="desktop-scroll-experience" src="/scripts/desktop-scroll-experience.js" strategy="lazyOnload" />
@@ -1220,6 +904,7 @@ export default function RootLayout({
           </div>
           </div>
         </div>
+        <Script id="scroll-unlock-failsafe" src="/scripts/scroll-unlock-failsafe.js" strategy="beforeInteractive" />
         <Script id="splash-hide" src="/scripts/splash-hide.js" strategy="beforeInteractive" />
         {/* All providers consolidated into AppProviders (heavy ones dynamically imported) */}
         <AppProviders>

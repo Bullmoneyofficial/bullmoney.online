@@ -33,6 +33,16 @@
     if (!splash || splash.classList.contains('hide')) return;
     splash.classList.add('hide');
     document.documentElement.classList.add('bm-splash-done');
+    
+    // ✅ CRITICAL: Force unlock scroll immediately (don't wait for CSS cascade)
+    // Some browsers/configs don't apply :has() selector fast enough
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.height = '';
+    document.documentElement.style.position = '';
+    document.body.style.overflow = '';
+    document.body.style.height = '';
+    document.body.style.position = '';
+    
     setTimeout(function() {
       if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
     }, 450);
@@ -50,11 +60,23 @@
   var progress = 0;
   var reactHydrated = false; // Gate: don't touch step DOM until React hydrates
   var pendingStep = 0;       // Queue step changes for after hydration
-  var progressEl = document.getElementById('bm-splash-pct');
-  var barEl = document.getElementById('bm-splash-bar');
-  var statusEl = document.getElementById('bm-splash-status');
-  var stepsEl = document.getElementById('bm-splash-steps');
-  var stepEls = stepsEl ? stepsEl.querySelectorAll('.bm-step') : [];
+  var progressEl = null;
+  var barEl = null;
+  var statusEl = null;
+  var stepsEl = null;
+  var stepEls = [];
+  var elsCached = false;
+  
+  // Aggressively cache elements as soon as they appear
+  function tryBindElements() {
+    if (!progressEl) progressEl = document.getElementById('bm-splash-pct');
+    if (!barEl) barEl = document.getElementById('bm-splash-bar');
+    if (!statusEl) statusEl = document.getElementById('bm-splash-status');
+    if (!stepsEl) stepsEl = document.getElementById('bm-splash-steps');
+    if (stepsEl && (!stepEls || !stepEls.length)) stepEls = stepsEl.querySelectorAll('.bm-step');
+    elsCached = !!(progressEl && barEl && statusEl && stepsEl && stepEls && stepEls.length);
+    return elsCached;
+  }
   var lastVisualProgress = 0;
   var lastVisualTick = Date.now();
   var visualProgress = 0;
@@ -235,17 +257,12 @@
   // Update progress display (safe — these elements have suppressHydrationWarning)
   function ensureSplashEls() {
     // Rebind if the script ran before the splash children were parsed.
-    if (!progressEl || (progressEl && progressEl.isConnected === false)) progressEl = document.getElementById('bm-splash-pct');
-    if (!barEl || (barEl && barEl.isConnected === false)) barEl = document.getElementById('bm-splash-bar');
-    if (!statusEl || (statusEl && statusEl.isConnected === false)) statusEl = document.getElementById('bm-splash-status');
-    if (!stepsEl || (stepsEl && stepsEl.isConnected === false)) stepsEl = document.getElementById('bm-splash-steps');
-    if ((!stepEls || !stepEls.length) && stepsEl && stepsEl.querySelectorAll) {
-      stepEls = stepsEl.querySelectorAll('.bm-step');
-    }
+    tryBindElements();
   }
   function updateProgress(pct) {
-    if (!progressEl || !barEl || !statusEl || !stepsEl || !stepEls || !stepEls.length) {
-      ensureSplashEls();
+    // Try to get elements if not yet cached
+    if (!elsCached) {
+      tryBindElements();
     }
     progress = Math.max(0, Math.min(pct, 100));
     var targetDisplay = Math.floor(progress + 0.35);
@@ -337,7 +354,16 @@
   var animFrame;
   var stallWatchdog;
   var lastFrameTs = 0;
+  var elementCheckCounter = 0;
+  
   function animateProgress() {
+    // Try to bind missing elements every 5 frames
+    elementCheckCounter++;
+    if (elementCheckCounter >= 5) {
+      elementCheckCounter = 0;
+      tryBindElements();
+    }
+    
     var now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     var dt = lastFrameTs ? Math.min((now - lastFrameTs) / 16.67, 3) : 1;
     lastFrameTs = now;

@@ -195,6 +195,13 @@
     clearInterval(imageOptTimer);
   }, { once: true });
 
+  // Clean up timer on page hide to prevent memory leaks
+  w.addEventListener('pagehide', function () {
+    try {
+      clearInterval(imageOptTimer);
+    } catch (e) {}
+  }, { once: true });
+
   // ── 7. Preconnect to critical API origins ──────────────────────────
   function addPreconnect(origin) {
     try {
