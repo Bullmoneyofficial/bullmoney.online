@@ -1056,7 +1056,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const fetchProducts = useCallback(async (
     pageNum: number,
     append: boolean,
-    trades?: AbortSignal
+    signal?: AbortSignal
   ) => {
     if (pageNum === 1) {
       setLoading(true);
@@ -1074,7 +1074,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       if (filters.sort_by) params.set('sort_by', filters.sort_by);
       if (debouncedSearch) params.set('search', debouncedSearch);
 
-      const response = await fetch(`/api/store/products?${params.toString()}`, { trades });
+      const response = await fetch(`/api/store/products?${params.toString()}`, { signal });
       const data = await response.json();
 
       // Check for timer mode from API
@@ -1544,7 +1544,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   useEffect(() => {
     if (!showProducts) return;
     const controller = new AbortController();
-    fetchProducts(1, false, controller.trades);
+    fetchProducts(1, false, controller.signal);
     return () => controller.abort();
   }, [fetchProducts, showProducts]);
 

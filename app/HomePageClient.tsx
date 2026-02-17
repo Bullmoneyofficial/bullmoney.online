@@ -32,6 +32,7 @@ import {
   PageMode,
   TradingUnlockLoader,
   TestimonialsCarousel,
+  BrokerSignupSectionDark,
 } from "@/components/home/dynamicImports";
 
 // ✅ SHIMMER: Only 2 of 7 exports were used — inline them instead of importing 1,561-line module
@@ -960,28 +961,40 @@ function HomeContent() {
                 )}
               </div>
 
-              {/* Community Signals section within hero */}
-              <div data-apple-section-wrapper className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+              {/* Broker Signup section within hero — above community */}
+              <div style={{ flexShrink: 0, marginTop: isMobile ? 24 : 48 }}>
                 {hasMounted && showStage2 && (
-                  <div style={deferredSectionStyle}>
+                    <BrokerSignupSectionDark />
+                )}
+              </div>
+
+              {/* Community Signals section within hero */}
+              <div data-apple-section-wrapper style={{ flexShrink: 0, marginTop: isMobile ? 24 : 48, contentVisibility: 'visible', contain: 'none' }}>
+                {hasMounted && showStage2 && (
                     <div
-                      className={isMobile
-                        ? "w-full border-t border-white/15 overflow-hidden"
-                        : "mx-auto w-full max-w-[1800px] rounded-2xl sm:rounded-3xl border border-white/15 overflow-hidden"}
                       style={isMobile ? {
+                        width: '100%',
+                        borderTop: '1px solid rgba(255,255,255,0.15)',
+                        overflow: 'hidden',
                         background: '#000000',
                       } : {
+                        margin: '0 auto',
+                        width: '100%',
+                        maxWidth: 1800,
+                        borderRadius: 24,
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        overflow: 'hidden',
                         background: 'linear-gradient(180deg, rgba(7,7,7,0.98), rgba(0,0,0,1))',
                         boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
                       }}
                     >
                       {!isMobile && (
-                        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/10">
-                          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/55">Community Hub</p>
-                          <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white">
+                        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                          <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.28em', color: 'rgba(255,255,255,0.55)' }}>Community Hub</p>
+                          <h2 style={{ marginTop: 8, fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', fontWeight: 600, letterSpacing: '-0.02em', color: '#fff' }}>
                             Community Signals
                           </h2>
-                          <p className="mt-2 text-sm sm:text-base text-white/70 max-w-3xl">
+                          <p style={{ marginTop: 8, fontSize: 'clamp(0.875rem, 2vw, 1rem)', color: 'rgba(255,255,255,0.7)', maxWidth: 768 }}>
                             Connect with the BullMoney trading community and access real-time signals and market insights.
                           </p>
                         </div>
@@ -995,13 +1008,12 @@ function HomeContent() {
                         }}
                       >
                         <div
-                          className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                          style={{ height: '100%', overflowX: 'auto', overflowY: 'hidden', touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}
                         >
                           <BullMoneyCommunity />
                         </div>
                       </div>
                     </div>
-                  </div>
                 )}
               </div>
 

@@ -157,6 +157,25 @@ export default function AffiliateQRPosterPanel() {
     return canvas;
   }, []);
 
+  // Generate referral link — matches affiliate dashboard format so QR scans land on homepage pagemode
+  const getReferralLink = useCallback((affiliate: AffiliateRecord) => {
+    if (affiliate.custom_referral_link) return affiliate.custom_referral_link;
+    const code = affiliate.affiliate_code || "";
+    if (!code) return `${BASE_URL}/`;
+
+    const params = new URLSearchParams();
+    params.set("ref", code);
+    if (affiliate.id) params.set("aff_id", String(affiliate.id));
+    if (affiliate.full_name) params.set("aff_name", affiliate.full_name);
+    if (affiliate.email) params.set("aff_email", affiliate.email);
+    params.set("aff_code", code);
+    params.set("utm_source", "affiliate");
+    params.set("utm_medium", "qr_poster");
+    params.set("utm_campaign", "partner_link");
+
+    return `${BASE_URL}/?${params.toString()}`;
+  }, []);
+
   // Bulk download all affiliate QR codes + business cards bundled into a single ZIP file
   const handleBulkDownloadAllQRCodes = useCallback(async () => {
     if (affiliates.length === 0) {
@@ -269,25 +288,6 @@ export default function AffiliateQRPosterPanel() {
   useEffect(() => {
     fetchAffiliates();
   }, [fetchAffiliates]);
-
-  // Generate referral link — matches affiliate dashboard format so QR scans land on homepage pagemode
-  const getReferralLink = useCallback((affiliate: AffiliateRecord) => {
-    if (affiliate.custom_referral_link) return affiliate.custom_referral_link;
-    const code = affiliate.affiliate_code || "";
-    if (!code) return `${BASE_URL}/`;
-    
-    const params = new URLSearchParams();
-    params.set("ref", code);
-    if (affiliate.id) params.set("aff_id", String(affiliate.id));
-    if (affiliate.full_name) params.set("aff_name", affiliate.full_name);
-    if (affiliate.email) params.set("aff_email", affiliate.email);
-    params.set("aff_code", code);
-    params.set("utm_source", "affiliate");
-    params.set("utm_medium", "qr_poster");
-    params.set("utm_campaign", "partner_link");
-    
-    return `${BASE_URL}/?${params.toString()}`;
-  }, []);
 
   // Toast helper
   const showToast = useCallback((message: string, type: "success" | "error" = "success") => {

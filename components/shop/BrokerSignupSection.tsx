@@ -106,40 +106,48 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
   return (
     <section
       data-store-broker-signup
-      className="relative w-full overflow-hidden"
       style={{
+        position: 'relative',
+        width: '100%',
+        overflow: 'hidden',
         backgroundColor: '#f5f5f7',
         borderTop: '1px solid rgba(0,0,0,0.04)',
         borderBottom: '1px solid rgba(0,0,0,0.04)',
       }}
     >
+      {/* Inline shimmer keyframes */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes bm-store-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+      `}} />
 
       <div
-        className="relative mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 sm:py-28"
         style={{
+          position: 'relative',
+          margin: '0 auto',
+          width: '100%',
+          maxWidth: 1152,
+          padding: '80px 24px',
           backgroundColor: '#fff',
           borderRadius: 24,
           border: '1px solid rgba(0,0,0,0.06)',
           boxShadow: '0 20px 60px rgba(15, 23, 42, 0.08)',
+          boxSizing: 'border-box',
         }}
       >
         {/* Header */}
-        <div className="mb-14 text-center">
+        <div style={{ marginBottom: 56, textAlign: 'center' }}>
           <p
-            className="text-[11px] uppercase tracking-[0.28em] font-medium"
-            style={{ color: 'rgba(0,0,0,0.4)' }}
+            style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.28em', fontWeight: 500, color: 'rgba(0,0,0,0.4)' }}
           >
             Create a broker / trading account
           </p>
           <h2
-            className="mt-3 text-2xl sm:text-4xl font-semibold tracking-tight"
-            style={{ color: '#1D1D1F', letterSpacing: '-0.025em' }}
+            style={{ marginTop: 12, fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', fontWeight: 600, letterSpacing: '-0.025em', color: '#1D1D1F' }}
           >
             BullMoney Brokers (Required)
           </h2>
           <p
-            className="mx-auto mt-3 max-w-lg text-sm sm:text-base"
-            style={{ color: 'rgba(0,0,0,0.5)', lineHeight: 1.6 }}
+            style={{ margin: '12px auto 0', maxWidth: 512, fontSize: 'clamp(0.875rem, 2vw, 1rem)', color: 'rgba(0,0,0,0.5)', lineHeight: 1.6 }}
           >
             These are our official brokers. You must use the partner code when trading to join
             the BullMoney community or keep access. Pick a broker, copy the code, and finish signup.
@@ -147,13 +155,20 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
         </div>
 
         {/* Steps pills */}
-        <div className="mx-auto mb-12 flex max-w-xl flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <div style={{ margin: '0 auto 48px', display: 'flex', maxWidth: 576, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
           {STEPS.map((s, i) => (
-            <div key={s.number} className="flex items-center gap-3 sm:gap-4">
-              <div className="flex items-center gap-2.5">
+            <div key={s.number} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold"
                   style={{
+                    display: 'flex',
+                    height: 28,
+                    width: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    fontSize: 11,
+                    fontWeight: 600,
                     backgroundColor: '#000',
                     color: '#fff',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
@@ -161,18 +176,17 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
                 >
                   {s.number}
                 </span>
-                <div className="text-left">
-                  <p className="text-[13px] font-medium" style={{ color: '#1D1D1F' }}>
+                <div style={{ textAlign: 'left' }}>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: '#1D1D1F' }}>
                     {s.label}
                   </p>
-                  <p className="text-[11px]" style={{ color: 'rgba(0,0,0,0.35)' }}>
+                  <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)' }}>
                     {s.sublabel}
                   </p>
                 </div>
               </div>
               {i < STEPS.length - 1 && (
                 <ChevronRight
-                  className="hidden sm:block"
                   style={{ width: 14, height: 14, color: 'rgba(0,0,0,0.15)' }}
                 />
               )}
@@ -181,7 +195,7 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
         </div>
 
         {/* Broker cards */}
-        <div className="mx-auto grid max-w-3xl gap-4 sm:grid-cols-2">
+        <div style={{ margin: '0 auto', display: 'grid', maxWidth: 768, gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
           {(Object.keys(BROKER_CONFIG) as BrokerName[]).map((key) => {
             const b = BROKER_CONFIG[key];
             const isActive = activeBroker === key;
@@ -193,8 +207,11 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
                 onClick={() => handleBrokerSwitch(key)}
                 onMouseEnter={() => setHoverBroker(key)}
                 onMouseLeave={() => setHoverBroker(null)}
-                className="group relative rounded-2xl text-left transition-all duration-300"
                 style={{
+                  position: 'relative',
+                  borderRadius: 16,
+                  textAlign: 'left' as const,
+                  transition: 'all 0.3s ease',
                   padding: '20px 22px',
                   border: isActive
                     ? `1.5px solid ${b.accentBorder}`
@@ -210,18 +227,28 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
                 {/* Active indicator dot */}
                 {isActive && (
                   <div
-                    className="absolute right-4 top-4 h-2.5 w-2.5 rounded-full"
                     style={{
+                      position: 'absolute',
+                      right: 16,
+                      top: 16,
+                      height: 10,
+                      width: 10,
+                      borderRadius: '50%',
                       backgroundColor: b.accentText,
                       boxShadow: `0 0 8px ${b.accentText}40`,
                     }}
                   />
                 )}
                 
-                {/* Logo with shimmer background (blue for Vantage, red for XM) */}
+                {/* Logo with shimmer background */}
                 <div
-                  className="mb-4 inline-flex items-center justify-center rounded-xl overflow-hidden"
                   style={{
+                    marginBottom: 16,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 12,
+                    overflow: 'hidden',
                     width: 120,
                     height: 60,
                     background: key === 'XM' 
@@ -239,7 +266,7 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
                       position: 'absolute',
                       inset: 0,
                       background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)',
-                      animation: 'shimmer 2.5s infinite',
+                      animation: 'bm-store-shimmer 2.5s infinite',
                     }}
                   />
                   <Image
@@ -247,29 +274,29 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
                     alt={`${b.name} logo`}
                     width={100}
                     height={50}
-                    className="relative z-10"
-                    style={{ objectFit: 'contain' }}
+                    style={{ objectFit: 'contain', position: 'relative', zIndex: 10 }}
                   />
                 </div>
                 
                 <h3
-                  className="text-lg font-semibold"
-                  style={{ color: '#1D1D1F', letterSpacing: '-0.01em' }}
+                  style={{ fontSize: 18, fontWeight: 600, color: '#1D1D1F', letterSpacing: '-0.01em' }}
                 >
                   {b.name}
                 </h3>
                 <p
-                  className="mt-1 text-[13px]"
-                  style={{ color: 'rgba(0,0,0,0.5)', lineHeight: 1.5 }}
+                  style={{ marginTop: 4, fontSize: 13, color: 'rgba(0,0,0,0.5)', lineHeight: 1.5 }}
                 >
                   {b.description}
                 </p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
+                <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {b.features.map((f) => (
                     <span
                       key={f}
-                      className="rounded-full px-2.5 py-0.5 text-[10px] font-medium"
                       style={{
+                        borderRadius: 9999,
+                        padding: '2px 10px',
+                        fontSize: 10,
+                        fontWeight: 500,
                         backgroundColor: isActive ? `${b.accentText}10` : 'rgba(0,0,0,0.03)',
                         color: isActive ? b.accentText : 'rgba(0,0,0,0.45)',
                         border: `1px solid ${isActive ? `${b.accentText}20` : 'rgba(0,0,0,0.05)'}`,
@@ -286,8 +313,10 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
 
         {/* Action card — copy code + open broker */}
         <div
-          className="mx-auto mt-8 max-w-3xl rounded-2xl"
           style={{
+            margin: '32px auto 0',
+            maxWidth: 768,
+            borderRadius: 16,
             backgroundColor: '#fff',
             border: '1px solid rgba(0,0,0,0.06)',
             boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
@@ -296,19 +325,16 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
         >
           {/* Code display */}
           <div
-            className="flex items-center justify-between px-6 py-5"
-            style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
           >
             <div>
               <p
-                className="text-[10px] uppercase font-medium"
-                style={{ color: 'rgba(0,0,0,0.35)', letterSpacing: '0.08em' }}
+                style={{ fontSize: 10, textTransform: 'uppercase', fontWeight: 500, color: 'rgba(0,0,0,0.35)', letterSpacing: '0.08em' }}
               >
                 {activeBroker} Partner Code
               </p>
               <p
-                className="mt-0.5 text-xl font-bold tracking-wide"
-                style={{ color: '#1D1D1F', letterSpacing: '0.04em' }}
+                style={{ marginTop: 2, fontSize: 20, fontWeight: 700, letterSpacing: '0.04em', color: '#1D1D1F' }}
               >
                 {broker.code}
               </p>
@@ -316,8 +342,16 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
             <button
               type="button"
               onClick={() => copyCode(broker.code)}
-              className="flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold transition-all duration-200 hover:-translate-y-0.5"
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                borderRadius: 9999,
+                padding: '8px 16px',
+                fontSize: 13,
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
                 backgroundColor: copied ? '#E8F5E9' : 'rgba(0,0,0,0.04)',
                 color: copied ? '#2E7D32' : '#1D1D1F',
                 border: copied ? '1px solid #A5D6A7' : '1px solid rgba(0,0,0,0.08)',
@@ -336,8 +370,8 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
           </div>
 
           {/* Instructions + CTA */}
-          <div className="flex flex-col gap-5 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-1.5 text-[12px]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '20px 24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
               <p>
                 <span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>1.</span> Copy the code
                 above
@@ -350,8 +384,7 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
                 <span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>3.</span> Come back and{' '}
                 <a
                   href="/register"
-                  className="font-medium underline decoration-black/20 underline-offset-2 hover:decoration-black/40"
-                  style={{ color: 'rgba(0,0,0,0.7)' }}
+                  style={{ fontWeight: 500, color: 'rgba(0,0,0,0.7)', textDecoration: 'underline', textUnderlineOffset: 2 }}
                 >
                   finish sign-up
                 </a>
@@ -360,10 +393,22 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
             <button
               type="button"
               onClick={handleBrokerClick}
-              className="flex items-center justify-center gap-2 rounded-full px-7 py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 sm:shrink-0"
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                borderRadius: 9999,
+                padding: '12px 28px',
+                fontSize: 14,
+                fontWeight: 600,
+                color: '#fff',
                 background: '#000',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
                 boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)',
+                flexShrink: 0,
               }}
             >
               Open {activeBroker} Account <ExternalLink style={{ width: 15, height: 15 }} />
@@ -371,30 +416,40 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
           </div>
         </div>
 
-        <div className="mx-auto mt-6 flex flex-col items-center gap-3">
+        <div style={{ margin: '24px auto 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <button
             type="button"
             onClick={handleSignupRedirect}
-            className="rounded-full border border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-black transition-all duration-200 hover:-translate-y-0.5"
-            style={{ boxShadow: '0 8px 24px -10px rgba(0,0,0,0.18)' }}
+            style={{
+              borderRadius: 9999,
+              padding: '10px 24px',
+              fontSize: 13,
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+              cursor: 'pointer',
+              backgroundColor: '#fff',
+              border: '1px solid rgba(0,0,0,0.1)',
+              color: '#000',
+              boxShadow: '0 8px 24px -10px rgba(0,0,0,0.18)',
+            }}
           >
             Create BullMoney Account
           </button>
-          <p className="text-[11px]" style={{ color: 'rgba(0,0,0,0.4)' }}>
+          <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>
             Use the same broker code to stay active in the community.
           </p>
         </div>
 
         {/* Trust badges */}
-        <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-6 sm:gap-10">
+        <div style={{ margin: '40px auto 0', display: 'flex', maxWidth: 672, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 40 }}>
           {[
             { icon: Shield, label: 'Regulated Brokers' },
             { icon: Zap, label: 'Instant Access' },
             { icon: TrendingUp, label: 'No Payment Needed' },
           ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2">
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Icon style={{ width: 16, height: 16, color: 'rgba(0,0,0,0.3)' }} />
-              <span className="text-[12px] font-medium" style={{ color: 'rgba(0,0,0,0.4)' }}>
+              <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(0,0,0,0.4)' }}>
                 {label}
               </span>
             </div>
@@ -405,18 +460,3 @@ export const BrokerSignupSection = memo(function BrokerSignupSection() {
     </section>
   );
 });
-
-// Add shimmer animation keyframes
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes shimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-  `;
-  if (!document.querySelector('style[data-shimmer-animation]')) {
-    style.setAttribute('data-shimmer-animation', 'true');
-    document.head.appendChild(style);
-  }
-}

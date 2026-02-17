@@ -95,6 +95,11 @@ export const TestimonialsCarousel = dynamic(
   { ssr: true, loading: () => <CardSkeleton /> }
 );
 
+export const BrokerSignupSectionDark = dynamic(
+  () => import("@/components/home/BrokerSignupSectionDark").then(mod => ({ default: mod.BrokerSignupSectionDark })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
 export const FooterComponent = dynamic(
   () => import( "@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
   { ssr: false }
