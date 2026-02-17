@@ -269,6 +269,46 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setGamesManualOpen(false);
     setSiteSearchOpen(false);
   }, [pathname]);  
+
+  // Prevent the desktop dropdown from remaining logically open when it is not renderable.
+  // The dropdown UI is `hidden lg:block`, so on <lg viewports we force-close and cancel
+  // any pending hover timers to avoid opening an invisible menu state.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mql = window.matchMedia('(min-width: 1024px)'); // Tailwind `lg`
+
+    const syncDesktopMenuToViewport = () => {
+      if (mql.matches) return;
+
+      if (desktopMenuCloseTimer.current) {
+        clearTimeout(desktopMenuCloseTimer.current);
+        desktopMenuCloseTimer.current = null;
+      }
+      if (desktopMenuOpenTimer.current) {
+        clearTimeout(desktopMenuOpenTimer.current);
+        desktopMenuOpenTimer.current = null;
+      }
+
+      if (desktopMenuOpen) {
+        setDesktopMenuOpen(false);
+      }
+    };
+
+    // Run once on mount, then on breakpoint changes.
+    syncDesktopMenuToViewport();
+
+    const onChange = () => syncDesktopMenuToViewport();
+    // Safari < 14 uses addListener/removeListener.
+    if ('addEventListener' in mql) {
+      mql.addEventListener('change', onChange);
+      return () => mql.removeEventListener('change', onChange);
+    }
+    // @ts-expect-error - legacy MediaQueryList API
+    mql.addListener(onChange);
+    // @ts-expect-error - legacy MediaQueryList API
+    return () => mql.removeListener(onChange);
+  }, [desktopMenuOpen, setDesktopMenuOpen]);
   
   // Load Ultimate Hub preference
   useEffect(() => {

@@ -14,6 +14,43 @@ const isWindows = platform === 'win32';
 const isMac = platform === 'darwin';
 const isLinux = platform === 'linux';
 
+// Dev-server safety: allow requests for /_next assets from your LAN origin
+// when testing on phones/other devices (e.g. http://192.168.x.x:3000).
+const devAllowedOrigins = (() => {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd) return [];
+
+  const port = String(process.env.PORT || 3000);
+  const origins = new Set([
+    `http://localhost:${port}`,
+    `http://127.0.0.1:${port}`,
+  ]);
+
+  try {
+    const nets = os.networkInterfaces();
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name] || []) {
+        if (!net || net.family !== 'IPv4' || net.internal) continue;
+        origins.add(`http://${net.address}:${port}`);
+      }
+    }
+  } catch {
+    // Ignore
+  }
+
+  // Optional manual override/additions: comma-separated list of origins
+  // Example: NEXT_PUBLIC_ALLOWED_DEV_ORIGINS="http://192.168.1.163:3000,http://10.0.0.5:3000"
+  const extra = process.env.NEXT_PUBLIC_ALLOWED_DEV_ORIGINS;
+  if (extra) {
+    for (const raw of extra.split(',')) {
+      const trimmed = raw.trim();
+      if (trimmed) origins.add(trimmed);
+    }
+  }
+
+  return Array.from(origins);
+})();
+
 // Casino backend URL for proxy
 const isDev = process.env.NODE_ENV !== 'production';
 const CASINO_BACKEND_URL = process.env.CASINO_BACKEND_URL || (isDev ? 'http://localhost:8000' : 'https://bullmoney-casino.onrender.com');
@@ -63,6 +100,7 @@ const nextConfig = {
   reactStrictMode: false, // Disable StrictMode in prod - reduces double renders
   compress: true,
   productionBrowserSourceMaps: false,
+  ...(isDev ? { allowedDevOrigins: devAllowedOrigins } : {}),
   // COMPILATION SPEED: Disable source maps in development (massive speed boost)
   webpack: (config, { dev, isServer }) => {
     if (dev) {

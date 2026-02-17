@@ -150,15 +150,20 @@ const TelegramUnlockScreen = dynamic(
 
 // Legacy flag placeholder to satisfy stale client bundles that may reference it during Fast Refresh.
 
-function HomeContent() {
+type HomePageClientProps = {
+  initialView?: 'pagemode' | 'loader' | 'telegram' | 'content';
+  skipInit?: boolean;
+};
+
+function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageClientProps) {
   const { optimizeSection } = useLazyBigDeviceScrollOptimizer();
   const isHydrated = useHydrated();
   
   // ✅ HYDRATION OPTIMIZED: Start with safe defaults that match SSR
   // useEffect will check localStorage on client mount
   // This ensures SSR hydration works correctly in production
-  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'telegram' | 'content'>('pagemode');
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'telegram' | 'content'>(initialView);
+  const [isInitialized, setIsInitialized] = useState(skipInit);
   // ✅ HYDRATION OPTIMIZED: Initialize as false to match server render
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -551,6 +556,7 @@ function HomeContent() {
   // Check localStorage on client mount to determine the correct view
   // This runs once on mount and sets the view based on user's previous progress
   useEffect(() => {
+    if (skipInit) return;
     const forcePagemodeLogin = safeGetLocal(PAGEMODE_FORCE_LOGIN_KEY);
     if (forcePagemodeLogin === "true") {
       safeRemoveLocal(PAGEMODE_FORCE_LOGIN_KEY);
@@ -675,7 +681,7 @@ function HomeContent() {
       setCurrentView('pagemode');
     }
     setIsInitialized(true);
-  }, []);
+  }, [skipInit, setV2Unlocked]);
 
   useEffect(() => {
     setHasMounted(true);
@@ -1129,10 +1135,10 @@ function HomeContent() {
   );
 }
 
-export function HomePageClient() {
+export function HomePageClient(props: HomePageClientProps = {}) {
   return (
     <>
-      <HomeContent />
+      <HomeContent {...props} />
     </>
   );
 }

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import HomePageShell from "./HomePageShell";
 
 const HomePageClientMobile = dynamic(
-  () => import("./HomePageClient").then((m) => ({ default: m.HomePageClient })),
+  () => import("./HomePageController").then((m) => ({ default: m.HomePageController })),
   {
     ssr: false,
     loading: () => <HomePageShell />,
