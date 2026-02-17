@@ -47,7 +47,7 @@ const ShimmerRadialGlow = ({ color = "white", intensity = "low" }: { color?: str
 // ✅ PERF: Heavy systems lazy-loaded — not needed for compile or first paint
 // UnifiedPerformanceSystem (1,641 lines), CrashTracker (1,008 lines), bigDeviceScrollOptimizer (212 lines)
 // = 2,861 fewer lines in the critical compile chain
-import { useLazyUnifiedPerformance, useLazyComponentTracking, useLazyCrashTracker, useLazyBigDeviceScrollOptimizer } from "@/lib/lazyPerformanceHooks";
+import { useLazyUnifiedPerformance, useLazyBigDeviceScrollOptimizer } from "@/lib/lazyPerformanceHooks";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
@@ -123,6 +123,11 @@ const LazyAudioEngine = dynamic(() => import("@/app/hooks/useAudioEngine").then(
     return null;
   }
 })), { ssr: false });
+
+const HomePagePerformanceSystems = dynamic(
+  () => import("./HomePagePerformanceSystems"),
+  { ssr: false }
+);
 
 // Lazy load heavy components that aren't needed immediately
 const DiscordMobileHero = dynamic(
@@ -313,15 +318,8 @@ function HomeContent() {
     deviceTier, 
     registerComponent, 
     unregisterComponent,
-    averageFps,
-    shimmerQuality,
-    preloadQueue,
-    unloadQueue 
+    shimmerQuality
   } = useLazyUnifiedPerformance();
-  
-  // Crash tracking for the main page
-  const { trackClick, trackError, trackCustom } = useLazyComponentTracking('page');
-  const { trackPerformanceWarning } = useLazyCrashTracker();
 
   // Use global theme context
   const { activeThemeId, activeTheme, setAppLoading } = useGlobalTheme();
@@ -356,13 +354,6 @@ function HomeContent() {
     contain: 'layout paint style',
   };
   
-  // Track FPS drops
-  useEffect(() => {
-    if (averageFps < 25 && currentView === 'content') {
-      trackPerformanceWarning('page', averageFps, `FPS dropped to ${averageFps}`);
-    }
-  }, [averageFps, currentView, trackPerformanceWarning]);
-
   useEffect(() => {
     if (currentView !== 'content') {
       setSequenceStage(0);
@@ -380,14 +371,12 @@ function HomeContent() {
   // Store callback refs to avoid dependency changes triggering cleanup
   const registerComponentRef = useRef(registerComponent);
   const unregisterComponentRef = useRef(unregisterComponent);
-  const trackCustomRef = useRef(trackCustom);
   const optimizeSectionRef = useRef(optimizeSection);
 
   // Keep refs updated
   useEffect(() => {
     registerComponentRef.current = registerComponent;
     unregisterComponentRef.current = unregisterComponent;
-    trackCustomRef.current = trackCustom;
     optimizeSectionRef.current = optimizeSection;
   });
   
@@ -398,7 +387,6 @@ function HomeContent() {
       registerComponentRef.current('hero', 9);
       registerComponentRef.current('features', 5);
       registerComponentRef.current('ticker', 7);
-      trackCustomRef.current('content_loaded', { deviceTier, shimmerQuality });
       
       if (typeof window !== 'undefined' && window.innerWidth >= 1440) {
         setTimeout(() => {
@@ -585,7 +573,6 @@ function HomeContent() {
     try {
       const sessionCountKey = "bullmoney_refresh_count";
       const refreshTimesKey = "bullmoney_refresh_times";
-      const showProbability = 0.35;
       const rapidShownKey = "bullmoney_refresh_rapid_last";
 
       const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -623,12 +610,6 @@ function HomeContent() {
         shouldForceLoader = true;
         forceReasons.push("rapid_refresh_3_in_2min");
         safeSetSession(rapidShownKey, String(now));
-      }
-
-      // Randomized probability: show 35% of refreshes
-      if (Math.random() < showProbability) {
-        shouldForceLoader = true;
-        forceReasons.push("random_refresh_35_percent");
       }
     } catch (error) {
       console.warn('[Page] Refresh trigger check failed', error);
@@ -803,6 +784,11 @@ function HomeContent() {
   return (
     <>
       <style>{glassStyles}</style>
+
+      {/* Defer heavy tracking until content is visible */}
+      {currentView === 'content' && (
+        <HomePagePerformanceSystems enabled={true} pageView={currentView} />
+      )}
       
       {/* ✅ Lazy effect components — defers 1,296 lines from initial compile */}
       <LazyShowcaseScroll

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
+import "./bm-splash.css";
 // Combined 12 CSS files into 1 for faster compilation (fewer modules to resolve)
 import "../styles/_combined-layout.css";
 // import "./styles/90-scroll-anywhere.css"; // Temporarily disabled - causing PostCSS parse errors, scroll fixes moved to inline styles
@@ -249,171 +250,270 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* INSTANT SPLASH: Prevents white/black flash before React hydrates */}
-        <style dangerouslySetInnerHTML={{ __html: `
-      :root{--app-vh:1vh;}
-      html,body{background:#000000!important;}
-      
-      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:var(--app-height,calc(var(--vh,1vh)*100));min-height:var(--app-height,calc(var(--vh,1vh)*100));min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;background-color:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),background-color .55s cubic-bezier(.22,1,.36,1);overflow:hidden;will-change:opacity,transform,background-color;transform-origin:50% 50%;}
-      /* Lock viewport while splash is active — overrides scroll fixes below */
-      html:has(#bm-splash:not(.hide)),html:has(#bm-splash:not(.hide)) body{overflow:hidden!important;height:100%!important;position:static!important;}
-      @supports not (selector(:has(*))){html:not(.bm-splash-done),html:not(.bm-splash-done) body{overflow:hidden!important;height:100%!important;}}
-      #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);animation:none!important;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);}
+        {/* INSTANT SPLASH: Tiny no-flash rule; full splash CSS lives in app/bm-splash.css */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `:root{--app-vh:1vh;}html,body{background:#000000!important;}`,
+          }}
+        />
+        {/* CRITICAL: Combined beforeInteractive init (reduces blocking script tags) */}
+        <Script
+          id="bm-preinteractive"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+(function(){
+  // --- splash-init (desktop inline / mobile external) ---
+  (function(){
+    try{
+      if (typeof window === 'undefined' || typeof document === 'undefined') return;
+      var d = document.documentElement;
+      if (!d) return;
+      var s = d.style || {};
+      var w = window;
+      var ua = String((navigator && navigator.userAgent) || '');
+      var isDesktop = !/mobi|android|iphone|ipad/i.test(ua) && (w.innerWidth||0) >= 769;
 
-      /* Safari/iOS fallback: reduce compositor stress only in lite mode */
-      html.is-safari #bm-splash,html.is-ios-safari #bm-splash{left:0;right:0;width:100%;height:100%;min-height:100vh;min-height:-webkit-fill-available;transform:translateZ(0);-webkit-transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
-      html.is-safari #bm-splash.bm-splash-lite::before,html.is-safari #bm-splash.bm-splash-lite::after,html.is-ios-safari #bm-splash.bm-splash-lite::before,html.is-ios-safari #bm-splash.bm-splash-lite::after{animation:none!important;filter:none!important;}
-      html.is-safari #bm-splash.bm-splash-lite .bm-orb,html.is-ios-safari #bm-splash.bm-splash-lite .bm-orb{display:none;}
-      html.is-safari #bm-splash.bm-splash-lite .bm-status,html.is-ios-safari #bm-splash.bm-splash-lite .bm-status{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
-      html.is-safari #bm-splash.bm-splash-lite .bm-logo-wrap,html.is-safari #bm-splash.bm-splash-lite .bm-progress-wrap,html.is-ios-safari #bm-splash.bm-splash-lite .bm-logo-wrap,html.is-ios-safari #bm-splash.bm-splash-lite .bm-progress-wrap{animation:none!important;}
-
-      /* Subtle radial gradient overlay */
-      #bm-splash::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0.02) 0%,rgba(255,255,255,0) 70%);z-index:0;}
-      #bm-splash::after{content:"";position:absolute;inset:-20%;background:conic-gradient(from 180deg at 50% 50%,rgba(24,24,27,.04),rgba(24,24,27,0),rgba(24,24,27,.04));filter:blur(20px);opacity:.48;z-index:0;}
-      #bm-splash .bm-orb{position:absolute;border-radius:9999px;filter:blur(20px);pointer-events:none;z-index:1;will-change:transform;}
-      #bm-splash .bm-orb-a{width:240px;height:240px;top:12%;left:18%;background:radial-gradient(circle,rgba(24,24,27,.12),rgba(24,24,27,0) 65%);}
-      #bm-splash .bm-orb-b{width:280px;height:280px;right:14%;bottom:10%;background:radial-gradient(circle,rgba(24,24,27,.1),rgba(24,24,27,0) 65%);}
-
-      /* Splash content wrapper */
-      #bm-splash .bm-sway-content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;}
-
-      /* Logo container */
-      #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:162px;height:162px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-intro .7s cubic-bezier(.2,.8,.2,1) both;will-change:transform,opacity;transition:width .45s cubic-bezier(.22,1,.36,1),height .45s cubic-bezier(.22,1,.36,1);}
-      #bm-splash .bm-logo-wrap svg{width:100%;height:100%;filter:drop-shadow(0 0 20px rgba(0,0,0,0.08));}
-
-      /* Title */
-      #bm-splash .bm-title{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,"Segoe UI",Roboto,sans-serif;font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1;margin-bottom:6px;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .15s both;will-change:transform,opacity;}
-
-      /* Subtitle */
-      #bm-splash .bm-subtitle{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",Roboto,sans-serif;font-size:11px;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:rgba(0,0,0,.35);margin-bottom:32px;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .28s both;will-change:transform,opacity;}
-
-      /* Progress section */
-      #bm-splash .bm-progress-wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:16px;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .4s both;will-change:transform,opacity;}
-
-      /* Percentage */
-      #bm-splash .bm-percent{display:inline-block;white-space:nowrap;padding-right:.08em;overflow:visible;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-variant-numeric:tabular-nums;}
-
-      /* Status pill */
-      #bm-splash .bm-status{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.03);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:8px 20px;border-radius:9999px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 3px rgba(0,0,0,.04);}
-      #bm-splash .bm-dot-wrap{position:relative;display:flex;width:10px;height:10px;}
-      #bm-splash .bm-dot-ping{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.25);}
-      #bm-splash .bm-dot{position:relative;width:10px;height:10px;border-radius:50%;background:#18181b;}
-      #bm-splash .bm-status-text{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,0,0,.5);}
-
-      /* Loading bar */
-      #bm-splash .bm-bar-outer{width:200px;height:2px;border-radius:2px;background:rgba(0,0,0,.06);overflow:hidden;margin-top:8px;position:relative;}
-      #bm-splash .bm-bar-outer::after{content:"";position:absolute;inset:0;transform:translate3d(-130%,0,0);background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:bm-bar-sheen 1.15s linear infinite;opacity:.85;}
-      #bm-splash .bm-bar-inner{width:0%;height:100%;border-radius:2px;background:linear-gradient(90deg,#18181b 0%,#3f3f46 35%,#a1a1aa 50%,#3f3f46 65%,#18181b 100%);background-size:240% 100%;animation:bm-bar-flow .95s linear infinite;transition:width .3s ease-out,opacity .3s ease-out;}
-
-      /* Loading steps */
-      #bm-splash .bm-steps{display:flex;flex-direction:column;gap:6px;margin-top:20px;position:relative;z-index:10;}
-      #bm-splash .bm-step{display:flex;align-items:center;gap:10px;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.05em;color:rgba(0,0,0,.25);transition:color .3s ease,opacity .3s ease,transform .3s ease;opacity:.5;transform:translateX(0);}
-      #bm-splash .bm-step span:last-child{position:relative;display:inline-block;}
-
-      /* SCROLL FIXES: Lazy-loaded via external stylesheet to reduce inline CSS size */
-      /* See public/styles/desktop-scroll-fixes.css */
-      /* ═══════════════════════════════════════════════════════════════════ */
-      /* SPLASH ANIMATIONS: Optimized for desktop performance */
-      @media (min-width: 769px) {
-        /* On desktop: simplify animations to reduce GPU load */
-        #bm-splash .bm-bar-outer::after{
-          animation: none !important;
-          opacity: .35 !important;
+      if (isDesktop) {
+        var addClass = function(cls){ try{ if (d.classList) d.classList.add(cls); } catch(e){} };
+        addClass('desktop-optimized');
+        s.height='auto'; s.overflowY='scroll'; s.overflowX='hidden'; s.scrollBehavior='auto';
+        s.scrollSnapType='none'; s.overscrollBehavior='auto';
+        var b = document.body;
+        if (b && b.style) { b.style.height='auto'; b.style.overflowY='visible'; b.style.overflowX='hidden'; b.style.overscrollBehavior='auto'; }
+        addClass('mouse-device'); addClass('non-touch-device');
+        if ((w.innerWidth||0) >= 1440) {
+          addClass('big-display');
+          s.scrollPaddingTop='80px';
+          try { if (b && b.classList) b.classList.add('big-display-body'); } catch(e) {}
         }
-        #bm-splash .bm-bar-inner{
-          animation: none !important;
-          background: #18181b !important;
+        if (/macintosh|mac os x/i.test(ua)) addClass('macos');
+        if (/^((?!chrome|android|crios|fxios|opera|opr|edge|edg).)*safari/i.test(ua)) addClass('is-safari');
+        var setVH = function(){
+          try{
+            var vh = (w.innerHeight * 0.01) + 'px';
+            if (s && typeof s.setProperty === 'function') { s.setProperty('--app-vh', vh); s.setProperty('--vh', vh); }
+          } catch(e) {}
+        };
+        setVH();
+        w.addEventListener('resize', setVH, { passive: true });
+
+        try{
+          var t = localStorage.getItem('bullmoney-theme-data');
+          if (t) {
+            var p = JSON.parse(t);
+            if (p && p.accentColor && s && typeof s.setProperty === 'function') {
+              var h2 = String(p.accentColor || '').replace('#', '');
+              var r = parseInt(h2.substring(0,2),16) || 59;
+              var g = parseInt(h2.substring(2,4),16) || 130;
+              var b2 = parseInt(h2.substring(4,6),16) || 246;
+              var rgb = r + ', ' + g + ', ' + b2;
+              s.setProperty('--accent-color', p.accentColor);
+              s.setProperty('--accent-rgb', rgb);
+              d.setAttribute('data-active-theme', p.id || 'bullmoney-blue');
+              d.setAttribute('data-theme-category', p.category || 'SPECIAL');
+            }
+          } else {
+            d.setAttribute('data-active-theme', 'bullmoney-blue');
+            if (s && typeof s.setProperty === 'function') {
+              s.setProperty('--accent-color', '#ffffff');
+              s.setProperty('--accent-rgb', '255, 255, 255');
+            }
+          }
+        } catch(e) {
+          d.setAttribute('data-active-theme', 'bullmoney-blue');
+          if (s && typeof s.setProperty === 'function') {
+            s.setProperty('--accent-color', '#ffffff');
+            s.setProperty('--accent-rgb', '255, 255, 255');
+          }
         }
-        #bm-splash .bm-orb{
-          animation: none !important;
-          display: none !important;
+      } else {
+        var script = document.createElement('script');
+        script.src = '/scripts/splash-init.js';
+        script.async = false;
+        document.head.appendChild(script);
+      }
+    } catch(e) {}
+  })();
+
+  // --- compat-layer (desktop skips) ---
+  (function(){
+    try{
+      var ua = String((navigator && navigator.userAgent) || '');
+      var isDesktop = !/mobi|android|iphone|ipad/i.test(ua) && (window.innerWidth||0) >= 769;
+      var isModernDesktop = isDesktop && (window.fetch && window.Promise && window.IntersectionObserver && Element.prototype.closest);
+      if (isModernDesktop) return;
+      var s = document.createElement('script');
+      s.src = '/scripts/BMBRAIN/compat-layer.js';
+      s.async = false;
+      document.head.appendChild(s);
+    } catch(e) {}
+  })();
+
+  // --- splash-failsafe (15s) ---
+  (function(){
+    try {
+      window.setTimeout(function(){
+        var splash = document.getElementById('bm-splash');
+        if (!splash || splash.classList.contains('hide')) return;
+        splash.classList.add('hide');
+        document.documentElement.classList.add('bm-splash-done');
+        window.__BM_SPLASH_FINISHED__ = true;
+        try { window.dispatchEvent(new Event('bm-splash-finished')); } catch (e) {}
+        window.setTimeout(function(){
+          if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+        }, 450);
+      }, 15000);
+    } catch (e) {}
+  })();
+
+  // --- scroll-failsafe ---
+  (function(){
+    try {
+      function unlock(){
+        try{
+          var h = document.documentElement;
+          var b = document.body;
+          if (h && h.style) h.style.overflow = '';
+          if (b && b.style) b.style.overflow = '';
+        } catch(e) {}
+      }
+      unlock();
+      setTimeout(unlock, 100);
+      setTimeout(unlock, 500);
+      window.addEventListener('bm-splash-finished', unlock);
+    } catch (e) {}
+  })();
+
+  // --- splash-hide (desktop inline / mobile external) ---
+  (function(){
+    var ua = String((navigator && navigator.userAgent) || '');
+    var isDesktop = !/mobi|android|iphone|ipad/i.test(ua) && (window.innerWidth||0) >= 769;
+    if (isDesktop) {
+      function run(){
+        var splash = document.getElementById('bm-splash');
+        if (!splash) return false;
+        if (window.__BM_SPLASH_STARTED__) return true;
+        window.__BM_SPLASH_STARTED__ = true;
+        var raf = window.requestAnimationFrame || function(cb){ return setTimeout(cb,16); };
+        var caf = window.cancelAnimationFrame || function(id){ clearTimeout(id); };
+        function forceHide(){
+          if (!splash || splash.classList.contains('hide')) return;
+          splash.classList.add('hide');
+          document.documentElement.classList.add('bm-splash-done');
+          document.documentElement.style.overflow='';
+          document.documentElement.style.height='';
+          if (document.body && document.body.style) {
+            document.body.style.overflow='';
+            document.body.style.height='';
+          }
+          setTimeout(function(){ if(splash && splash.parentNode) splash.parentNode.removeChild(splash); }, 300);
+          window.__BM_SPLASH_FINISHED__ = true;
+          try { window.dispatchEvent(new Event('bm-splash-finished')); } catch(e) {}
         }
-        #bm-splash::before,
-        #bm-splash::after {
-          animation: none !important;
+        var progress = 0;
+        var targetPct = 0;
+        var progressEl = document.getElementById('bm-splash-pct');
+        var barEl = document.getElementById('bm-splash-bar');
+        var animFrame;
+        var startTime = Date.now();
+        splash.classList.add('bm-splash-lite');
+        function updateProgress(pct){
+          progress = Math.max(0, Math.min(pct, 100));
+          var display = Math.floor(progress);
+          if (display < 10) display = '0' + display;
+          if (progressEl) progressEl.textContent = display + '%';
+          if (barEl) barEl.style.width = progress + '%';
         }
+        function animateProgress(){
+          if (progress < targetPct) {
+            var delta = (targetPct - progress) * 0.15;
+            if (delta < 0.5) delta = 0.5;
+            updateProgress(progress + delta);
+          }
+          if (progress < 100) {
+            animFrame = raf(animateProgress);
+          } else {
+            setTimeout(hide, 200);
+          }
+        }
+        animFrame = raf(animateProgress);
+        targetPct = 30;
+        function onDomReady(){
+          targetPct = 60;
+          if (document.readyState === 'complete') { onLoad(); }
+          else { window.addEventListener('load', onLoad, { once: true }); }
+        }
+        function onLoad(){
+          targetPct = 85;
+          waitForHydration(function(){ targetPct = 100; });
+        }
+        function waitForHydration(cb){
+          var checks = 0;
+          var maxChecks = 60;
+          function check(){
+            try{
+              checks++;
+              var hydrated = false;
+              if (!document.body) {
+                if (checks >= maxChecks) cb();
+                else setTimeout(check, 50);
+                return;
+              }
+              var reactRoot = document.querySelector('[data-reactroot]') || document.getElementById('__next');
+              if (reactRoot && reactRoot.children && reactRoot.children.length > 0) hydrated = true;
+              if (window.__BM_HYDRATED__) hydrated = true;
+              if (hydrated || checks >= maxChecks) cb();
+              else {
+                if (targetPct < 80) targetPct += 1;
+                setTimeout(check, 50);
+              }
+            } catch(e) { cb(); }
+          }
+          check();
+        }
+        window.addEventListener('bm-hydrated', function(){ window.__BM_HYDRATED__ = true; }, { once: true });
+        function hide(){
+          var elapsed = Date.now() - startTime;
+          if (elapsed < 100) { setTimeout(hide, 100 - elapsed); return; }
+          caf(animFrame);
+          splash.classList.add('hide');
+          document.documentElement.classList.add('bm-splash-done');
+          document.documentElement.style.overflow='';
+          document.documentElement.style.height='';
+          if (document.body && document.body.style) {
+            document.body.style.overflow='';
+            document.body.style.height='';
+          }
+          setTimeout(function(){
+            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+            window.__BM_SPLASH_FINISHED__ = true;
+            try { window.dispatchEvent(new Event('bm-splash-finished')); } catch(e) {}
+          }, 300);
+        }
+        try {
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onDomReady, { once: true });
+          else onDomReady();
+          setTimeout(forceHide, 4000);
+        } catch(e) { forceHide(); }
+        return true;
       }
-      
-      #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;transform:translateX(3px);}
-      #bm-splash .bm-step.active span:last-child{background:linear-gradient(100deg,#0f0f12 0%,#3f3f46 35%,#0f0f12 70%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-step-sheen 1.4s ease-in-out infinite;}
-      #bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}
-      #bm-splash .bm-step.done span:last-child{animation:bm-step-settle .5s ease-out both;}
-      #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
-      #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
-      #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
-
-      /* In-app webviews (Instagram/TikTok/Facebook etc): keep splash reliable by disabling heavy animations */
-      #bm-splash.bm-splash-lite .bm-orb{display:none!important;}
-      #bm-splash.bm-splash-lite .bm-bar-outer::after{animation:none!important;opacity:.35!important;}
-      #bm-splash.bm-splash-lite .bm-bar-inner{animation:none!important;background:#18181b!important;}
-      #bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle{animation:none!important;background-color:#000000!important;}
-      #bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:none!important;filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;-webkit-filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;}
-
-
-      /* === Splash Finale: logo grows to playing-card size, all else disappears === */
-      #bm-splash.bm-splash-finale{justify-content:center;align-items:center;background:#0a0a0a;background-color:#0a0a0a;}
-      #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:transform!important;--bm-finale-scale:1;transform:translateX(-15px) scale(var(--bm-finale-scale))!important;transition:transform .8s cubic-bezier(.22,1,.36,1),width .8s cubic-bezier(.22,1,.36,1),height .8s cubic-bezier(.22,1,.36,1)!important;}
-      /* Use filter invert() so the inline SVG (black) can become white on dark bg (Safari-friendly) */
-      #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));-webkit-filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));}
-      /* In-app: force white finale + black logo (no invert/glow, no bg animation) */
-      html.is-in-app-browser #bm-splash.bm-splash-finale{background:#ffffff!important;background-color:#ffffff!important;}
-      html.is-in-app-browser #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;background:#ffffff!important;background-color:#ffffff!important;}
-      html.is-in-app-browser #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:none!important;-webkit-filter:none!important;}
-      
-      /* DESKTOP OPTIMIZATION: Disable idle animations on desktop (>=769px) to reduce GPU load */
-      @media (min-width: 769px) {
-        #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;}
-        #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;animation:none!important;}
-        #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:none!important;}
-      }
-      
-      /* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS - Mobile/tablet only */
-      @media (max-width: 768px) {
-        #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
-        #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}
-        /* Extra idle motion: spin + synced contrast/glow (doesn't fight wrapper transform/scale) */
-        #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{transform-origin:50% 50%;will-change:transform,filter;animation:bm-finale-spin 8s cubic-bezier(.4,0,.2,1) infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
-      }
-      
-      #bm-splash.bm-splash-finale .bm-title,
-      #bm-splash.bm-splash-finale .bm-subtitle,
-      #bm-splash.bm-splash-finale .bm-progress-wrap{animation:bm-finale-fadeout .35s cubic-bezier(.4,0,.2,1) forwards!important;pointer-events:none;}
-      #bm-splash.bm-splash-finale .bm-orb{animation:bm-finale-fadeout .25s ease-out forwards!important;}
-      #bm-splash.bm-splash-finale::before,
-      #bm-splash.bm-splash-finale::after{animation:bm-finale-fadeout .25s ease-out forwards!important;}
-
-      @keyframes bm-finale-fadeout{0%{opacity:1}100%{opacity:0;visibility:hidden}}
-
-      @keyframes bm-bar-flow{0%{background-position:0% 50%}100%{background-position:240% 50%}}
-      @keyframes bm-bar-sheen{0%{transform:translate3d(-130%,0,0)}100%{transform:translate3d(130%,0,0)}}
-
-      @keyframes bm-finale-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-      @keyframes bm-finale-float-y{0%,100%{transform:translate3d(0,-10px,0)}50%{transform:translate3d(0,10px,0)}}
-      /* Smooth off-black↔off-white cycle with long dwell at endpoints */
-      @keyframes bm-finale-bg{0%,12%{background-color:#0a0a0a}30%{background-color:#222}50%{background-color:#777}70%{background-color:#ccc}88%,100%{background-color:#f2f2f2}}
-      @keyframes bm-finale-filter-contrast{
-        0%,12%{filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16));-webkit-filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16))}
-        30%{filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14));-webkit-filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14))}
-        50%{filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12));-webkit-filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12))}
-        70%{filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10));-webkit-filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10))}
-        88%,100%{filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12));-webkit-filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12))}
-      }
-
-      @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9);will-change:transform}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
-      @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
-      @keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
-      @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
-
-      @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-logo-wrap svg,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
-      @media(min-width:768px){#bm-splash .bm-logo-wrap{width:216px;height:216px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}\n      @media(min-width:768px){#bm-splash.bm-splash-finale .bm-logo-wrap{width:380px;height:380px;}#bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:bm-finale-float-y 1.5s ease-in-out infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}}
-        ` }} />
-        {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
-        <Script id="splash-init" src="/scripts/splash-init.js" strategy="beforeInteractive" />
-        {/* UNIVERSAL COMPATIBILITY LAYER: Polyfills + feature detection for ALL devices worldwide
-            MUST load BEFORE other BMBRAIN scripts — provides Element.closest, CustomEvent, Promise,
-            fetch, IntersectionObserver polyfills + safe storage for private browsing + CSS fixes
-            for Samsung Internet, UC Browser, Huawei Browser, Opera Mini, MIUI Browser, etc. */}
-        <Script id="compat-layer" src="/scripts/BMBRAIN/compat-layer.js" strategy="beforeInteractive" />
+      if (run()) return;
+      var tries = 0;
+      var timer = setInterval(function(){ tries += 1; if (run() || tries >= 40) clearInterval(timer); }, 50);
+    } else {
+      try{
+        var script = document.createElement('script');
+        script.src = '/scripts/splash-hide.js';
+        script.async = false;
+        document.head.appendChild(script);
+      } catch(e) {}
+    }
+  })();
+})();
+            `,
+          }}
+        />
         {/* Cache validation (deferred to avoid blocking first paint) */}
         <Script
           id="cache-buster"
@@ -732,14 +832,28 @@ export default function RootLayout({
             `
           }}
         />
-        <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
+        
+        {/* MOBILE-ONLY SCRIPTS: Skip on desktop for faster loads */}
+        <Script id="mobile-scripts" strategy="afterInteractive" dangerouslySetInnerHTML={{__html: `
+(function(){
+var ua=String((navigator&&navigator.userAgent)||'');
+var isDesktop=!/mobi|android|iphone|ipad/i.test(ua)&&(window.innerWidth||0)>=769;
+if(isDesktop)return;
+// Mobile only: Load SW/touch, crash shields, etc
+var scripts=['sw-touch.js','BMBRAIN/mobile-crash-shield.js','BMBRAIN/inapp-shield.js'];
+scripts.forEach(function(src){
+  var s=document.createElement('script');
+  s.src='/scripts/'+src;
+  s.async=true;
+  document.head.appendChild(s);
+});
+})();
+        `}} />
 
         {/* GLOBAL BRAIN ORCHESTRATOR — coordinates all BMBRAIN scripts, shared state, event bus */}
         <Script id="bmbrain-global" src="/scripts/BMBRAIN/bmbrain-global.js" strategy="afterInteractive" />
 
         {/* CRITICAL SCRIPTS - afterInteractive (run after page is interactive) */}
-        <Script id="mobile-crash-shield" src="/scripts/BMBRAIN/mobile-crash-shield.js" strategy="afterInteractive" />
-        <Script id="inapp-shield" src="/scripts/BMBRAIN/inapp-shield.js" strategy="afterInteractive" />
         <Script
           id="memory-manager-loader"
           strategy="afterInteractive"
@@ -790,30 +904,6 @@ export default function RootLayout({
           }}
         />
 
-        <Script
-          id="splash-failsafe"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(){
-                try {
-                  window.setTimeout(function(){
-                    var splash = document.getElementById('bm-splash');
-                    if (!splash || splash.classList.contains('hide')) return;
-                    splash.classList.add('hide');
-                    document.documentElement.classList.add('bm-splash-done');
-                    window.__BM_SPLASH_FINISHED__ = true;
-                    try { window.dispatchEvent(new Event('bm-splash-finished')); } catch (e) {}
-                    window.setTimeout(function(){
-                      if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
-                    }, 450);
-                  }, 15000);
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-
         {/* NON-CRITICAL SCRIPTS - lazyOnload (defer until after everything else) */}
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />
         <Script id="perf-monitor" src="/scripts/perf-monitor.js" strategy="lazyOnload" />
@@ -830,39 +920,61 @@ export default function RootLayout({
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {/* DESKTOP CORE WEB VITALS OPTIMIZATION SCRIPTS                       */}
         {/* Targets: FCP <1.8s, LCP <2.5s, CLS <0.1, TTFB <0.8s              */}
-        {/* These scripts self-gate to desktop only (>769px, non-mobile UA)    */}
+        {/* DESKTOP OPTIMIZATION: Single consolidated script for fast loads      */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        <Script id="desktop-instant-hero" src="/scripts/desktop-instant-hero.js" strategy="beforeInteractive" />
-        <Script id="desktop-fcp-optimizer" src="/scripts/desktop-fcp-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-lcp-optimizer" src="/scripts/desktop-lcp-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-cls-prevention" src="/scripts/desktop-cls-prevention.js" strategy="afterInteractive" />
-        <Script id="desktop-ttfb-optimizer" src="/scripts/desktop-ttfb-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-core" strategy="lazyOnload" dangerouslySetInnerHTML={{__html: `
+(function(){
+var ua=String((navigator&&navigator.userAgent)||'');
+var isDesktop=!/mobi|android|iphone|ipad/i.test(ua)&&(window.innerWidth||0)>=769;
+if(!isDesktop)return;
+// Desktop: Minimal optimizations only - everything else is overkill
+try{
+  // Prefetch critical resources
+  if(window.innerWidth>=1440){
+    var prefetch=function(url,as){var l=document.createElement('link');l.rel='prefetch';l.href=url;if(as)l.as=as;document.head.appendChild(l);};
+    prefetch('/api/products','fetch');
+  }
+  // Single RAF for smooth animations
+  if(!window.__desktop_raf__){
+    window.__desktop_raf__=true;
+    var tasks=[];
+    window.addDesktopTask=function(fn){if(tasks.indexOf(fn)===-1)tasks.push(fn);};
+    window.removeDesktopTask=function(fn){var idx=tasks.indexOf(fn);if(idx>-1)tasks.splice(idx,1);};
+    function tick(){tasks.forEach(function(fn){try{fn();}catch(e){}});requestAnimationFrame(tick);}
+    requestAnimationFrame(tick);
+  }
+}catch(e){}
+})();
+        `}} />
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* DESKTOP PERFORMANCE & OPTIMIZATION SCRIPTS (HIGH PRIORITY)          */}
-        {/* Runs after page interactive: tier detection, orchestrator, etc     */}
-        {/* Self-gate to desktop only (>769px, non-mobile UA)                   */}
+        {/* DESKTOP ENHANCEMENTS: Optional lazy features (sounds, effects)     */}
+        {/* Only loads if user actually interacts with the page                */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        <Script id="desktop-performance-tuning" src="/scripts/desktop-performance-tuning.js" strategy="afterInteractive" />
-        <Script id="desktop-orchestrator" src="/scripts/desktop-orchestrator.js" strategy="afterInteractive" />
-        <Script id="desktop-arm64-optimizer" src="/scripts/desktop-arm64-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-hero-controller" src="/scripts/desktop-hero-controller.js" strategy="afterInteractive" />
-        <Script id="desktop-homepage-optimizer" src="/scripts/desktop-homepage-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-image-optimizer" src="/scripts/desktop-image-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-network-optimizer" src="/scripts/desktop-network-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-interaction-optimizer" src="/scripts/desktop-interaction-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-memory-optimizer" src="/scripts/desktop-memory-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-scroll-smoothness" src="/scripts/desktop-scroll-smoothness.js" strategy="afterInteractive" />
-        <Script id="desktop-fast-rendering" src="/scripts/desktop-fast-rendering.js" strategy="afterInteractive" />
-
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* DESKTOP EXPERIENCE ENHANCEMENT SCRIPTS (LOW PRIORITY)               */}
-        {/* Interaction sounds, scroll physics + audio, stability shield       */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        <Script id="desktop-interaction-sounds" src="/scripts/desktop-interaction-sounds.js" strategy="lazyOnload" />
-        <Script id="desktop-scroll-experience" src="/scripts/desktop-scroll-experience.js" strategy="lazyOnload" />
-        <Script id="desktop-stability-shield" src="/scripts/desktop-stability-shield.js" strategy="lazyOnload" />
-        <Script id="desktop-fps-boost" src="/scripts/desktop-fps-boost.js" strategy="lazyOnload" />
+        <Script id="desktop-enhancements" strategy="lazyOnload" dangerouslySetInnerHTML={{__html: `
+(function(){
+var ua=String((navigator&&navigator.userAgent)||'');
+var isDesktop=!/mobi|android|iphone|ipad/i.test(ua)&&(window.innerWidth||0)>=769;
+if(!isDesktop)return;
+// Desktop: Only load enhancement features after user interaction
+var loaded=false;
+function loadEnhancements(){
+  if(loaded)return;
+  loaded=true;
+  // Only load if user shows intent (scroll, click, etc)
+  var s=document.createElement('script');
+  s.src='/scripts/desktop-scroll-experience.js';
+  document.head.appendChild(s);
+}
+// Lazy load after first interaction
+var events=['scroll','click','touchstart','keydown'];
+events.forEach(function(e){
+  window.addEventListener(e,loadEnhancements,{once:true,passive:true});
+});
+// Or after 5 seconds of idle
+setTimeout(loadEnhancements,5000);
+})();
+        `}} />
       </head>
       <body
         className={cn("antialiased bg-[#050915] text-white", inter.className)}
@@ -908,8 +1020,6 @@ export default function RootLayout({
           </div>
           </div>
         </div>
-        <Script id="scroll-unlock-failsafe" src="/scripts/scroll-unlock-failsafe.js" strategy="beforeInteractive" />
-        <Script id="splash-hide" src="/scripts/splash-hide.js" strategy="beforeInteractive" />
         {/* All providers consolidated into AppProviders (heavy ones dynamically imported) */}
         <AppProviders>
           <LayoutProviders modal={modal}>

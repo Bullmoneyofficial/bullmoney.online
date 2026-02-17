@@ -58,9 +58,6 @@ export const UnifiedFpsPill = memo(({
   const [scrollY, setScrollY] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('down');
-  const [isFastScrolling, setIsFastScrolling] = useState(false); // Track fast scrolling for BULLMONEY overlay
-  const [isFlickeringOut, setIsFlickeringOut] = useState(false); // Track flickering fade out
-  const [scrollIntensity, setScrollIntensity] = useState(0); // 0-1 for smooth intensity transitions
   const [randomDelay] = useState(() => Math.random() * 5 + 5); // Random 5-10 seconds
   const [tipIndex, setTipIndex] = useState(0); // Rotating helper tips
   const [tipVisible, setTipVisible] = useState(true); // For fade animation
@@ -68,235 +65,13 @@ export const UnifiedFpsPill = memo(({
   const unpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const fastScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const flickerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const intensityDecayRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   const lastScrollTime = useRef(Date.now());
-  const scrollVelocity = useRef(0);
-  const velocityHistory = useRef<number[]>([]); // Rolling average for smoother detection
-  const fastScrollCount = useRef(0); // Count consecutive fast scrolls
-  const lastOverlayTime = useRef(0); // Cooldown tracking to prevent spam
-  const accumulatedDelta = useRef(0); // For trackpad gesture accumulation
-  const gestureStartTime = useRef(0); // Track gesture start for trackpad detection
   const isMobile = useResponsiveIsMobile();
   
   // Currency formatting - subscribe to store for reactivity
   const { formatPrice } = useCurrencyLocaleStore();
-  
-  // Performance boost function - runs when overlay shows
-  // This is a REAL performance boost that:
-  // 1. Temporarily pauses expensive CSS animations
-  // 2. Reduces animation complexity
-  // 3. Clears memory and cache intelligently
-  // 4. Optimizes rendering pipeline
-  const triggerPerformanceBoost = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    
-    const startTime = performance.now();
-    console.log('[BULLMONEY] 🚀 Performance boost triggered');
-    
-    // ========================================
-    // 1. PAUSE ALL CSS ANIMATIONS TEMPORARILY
-    // ========================================
-    // This is the biggest FPS boost - stops expensive animations
-    const styleEl = document.createElement('style');
-    styleEl.id = 'bullmoney-perf-boost';
-    styleEl.textContent = `
-      /* Pause all animations during overlay */
-      *, *::before, *::after {
-        animation-play-state: paused !important;
-        transition-duration: 0s !important;
-      }
-      /* Exception: keep BULLMONEY overlay animated */
-      [data-bullmoney-overlay] *, [data-bullmoney-overlay] *::before, [data-bullmoney-overlay] *::after {
-        animation-play-state: running !important;
-        transition-duration: unset !important;
-      }
-      /* Disable expensive effects */
-      .shimmer, [class*="shimmer"], [class*="pulse"], [class*="glow"]:not([data-bullmoney-overlay] *) {
-        animation: none !important;
-        opacity: 1 !important;
-      }
-      /* Reduce blur effects (expensive on GPU) */
-      .backdrop-blur, [class*="backdrop-blur"]:not([data-bullmoney-overlay] *) {
-        backdrop-filter: none !important;
-      }
-      /* Disable will-change to free GPU memory */
-      *:not([data-bullmoney-overlay] *) {
-        will-change: auto !important;
-      }
-    `;
-    document.head.appendChild(styleEl);
-    
-    // Remove the style after overlay fades (restore animations)
-    // FIXED: Added cleanup safety — if setTimeout fails (unmount/navigation),
-    // a MutationObserver catches it so the dark perf-boost style never persists
-    const cleanupTimeout = setTimeout(() => {
-      const el = document.getElementById('bullmoney-perf-boost');
-      if (el) el.remove();
-      console.log('[BULLMONEY] ✅ Animations restored');
-    }, 3000);
-    
-    // Safety: also clean up on any navigation or visibility change
-    const safetyCleanup = () => {
-      clearTimeout(cleanupTimeout);
-      const el = document.getElementById('bullmoney-perf-boost');
-      if (el) el.remove();
-      document.removeEventListener('visibilitychange', safetyCleanup);
-      window.removeEventListener('beforeunload', safetyCleanup);
-    };
-    document.addEventListener('visibilitychange', safetyCleanup);
-    window.addEventListener('beforeunload', safetyCleanup);
-    
-    // ========================================
-    // 2. FORCE GPU MEMORY RELEASE
-    // ========================================
-    // Create and destroy a WebGL context to trigger GPU cleanup
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-      if (gl) {
-        gl.getExtension('WEBGL_lose_context')?.loseContext();
-      }
-    } catch (e) {}
-    
-    // ========================================
-    // 3. CLEAR JAVASCRIPT TIMERS & INTERVALS
-    // ========================================
-    // Temporarily pause non-critical intervals
-    const pausedIntervals: number[] = [];
-    const originalSetInterval = window.setInterval;
-    const originalClearInterval = window.clearInterval;
-    
-    // Clear any pending image observers
-    if ('IntersectionObserver' in window) {
-      // Disconnect image lazy loaders temporarily
-      document.querySelectorAll('img[loading="lazy"]').forEach(img => {
-        (img as HTMLImageElement).loading = 'eager';
-      });
-    }
-    
-    // ========================================
-    // 4. OPTIMIZE DOM - HIDE OFFSCREEN ELEMENTS
-    // ========================================
-    const viewportHeight = window.innerHeight;
-    const scrollY = window.scrollY;
-    const hiddenElements: HTMLElement[] = [];
-    
-    // Find elements far from viewport and hide them
-    document.querySelectorAll('[data-heavy], .spline-container, iframe, video, canvas:not([data-bullmoney-overlay] canvas)').forEach(el => {
-      const rect = el.getBoundingClientRect();
-      const isOffscreen = rect.bottom < -500 || rect.top > viewportHeight + 500;
-      
-      if (isOffscreen) {
-        const htmlEl = el as HTMLElement;
-        if (htmlEl.style.visibility !== 'hidden') {
-          htmlEl.dataset.wasVisible = 'true';
-          htmlEl.style.visibility = 'hidden';
-          htmlEl.style.contentVisibility = 'hidden';
-          hiddenElements.push(htmlEl);
-        }
-      }
-    });
-    
-    // Restore after overlay
-    setTimeout(() => {
-      hiddenElements.forEach(el => {
-        if (el.dataset.wasVisible) {
-          el.style.visibility = '';
-          el.style.contentVisibility = '';
-          delete el.dataset.wasVisible;
-        }
-      });
-    }, 3000);
-    
-    // ========================================
-    // 5. MEMORY CLEANUP
-    // ========================================
-    // Clear volatile storage
-    try {
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (
-          key.includes('_temp') || 
-          key.includes('_volatile') ||
-          key.includes('scroll_') ||
-          key.includes('animation_') ||
-          key.includes('_preview')
-        )) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-      
-      // Clear sessionStorage non-essentials
-      ['animation_state', 'scroll_position_cache', 'hover_states', 'modal_history'].forEach(key => {
-        try { sessionStorage.removeItem(key); } catch (e) {}
-      });
-    } catch (e) {}
-    
-    // ========================================
-    // 6. SIGNAL OTHER COMPONENTS TO OPTIMIZE
-    // ========================================
-    // Dispatch custom event that other components can listen to
-    window.dispatchEvent(new CustomEvent('bullmoney-performance-boost', {
-      detail: { 
-        timestamp: Date.now(),
-        duration: 3000, // How long the boost lasts
-        level: 'aggressive'
-      }
-    }));
-    
-    // ========================================
-    // 7. IDLE-TIME DEEP CLEANUP
-    // ========================================
-    if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(() => {
-        // Clear old cache entries
-        if ('caches' in window) {
-          caches.keys().then(names => {
-            names.forEach(name => {
-              if (name.includes('temp') || name.includes('runtime') || name.includes('preview')) {
-                caches.delete(name);
-              }
-            });
-          }).catch(() => {});
-        }
-        
-        // Clear any orphaned blob URLs
-        const blobURLs = (window as any).__blobURLs;
-        if (Array.isArray(blobURLs)) {
-          blobURLs.forEach((url: string) => {
-            try { URL.revokeObjectURL(url); } catch (e) {}
-          });
-          (window as any).__blobURLs = [];
-        }
-        
-        // Hint GC
-        if ((window as any).gc) {
-          try { (window as any).gc(); } catch (e) {}
-        }
-      }, { timeout: 5000 });
-    }
-    
-    // ========================================
-    // 8. REDUCE REACT RE-RENDERS
-    // ========================================
-    // Set a flag that expensive components can check
-    (window as any).__bullmoneyPerfBoostActive = true;
-    setTimeout(() => {
-      (window as any).__bullmoneyPerfBoostActive = false;
-    }, 3000);
-    
-    const elapsed = performance.now() - startTime;
-    console.log(`[BULLMONEY] ⚡ Performance boost setup complete in ${elapsed.toFixed(2)}ms`);
-    console.log('[BULLMONEY] 📊 Optimizations: CSS paused, GPU freed, DOM simplified, memory cleared');
-  }, []);
   
   // Handle interaction to pin the button, then unpin after random delay
   const handleInteraction = useCallback(() => {
@@ -347,114 +122,18 @@ export const UnifiedFpsPill = memo(({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleHoverEnd]);
   
-  // Handle scroll - collapse and animate with improved detection
+  // Handle scroll - collapse on scroll
   useEffect(() => {
-    const isMobileDevice = window.innerWidth < 768;
-    
-    // On mobile, disable scroll effects completely
-    if (isMobileDevice) {
-      return;
-    }
-    
-    // Detect if user is likely using a trackpad (MacBooks, etc)
-    const isLikelyTrackpad = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent) && !isMobileDevice;
-    
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const now = Date.now();
-      const timeDelta = Math.max(now - lastScrollTime.current, 1); // Prevent division by zero
-      const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
-      
-      // Calculate instantaneous velocity (pixels per millisecond)
-      const instantVelocity = scrollDelta / timeDelta;
-      
-      // Trackpad detection: trackpads fire many small events vs mouse wheel's fewer large events
-      // If we're getting many events with small deltas, it's likely a trackpad
-      const isTrackpadLikeEvent = scrollDelta < 50 && timeDelta < 20;
-      
-      // Accumulate delta for trackpad gesture detection
-      if (isTrackpadLikeEvent || isLikelyTrackpad) {
-        // Start new gesture if it's been a while
-        if (now - gestureStartTime.current > 150) {
-          accumulatedDelta.current = 0;
-          gestureStartTime.current = now;
-        }
-        accumulatedDelta.current += scrollDelta;
-      }
-      
-      // Add to velocity history for rolling average (last 8 samples for trackpad smoothing)
-      velocityHistory.current.push(instantVelocity);
-      if (velocityHistory.current.length > 8) {
-        velocityHistory.current.shift();
-      }
-      
-      // Calculate rolling average velocity for smoother detection
-      const avgVelocity = velocityHistory.current.reduce((a, b) => a + b, 0) / velocityHistory.current.length;
-      scrollVelocity.current = avgVelocity;
-      
-      // For trackpads, also consider accumulated gesture distance
-      const gestureDuration = now - gestureStartTime.current;
-      const gestureVelocity = gestureDuration > 0 ? accumulatedDelta.current / gestureDuration : 0;
-      
-      // Use the higher of instantaneous avg or gesture velocity for trackpad detection
-      const effectiveVelocity = isLikelyTrackpad 
-        ? Math.max(avgVelocity, gestureVelocity * 0.8) 
-        : avgVelocity;
       
       // Determine scroll direction
       setScrollDirection(currentScrollY > lastScrollY.current ? 'down' : 'up');
       lastScrollY.current = currentScrollY;
-      lastScrollTime.current = now;
+      lastScrollTime.current = Date.now();
       
       setScrollY(currentScrollY);
       setIsScrolling(true);
-      
-      // Device-specific thresholds
-      // Desktop trackpad: responsive to fast swipe gestures
-      // Desktop mouse: responsive for fast wheel flicks
-      const FAST_SCROLL_THRESHOLD = isLikelyTrackpad 
-          ? 4.0  // Much higher threshold for trackpads - only extreme scrolling
-          : 5.0; // Mouse wheel threshold - only extreme scrolling
-      const FAST_SCROLL_CONFIRM = 8; // Desktop: 8 consecutive fast scrolls needed (rarely triggers)
-      const COOLDOWN_MS = 12000; // 12 second cooldown on desktop
-      
-      // Check if we're in cooldown period
-      const timeSinceLastOverlay = now - lastOverlayTime.current;
-      const isInCooldown = timeSinceLastOverlay < COOLDOWN_MS;
-      
-      // Also check for large accumulated gesture (trackpad fast swipe) - much higher threshold
-      const isTrackpadFastGesture = isLikelyTrackpad && accumulatedDelta.current > 1000 && gestureDuration < 100;
-      
-      if ((effectiveVelocity > FAST_SCROLL_THRESHOLD || isTrackpadFastGesture) && !isInCooldown) {
-        fastScrollCount.current++;
-        
-        // Calculate intensity based on velocity (0-1 scale)
-        const intensity = Math.min((effectiveVelocity - FAST_SCROLL_THRESHOLD) / 3, 1);
-        setScrollIntensity(prev => Math.max(prev, intensity)); // Only increase, never decrease abruptly
-        
-        if (fastScrollCount.current >= FAST_SCROLL_CONFIRM && !isFastScrolling) {
-          setIsFastScrolling(true);
-          setIsFlickeringOut(false);
-          lastOverlayTime.current = now; // Start cooldown
-          
-          // Trigger performance boost when overlay shows
-          triggerPerformanceBoost();
-        }
-        
-        // Clear any existing timeouts
-        if (fastScrollTimeoutRef.current) {
-          clearTimeout(fastScrollTimeoutRef.current);
-        }
-        if (flickerTimeoutRef.current) {
-          clearTimeout(flickerTimeoutRef.current);
-        }
-        if (intensityDecayRef.current) {
-          clearTimeout(intensityDecayRef.current);
-        }
-      } else {
-        // Gradually decrease fast scroll count for hysteresis
-        fastScrollCount.current = Math.max(0, fastScrollCount.current - 1);
-      }
       
       // Collapse expanded view on scroll
       if (isExpanded) {
@@ -469,40 +148,12 @@ export const UnifiedFpsPill = memo(({
       // Set scrolling to false after scroll stops
       scrollTimeoutRef.current = setTimeout(() => {
         setIsScrolling(false);
-        velocityHistory.current = []; // Clear velocity history
-        fastScrollCount.current = 0; // Reset fast scroll count
-        accumulatedDelta.current = 0; // Reset gesture accumulator
-        
-        // Smoothly decay intensity before flickering out
-        if (isFastScrolling) {
-          // Start intensity decay
-          const decayIntensity = () => {
-            setScrollIntensity(prev => {
-              const newVal = prev * 0.85; // Smooth exponential decay
-              if (newVal < 0.1) {
-                setIsFlickeringOut(true);
-                return 0;
-              }
-              intensityDecayRef.current = setTimeout(decayIntensity, 50);
-              return newVal;
-            });
-          };
-          intensityDecayRef.current = setTimeout(decayIntensity, 100);
-          
-          // Remove overlay after flicker animation - faster on mobile
-          const flickerDuration = isMobileDevice ? 1200 : 2000;
-          flickerTimeoutRef.current = setTimeout(() => {
-            setIsFastScrolling(false);
-            setIsFlickeringOut(false);
-            setScrollIntensity(0);
-          }, flickerDuration);
-        }
-      }, 200); // Slightly longer debounce for smoother detection
+      }, 200);
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isExpanded, handleHoverEnd, isFastScrolling, triggerPerformanceBoost]);
+  }, [isExpanded, handleHoverEnd]);
   
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -515,15 +166,6 @@ export const UnifiedFpsPill = memo(({
       }
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
-      }
-      if (fastScrollTimeoutRef.current) {
-        clearTimeout(fastScrollTimeoutRef.current);
-      }
-      if (flickerTimeoutRef.current) {
-        clearTimeout(flickerTimeoutRef.current);
-      }
-      if (intensityDecayRef.current) {
-        clearTimeout(intensityDecayRef.current);
       }
     };
   }, []);
@@ -1129,164 +771,6 @@ export const UnifiedFpsPill = memo(({
         
         {/* Tap hint on mobile - larger touch target pill with rotating tips */}
       </motion.div>
-      
-      {/* BULLMONEY Fullscreen Fast Scroll Overlay */}
-      <AnimatePresence>
-        {isFastScrolling && (
-          <motion.div
-            data-bullmoney-overlay="true"
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: isFlickeringOut 
-                ? [1, 0.7, 0.9, 0.4, 0.8, 0.2, 0.5, 0.1, 0.3, 0] 
-                : [0, 0.3, 0.6, 0.85, 1]
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ 
-              duration: isFlickeringOut ? 2 : 0.4,
-              ease: isFlickeringOut 
-                ? [0.25, 0.1, 0.25, 1] // Custom cubic-bezier for smooth flicker out
-                : [0.34, 1.56, 0.64, 1], // Smooth overshoot ease-in
-              times: isFlickeringOut 
-                ? [0, 0.1, 0.2, 0.35, 0.5, 0.65, 0.75, 0.85, 0.92, 1]
-                : [0, 0.2, 0.5, 0.8, 1]
-            }}
-            className="fixed inset-0 z-[2147483647] flex items-center justify-center pointer-events-none"
-            style={{
-              background: `rgba(0, 0, 0, ${0.9 + scrollIntensity * 0.08})`,
-            }}
-          >
-            {/* Background neon glow effects */}
-            <div 
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
-                  radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 40%),
-                  radial-gradient(ellipse at 70% 70%, rgba(255, 255, 255, 0.15) 0%, transparent 40%)
-                `,
-              }}
-            />
-            
-            {/* Animated scan lines */}
-            <div 
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.1) 2px, rgba(255, 255, 255, 0.1) 4px)',
-                animation: 'bullmoney-scanlines 0.1s linear infinite',
-              }}
-            />
-            
-            {/* BULLMONEY Text */}
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 20 }}
-              animate={{ 
-                scale: isFlickeringOut 
-                  ? [1, 1.02, 0.99, 1.01, 0.98, 1, 0.97] 
-                  : [0.85, 1.02, 1],
-                opacity: isFlickeringOut 
-                  ? [1, 0.8, 0.95, 0.5, 0.85, 0.3, 0.6, 0.15, 0.4, 0] 
-                  : [0, 0.5, 1],
-                y: isFlickeringOut ? [0, -5, 0, 5, -3, 0] : [20, -5, 0],
-              }}
-              transition={{ 
-                duration: isFlickeringOut ? 2 : 0.5,
-                ease: isFlickeringOut 
-                  ? [0.4, 0, 0.2, 1] // Material design standard easing
-                  : [0.34, 1.56, 0.64, 1], // Spring-like overshoot
-                times: isFlickeringOut 
-                  ? [0, 0.1, 0.2, 0.35, 0.5, 0.65, 0.75, 0.85, 0.92, 1]
-                  : [0, 0.6, 1]
-              }}
-              className="relative select-none flex flex-col items-center gap-2 sm:gap-4"
-            >
-              {/* BULLMONEY - Main text */}
-              <div className="relative">
-                <span 
-                  className="absolute text-5xl sm:text-7xl md:text-8xl font-black tracking-widest"
-                  style={{
-                    color: 'transparent',
-                    WebkitTextStroke: '2px rgba(255, 255, 255, 0.3)',
-                    filter: 'blur(8px)',
-                    transform: 'translate(-2px, -2px)',
-                  }}
-                >
-                  BULLMONEY
-                </span>
-                <span 
-                  className="absolute text-5xl sm:text-7xl md:text-8xl font-black tracking-widest"
-                  style={{
-                    color: 'transparent',
-                    WebkitTextStroke: '1px rgba(255, 255, 255, 0.5)',
-                    filter: 'blur(4px)',
-                    transform: 'translate(-1px, -1px)',
-                  }}
-                >
-                  BULLMONEY
-                </span>
-                <span 
-                  className="relative text-5xl sm:text-7xl md:text-8xl font-black tracking-widest"
-                  style={{
-                    color: '#000000',
-                    textShadow: `
-                      0 0 10px #ffffff,
-                      0 0 20px #ffffff,
-                      0 0 40px #ffffff,
-                      0 0 80px #ffffff,
-                      0 0 120px rgba(255, 255, 255, 0.8),
-                      0 0 160px rgba(255, 255, 255, 0.6),
-                      0 0 200px rgba(255, 255, 255, 0.4)
-                    `,
-                    animation: isFlickeringOut ? undefined : 'bullmoney-neon-flicker 0.1s ease-in-out infinite alternate',
-                  }}
-                >
-                  BULLMONEY
-                </span>
-              </div>
-              
-              {/* TRADING HUB - Subtitle */}
-              <span 
-                className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-[0.3em] uppercase"
-                style={{
-                  color: '#000000',
-                  textShadow: 'none',
-                  animation: isFlickeringOut ? undefined : 'bullmoney-neon-flicker 0.15s ease-in-out infinite alternate',
-                }}
-              >
-                TRADING HUB
-              </span>
-              
-              {/* SLOW DOWN - Warning text */}
-              <motion.span
-                initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                animate={{ 
-                  opacity: isFlickeringOut ? [1, 0] : [0, 0.7, 1, 0.85, 1],
-                  scale: isFlickeringOut ? [1, 0.95] : [0.9, 1.03, 1, 1.02, 1],
-                  y: isFlickeringOut ? [0, 20] : [30, -3, 0],
-                }}
-                transition={{ 
-                  duration: isFlickeringOut ? 0.8 : 0.6,
-                  delay: isFlickeringOut ? 0 : 0.2,
-                  ease: [0.34, 1.56, 0.64, 1], // Spring-like bounce
-                }}
-                className="text-3xl sm:text-4xl md:text-5xl font-black tracking-[0.2em] uppercase mt-4 sm:mt-6"
-                style={{
-                  color: '#000000',
-                  textShadow: `
-                    0 0 ${15 + scrollIntensity * 20}px #ffffff,
-                    0 0 ${30 + scrollIntensity * 30}px #ffffff,
-                    0 0 ${60 + scrollIntensity * 40}px #ffffff,
-                    0 0 ${100 + scrollIntensity * 50}px rgba(255, 255, 255, ${0.9 + scrollIntensity * 0.1})
-                  `,
-                  animation: isFlickeringOut ? undefined : 'bullmoney-slow-pulse 1.2s ease-in-out infinite',
-                }}
-              >
-                 SLOW DOWN 
-              </motion.span>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 });

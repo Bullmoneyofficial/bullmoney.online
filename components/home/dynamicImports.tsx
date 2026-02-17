@@ -13,22 +13,22 @@ import {
 
 // HIGH PRIORITY - Visible immediately on page load
 export const Hero = dynamic(
-  () => import( "@/components/hero"),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.Hero })),
   { ssr: false, loading: () => <HeroSkeleton /> }
 );
 
 export const HeroDesktop = dynamic(
-  () => import( "@/components/HeroDesktop"),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.HeroDesktop })),
   { ssr: false }
 );
 
 export const PageMode = dynamic(
-  () => import( "@/components/REGISTER USERS/pagemode"),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.PageMode })),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
 export const TradingUnlockLoader = dynamic(
-  () => import( "@/components/MultiStepLoaderv3Simple"),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.TradingUnlockLoader })),
   { 
     ssr: false, 
     loading: () => <MinimalFallback />,
@@ -37,22 +37,22 @@ export const TradingUnlockLoader = dynamic(
 
 // MEDIUM PRIORITY - Above the fold or near top
 export const MetaTraderQuotes = dynamic(
-  () => import( "@/components/MetaTraderQuotes"),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.MetaTraderQuotes })),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
 export const Features = dynamic(
-  () => import( "@/components/features").then(mod => ({ default: mod.Features })),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.Features })),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
 export const BullMoneyCommunity = dynamic(
-  () => import( "@/components/BullMoneyCommunity"),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.BullMoneyCommunity })),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
 export const BreakingNewsTicker = dynamic(
-  () => import( "@/components/BreakingNewsTicker"),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.BreakingNewsTicker })),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
@@ -75,33 +75,33 @@ const TradingViewDashboardSkeleton = () => (
 );
 
 export const TradingViewDashboard = dynamic(
-  () => import( "@/components/TradingViewDashboard"),
+  () => import("@/components/home/bundles/aboveFold").then(mod => ({ default: mod.TradingViewDashboard })),
   { ssr: false, loading: () => <TradingViewDashboardSkeleton /> }
 );
 
 // LOW PRIORITY - Below the fold, load on demand
 export const BullMoneyPromoScroll = dynamic(
-  () => import( "@/components/BullMoneyPromoScroll"),
+  () => import("@/components/home/bundles/belowFold").then(mod => ({ default: mod.BullMoneyPromoScroll })),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
 export const LiveMarketTicker = dynamic(
-  () => import( "@/components/LiveMarketTickerOptimized").then(mod => ({ default: mod.LiveMarketTickerOptimized })),
+  () => import("@/components/home/bundles/belowFold").then(mod => ({ default: mod.LiveMarketTickerOptimized })),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
 export const TestimonialsCarousel = dynamic(
-  () => import( '@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })),
+  () => import("@/components/home/bundles/belowFold").then(mod => ({ default: mod.TestimonialsCarousel })),
   { ssr: true, loading: () => <CardSkeleton /> }
 );
 
 export const BrokerSignupSectionDark = dynamic(
-  () => import("@/components/home/BrokerSignupSectionDark").then(mod => ({ default: mod.BrokerSignupSectionDark })),
+  () => import("@/components/home/bundles/belowFold").then(mod => ({ default: mod.BrokerSignupSectionDark })),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
 export const FooterComponent = dynamic(
-  () => import( "@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
+  () => import("@/components/home/bundles/belowFold").then(mod => ({ default: mod.FooterComponent })),
   { ssr: false }
 );
 
@@ -118,27 +118,27 @@ export const LoadingSkeleton = dynamic(
 
 // HEAVY COMPONENTS - Desktop only, deferred loading
 export const HeroScrollDemo = dynamic(
-  () => import( "@/components/HeroScrollDemo").then(mod => ({ default: mod.HeroScrollDemo })),
+  () => import("@/components/home/bundles/heavy").then(mod => ({ default: mod.HeroScrollDemo })),
   { ssr: false }
 );
 
 export const TradingQuickAccess = dynamic(
-  () => import( "@/components/TradingQuickAccess").then(mod => ({ default: mod.default })),
+  () => import("@/components/home/bundles/belowFold").then(mod => ({ default: mod.TradingQuickAccess })),
   { ssr: false }
 );
 
 export const HiddenYoutubePlayer = dynamic(
-  () => import( "@/components/Mainpage/HiddenYoutubePlayer"),
+  () => import("@/components/home/bundles/belowFold").then(mod => ({ default: mod.HiddenYoutubePlayer })),
   { ssr: false }
 );
 
 export const DraggableSplit = dynamic(
-  () => import( '@/components/DraggableSplit'),
+  () => import("@/components/home/bundles/heavy").then(mod => ({ default: mod.DraggableSplit })),
   { ssr: true, loading: () => <ContentSkeleton lines={5} /> }
 );
 
 export const SplineScene = dynamic(
-  () => import( '@/components/SplineScene'),
+  () => import("@/components/home/bundles/heavy").then(mod => ({ default: mod.SplineScene })),
   { ssr: true, loading: () => <ContentSkeleton lines={4} /> }
 );
 

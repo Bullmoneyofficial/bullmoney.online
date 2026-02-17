@@ -1,0 +1,176 @@
+:root{--app-vh:1vh;}
+html,body{background:#000000!important;}
+
+#bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:var(--app-height,calc(var(--vh,1vh)*100));min-height:var(--app-height,calc(var(--vh,1vh)*100));min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;background-color:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),background-color .55s cubic-bezier(.22,1,.36,1);overflow:hidden;will-change:opacity,transform,background-color;transform-origin:50% 50%;}
+
+/* Lock viewport while splash is active — overrides scroll fixes below */
+html:has(#bm-splash:not(.hide)),html:has(#bm-splash:not(.hide)) body{overflow:hidden!important;height:100%!important;position:static!important;}
+@supports not (selector(:has(*))){html:not(.bm-splash-done),html:not(.bm-splash-done) body{overflow:hidden!important;height:100%!important;}}
+
+#bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);animation:none!important;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);}
+
+/* Safari/iOS fallback: reduce compositor stress only in lite mode */
+html.is-safari #bm-splash,html.is-ios-safari #bm-splash{left:0;right:0;width:100%;height:100%;min-height:100vh;min-height:-webkit-fill-available;transform:translateZ(0);-webkit-transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+html.is-safari #bm-splash.bm-splash-lite::before,html.is-safari #bm-splash.bm-splash-lite::after,html.is-ios-safari #bm-splash.bm-splash-lite::before,html.is-ios-safari #bm-splash.bm-splash-lite::after{animation:none!important;filter:none!important;}
+html.is-safari #bm-splash.bm-splash-lite .bm-orb,html.is-ios-safari #bm-splash.bm-splash-lite .bm-orb{display:none;}
+html.is-safari #bm-splash.bm-splash-lite .bm-status,html.is-ios-safari #bm-splash.bm-splash-lite .bm-status{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+html.is-safari #bm-splash.bm-splash-lite .bm-logo-wrap,html.is-safari #bm-splash.bm-splash-lite .bm-progress-wrap,html.is-ios-safari #bm-splash.bm-splash-lite .bm-logo-wrap,html.is-ios-safari #bm-splash.bm-splash-lite .bm-progress-wrap{animation:none!important;}
+
+/* Subtle radial gradient overlay */
+#bm-splash::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0.02) 0%,rgba(255,255,255,0) 70%);z-index:0;}
+#bm-splash::after{content:"";position:absolute;inset:-20%;background:conic-gradient(from 180deg at 50% 50%,rgba(24,24,27,.04),rgba(24,24,27,0),rgba(24,24,27,.04));filter:blur(20px);opacity:.48;z-index:0;}
+#bm-splash .bm-orb{position:absolute;border-radius:9999px;filter:blur(20px);pointer-events:none;z-index:1;will-change:transform;}
+#bm-splash .bm-orb-a{width:240px;height:240px;top:12%;left:18%;background:radial-gradient(circle,rgba(24,24,27,.12),rgba(24,24,27,0) 65%);}
+#bm-splash .bm-orb-b{width:280px;height:280px;right:14%;bottom:10%;background:radial-gradient(circle,rgba(24,24,27,.1),rgba(24,24,27,0) 65%);}
+
+/* Splash content wrapper */
+#bm-splash .bm-sway-content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;}
+
+/* Logo container */
+#bm-splash .bm-logo-wrap{position:relative;z-index:10;width:162px;height:162px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-intro .7s cubic-bezier(.2,.8,.2,1) both;will-change:transform,opacity;transition:width .45s cubic-bezier(.22,1,.36,1),height .45s cubic-bezier(.22,1,.36,1);}
+#bm-splash .bm-logo-wrap svg{width:100%;height:100%;filter:drop-shadow(0 0 20px rgba(0,0,0,0.08));}
+
+/* Title */
+#bm-splash .bm-title{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,"Segoe UI",Roboto,sans-serif;font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1;margin-bottom:6px;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .15s both;will-change:transform,opacity;}
+
+/* Subtitle */
+#bm-splash .bm-subtitle{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",Roboto,sans-serif;font-size:11px;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:rgba(0,0,0,.35);margin-bottom:32px;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .28s both;will-change:transform,opacity;}
+
+/* Progress section */
+#bm-splash .bm-progress-wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:16px;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .4s both;will-change:transform,opacity;}
+
+/* Percentage */
+#bm-splash .bm-percent{display:inline-block;white-space:nowrap;padding-right:.08em;overflow:visible;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-variant-numeric:tabular-nums;}
+
+/* Status pill */
+#bm-splash .bm-status{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.03);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:8px 20px;border-radius:9999px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 3px rgba(0,0,0,.04);}
+#bm-splash .bm-dot-wrap{position:relative;display:flex;width:10px;height:10px;}
+#bm-splash .bm-dot-ping{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.25);}
+#bm-splash .bm-dot{position:relative;width:10px;height:10px;border-radius:50%;background:#18181b;}
+#bm-splash .bm-status-text{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,0,0,.5);}
+
+/* Loading bar */
+#bm-splash .bm-bar-outer{width:200px;height:2px;border-radius:2px;background:rgba(0,0,0,.06);overflow:hidden;margin-top:8px;position:relative;}
+#bm-splash .bm-bar-outer::after{content:"";position:absolute;inset:0;transform:translate3d(-130%,0,0);background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:bm-bar-sheen 1.15s linear infinite;opacity:.85;}
+#bm-splash .bm-bar-inner{width:0%;height:100%;border-radius:2px;background:linear-gradient(90deg,#18181b 0%,#3f3f46 35%,#a1a1aa 50%,#3f3f46 65%,#18181b 100%);background-size:240% 100%;animation:bm-bar-flow .95s linear infinite;transition:width .3s ease-out,opacity .3s ease-out;}
+
+/* Loading steps */
+#bm-splash .bm-steps{display:flex;flex-direction:column;gap:6px;margin-top:20px;position:relative;z-index:10;}
+#bm-splash .bm-step{display:flex;align-items:center;gap:10px;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.05em;color:rgba(0,0,0,.25);transition:color .3s ease,opacity .3s ease,transform .3s ease;opacity:.5;transform:translateX(0);}
+#bm-splash .bm-step span:last-child{position:relative;display:inline-block;}
+
+/* SPLASH ANIMATIONS: Optimized for desktop performance */
+@media (min-width: 769px) {
+  /* On desktop: simplify animations to reduce GPU load */
+  #bm-splash .bm-bar-outer::after{animation:none!important;opacity:.35!important;}
+  #bm-splash .bm-bar-inner{animation:none!important;background:#18181b!important;}
+  #bm-splash .bm-orb{animation:none!important;display:none!important;}
+  #bm-splash::before,
+  #bm-splash::after{animation:none!important;}
+}
+
+#bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;transform:translateX(3px);}
+#bm-splash .bm-step.active span:last-child{background:linear-gradient(100deg,#0f0f12 0%,#3f3f46 35%,#0f0f12 70%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-step-sheen 1.4s ease-in-out infinite;}
+#bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}
+#bm-splash .bm-step.done span:last-child{animation:bm-step-settle .5s ease-out both;}
+#bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
+#bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
+#bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
+
+/* In-app webviews (Instagram/TikTok/Facebook etc): keep splash reliable by disabling heavy animations */
+#bm-splash.bm-splash-lite .bm-orb{display:none!important;}
+#bm-splash.bm-splash-lite .bm-bar-outer::after{animation:none!important;opacity:.35!important;}
+#bm-splash.bm-splash-lite .bm-bar-inner{animation:none!important;background:#18181b!important;}
+#bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle{animation:none!important;background-color:#000000!important;}
+#bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:none!important;filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;-webkit-filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;}
+
+/* === Splash Finale: logo grows to playing-card size, all else disappears === */
+#bm-splash.bm-splash-finale{justify-content:center;align-items:center;background:#0a0a0a;background-color:#0a0a0a;}
+#bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:transform!important;--bm-finale-scale:1;transform:translateX(-15px) scale(var(--bm-finale-scale))!important;transition:transform .8s cubic-bezier(.22,1,.36,1),width .8s cubic-bezier(.22,1,.36,1),height .8s cubic-bezier(.22,1,.36,1)!important;}
+
+/* Use filter invert() so the inline SVG (black) can become white on dark bg (Safari-friendly) */
+#bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));-webkit-filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));}
+
+/* In-app: force white finale + black logo (no invert/glow, no bg animation) */
+html.is-in-app-browser #bm-splash.bm-splash-finale{background:#ffffff!important;background-color:#ffffff!important;}
+html.is-in-app-browser #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;background:#ffffff!important;background-color:#ffffff!important;}
+html.is-in-app-browser #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:none!important;-webkit-filter:none!important;}
+
+/* DESKTOP OPTIMIZATION: Disable idle animations on desktop (>=769px) to reduce GPU load */
+@media (min-width: 769px) {
+  /* Desktop: Lightweight mode for fast LCP - disable all heavy effects */
+  #bm-splash.bm-splash-lite::before,
+  #bm-splash.bm-splash-lite::after{display:none!important;}
+  #bm-splash.bm-splash-lite .bm-orb{display:none!important;}
+  #bm-splash.bm-splash-lite .bm-bar-outer::after{display:none!important;}
+  #bm-splash.bm-splash-lite .bm-bar-inner{animation:none!important;background:#18181b!important;}
+  #bm-splash.bm-splash-lite .bm-logo-wrap{animation:none!important;opacity:1!important;transform:none!important;}
+  #bm-splash.bm-splash-lite .bm-title,
+  #bm-splash.bm-splash-lite .bm-subtitle,
+  #bm-splash.bm-splash-lite .bm-progress-wrap{animation:none!important;opacity:1!important;transform:none!important;}
+  #bm-splash.bm-splash-lite .bm-step span:last-child{animation:none!important;}
+
+  /* Disable finale animations on desktop */
+  #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;}
+  #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;animation:none!important;}
+  #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:none!important;}
+
+  /* Faster hide transition on desktop */
+  #bm-splash.hide{transition:opacity .3s ease,visibility .3s ease!important;}
+}
+
+/* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS - Mobile/tablet only */
+@media (max-width: 768px) {
+  #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+  #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}
+
+  /* Extra idle motion: spin + synced contrast/glow (doesn't fight wrapper transform/scale) */
+  #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{transform-origin:50% 50%;will-change:transform,filter;animation:bm-finale-spin 8s cubic-bezier(.4,0,.2,1) infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+}
+
+#bm-splash.bm-splash-finale .bm-title,
+#bm-splash.bm-splash-finale .bm-subtitle,
+#bm-splash.bm-splash-finale .bm-progress-wrap{animation:bm-finale-fadeout .35s cubic-bezier(.4,0,.2,1) forwards!important;pointer-events:none;}
+#bm-splash.bm-splash-finale .bm-orb{animation:bm-finale-fadeout .25s ease-out forwards!important;}
+#bm-splash.bm-splash-finale::before,
+#bm-splash.bm-splash-finale::after{animation:bm-finale-fadeout .25s ease-out forwards!important;}
+
+@keyframes bm-finale-fadeout{0%{opacity:1}100%{opacity:0;visibility:hidden}}
+
+@keyframes bm-bar-flow{0%{background-position:0% 50%}100%{background-position:240% 50%}}
+@keyframes bm-bar-sheen{0%{transform:translate3d(-130%,0,0)}100%{transform:translate3d(130%,0,0)}}
+
+@keyframes bm-finale-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes bm-finale-float-y{0%,100%{transform:translate3d(0,-10px,0)}50%{transform:translate3d(0,10px,0)}}
+
+/* Smooth off-black↔off-white cycle with long dwell at endpoints */
+@keyframes bm-finale-bg{0%,12%{background-color:#0a0a0a}30%{background-color:#222}50%{background-color:#777}70%{background-color:#ccc}88%,100%{background-color:#f2f2f2}}
+
+@keyframes bm-finale-filter-contrast{
+  0%,12%{filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16));-webkit-filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16))}
+  30%{filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14));-webkit-filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14))}
+  50%{filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12));-webkit-filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12))}
+  70%{filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10));-webkit-filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10))}
+  88%,100%{filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12));-webkit-filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12))}
+}
+
+@keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9);will-change:transform}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+@keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
+@keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
+
+@media(prefers-reduced-motion:reduce){
+  #bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-logo-wrap svg,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}
+  #bm-splash,#bm-splash .bm-step{transition:none!important;}
+}
+
+@media(min-width:768px){
+  #bm-splash .bm-logo-wrap{width:216px;height:216px;}
+  #bm-splash .bm-title{font-size:64px;}
+  #bm-splash .bm-percent{font-size:72px;}
+}
+
+@media(min-width:768px){
+  #bm-splash.bm-splash-finale .bm-logo-wrap{width:380px;height:380px;}
+  #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:bm-finale-float-y 1.5s ease-in-out infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+}
