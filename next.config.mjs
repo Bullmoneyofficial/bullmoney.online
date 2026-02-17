@@ -71,21 +71,169 @@ const nextConfig = {
     
     // Apple Silicon optimizations - use native ARM binaries
     if (isAppleSilicon) {
+      // ARM64 native module resolution
       config.externals = config.externals || [];
-      // Prefer native ARM modules for better performance
       config.resolve.conditionNames = ['node', 'import', 'require'];
+      
+      // Use performance cores for compilation (4P cores)
+      config.parallelism = Math.ceil(cpus / 2); // P-cores only
+      
+      // Optimize for unified memory architecture
+      config.performance = {
+        maxEntrypointSize: 1024 * 1024, // 1MB (can be larger with 16GB)
+        maxAssetSize: 1024 * 1024,
+      };
+      
+      // Enable aggressive caching with unified memory
+      config.cache = config.cache || {};
+      if (typeof config.cache === 'object') {
+        config.cache.type = 'filesystem';
+        config.cache.compression = false; // Faster on ARM64 with SSD
+        config.cache.maxMemoryGenerations = 10; // Cache more in memory
+        config.cache.maxAge = 1000 * 60 * 60 * 24 * 7; // 7 days
+      }
+      
+      // Optimize module resolution
+      config.resolve = config.resolve || {};
+      config.resolve.symlinks = false; // Skip symlink resolution (faster)
+      config.resolve.cacheWithContext = false; // Static cache
+      
+      // Tree shaking optimization
+      config.optimization = config.optimization || {};
+      config.optimization.usedExports = true;
+      config.optimization.sideEffects = true;
+      
+      console.log(`[Webpack] ARM64 mode: ${Math.ceil(cpus / 2)} P-cores, unified memory cache`);
     }
     
-    // Windows optimizations - handle path separators correctly
-    if (isWindows) {
-      // Normalize all paths to forward slashes for consistency
+    // Windows optimizations - optimized for x64/AMD64 architecture
+    if (isWindows && !isAppleSilicon) {
+      // Use P-cores for compilation (Windows hybrid CPUs)
+      // Estimate: 60% of cores are performance cores
+      const estimatedPCores = Math.max(2, Math.ceil(cpus * 0.6));
+      config.parallelism = Math.min(estimatedPCores - 1, 8); // Leave 1 P-core for OS
+      
+      // NTFS-optimized caching
+      config.cache = config.cache || {};
+      if (typeof config.cache === 'object') {
+        config.cache.type = 'filesystem';
+        config.cache.compression = 1; // Light compression for Windows
+        config.cache.maxMemoryGenerations = 5; // Conservative for Windows memory management
+        config.cache.maxAge = 1000 * 60 * 60 * 24 * 7; // 7 days
+        config.cache.cacheDirectory = '.next/cache/webpack-windows';
+      }
+      
+      // Windows path handling
+      config.resolve = config.resolve || {};
       config.resolve.alias = config.resolve.alias || {};
-      // Windows: Enable long path support
-      config.output.pathinfo = false; // Faster builds on Windows
+      config.resolve.symlinks = false; // Skip symlinks (faster on Windows)
+      config.resolve.cacheWithContext = false; // Static cache
+      
+      // Faster builds on Windows
+      config.output.pathinfo = false;
+      
+      // Optimize module resolution for Windows
+      config.snapshot = {
+        managedPaths: [/^(.+?[\\/]node_modules[\\/])/],
+        immutablePaths: [],
+        buildDependencies: {
+          hash: true,
+          timestamp: true,
+        },
+        module: {
+          timestamp: true,
+        },
+        resolve: {
+          timestamp: true,
+        },
+      };
+      
+      // Tree shaking optimization
+      config.optimization = config.optimization || {};
+      config.optimization.usedExports = true;
+      config.optimization.sideEffects = true;
+      config.optimization.moduleIds = 'deterministic';
+      
+      // Windows-specific performance settings
+      config.performance = {
+        maxEntrypointSize: 768 * 1024, // 768KB (conservative for Windows)
+        maxAssetSize: 768 * 1024,
+      };
+      
+      console.log(`[Webpack] Windows mode: ${estimatedPCores - 1} cores, NTFS-optimized cache`);
     }
     
-    // Multi-core compilation for all platforms
-    config.parallelism = Math.max(1, Math.min(cpus - 1, 8)); // Use N-1 cores, max 8
+    // Linux optimizations - optimized for x64/ARM64 servers and workstations
+    if (isLinux && !isAppleSilicon) {
+      // Linux has excellent process scheduling - can use more cores
+      const estimatedPCores = cpus >= 16 ? Math.floor(cpus * 0.6) : cpus;
+      config.parallelism = Math.max(1, estimatedPCores - 1); // Leave 1 core for OS
+      
+      // Linux filesystem-optimized caching
+      config.cache = config.cache || {};
+      if (typeof config.cache === 'object') {
+        config.cache.type = 'filesystem';
+        config.cache.compression = 0; // No compression on modern Linux filesystems (ext4, btrfs, xfs have native compression)
+        config.cache.maxMemoryGenerations = 10; // Aggressive caching
+        config.cache.maxAge = 1000 * 60 * 60 * 24 * 14; // 14 days
+        config.cache.cacheDirectory = '.next/cache/webpack-linux';
+      }
+      
+      // Linux-optimized module resolution
+      config.resolve = config.resolve || {};
+      config.resolve.symlinks = true; // Linux handles symlinks efficiently
+      config.resolve.cacheWithContext = false; // Static cache
+      
+      // Optimize module resolution
+      config.snapshot = {
+        managedPaths: [/^(.+?[\\/]node_modules[\\/])/],
+        immutablePaths: [],
+        buildDependencies: {
+          hash: true,
+        },
+        module: {
+          hash: true,
+        },
+        resolve: {
+          hash: true,
+        },
+      };
+      
+      // Tree shaking optimization
+      config.optimization = config.optimization || {};
+      config.optimization.usedExports = true;
+      config.optimization.sideEffects = true;
+      config.optimization.moduleIds = 'deterministic';
+      config.optimization.removeAvailableModules = true;
+      
+      // Linux-specific performance settings (can handle larger bundles)
+      config.performance = {
+        maxEntrypointSize: 1024 * 1024, // 1MB
+        maxAssetSize: 1024 * 1024,
+      };
+      
+      // Optimize for production builds
+      if (!dev) {
+        config.optimization.minimizer = config.optimization.minimizer || [];
+        config.optimization.splitChunks = {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: 10,
+            },
+          },
+        };
+      }
+      
+      console.log(`[Webpack] Linux mode: ${estimatedPCores - 1} cores, ${typeof config.cache === 'object' ? config.cache.compression === 0 ? 'zero-compression' : 'compressed' : 'default'} cache`);
+    }
+    
+    // Fallback for other platforms
+    if (!isAppleSilicon && !isWindows && !isLinux) {
+      config.parallelism = Math.max(1, Math.min(cpus - 1, 8)); // Use N-1 cores, max 8
+    }
     
     return config;
   },
@@ -131,10 +279,55 @@ const nextConfig = {
     parallelServerCompiles: true,
     parallelServerBuildTraces: true,
     // Use worker threads for webpack compilation (parallelism)
-    // Apple Silicon: More aggressive parallelization (unified memory benefits)
-    webpackBuildWorker: isAppleSilicon ? true : true,
+    // Apple Silicon: Aggressive parallelization (unified memory + P-cores)
+    webpackBuildWorker: true,
     // Cache server component HMR responses - huge dev speed win
     serverComponentsHmrCache: true,
+    // Turbopack-specific optimizations for Apple Silicon, Windows, and Linux
+    turbo: isAppleSilicon ? {
+      rules: {
+        // Use SWC native ARM64 binary for transforms
+        '*.{js,jsx,ts,tsx}': {
+          loaders: ['swc-loader'],
+          as: '*.js',
+        },
+      },
+      resolveAlias: {
+        // Faster module resolution
+        canvas: './empty-module',
+      },
+      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+      // Use all P-cores for parallel compilation
+      moduleIdStrategy: 'deterministic',
+    } : isWindows ? {
+      rules: {
+        // Use SWC native Windows x64 binary for transforms
+        '*.{js,jsx,ts,tsx}': {
+          loaders: ['swc-loader'],
+          as: '*.js',
+        },
+      },
+      resolveAlias: {
+        // Faster module resolution on Windows
+        canvas: './empty-module',
+      },
+      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+      moduleIdStrategy: 'deterministic',
+    } : isLinux ? {
+      rules: {
+        // Use SWC native Linux binary for transforms (x64 or ARM64)
+        '*.{js,jsx,ts,tsx}': {
+          loaders: ['swc-loader'],
+          as: '*.js',
+        },
+      },
+      resolveAlias: {
+        // Faster module resolution on Linux
+        canvas: './empty-module',
+      },
+      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+      moduleIdStrategy: 'deterministic',
+    } : undefined,
     // Package import optimizations - tree shake only the most critical heavy packages
     // NOTE: Too many entries (165) can slow down Turbopack compilation
     // Only optimize packages that are actually imported frequently and have large bundle impact

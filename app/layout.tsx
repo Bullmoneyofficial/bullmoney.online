@@ -845,6 +845,7 @@ export default function RootLayout({
         {/* ═══════════════════════════════════════════════════════════════════ */}
         <Script id="desktop-performance-tuning" src="/scripts/desktop-performance-tuning.js" strategy="afterInteractive" />
         <Script id="desktop-orchestrator" src="/scripts/desktop-orchestrator.js" strategy="afterInteractive" />
+        <Script id="desktop-arm64-optimizer" src="/scripts/desktop-arm64-optimizer.js" strategy="afterInteractive" />
         <Script id="desktop-hero-controller" src="/scripts/desktop-hero-controller.js" strategy="afterInteractive" />
         <Script id="desktop-homepage-optimizer" src="/scripts/desktop-homepage-optimizer.js" strategy="afterInteractive" />
         <Script id="desktop-image-optimizer" src="/scripts/desktop-image-optimizer.js" strategy="afterInteractive" />

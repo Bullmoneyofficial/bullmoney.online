@@ -89,6 +89,15 @@
     var cores = nav.hardwareConcurrency || 4;
     var connection = nav.connection || nav.mozConnection || nav.webkitConnection;
     var effectiveType = connection ? connection.effectiveType : '4g';
+    
+    var ua = navigator.userAgent.toLowerCase();
+    var platform = navigator.platform?.toLowerCase() || '';
+    var isAppleSilicon = (ua.includes('mac') && platform.includes('arm')) || ua.includes('apple m');
+
+    // Apple Silicon: Always tier 3+ (8 cores, 16GB unified memory)
+    if (isAppleSilicon && cores >= 8) {
+      return mem >= 16 ? 4 : 3;
+    }
 
     // Tier 1 (Low): < 4GB RAM, < 4 cores, slow connection
     if (mem < 4 || cores < 4 || effectiveType === '3g' || effectiveType === '2g') {

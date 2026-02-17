@@ -193,6 +193,13 @@
 
       // Set initial tier based on window.__BM_PERFORMANCE_TIER__
       state.tier = w.__BM_PERFORMANCE_TIER__ || 1;
+      
+      // Apple Silicon gets enhanced defaults
+      if (w.__BM_UNIFIED_MEMORY__ && state.tier >= 3) {
+        console.log('[HERO_CTRL] Apple Silicon detected - enabling enhanced 3D');
+        state.splineQuality = 'ultra';
+      }
+      
       if (state.tier <= 1) {
         suspendSpline('tier-limited');
       }

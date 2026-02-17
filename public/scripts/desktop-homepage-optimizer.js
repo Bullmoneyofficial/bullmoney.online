@@ -116,7 +116,13 @@
       }
 
       // Tier 3+: Spline loads in parallel with hero
-      console.log('[HOME_OPT] Tier 3+ — Spline allowed immediately');
+      // Apple Silicon (tier 4+): Instant load with ultra quality
+      if (w.__BM_UNIFIED_MEMORY__ && state.tier >= 4) {
+        console.log('[HOME_OPT] Apple Silicon - Spline ultra quality mode');
+        w.__BM_SPLINE_QUALITY__ = 'ultra';
+      }
+      
+      console.log('[HOME_OPT] Tier ' + state.tier + ' — Spline allowed immediately');
       DESKTOP.emit('homepage:spline-allowed', {});
     }
 
@@ -185,6 +191,12 @@
         assetsToPreload.push('/store');
         assetsToPreload.push('/games');
       }
+      
+      // Apple Silicon: Aggressive prefetch with unified memory
+      if (w.__BM_UNIFIED_MEMORY__ && state.tier >= 4) {
+        assetsToPreload.push('/community');
+        assetsToPreload.push('/trading-showcase');
+      }
 
       // Preload logo variants (used across site)
       assetsToPreload.push('/bullmoney-logo.png');
@@ -192,6 +204,13 @@
       // Prefetch critical scripts
       if (state.tier >= 2) {
         assetsToPreload.push('/scripts/BMBRAIN/spline-universal.js');
+      }
+      
+      // Apple Silicon: Aggressive prefetch with unified memory
+      if (w.__BM_UNIFIED_MEMORY__ && state.tier >= 4) {
+        console.log('[HOME_OPT] Apple Silicon - aggressive prefetch enabled');
+        assetsToPreload.push('/community');
+        assetsToPreload.push('/trading-showcase');
       }
 
       assetsToPreload.forEach(function(asset) {
