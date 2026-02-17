@@ -371,18 +371,19 @@
     z-index: 250000 !important;
     isolation: isolate !important;
     position: fixed !important;
-    /* Premium modal entrance animation */
-    animation: modal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    /* Fast modal entrance — desktop hardware handles snappy animations */
+    animation: modal-entrance 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: transform, opacity !important;
   }
   
   @keyframes modal-entrance {
     0% {
       opacity: 0;
-      transform: scale(0.95) translateY(20px);
+      transform: scale(0.97) translateY(8px) translateZ(0);
     }
     100% {
       opacity: 1;
-      transform: scale(1) translateY(0);
+      transform: scale(1) translateY(0) translateZ(0);
     }
   }
   
@@ -399,9 +400,9 @@
     z-index: 250001 !important;
     position: relative !important;
     pointer-events: auto !important;
-    /* Premium modal styling */
-    backdrop-filter: blur(40px) saturate(200%) !important;
-    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    /* Lighter backdrop-filter for faster GPU compositing */
+    backdrop-filter: blur(16px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
     background: linear-gradient(135deg, rgba(30,20,50,0.95), rgba(15,10,30,0.98)) !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
     box-shadow: 
@@ -409,7 +410,8 @@
       0 0 40px rgba(255, 255, 255, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.1),
       0 0 100px rgba(255, 255, 255, 0.1) !important;
-    animation: premium-glow 3s ease-in-out infinite !important;
+    /* Removed premium-glow infinite — saves GPU frames every modal open */
+    transform: translateZ(0) !important;
   }
   
   /* ============================================

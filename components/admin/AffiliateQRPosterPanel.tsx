@@ -96,7 +96,68 @@ export default function AffiliateQRPosterPanel() {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const hiddenCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Bulk download all affiliate QR codes as individual PNGs
+  // Helper: load an image as a promise
+  const loadImage = useCallback((src: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+      img.src = src;
+    });
+  }, []);
+
+  // Helper: generate a business card canvas for a given affiliate QR canvas
+  const createBusinessCardCanvas = useCallback(async (
+    qrCanvas: HTMLCanvasElement,
+    affiliateCode: string,
+    affiliateName: string,
+    templateImg: HTMLImageElement,
+  ): Promise<HTMLCanvasElement> => {
+    const canvas = document.createElement('canvas');
+    canvas.width = templateImg.naturalWidth;
+    canvas.height = templateImg.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas context unavailable');
+
+    // Draw the business card template
+    ctx.drawImage(templateImg, 0, 0);
+
+    // QR code overlay — aligned to QR box in template
+    const qrX = 795;
+    const qrY = 985;
+    const qrSize = 215;
+    const padding = 8;
+    const radius = 16;
+
+    // White background behind QR
+    ctx.fillStyle = '#f5f5f5';
+    ctx.beginPath();
+    ctx.roundRect(qrX - padding, qrY - padding, qrSize + padding * 2, qrSize + padding * 2, radius);
+    ctx.fill();
+
+    // Draw the QR code
+    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+
+    // Draw affiliate code and name
+    const codeLabel = affiliateCode ? affiliateCode.toUpperCase() : 'PARTNER';
+    ctx.save();
+    ctx.font = 'bold 28px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'left';
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 5;
+    ctx.fillText(`Code: ${codeLabel}`, 60, 1310);
+    if (affiliateName) {
+      ctx.font = '600 24px Inter, Arial, sans-serif';
+      ctx.fillText(affiliateName, 60, 1345);
+    }
+    ctx.restore();
+
+    return canvas;
+  }, []);
+
+  // Bulk download all affiliate QR codes + business cards bundled into a single ZIP file
   const handleBulkDownloadAllQRCodes = useCallback(async () => {
     if (affiliates.length === 0) {
       showToast('No affiliates to download', 'error');
@@ -105,46 +166,86 @@ export default function AffiliateQRPosterPanel() {
     setBulkDownloading(true);
     setBulkProgress({ current: 0, total: affiliates.length });
     try {
+      const [JSZip, QRCodeLib] = await Promise.all([
+        import('jszip').then(m => m.default || m),
+        import('qrcode').then(m => m.default || m),
+      ]);
+      const zip = new JSZip();
+      const qrFolder = zip.folder('qr-codes')!;
+      const cardFolder = zip.folder('business-cards')!;
+
+      // Pre-load the business card template once
+      let businessCardTemplate: HTMLImageElement | null = null;
+      try {
+        businessCardTemplate = await loadImage('/F39D4E5B-1521-401C-9788-C44AA3A574FF.JPG');
+      } catch {
+        console.warn('Business card template not found — skipping business cards');
+      }
+
       for (let i = 0; i < affiliates.length; i++) {
         const affiliate = affiliates[i];
         const code = affiliate.affiliate_code || 'no-code';
-        const link = affiliate.custom_referral_link || `${BASE_URL}/register?ref=${code}`;
+        const name = (affiliate.full_name || affiliate.email || code).replace(/[^a-zA-Z0-9_-]/g, '_');
+        // Use same link format as affiliate dashboard — points to homepage pagemode
+        const link = getReferralLink(affiliate);
 
-        // Create offscreen canvas for QR
+        // Render QR to an offscreen canvas
         const qrCanvas = document.createElement('canvas');
         qrCanvas.width = 512;
         qrCanvas.height = 512;
-        // Use a temporary container to render QRCodeCanvas
-        const container = document.createElement('div');
-        container.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-        document.body.appendChild(container);
+        await QRCodeLib.toCanvas(qrCanvas, link, {
+          width: 512,
+          margin: 2,
+          color: { dark: '#000000', light: '#ffffff' },
+        });
 
-        // Render QR via canvas API
-        const { default: QRCodeLib } = await import('qrcode');
-        await QRCodeLib.toCanvas(qrCanvas, link, { width: 512, margin: 2 });
+        // Add QR code PNG to ZIP
+        const qrBlob: Blob = await new Promise((resolve) =>
+          qrCanvas.toBlob((b) => resolve(b!), 'image/png')
+        );
+        qrFolder.file(`bullmoney-qr-${code}-${name}.png`, qrBlob);
 
-        const dataUrl = qrCanvas.toDataURL('image/png');
-        const anchor = document.createElement('a');
-        anchor.href = dataUrl;
-        anchor.download = `bullmoney-qr-${code}.png`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-        document.body.removeChild(container);
+        // Generate business card and add to ZIP
+        if (businessCardTemplate) {
+          try {
+            const cardCanvas = await createBusinessCardCanvas(
+              qrCanvas,
+              code,
+              affiliate.full_name || '',
+              businessCardTemplate,
+            );
+            const cardBlob: Blob = await new Promise((resolve) =>
+              cardCanvas.toBlob((b) => resolve(b!), 'image/png')
+            );
+            cardFolder.file(`bullmoney-card-${code}-${name}.png`, cardBlob);
+          } catch (cardErr) {
+            console.warn(`Business card failed for ${code}:`, cardErr);
+          }
+        }
 
         setBulkProgress({ current: i + 1, total: affiliates.length });
-        // Small delay to prevent browser blocking multiple downloads
-        await new Promise(r => setTimeout(r, 300));
       }
-      showToast(`Downloaded ${affiliates.length} QR codes`, 'success');
+
+      // Generate ZIP and trigger single download
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `bullmoney-all-qr-and-cards-${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+
+      showToast(`Downloaded ${affiliates.length} QR codes & business cards as ZIP`, 'success');
     } catch (err) {
       console.error('Bulk QR download failed:', err);
-      showToast('Bulk download failed', 'error');
+      showToast('Bulk download failed — check console for details', 'error');
     } finally {
       setBulkDownloading(false);
       setBulkProgress({ current: 0, total: 0 });
     }
-  }, [affiliates]);
+  }, [affiliates, loadImage, createBusinessCardCanvas, getReferralLink]);
 
   // Fetch affiliates
   const fetchAffiliates = useCallback(async () => {
@@ -169,7 +270,7 @@ export default function AffiliateQRPosterPanel() {
     fetchAffiliates();
   }, [fetchAffiliates]);
 
-  // Generate referral link
+  // Generate referral link — matches affiliate dashboard format so QR scans land on homepage pagemode
   const getReferralLink = useCallback((affiliate: AffiliateRecord) => {
     if (affiliate.custom_referral_link) return affiliate.custom_referral_link;
     const code = affiliate.affiliate_code || "";
@@ -177,6 +278,9 @@ export default function AffiliateQRPosterPanel() {
     
     const params = new URLSearchParams();
     params.set("ref", code);
+    if (affiliate.id) params.set("aff_id", String(affiliate.id));
+    if (affiliate.full_name) params.set("aff_name", affiliate.full_name);
+    if (affiliate.email) params.set("aff_email", affiliate.email);
     params.set("aff_code", code);
     params.set("utm_source", "affiliate");
     params.set("utm_medium", "qr_poster");
@@ -536,8 +640,8 @@ export default function AffiliateQRPosterPanel() {
           >
             <Download className="w-4 h-4" />
             {bulkDownloading
-              ? `Downloading ${bulkProgress.current}/${bulkProgress.total}...`
-              : `Download All QR Codes (${affiliates.length})`}
+              ? `Generating ${bulkProgress.current}/${bulkProgress.total}...`
+              : `Download All QR & Cards (${affiliates.length})`}
           </button>
           <button
             onClick={fetchAffiliates}

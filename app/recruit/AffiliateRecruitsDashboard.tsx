@@ -1108,9 +1108,23 @@ export default function AffiliateRecruitsDashboard({
     URL.revokeObjectURL(url);
   };
 
-  const createQrProfileCardDataUrl = (format: 'png' | 'jpeg') => {
-    const qrCanvas = getQrCanvas();
-    if (!qrCanvas) throw new Error('QR canvas not available');
+  // Generate a fresh QR code canvas from referralLink (independent of DOM)
+  const generateQrCanvas = async (size: number = 512): Promise<HTMLCanvasElement> => {
+    const QRCodeLib = (await import('qrcode')).default || (await import('qrcode'));
+    const qrCanvas = document.createElement('canvas');
+    qrCanvas.width = size;
+    qrCanvas.height = size;
+    await QRCodeLib.toCanvas(qrCanvas, referralLink, {
+      width: size,
+      margin: 2,
+      color: { dark: '#000000', light: '#ffffff' },
+    });
+    return qrCanvas;
+  };
+
+  const createQrProfileCardDataUrl = async (format: 'png' | 'jpeg'): Promise<string> => {
+    // Generate QR directly from referralLink instead of relying on DOM canvas
+    const qrCanvas = await generateQrCanvas(560);
 
     const width = 1080;
     const height = 1920;
@@ -1160,8 +1174,8 @@ export default function AffiliateRecruitsDashboard({
   };
 
   const createBusinessCardDataUrl = async (format: 'png' | 'jpeg'): Promise<string> => {
-    const qrCanvas = getQrCanvas();
-    if (!qrCanvas) throw new Error('QR canvas not available');
+    // Generate QR directly from referralLink — guaranteed correct for this affiliate
+    const qrCanvas = await generateQrCanvas(512);
 
     return new Promise((resolve, reject) => {
       const templateImg = new Image();
@@ -1177,7 +1191,6 @@ export default function AffiliateRecruitsDashboard({
         ctx.drawImage(templateImg, 0, 0);
 
         // QR code overlay position — precisely aligned to the QR box in the template
-        // Template QR is at right side of card: x≈815-1000, y≈1015-1180 (detected via pixel analysis)
         const qrX = 795;
         const qrY = 985;
         const qrSize = 215;
@@ -1221,11 +1234,15 @@ export default function AffiliateRecruitsDashboard({
   };
 
   const handleDownloadBusinessCard = async (format: 'png' | 'jpeg') => {
+    // Guard: don't download while tracking code is still loading
+    if (!myTrackingCode || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found') {
+      setErrorMsg('Your affiliate code is not ready yet. Please wait a moment.');
+      setTimeout(() => setErrorMsg(null), 2500);
+      return;
+    }
     try {
       const dataUrl = await createBusinessCardDataUrl(format);
-      const fileCode = (myTrackingCode && myTrackingCode !== 'Loading...' && myTrackingCode !== 'No Code Found')
-        ? myTrackingCode.trim()
-        : 'partner';
+      const fileCode = myTrackingCode.trim() || 'partner';
       const ext = format === 'jpeg' ? 'jpg' : 'png';
       const anchor = document.createElement('a');
       anchor.href = dataUrl;
@@ -1245,12 +1262,15 @@ export default function AffiliateRecruitsDashboard({
     await handleDownloadBusinessCard('jpeg');
   };
 
-  const handleDownloadQrProfileImage = (format: 'png' | 'jpeg') => {
+  const handleDownloadQrProfileImage = async (format: 'png' | 'jpeg') => {
+    if (!myTrackingCode || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found') {
+      setErrorMsg('Your affiliate code is not ready yet. Please wait a moment.');
+      setTimeout(() => setErrorMsg(null), 2500);
+      return;
+    }
     try {
-      const dataUrl = createQrProfileCardDataUrl(format);
-      const fileCode = (myTrackingCode && myTrackingCode !== 'Loading...' && myTrackingCode !== 'No Code Found')
-        ? myTrackingCode.trim()
-        : 'partner';
+      const dataUrl = await createQrProfileCardDataUrl(format);
+      const fileCode = myTrackingCode.trim() || 'partner';
       const ext = format === 'jpeg' ? 'jpg' : 'png';
       const anchor = document.createElement('a');
       anchor.href = dataUrl;
@@ -1265,16 +1285,19 @@ export default function AffiliateRecruitsDashboard({
     }
   };
 
-  const handleAutoSaveQrProfileImages = () => {
-    handleDownloadQrProfileImage('png');
-    handleDownloadQrProfileImage('jpeg');
+  const handleAutoSaveQrProfileImages = async () => {
+    await handleDownloadQrProfileImage('png');
+    await handleDownloadQrProfileImage('jpeg');
   };
 
-  const handleDownloadQrProfileSvg = () => {
+  const handleDownloadQrProfileSvg = async () => {
+    if (!myTrackingCode || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found') {
+      setErrorMsg('Your affiliate code is not ready yet. Please wait a moment.');
+      setTimeout(() => setErrorMsg(null), 2500);
+      return;
+    }
     try {
-      const qrCanvas = getQrCanvas();
-      if (!qrCanvas) throw new Error('QR canvas unavailable');
-
+      const qrCanvas = await generateQrCanvas(560);
       const qrDataUrl = qrCanvas.toDataURL('image/png');
       const codeLabel = (myTrackingCode && myTrackingCode !== 'Loading...' && myTrackingCode !== 'No Code Found')
         ? myTrackingCode

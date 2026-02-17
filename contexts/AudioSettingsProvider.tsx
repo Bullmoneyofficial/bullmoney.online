@@ -276,6 +276,15 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     SoundEffects.setVolume(clamp01(sfxVolume));
   }, [sfxVolume]);
 
+  // Bridge React audio state to window globals for vanilla desktop scripts
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).__BM_SFX_VOLUME__ = clamp01(sfxVolume);
+      (window as any).__BM_SFX_ENABLED__ = !masterMuted;
+      (window as any).__BM_MASTER_MUTED__ = masterMuted;
+    }
+  }, [sfxVolume, masterMuted]);
+
   // Keep audio element volume and pause state in sync.
   useEffect(() => {
     const audio = ensureAudio();

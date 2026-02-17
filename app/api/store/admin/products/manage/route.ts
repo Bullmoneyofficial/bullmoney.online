@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-function normalizeEmail(value: unknown) {
-  return String(value ?? "")
-    .trim()
-    .replace(/^['"]|['"]$/g, "")
-    .trim()
-    .toLowerCase();
-}
-
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -16,37 +8,20 @@ function getSupabaseAdmin() {
   return createClient(url, key);
 }
 
-async function isAdminAuthorized(request: NextRequest): Promise<boolean> {
-  const adminEmail = normalizeEmail(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
-  const configuredSecret = String(process.env.ADMIN_API_TOKEN || "").trim();
-
-  const authEmail = normalizeEmail(request.headers.get("x-admin-email"));
-  const authToken = String(request.headers.get("x-admin-token") || "").trim();
+function isAdminAuthorized(request: NextRequest): boolean {
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const adminToken = process.env.ADMIN_API_TOKEN;
+  const authEmail = request.headers.get("x-admin-email");
+  const authToken = request.headers.get("x-admin-token");
 
   if (!adminEmail || !authEmail) return false;
   if (authEmail !== adminEmail) return false;
 
-  // If no server-side admin token is configured, fall back to email-only auth
-  // (this matches other existing admin endpoints in this codebase).
-  if (!configuredSecret) return true;
+  const isProd = process.env.NODE_ENV === "production";
+  if (isProd && !adminToken) return false;
+  if (adminToken && authToken !== adminToken) return false;
 
-  // If a secret token is configured, allow it as an auth mechanism (legacy).
-  if (configuredSecret && authToken === configuredSecret) return true;
-
-  // Otherwise, prefer verifying a Supabase session access token.
-  if (authToken) {
-    try {
-      const supabase = getSupabaseAdmin();
-      const { data: userData } = await supabase.auth.getUser(authToken);
-      const tokenEmail = normalizeEmail(userData?.user?.email);
-      if (tokenEmail && tokenEmail === adminEmail) return true;
-    } catch {
-      // fallthrough
-    }
-  }
-
-  // In environments where a secret is configured, require either the secret or a valid Supabase token.
-  return false;
+  return true;
 }
 
 async function upsertPrimaryProductImage(
@@ -83,7 +58,7 @@ async function upsertPrimaryProductImage(
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await isAdminAuthorized(request))) {
+  if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -121,7 +96,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!(await isAdminAuthorized(request))) {
+  if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -160,7 +135,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!(await isAdminAuthorized(request))) {
+  if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

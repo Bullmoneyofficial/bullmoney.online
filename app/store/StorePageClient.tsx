@@ -45,6 +45,10 @@ const StoreAboutTimeline = dynamic(
   () => import('@/components/shop/StoreAboutTimeline').then(m => ({ default: m.StoreAboutTimeline })),
   { ssr: false, loading: () => <div className="h-80 w-full bg-white" /> }
 );
+const BrokerSignupSection = dynamic(
+  () => import('@/components/shop/BrokerSignupSection').then(m => ({ default: m.BrokerSignupSection })),
+  { ssr: false, loading: () => <div className="h-80 w-full bg-[#FBFBFD]" /> }
+);
 
 // ✅ LAZY: useShowcaseScroll (461 lines) converted to lazy effect component — side-effect only
 const LazyShowcaseScroll = dynamic(() => import("@/hooks/useShowcaseScroll").then(mod => ({
@@ -3131,6 +3135,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         </div>
       </section>
       )}
+
+      {/* BROKER SIGNUP — Apple-style signup flow promoting XM & Vantage */}
+      <BrokerSignupSection />
 
       <StoreAboutTimeline />
 

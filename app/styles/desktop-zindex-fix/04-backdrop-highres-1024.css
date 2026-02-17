@@ -31,20 +31,18 @@
     isolation: isolate !important;
     /* Force the backdrop to be visible */
     will-change: opacity, backdrop-filter !important;
-    /* Premium backdrop animation */
-    animation: backdrop-fade-in 0.3s ease-out !important;
+    /* Fast backdrop — skip animating backdrop-filter (GPU-expensive), just fade opacity */
+    animation: backdrop-fade-in 0.12s ease-out !important;
+    -webkit-backdrop-filter: blur(12px) saturate(110%) !important;
+    backdrop-filter: blur(12px) saturate(110%) !important;
   }
   
   @keyframes backdrop-fade-in {
     0% {
       opacity: 0;
-      backdrop-filter: blur(0px) saturate(100%);
-      -webkit-backdrop-filter: blur(0px) saturate(100%);
     }
     100% {
       opacity: 1;
-      backdrop-filter: blur(20px) saturate(120%);
-      -webkit-backdrop-filter: blur(20px) saturate(120%);
     }
   }
   

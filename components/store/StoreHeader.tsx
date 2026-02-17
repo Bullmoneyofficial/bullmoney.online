@@ -1387,22 +1387,6 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         </div>
       )}
 
-      {/* Invisible Hover Trigger Strip - Smart detection avoids canvas sections */}
-      {!isCasinoPage && !isAccountPage && (
-        <div
-          className="fixed hidden lg:block pointer-events-auto z-[895]"
-          style={{
-            top: '48px',
-            // Ultra-small activation zone (near the menu button only)
-            height: '2px',
-            right: '28px',
-            width: '44px',
-          }}
-          onMouseEnter={openDesktopMenu}
-          onMouseLeave={scheduleDesktopMenuClose}
-        />
-      )}
-
       {/* Desktop Dropdown Menu - Apple-style (disabled on games pages) */}
       {!isCasinoPage && desktopMenuOpen && (
         <>

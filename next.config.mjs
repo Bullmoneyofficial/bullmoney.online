@@ -163,6 +163,11 @@ const nextConfig = {
             value: 'on',
           },
           {
+            // Early Hints: preload critical resources via HTTP header (faster than HTML <link>)
+            key: 'Link',
+            value: '</ONcc2l601.svg>; rel=preload; as=image; fetchpriority=high, </bullmoney-logo.png>; rel=preload; as=image',
+          },
+          {
             key: 'X-Frame-Options',
             value: 'SAMEORIGIN',
           },
@@ -356,6 +361,83 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Headers',
             value: '*',
+          },
+        ],
+      },
+      // Cache desktop performance optimization scripts (change with deploys)
+      {
+        source: '/scripts/desktop-fcp-optimizer.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+        ],
+      },
+      {
+        source: '/scripts/desktop-lcp-optimizer.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/scripts/desktop-cls-prevention.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/scripts/desktop-ttfb-optimizer.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/scripts/desktop-interaction-sounds.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/scripts/desktop-scroll-experience.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/scripts/desktop-stability-shield.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/scripts/desktop-fps-boost.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
           },
         ],
       },

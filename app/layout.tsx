@@ -1155,6 +1155,26 @@ export default function RootLayout({
         )}
         <Script id="spline-universal" src="/scripts/BMBRAIN/spline-universal.js" strategy="lazyOnload" />
         <Script id="offline-detect" src="/scripts/BMBRAIN/offline-detect.js" strategy="lazyOnload" />
+
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* DESKTOP CORE WEB VITALS OPTIMIZATION SCRIPTS                       */}
+        {/* Targets: FCP <1.8s, LCP <2.5s, CLS <0.1, TTFB <0.8s              */}
+        {/* These scripts self-gate to desktop only (>769px, non-mobile UA)    */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        <Script id="desktop-fcp-optimizer" src="/scripts/desktop-fcp-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-lcp-optimizer" src="/scripts/desktop-lcp-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-cls-prevention" src="/scripts/desktop-cls-prevention.js" strategy="afterInteractive" />
+        <Script id="desktop-ttfb-optimizer" src="/scripts/desktop-ttfb-optimizer.js" strategy="afterInteractive" />
+
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* DESKTOP EXPERIENCE ENHANCEMENT SCRIPTS                             */}
+        {/* Interaction sounds, scroll physics + audio, stability shield       */}
+        {/* Self-gate to desktop only (>769px, non-mobile UA)                  */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        <Script id="desktop-interaction-sounds" src="/scripts/desktop-interaction-sounds.js" strategy="lazyOnload" />
+        <Script id="desktop-scroll-experience" src="/scripts/desktop-scroll-experience.js" strategy="lazyOnload" />
+        <Script id="desktop-stability-shield" src="/scripts/desktop-stability-shield.js" strategy="lazyOnload" />
+        <Script id="desktop-fps-boost" src="/scripts/desktop-fps-boost.js" strategy="lazyOnload" />
       </head>
       <body
         className={cn("antialiased bg-[#050915] text-white", inter.className)}
