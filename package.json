@@ -84,7 +84,7 @@
     "@tiptap/extension-mention": "^3.15.3",
     "@tiptap/extension-placeholder": "^3.15.3",
     "@tiptap/react": "^3.15.3",
-    "@tiptap/starter-kit": "^3.15.3",
+    "@tiptap/starter-kit": "^3.19.0",
     "@tldraw/tldraw": "^4.3.1",
     "@tsparticles/engine": "^3.9.1",
     "@tsparticles/react": "^3.0.0",
