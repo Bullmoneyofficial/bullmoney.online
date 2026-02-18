@@ -153,6 +153,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const desktopMenuOpenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const desktopMenuHoverOpenRef = useRef(false);
   const { openCart, getItemCount, isOpen: isCartOpen } = useCartStore();
   const { isAuthenticated, recruit, signOut } = useRecruitAuth();
   const { isAdmin } = useAdminAuth();
@@ -757,6 +758,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     if (isUltimateHubOpen) return; // Never open desktop menu when Ultimate Hub is active
     if (isCasinoPage) return; // Disable hover menu on games pages
     if (isOverCanvasSection()) return; // Disable if cursor is over canvas sections
+    desktopMenuHoverOpenRef.current = true;
     if (desktopMenuCloseTimer.current) {
       clearTimeout(desktopMenuCloseTimer.current);
       desktopMenuCloseTimer.current = null;
@@ -780,17 +782,25 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     if (desktopMenuCloseTimer.current) {
       clearTimeout(desktopMenuCloseTimer.current);
     }
+    if (!desktopMenuHoverOpenRef.current) return;
     desktopMenuCloseTimer.current = setTimeout(() => {
       setDesktopMenuOpen(false);
-    }, 250);
+    }, 0);
   }, []);
 
   const toggleDesktopMenu = useCallback(() => {
     if (isUltimateHubOpen) return; // Never toggle desktop menu when Ultimate Hub is active
     if (isCasinoPage) return; // Ignore toggle on games pages
     SoundEffects.click();
+    desktopMenuHoverOpenRef.current = false;
     setDesktopMenuOpen(!desktopMenuOpen);
   }, [isUltimateHubOpen, isCasinoPage, desktopMenuOpen, setDesktopMenuOpen]);
+
+  useEffect(() => {
+    if (!desktopMenuOpen) {
+      desktopMenuHoverOpenRef.current = false;
+    }
+  }, [desktopMenuOpen]);
 
   // Ensure desktop menu stays closed on games pages
   useEffect(() => {

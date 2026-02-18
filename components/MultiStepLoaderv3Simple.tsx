@@ -545,7 +545,24 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
   // X3R7P = XM Broker Code (RED theme)
   // BULLMONEY = Vantage Broker Code (BLUE theme)
   const PASSWORD_OPTIONS = useMemo(() => ['X3R7P', 'BULLMONEY', 'BUY GOLD', 'BUY BTC', 'SELL GOLD', 'SELL BTC'], []);
-  const [targetPassword] = useState(() => PASSWORD_OPTIONS[Math.floor(Math.random() * PASSWORD_OPTIONS.length)]);
+  const PASSWORD_STORAGE_KEY = 'bullmoney_v3loader_password_v3simple';
+  const [targetPassword] = useState(() => {
+    if (typeof window === 'undefined') {
+      return PASSWORD_OPTIONS[0];
+    }
+
+    try {
+      const stored = sessionStorage.getItem(PASSWORD_STORAGE_KEY);
+      if (stored && PASSWORD_OPTIONS.includes(stored)) {
+        return stored;
+      }
+      const next = PASSWORD_OPTIONS[Math.floor(Math.random() * PASSWORD_OPTIONS.length)];
+      sessionStorage.setItem(PASSWORD_STORAGE_KEY, next);
+      return next;
+    } catch {
+      return PASSWORD_OPTIONS[0];
+    }
+  });
   
   // Broker code detection for theming
   const isXMBrokerCode = targetPassword === 'X3R7P';

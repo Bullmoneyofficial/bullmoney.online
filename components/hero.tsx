@@ -704,32 +704,23 @@ ProductCard.displayName = "ProductCard";
 const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { preferViewer: boolean; runtimeUrl: string; viewerUrl: string }) => {
   const viewerReady = useSplineViewerScript();
   const [forceIframeFallback, setForceIframeFallback] = useState(false);
-  const [isBatterySaving, setIsBatterySaving] = useState(false); // NEW: Battery saver state
+  const [isBatterySaving, setIsBatterySaving] = useState(false);
   const [viewportSize, setViewportSize] = useState({ 
     width: typeof window !== 'undefined' ? window.innerWidth : 1920,
     height: typeof window !== 'undefined' ? window.innerHeight : 1080,
     dpr: typeof window !== 'undefined' ? window.devicePixelRatio : 1,
   });
   const containerRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number | null>(null);
-  const lastSizeRef = useRef({ width: 0, height: 0 });
 
   // BATTERY SAVER - Stop all rendering when screensaver is active
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     const handleFreeze = () => {
-      console.log('[SplineSceneEmbed] 🔋 Battery saver: stopping render');
       setIsBatterySaving(true);
-      // Cancel the viewport monitoring RAF
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
     };
     
     const handleUnfreeze = () => {
-      console.log('[SplineSceneEmbed] ⚡ Battery saver: resuming render');
       setIsBatterySaving(false);
     };
     
@@ -746,71 +737,31 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
     };
   }, []);
 
-  // REAL-TIME VIEWPORT DETECTION - Updates every frame for instant response
-  // STOPS when battery saving is active
+  // VIEWPORT DETECTION — event-driven only (no RAF polling = no lag)
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    // Don't run RAF loop when battery saving
-    if (isBatterySaving) {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-      return;
-    }
-    
-    let isActive = true;
+    if (typeof window === "undefined" || isBatterySaving) return;
     
     const updateViewportSize = () => {
-      if (!isActive || isBatterySaving) return;
-      
-      // Use visualViewport for accurate size in mobile browsers / in-app browsers
       const vv = window.visualViewport;
-      const newWidth = Math.round(vv?.width || window.innerWidth);
-      const newHeight = Math.round(vv?.height || window.innerHeight);
-      const newDpr = window.devicePixelRatio || 1;
-      
-      // Only update state if size actually changed (prevents unnecessary re-renders)
-      if (newWidth !== lastSizeRef.current.width || newHeight !== lastSizeRef.current.height) {
-        lastSizeRef.current = { width: newWidth, height: newHeight };
-        setViewportSize({ width: newWidth, height: newHeight, dpr: newDpr });
-      }
-      
-      // Schedule next check (16ms = ~60fps monitoring)
-      if (!isBatterySaving) {
-        rafRef.current = requestAnimationFrame(updateViewportSize);
-      }
-    };
-    
-    // Start monitoring
-    updateViewportSize();
-    
-    // Also listen to events for immediate response
-    const handleResize = () => {
-      if (isBatterySaving) return;
-      const vv = window.visualViewport;
-      const newWidth = Math.round(vv?.width || window.innerWidth);
-      const newHeight = Math.round(vv?.height || window.innerHeight);
-      lastSizeRef.current = { width: newWidth, height: newHeight };
-      setViewportSize({ 
-        width: newWidth, 
-        height: newHeight, 
-        dpr: window.devicePixelRatio || 1 
+      setViewportSize({
+        width: Math.round(vv?.width || window.innerWidth),
+        height: Math.round(vv?.height || window.innerHeight),
+        dpr: window.devicePixelRatio || 1,
       });
     };
     
-    window.addEventListener('resize', handleResize, { passive: true });
-    window.addEventListener('orientationchange', handleResize, { passive: true });
-    window.visualViewport?.addEventListener('resize', handleResize, { passive: true });
-    window.visualViewport?.addEventListener('scroll', handleResize, { passive: true });
+    // Initial measurement
+    updateViewportSize();
+    
+    // Listen to events only — no requestAnimationFrame loop
+    window.addEventListener('resize', updateViewportSize, { passive: true });
+    window.addEventListener('orientationchange', updateViewportSize, { passive: true });
+    window.visualViewport?.addEventListener('resize', updateViewportSize, { passive: true });
     
     return () => {
-      isActive = false;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-      window.visualViewport?.removeEventListener('resize', handleResize);
-      window.visualViewport?.removeEventListener('scroll', handleResize);
+      window.removeEventListener('resize', updateViewportSize);
+      window.removeEventListener('orientationchange', updateViewportSize);
+      window.visualViewport?.removeEventListener('resize', updateViewportSize);
     };
   }, [isBatterySaving]);
 

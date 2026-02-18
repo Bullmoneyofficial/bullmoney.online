@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import HomePageShell from "./HomePageShell";
 import { useUIState } from "@/contexts/UIStateHook";
+import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 
 type HomeView = "pagemode" | "loader" | "telegram" | "content";
 
@@ -82,11 +83,18 @@ export function HomePageController() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentView, setCurrentView] = useState<HomeView>("pagemode");
 
-  const { setLoaderv2Open, setV2Unlocked } = useUIState();
+  const { setLoaderv2Open, setV2Unlocked, setDevSkipPageModeAndLoader } = useUIState();
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  // Dev keyboard shortcut to skip pagemode and loader (works even before content mounts)
+  useDevSkipShortcut(() => {
+    setDevSkipPageModeAndLoader(true);
+    setV2Unlocked(true);
+    setCurrentView("content");
+  });
 
   // Keep global loader state in sync with the controller view.
   useEffect(() => {

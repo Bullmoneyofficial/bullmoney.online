@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { motion } from "framer-motion";
 import { ArrowRight, User } from 'lucide-react';
 import { UI_Z_INDEX } from "@/contexts/UIStateContext";
+import type { SplineWrapperProps } from '@/lib/spline-wrapper';
 
 const UnifiedFpsPill = dynamic(
   () => import('@/components/ultimate-hub/pills/UnifiedFpsPill').then(m => ({ default: m.UnifiedFpsPill })),
@@ -22,93 +23,131 @@ const LegalDisclaimerModal = dynamic(
   { ssr: false, loading: () => null }
 );
 
-// --- DYNAMIC SPLINE IMPORT ---
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-  ssr: false,
-  loading: () => null,
-});
+// --- DYNAMIC SPLINE IMPORT (ultra-optimized wrapper) ---
+const Spline = dynamic<SplineWrapperProps>(
+  () => import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper') as any,
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 // Available Spline scenes - scene1 is preloaded in layout.tsx for fastest first load
 const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
 
-// Detect low memory / constrained environments
-const isLowMemoryDevice = (): boolean => {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') return true;
-  
-  const ua = navigator.userAgent.toLowerCase();
-  
-  // iOS Safari and in-app browsers (Facebook, Instagram, TikTok, Twitter, LinkedIn, etc.)
-  const isIOS = /iphone|ipad|ipod/.test(ua);
-  const isSafari = /safari/.test(ua) && !/chrome|crios|fxios/.test(ua);
-  const isInAppBrowser = /fban|fbav|instagram|twitter|linkedin|snapchat|tiktok|wechat|line|telegram/i.test(ua);
-  
-  // Check for low device memory (Chrome/Edge expose this)
-  const deviceMemory = (navigator as any).deviceMemory;
-  const isLowRAM = deviceMemory !== undefined && deviceMemory < 4;
-  
-  // Check for low CPU cores
-  const hardwareConcurrency = navigator.hardwareConcurrency;
-  const isLowCPU = hardwareConcurrency !== undefined && hardwareConcurrency < 4;
-  
-  // Older/budget Android devices
-  const isOldAndroid = /android [1-7]\./i.test(ua);
-  
-  // WebView detection (apps embedding browsers)
-  const isWebView = /wv|webview/i.test(ua) || (isIOS && !/safari/i.test(ua));
-  
-  return (
-    (isIOS && isSafari) || // iOS Safari has strict memory limits
-    isInAppBrowser ||       // In-app browsers are very constrained
-    isWebView ||            // WebViews have limited resources
-    isLowRAM ||             // Low RAM devices
-    isLowCPU ||             // Low CPU devices
-    isOldAndroid            // Old Android versions
-  );
-};
+// --- SPLINE LOAD LOCK (matches store page pattern for smooth loading) ---
+function getSplineLoadLock() {
+  const w = window as typeof window & { __BM_SPLINE_LOAD_LOCK__?: { active: boolean; queue: Array<() => void> } };
+  if (!w.__BM_SPLINE_LOAD_LOCK__) {
+    w.__BM_SPLINE_LOAD_LOCK__ = { active: false, queue: [] };
+  }
+  return w.__BM_SPLINE_LOAD_LOCK__;
+}
+
+function waitForSplineSlot(): Promise<() => void> {
+  return new Promise((resolve) => {
+    const lock = getSplineLoadLock();
+    const grant = () => {
+      lock.active = true;
+      resolve(() => {
+        lock.active = false;
+        const next = lock.queue.shift();
+        if (next) next();
+      });
+    };
+    if (!lock.active) grant();
+    else lock.queue.push(grant);
+  });
+}
 
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (DESKTOP) ---
-// Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
-// Spline always renders on ALL devices (including low-memory). CSS fallback shows while loading.
+// Uses same load-lock pattern as store page hero for smooth, lag-free loading
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const splineRef = useRef<any>(null);
-  const isLowMem = typeof window !== 'undefined' && isLowMemoryDevice();
+  const [allowLoad, setAllowLoad] = useState(false);
+  const releaseRef = useRef<null | (() => void)>(null);
 
-  // Always use scene1 for fastest cold start and reliable reloads
-  const [scene] = useState(() => SPLINE_SCENES[0]);
+  const scene = SPLINE_SCENES[0]; // Always use scene1 for fastest cold start
 
-  // Preload Spline runtime + scene for faster first paint and reliable reloads
+  // Acquire load lock — only one Spline loads at a time (prevents GPU contention)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    let cancelled = false;
 
-    import('@splinetool/react-spline').catch(() => undefined);
+    const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection || {};
+    const saveData = !!conn.saveData;
+    const effectiveType = String(conn.effectiveType || '');
+    const isSlowNet = effectiveType === '2g' || effectiveType === 'slow-2g';
+    const preloadPriority: 'high' | 'low' = (!saveData && !isSlowNet) ? 'high' : 'low';
 
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'fetch';
-    link.href = scene;
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
+    // Preload the runtime in parallel
+    import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
 
-    fetch(scene, { cache: 'force-cache' }).catch(() => undefined);
+    // Preconnect to Spline asset origins so scene subresources start faster
+    const preconnectOrigins = ['https://prod.spline.design', 'https://cdn.spline.design'] as const;
+    preconnectOrigins.forEach((href) => {
+      if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
+      const l = document.createElement('link');
+      l.rel = 'preconnect';
+      l.href = href;
+      l.crossOrigin = 'anonymous';
+      document.head.appendChild(l);
+    });
+
+    // Preload the scene file
+    let link: HTMLLinkElement | null = null;
+    const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`) as HTMLLinkElement | null;
+    if (!existing) {
+      link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'fetch';
+      link.href = scene;
+      link.crossOrigin = 'anonymous';
+      // fetchPriority isn't in TS DOM typings everywhere yet
+      (link as any).fetchPriority = preloadPriority;
+      link.setAttribute('fetchpriority', preloadPriority);
+      document.head.appendChild(link);
+    }
+    fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
+
+    // Wait for exclusive GPU slot
+    waitForSplineSlot().then((release) => {
+      if (cancelled) { release(); return; }
+      releaseRef.current = release;
+      setAllowLoad(true);
+    });
 
     return () => {
-      if (link.parentNode) link.parentNode.removeChild(link);
+      cancelled = true;
+      if (link && link.parentNode) link.parentNode.removeChild(link);
+      if (releaseRef.current) {
+        releaseRef.current();
+        releaseRef.current = null;
+      }
+      setAllowLoad(false);
     };
   }, [scene]);
 
-  const handleLoad = useCallback((splineApp: any) => {
-    splineRef.current = splineApp;
+  // Safety timeout — release lock after 15s even if Spline never fires onLoad
+  useEffect(() => {
+    if (!allowLoad || !releaseRef.current) return;
+    const timeout = setTimeout(() => {
+      if (releaseRef.current) {
+        releaseRef.current();
+        releaseRef.current = null;
+      }
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [allowLoad]);
+
+  const handleLoad = useCallback(() => {
     setIsLoaded(true);
+    // Release the load lock so other Spline instances can load
+    if (releaseRef.current) {
+      releaseRef.current();
+      releaseRef.current = null;
+    }
   }, []);
-
-  const handleError = useCallback((error: any) => {
-    console.error('[WelcomeSplineDesktop] Load error:', error);
-    setIsLoaded(false);
-  }, []);
-
-  // Use simpler CSS filters on constrained browsers to avoid GPU crashes
-  const useSafeFilters = isLowMem;
 
   return (
     <div
@@ -118,133 +157,32 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         backgroundColor: '#000',
       }}
     >
-      {/* CSS animated background — visible while Spline loads, fades when Spline is ready */}
-      <style>{`
-        @keyframes welcomeDeskDrift {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(2%, -3%) scale(1.05); }
-          66% { transform: translate(-2%, 2%) scale(1.02); }
-        }
-        @keyframes welcomeDeskPulse {
-          0%, 100% { opacity: 0.35; }
-          50% { opacity: 0.55; }
-        }
-        @keyframes welcomeDeskSweep {
-          0% { transform: translateX(-100%) rotate(-15deg); }
-          100% { transform: translateX(200%) rotate(-15deg); }
-        }
-      `}</style>
+      {/* Gradient fallback — always visible until Spline is loaded, then fades out */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse 80% 60% at 40% 30%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 50%, transparent 80%)',
-          opacity: isLoaded ? 0.15 : 1,
-          transition: 'opacity 600ms ease-out',
-          animation: 'welcomeDeskDrift 12s ease-in-out infinite',
-          willChange: 'transform',
-        }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'radial-gradient(ellipse 70% 50% at 70% 75%, rgba(255,255,255,0.12) 0%, transparent 60%)',
-          opacity: isLoaded ? 0.1 : 1,
-          transition: 'opacity 600ms ease-out',
-          animation: 'welcomeDeskDrift 16s ease-in-out infinite reverse',
-        }}
-      />
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.2) 0%, transparent 55%)',
-          animation: 'welcomeDeskPulse 5s ease-in-out infinite',
+          background: 'linear-gradient(135deg, rgba(15,15,15,1) 0%, rgba(30,30,30,1) 50%, rgba(10,10,10,1) 100%)',
           opacity: isLoaded ? 0 : 1,
-          transition: 'opacity 600ms ease-out',
+          transition: 'opacity 700ms ease-out',
         }}
       />
-      {!isLoaded && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: 0.08 }}>
-          <div style={{
-            position: 'absolute', top: 0, left: 0, width: '60%', height: '200%',
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-            animation: 'welcomeDeskSweep 8s ease-in-out infinite',
-          }} />
-        </div>
-      )}
 
-      {/* Spline — always rendered on all devices */}
-      {!useSafeFilters && (
-        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-          <defs>
-            <filter id="grayscale-filter">
-              <feColorMatrix type="saturate" values="0" />
-              <feComponentTransfer>
-                <feFuncR type="linear" slope="1.1" />
-                <feFuncG type="linear" slope="1.1" />
-                <feFuncB type="linear" slope="1.1" />
-              </feComponentTransfer>
-            </filter>
-          </defs>
-        </svg>
-      )}
-
-      <div
-        className="absolute inset-0"
-        style={{
-          filter: useSafeFilters
-            ? 'grayscale(100%) saturate(0)'
-            : 'url(#grayscale-filter) grayscale(100%) saturate(0) contrast(1.1)',
-          WebkitFilter: useSafeFilters
-            ? 'grayscale(100%) saturate(0)'
-            : 'grayscale(100%) saturate(0) contrast(1.1)',
-        } as React.CSSProperties}
-      >
-        <Spline
-          scene={scene}
-          onLoad={handleLoad}
-          onError={handleError}
+      {/* Spline — only mounts after acquiring load lock (prevents GPU contention) */}
+      {allowLoad && (
+        <div
+          className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           style={{
-            width: '100%',
-            height: '100%',
-            display: 'block',
-            opacity: isLoaded ? 1 : 0.6,
-            transition: 'opacity 500ms ease-out',
-            willChange: 'opacity',
             filter: 'grayscale(100%) saturate(0)',
             WebkitFilter: 'grayscale(100%) saturate(0)',
           } as React.CSSProperties}
-        />
-      </div>
-
-      {!useSafeFilters ? (
-        <>
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              zIndex: 1,
-              backgroundColor: '#808080',
-              mixBlendMode: 'color',
-              WebkitMixBlendMode: 'color',
-            } as React.CSSProperties}
+        >
+          <Spline
+            scene={scene}
+            onLoad={handleLoad}
+            priority
+            className="w-full h-full"
           />
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              zIndex: 1,
-              backgroundColor: 'rgba(128, 128, 128, 0.3)',
-              mixBlendMode: 'saturation',
-              WebkitMixBlendMode: 'saturation',
-            } as React.CSSProperties}
-          />
-        </>
-      ) : (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            zIndex: 1,
-            backgroundColor: 'rgba(110, 110, 110, 0.16)',
-          }}
-        />
+        </div>
       )}
     </div>
   );
@@ -302,7 +240,6 @@ interface WelcomeScreenDesktopProps {
 }
 
 export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackground = false }: WelcomeScreenDesktopProps) {
-  const [mounted, setMounted] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
@@ -313,10 +250,6 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
 
   // Use live prices from UltimateHub
   const prices = useLivePrices();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Handle user interaction to stop ghost mode; keep it local to the card to avoid auto-disabling from background mouse moves
   const handleUserInteraction = useCallback(() => {
@@ -330,8 +263,6 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
     // Immediately call onGuest without animation delays
     onGuest();
   }, [onGuest]);
-
-  if (!mounted) return null;
 
   return (
     <>

@@ -1,32 +1,28 @@
 "use client";
 
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, lazy, Suspense } from 'react';
-import { createClient } from '@supabase/supabase-js'; 
-import { gsap } from 'gsap';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import type { SplineWrapperProps } from '@/lib/spline-wrapper';
 
-// Dynamic import for Spline component (used for local .splinecode files)
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-  ssr: false,
-  loading: () => null,
-});
+// Dynamic import for Spline component (ultra-optimized wrapper)
+const Spline = dynamic<SplineWrapperProps>(
+  () => import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper') as any,
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 import { trackEvent, BullMoneyAnalytics } from '@/lib/analytics';
 import {
-  Check, Mail, Hash, Lock,
+  Check, Hash, Lock,
   ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Plus, Eye, EyeOff, FolderPlus, Loader2, ShieldCheck, Clock, User, Send, Sparkles
+  Copy, Eye, EyeOff, ShieldCheck
 } from 'lucide-react';
 
-import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { persistSession } from '@/lib/sessionPersistence';
-
-// --- THERMAL OPTIMIZATION (prevent phone overheating) ---
-import { getGlobalThermalState } from '@/hooks/useThermalOptimization';
-
-// --- UNIFIED SHIMMER SYSTEM ---
-import { ShimmerLine, ShimmerBorder, ShimmerSpinner, ShimmerRadialGlow } from '@/components/ui/UnifiedShimmer';
 
 // --- UI STATE CONTEXT ---
 import { useUIState, UI_Z_INDEX } from "@/contexts/UIStateContext";
@@ -40,7 +36,11 @@ const TelegramConfirmationResponsive = dynamic(() => import("./TelegramConfirmat
 const LegalDisclaimerModal = dynamic(() => import("@/components/Mainpage/footer/LegalDisclaimerModal").then(m => ({ default: m.LegalDisclaimerModal })), { ssr: false, loading: () => null });
 
 // --- DESKTOP WELCOME SCREEN (separate layout for larger screens) ---
-const WelcomeScreenDesktop = dynamic(() => import("./WelcomeScreenDesktop").then(m => ({ default: m.WelcomeScreenDesktop })), { ssr: false, loading: () => null });
+// Keep SSR enabled so desktop gets HTML immediately (faster first paint in production)
+const WelcomeScreenDesktop = dynamic(
+  () => import("./WelcomeScreenDesktop").then(m => ({ default: m.WelcomeScreenDesktop })),
+  { loading: () => null }
+);
 
 // --- ULTIMATE HUB COMPONENTS (for mobile welcome screen to match desktop) ---
 const UnifiedFpsPill = dynamic(() => import('@/components/ultimate-hub/pills/UnifiedFpsPill').then(m => ({ default: m.UnifiedFpsPill })), { ssr: false, loading: () => null });
@@ -48,8 +48,18 @@ const UnifiedHubPanel = dynamic(() => import('@/components/ultimate-hub/panel/Un
 import { useLivePrices } from '@/components/ultimate-hub/hooks/useAccess';
 import { createPortal } from 'react-dom';
 
-// Available Spline scenes - scene1 is preloaded in layout.tsx for fastest first load
-const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
+// Spline scene for welcome background (preloaded in layout.tsx for fastest first load)
+const SPLINE_SCENE = '/scene1.splinecode';
+
+// Pre-compiled RegExp patterns (avoids re-creation per call)
+const RE_MOBILE_UA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+const RE_INSTAGRAM = /instagram/i;
+const RE_IOS_DEVICE = /iphone|ipad|ipod/;
+const RE_SAFARI_ONLY = /safari/;
+const RE_NON_SAFARI_BROWSERS = /chrome|crios|fxios|edgios/;
+const RE_INAPP_BROWSER = /fban|fbav|instagram|twitter|linkedin|snapchat|tiktok|wechat|line|telegram/i;
+const RE_WEBVIEW = /wv|webview|; wv\)|instagram|fb_iab|line\//i;
+const RE_OLD_ANDROID = /android [1-7]\./i;
 
 type RuntimeProfile = {
   isIOS: boolean;
@@ -79,11 +89,11 @@ const getRuntimeProfile = (): RuntimeProfile => {
 
   const ua = navigator.userAgent.toLowerCase();
   const platform = (navigator.platform || '').toLowerCase();
-  const isIOS = /iphone|ipad|ipod/.test(ua) || (platform === 'macintel' && navigator.maxTouchPoints > 1);
-  const isSafari = /safari/.test(ua) && !/chrome|crios|fxios|edgios/.test(ua);
-  const isInAppBrowser = /fban|fbav|instagram|twitter|linkedin|snapchat|tiktok|wechat|line|telegram/i.test(ua);
-  const isWebView = /wv|webview|; wv\)|instagram|fb_iab|line\//i.test(ua) || (isIOS && !isSafari && !/crios|fxios|edgios/.test(ua));
-  const isOldAndroid = /android [1-7]\./i.test(ua);
+  const isIOS = RE_IOS_DEVICE.test(ua) || (platform === 'macintel' && navigator.maxTouchPoints > 1);
+  const isSafari = RE_SAFARI_ONLY.test(ua) && !RE_NON_SAFARI_BROWSERS.test(ua);
+  const isInAppBrowser = RE_INAPP_BROWSER.test(ua);
+  const isWebView = RE_WEBVIEW.test(ua) || (isIOS && !isSafari && !RE_NON_SAFARI_BROWSERS.test(ua));
+  const isOldAndroid = RE_OLD_ANDROID.test(ua);
 
   const rawDeviceMemory = (navigator as any).deviceMemory;
   const deviceMemory = typeof rawDeviceMemory === 'number' ? rawDeviceMemory : undefined;
@@ -105,181 +115,139 @@ const getRuntimeProfile = (): RuntimeProfile => {
   };
 };
 
-// Detect low memory / constrained environments
+// Cache runtime profile (computed once, stable for session lifetime)
+let _cachedRuntimeProfile: RuntimeProfile | null = null;
+const getCachedRuntimeProfile = (): RuntimeProfile => {
+  if (!_cachedRuntimeProfile) _cachedRuntimeProfile = getRuntimeProfile();
+  return _cachedRuntimeProfile;
+};
+
+// Detect low memory / constrained environments (cached)
+let _cachedIsLowMemory: boolean | null = null;
 const isLowMemoryDevice = (): boolean => {
-  const profile = getRuntimeProfile();
-  return (
+  if (_cachedIsLowMemory !== null) return _cachedIsLowMemory;
+  const profile = getCachedRuntimeProfile();
+  _cachedIsLowMemory = (
     (profile.isIOS && profile.isSafari) ||
     profile.isInAppBrowser ||
     profile.isWebView ||
     profile.isLowMemory
   );
+  return _cachedIsLowMemory;
 };
 
-// =============================================================================
-// THERMAL-AWARE QUALITY HELPERS (prevent phone overheating)
-// Everything ALWAYS renders - just at reduced quality when device is hot
-// =============================================================================
-function getThermalQualityMultiplier(): number {
-  const state = getGlobalThermalState();
-  if (!state.isPageVisible) return 0.3;
-  switch (state.thermalLevel) {
-    case 'critical': return 0.4;
-    case 'hot': return 0.6;
-    case 'warm': return 0.8;
-    default: return 1.0;
+// --- SPLINE LOAD LOCK (matches store page pattern for smooth loading) ---
+function getSplineLoadLock() {
+  const w = window as typeof window & { __BM_SPLINE_LOAD_LOCK__?: { active: boolean; queue: Array<() => void> } };
+  if (!w.__BM_SPLINE_LOAD_LOCK__) {
+    w.__BM_SPLINE_LOAD_LOCK__ = { active: false, queue: [] };
   }
+  return w.__BM_SPLINE_LOAD_LOCK__;
+}
+
+function waitForSplineSlot(): Promise<() => void> {
+  return new Promise((resolve) => {
+    const lock = getSplineLoadLock();
+    const grant = () => {
+      lock.active = true;
+      resolve(() => {
+        lock.active = false;
+        const next = lock.queue.shift();
+        if (next) next();
+      });
+    };
+    if (!lock.active) grant();
+    else lock.queue.push(grant);
+  });
 }
 
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (MOBILE) ---
-// Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
-// THERMAL-AWARE: Reduces canvas quality when device is hot
+// Uses same load-lock pattern as store page hero for smooth, lag-free loading
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
-  const runtimeProfile = useMemo(() => getRuntimeProfile(), []);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [loadTimeout, setLoadTimeout] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [retryKey, setRetryKey] = useState(0);
-  const [sceneIndex, setSceneIndex] = useState(0);
-  const splineRef = useRef<any>(null);
-  const retryTimeoutRef = useRef<number | null>(null);
+  const [allowLoad, setAllowLoad] = useState(false);
+  const releaseRef = useRef<null | (() => void)>(null);
 
-  const scene = SPLINE_SCENES[sceneIndex] || SPLINE_SCENES[0];
-  const maxRetries = runtimeProfile.isLowMemory ? 5 : 4;
-  const retryDelayMs = runtimeProfile.isLowMemory ? 700 : 450;
-  const loadTimeoutMs = runtimeProfile.isLowMemory ? 12000 : 9000;
-  
-  const scheduleRetry = useCallback((reason: 'timeout' | 'error' | 'visibility' | 'contextlost') => {
-    if (retryCount >= maxRetries) {
-      setLoadTimeout(true);
-      return;
-    }
+  const scene = SPLINE_SCENE;
 
-    if (retryTimeoutRef.current) {
-      window.clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
-    }
-
-    retryTimeoutRef.current = window.setTimeout(() => {
-      console.warn(`[WelcomeSpline] Retry #${retryCount + 1} (${reason})`);
-      setRetryCount((count) => count + 1);
-      setRetryKey((key) => key + 1);
-      setSceneIndex((index) => (index + 1) % SPLINE_SCENES.length);
-      setHasError(false);
-      setLoadTimeout(false);
-      setIsLoaded(false);
-    }, retryDelayMs);
-  }, [maxRetries, retryCount, retryDelayMs]);
-
-  // Preload Spline runtime + scene for faster first paint and reliable reloads
+  // Acquire load lock — only one Spline loads at a time (prevents GPU contention)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    let cancelled = false;
 
-    import('@splinetool/react-spline').catch(() => undefined);
+    const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection || {};
+    const saveData = !!conn.saveData;
+    const effectiveType = String(conn.effectiveType || '');
+    const isSlowNet = effectiveType === '2g' || effectiveType === 'slow-2g';
+    const preloadPriority: 'high' | 'low' = (!saveData && !isSlowNet) ? 'high' : 'low';
 
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'fetch';
-    link.href = scene;
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
+    // Preload the runtime in parallel
+    import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
 
-    const controller = new AbortController();
-    fetch(scene, { cache: 'force-cache', signal: controller.signal }).catch(() => undefined);
+    // Preconnect to Spline asset origins so scene subresources start faster
+    const preconnectOrigins = ['https://prod.spline.design', 'https://cdn.spline.design'] as const;
+    preconnectOrigins.forEach((href) => {
+      if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
+      const l = document.createElement('link');
+      l.rel = 'preconnect';
+      l.href = href;
+      l.crossOrigin = 'anonymous';
+      document.head.appendChild(l);
+    });
+
+    // Preload the scene file
+    let link: HTMLLinkElement | null = null;
+    const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`) as HTMLLinkElement | null;
+    if (!existing) {
+      link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'fetch';
+      link.href = scene;
+      link.crossOrigin = 'anonymous';
+      (link as any).fetchPriority = preloadPriority;
+      link.setAttribute('fetchpriority', preloadPriority);
+      document.head.appendChild(link);
+    }
+    fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
+
+    // Wait for exclusive GPU slot
+    waitForSplineSlot().then((release) => {
+      if (cancelled) { release(); return; }
+      releaseRef.current = release;
+      setAllowLoad(true);
+    });
 
     return () => {
-      controller.abort();
-      if (link.parentNode) link.parentNode.removeChild(link);
+      cancelled = true;
+      if (link && link.parentNode) link.parentNode.removeChild(link);
+      if (releaseRef.current) {
+        releaseRef.current();
+        releaseRef.current = null;
+      }
+      setAllowLoad(false);
     };
   }, [scene]);
 
-  // Timeout fallback - if Spline doesn't load in time, rotate scene and retry
+  // Safety timeout — release lock after 15s even if Spline never fires onLoad
   useEffect(() => {
-    if (isLoaded) return;
-
-    const timer = setTimeout(() => {
-      if (!isLoaded) {
-        console.warn('[WelcomeSpline] Load timeout - showing fallback');
-        setLoadTimeout(true);
-        scheduleRetry('timeout');
+    if (!allowLoad || !releaseRef.current) return;
+    const timeout = setTimeout(() => {
+      if (releaseRef.current) {
+        releaseRef.current();
+        releaseRef.current = null;
       }
-    }, loadTimeoutMs);
-
-    return () => clearTimeout(timer);
-  }, [isLoaded, loadTimeoutMs, scheduleRetry]);
-
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState === 'visible' && !isLoaded) {
-        scheduleRetry('visibility');
-      }
-    };
-
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [isLoaded, scheduleRetry]);
-
-  useEffect(() => {
-    return () => {
-      if (retryTimeoutRef.current) {
-        window.clearTimeout(retryTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    const canvas = document.querySelector('.welcome-spline-canvas-host canvas') as HTMLCanvasElement | null;
-    if (!canvas) return;
-
-    const onContextLost = (event: Event) => {
-      event.preventDefault();
-      setIsLoaded(false);
-      setHasError(true);
-      scheduleRetry('contextlost');
-    };
-
-    canvas.addEventListener('webglcontextlost', onContextLost, false);
-    return () => {
-      canvas.removeEventListener('webglcontextlost', onContextLost, false);
-    };
-  }, [isLoaded, retryKey, scheduleRetry]);
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [allowLoad]);
 
   const handleLoad = useCallback((splineApp: any) => {
-    splineRef.current = splineApp;
     setIsLoaded(true);
-    setHasError(false);
-    setLoadTimeout(false);
-    
-    // THERMAL-AWARE: Reduce canvas resolution based on device heat
-    // Always renders but at reduced quality when device is warm/hot
-    if (splineApp) {
-      try {
-        const canvas = splineApp.canvas as HTMLCanvasElement | undefined;
-        if (canvas) {
-          const thermalMultiplier = getThermalQualityMultiplier();
-          const baseFactor = runtimeProfile.isLowMemory ? 0.5 : 0.7;
-          const scaleFactor = Math.max(0.3, baseFactor * thermalMultiplier);
-          const w = Math.round(canvas.clientWidth * scaleFactor);
-          const h = Math.round(canvas.clientHeight * scaleFactor);
-          splineApp.setSize(w, h);
-          console.log(`[WelcomeSpline] Thermal-adjusted canvas to ${w}x${h} (${Math.round(scaleFactor * 100)}% quality)`);
-        }
-      } catch (e) {
-        console.warn('[WelcomeSpline] Could not reduce canvas size:', e);
-      }
+    // Release the load lock so other Spline instances can load
+    if (releaseRef.current) {
+      releaseRef.current();
+      releaseRef.current = null;
     }
-  }, [runtimeProfile.isLowMemory]);
-
-  const handleError = useCallback((error: any) => {
-    console.error('[WelcomeSpline] Load error:', error);
-    setHasError(true);
-    scheduleRetry('error');
-  }, [scheduleRetry]);
-
-  // Show animated gradient fallback if Spline fails or times out
-  const showFallback = hasError || (!isLoaded && loadTimeout);
+  }, []);
 
   return (
     <div
@@ -290,128 +258,35 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         backgroundColor: '#000',
       }}
     >
-      {/* CSS animated background — visible while Spline loads/retries, fades when Spline is ready */}
-      <style>{`
-        @keyframes welcomeBgDrift {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(2%, -3%) scale(1.05); }
-          66% { transform: translate(-2%, 2%) scale(1.02); }
-        }
-        @keyframes welcomeBgPulse {
-          0%, 100% { opacity: 0.35; }
-          50% { opacity: 0.55; }
-        }
-        @keyframes welcomeBgSweep {
-          0% { transform: translateX(-100%) rotate(-15deg); }
-          100% { transform: translateX(200%) rotate(-15deg); }
-        }
-      `}</style>
-      {/* Layered ambient gradients */}
+      {/* Gradient fallback — always visible until Spline is loaded, then fades out */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse 80% 60% at 40% 30%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 50%, transparent 80%)',
-          opacity: isLoaded ? 0.15 : 1,
-          transition: 'opacity 600ms ease-out',
-          animation: 'welcomeBgDrift 12s ease-in-out infinite',
-          willChange: 'transform',
-        }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'radial-gradient(ellipse 70% 50% at 70% 75%, rgba(255,255,255,0.12) 0%, transparent 60%)',
-          opacity: isLoaded ? 0.1 : 1,
-          transition: 'opacity 600ms ease-out',
-          animation: 'welcomeBgDrift 16s ease-in-out infinite reverse',
-        }}
-      />
-      {/* Animated glow pulse */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.2) 0%, transparent 55%)',
-          animation: 'welcomeBgPulse 5s ease-in-out infinite',
+          background: 'linear-gradient(135deg, rgba(15,15,15,1) 0%, rgba(30,30,30,1) 50%, rgba(10,10,10,1) 100%)',
           opacity: isLoaded ? 0 : 1,
-          transition: 'opacity 600ms ease-out',
+          transition: 'opacity 700ms ease-out',
         }}
       />
-      {/* Light sweep — visible while Spline is loading or failed */}
-      {(showFallback || !isLoaded) && (
+
+      {/* Spline — only mounts after acquiring load lock (prevents GPU contention) */}
+      {allowLoad && (
         <div
-          className="absolute inset-0 pointer-events-none overflow-hidden"
-          style={{ opacity: 0.08 }}
+          className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '60%',
-              height: '200%',
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-              animation: 'welcomeBgSweep 8s ease-in-out infinite',
-            }}
+          <Spline
+            scene={scene}
+            onLoad={handleLoad}
+            priority
+            className="w-full h-full"
           />
         </div>
       )}
-
-      {/* Spline — always rendered on all devices including low-memory */}
-      <div
-        className="absolute inset-0 welcome-spline-canvas-host"
-      >
-        <Spline
-          key={`welcome-spline-${retryKey}`}
-          scene={scene}
-          renderOnDemand={false}
-          onLoad={handleLoad}
-          onError={handleError}
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'block',
-            opacity: isLoaded ? 1 : 0.6,
-            transition: 'opacity 400ms ease-out',
-            willChange: 'opacity',
-            transform: 'translateZ(0)',
-            backfaceVisibility: 'hidden',
-          } as React.CSSProperties}
-        />
-      </div>
-
-
     </div>
   );
 });
 
-// --- 1. SUPABASE SETUP ---
+// --- CONSTANTS ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error("❌ MISSING SUPABASE KEYS in .env.local file");
-}
-
-const supabase = createClient(supabaseUrl!, supabaseKey!);
-
-// --- UTILS: MOBILE DETECTION HOOK ---
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-      setIsMobile(isTouch && (window.innerWidth <= 768 || isMobileUA));
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  return isMobile;
-};
 
 // --- UTILS: DESKTOP DETECTION HOOK (for welcome screen layout) ---
 const useIsDesktop = () => {
@@ -421,7 +296,7 @@ const useIsDesktop = () => {
       // Desktop: 1024px+ width AND not a touch-primary device
       const isLargeScreen = window.innerWidth >= 1024;
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      const isMobileUA = RE_MOBILE_UA.test(userAgent);
       // Consider it desktop if large screen and not a mobile user agent
       setIsDesktop(isLargeScreen && !isMobileUA);
     };
@@ -775,23 +650,74 @@ const GlobalStyles = () => (
   `}</style>
 );
 
-// --- LOADING STATES DATA ---
-const loadingStates = [
-  { text: "INITIALIZING BULLMONEY" },
-  { text: "RESTORING SESSION" }, 
-  { text: "VERIFYING CREDENTIALS" },
-  { text: "UNLOCKING TRADES" },
-  { text: "WELCOME BACK" },
-];
+// --- HOISTED STYLE CONSTANTS (prevents object re-creation per render) ---
+const FONT_FAMILY_FULL = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' as const;
+const FONT_FAMILY_SHORT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' as const;
 
-// --- PREMIUM CELEBRATION STATES (POST-V3) ---
-const celebrationStates = [
-  { text: "ACTIVATING ELITE ACCESS" },
-  { text: "UNLOCKING PREMIUM SETUPS" },
-  { text: "CONNECTING TO PRO NETWORK" },
-  { text: "GRANTING MENTOR ACCESS" },
-  { text: "WELCOME TO THE INNER CIRCLE" },
-];
+const STYLE_TOP_EDGE: React.CSSProperties = Object.freeze({
+  position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
+  zIndex: 20, pointerEvents: 'none' as const,
+});
+
+const STYLE_BACK_BTN: React.CSSProperties = Object.freeze({
+  position: 'fixed', top: 56, left: 16, display: 'flex', alignItems: 'center', gap: 4,
+  color: 'rgba(0,0,0,0.5)', fontSize: 13, fontWeight: 500, padding: '8px 12px',
+  borderRadius: 12, backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.08)',
+  zIndex: 2147483646, cursor: 'pointer',
+});
+
+const STYLE_FORM_CARD: React.CSSProperties = Object.freeze({
+  backgroundColor: '#fff', padding: 24, borderRadius: 20,
+  position: 'relative', overflow: 'hidden', width: '100%', maxWidth: 384,
+  marginLeft: 16, marginRight: 16,
+  border: '1px solid rgba(0,0,0,0.08)',
+  boxShadow: '0 8px 32px -8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.04)',
+  fontFamily: FONT_FAMILY_FULL, perspective: 1200,
+  transformStyle: 'preserve-3d' as any,
+});
+
+const STYLE_PRIMARY_BTN: React.CSSProperties = Object.freeze({
+  width: '100%', padding: '14px 0', borderRadius: 14,
+  fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center',
+  justifyContent: 'center', gap: 8, background: '#000', color: '#fff',
+  border: 'none', cursor: 'pointer',
+  boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)',
+});
+
+const STYLE_INPUT: React.CSSProperties = Object.freeze({
+  width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)',
+  borderRadius: 14, padding: '14px 16px', color: '#000', fontSize: 16,
+  outline: 'none', boxSizing: 'border-box' as const,
+});
+
+const STYLE_LOGO_IMG: React.CSSProperties = Object.freeze({
+  objectFit: 'contain' as const,
+  filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))',
+});
+
+// Common framer-motion transition presets (frozen to prevent re-allocation)
+const EASE_APPLE = Object.freeze([0.16, 1, 0.3, 1]);
+const TRANSITION_STEP = Object.freeze({ duration: 0.5, ease: EASE_APPLE });
+const TRANSITION_CARD = Object.freeze({ duration: 0.8, ease: EASE_APPLE });
+
+// --- LOADING STATES DATA (frozen — immutable) ---
+const loadingStates = Object.freeze([
+  Object.freeze({ text: "INITIALIZING BULLMONEY" }),
+  Object.freeze({ text: "RESTORING SESSION" }),
+  Object.freeze({ text: "VERIFYING CREDENTIALS" }),
+  Object.freeze({ text: "UNLOCKING TRADES" }),
+  Object.freeze({ text: "WELCOME BACK" }),
+]);
+
+// --- PREMIUM CELEBRATION STATES (frozen — immutable) ---
+const celebrationStates = Object.freeze([
+  Object.freeze({ text: "ACTIVATING ELITE ACCESS" }),
+  Object.freeze({ text: "UNLOCKING PREMIUM SETUPS" }),
+  Object.freeze({ text: "CONNECTING TO PRO NETWORK" }),
+  Object.freeze({ text: "GRANTING MENTOR ACCESS" }),
+  Object.freeze({ text: "WELCOME TO THE INNER CIRCLE" }),
+]);
 
 interface RegisterPageProps {
   onUnlock: () => void;
@@ -820,15 +746,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // Check if user came from Account Manager
   const [returnToAccountManager, setReturnToAccountManager] = useState(false);
   
+  // --- INIT: Read localStorage flags on mount (single effect) ---
   useEffect(() => {
     const shouldReturn = localStorage.getItem('return_to_account_manager');
     if (shouldReturn === 'true') {
       setReturnToAccountManager(true);
-      setStep(0); // Start directly at step 0 (broker registration)
+      setStep(0);
     }
-  }, []);
 
-  useEffect(() => {
     const shouldStartLogin = localStorage.getItem('bullmoney_pagemode_login_view');
     if (shouldStartLogin === 'true') {
       setViewMode('login');
@@ -839,6 +764,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   
   // --- DESKTOP DETECTION FOR WELCOME SCREEN ---
   const isDesktop = useIsDesktop();
+
+  // Desktop perf: prefetch the desktop welcome chunk + Spline runtime as soon as we know we're on desktop.
+  // This avoids an extra round-trip that can delay first interaction in production.
+  useEffect(() => {
+    if (!isDesktop) return;
+    import('./WelcomeScreenDesktop').catch(() => undefined);
+    import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
+  }, [isDesktop]);
 
   // --- MOBILE PERFORMANCE PROFILE ---
   const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur } = useMobilePerformance();
@@ -854,19 +787,21 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
     const rootStyle = document.documentElement.style;
-    const runtimeProfile = getRuntimeProfile();
+    const runtimeProfile = getCachedRuntimeProfile();
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const cachedUA = navigator.userAgent.toLowerCase(); // Cache UA — never changes during session
 
     const updateViewportMetrics = () => {
       const viewportHeight = window.visualViewport?.height || window.innerHeight;
       const viewportWidth = window.visualViewport?.width || window.innerWidth;
-      const userAgent = navigator.userAgent.toLowerCase();
 
       rootStyle.setProperty('--pagemode-vh', `${Math.max(1, viewportHeight) * 0.01}px`);
 
       const isVeryNarrowPhone = viewportWidth <= 390;
       const isNarrowPhone = viewportWidth <= 430;
       const isCompactPhone = viewportWidth <= 480;
-      const isInstagramInApp = /instagram/.test(userAgent);
+      const isInstagramInApp = RE_INSTAGRAM.test(cachedUA);
       const isInAppRuntime = runtimeProfile.isInAppBrowser || runtimeProfile.isWebView;
       const shouldShield = runtimeProfile.isIOS && (isInAppRuntime || isNarrowPhone);
 
@@ -906,18 +841,25 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       rootStyle.setProperty('--pagemode-ios-ui-scale', `${scale}`);
     };
 
+    // Debounced version for resize events (fires at most every 150ms)
+    const debouncedUpdate = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(updateViewportMetrics, 150);
+    };
+
     updateViewportMetrics();
 
-    window.addEventListener('resize', updateViewportMetrics);
+    window.addEventListener('resize', debouncedUpdate);
     window.addEventListener('orientationchange', updateViewportMetrics);
-    window.visualViewport?.addEventListener('resize', updateViewportMetrics);
-    window.visualViewport?.addEventListener('scroll', updateViewportMetrics);
+    window.visualViewport?.addEventListener('resize', debouncedUpdate);
+    window.visualViewport?.addEventListener('scroll', debouncedUpdate);
 
     return () => {
-      window.removeEventListener('resize', updateViewportMetrics);
+      if (debounceTimer) clearTimeout(debounceTimer);
+      window.removeEventListener('resize', debouncedUpdate);
       window.removeEventListener('orientationchange', updateViewportMetrics);
-      window.visualViewport?.removeEventListener('resize', updateViewportMetrics);
-      window.visualViewport?.removeEventListener('scroll', updateViewportMetrics);
+      window.visualViewport?.removeEventListener('resize', debouncedUpdate);
+      window.visualViewport?.removeEventListener('scroll', debouncedUpdate);
       rootStyle.removeProperty('--pagemode-vh');
       rootStyle.removeProperty('--pagemode-ios-ui-scale');
     };
@@ -935,18 +877,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [isHubMinimized, setIsHubMinimized] = useState(false);
   const prices = useLivePrices();
 
-  // --- GHOST ANIMATION STATE (for welcome screen card) ---
-  // Card fades in/out like a ghost until user interacts, then stays visible
-  const [isGhostMode, setIsGhostMode] = useState(true);
-  const [userInteracted, setUserInteracted] = useState(false);
-
-  // Handle any user interaction to stop ghost mode
-  const handleUserInteraction = useCallback(() => {
-    if (!userInteracted) {
-      setUserInteracted(true);
-      setIsGhostMode(false);
-    }
-  }, [userInteracted]);
+  // Memoized hub callbacks (prevents re-renders of UnifiedFpsPill / UnifiedHubPanel)
+  const toggleHubMinimized = useCallback(() => setIsHubMinimized(prev => !prev), []);
+  const openHubPanel = useCallback(() => setIsHubOpen(true), []);
+  const closeHubPanel = useCallback(() => setIsHubOpen(false), []);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -969,15 +903,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   
-  // --- INJECT GLOBAL APPLE STYLES ---
+  // --- INJECT GLOBAL APPLE STYLES (idempotent, runs once) ---
   useEffect(() => {
     const styleId = 'apple-glow-styles-pagemode';
-    if (!document.getElementById(styleId)) {
-      const style = document.createElement('style');
-      style.id = styleId;
-      style.textContent = APPLE_GLOBAL_STYLES;
-      document.head.appendChild(style);
-    }
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = APPLE_GLOBAL_STYLES;
+    document.head.appendChild(style);
   }, []);
 
   // --- EXTRACT REFERRAL CODE & AFFILIATE DETAILS FROM URL PARAMS ---
@@ -1086,29 +1019,35 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     }
   }, []);
 
-  // --- WELCOME AUDIO: Play once on page load (no loop) ---
+  // --- WELCOME AUDIO: Play once on page load (deferred to avoid blocking initial render) ---
   useEffect(() => {
     const audioKey = 'bullmoney_welcome_audio_played';
     const hasPlayed = sessionStorage.getItem(audioKey);
     if (hasPlayed) return; // Already played this session
 
-    const audio = new Audio('/luvvoice.com-20260201-ByklU8.mp3');
-    audio.loop = false;
-    audio.volume = 0.7;
+    let audio: HTMLAudioElement | null = null;
+    let cancelled = false;
 
-    const playAudio = () => {
+    // Defer audio creation to avoid blocking main thread during initial load
+    const scheduleAudio = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback
+      : (cb: () => void) => setTimeout(cb, 200);
+
+    const idleId = scheduleAudio(() => {
+      if (cancelled) return;
+      audio = new Audio('/luvvoice.com-20260201-ByklU8.mp3');
+      audio.loop = false;
+      audio.volume = 0.7;
+      audio.preload = 'none'; // Don't preload until play() is called
+
+      const markPlayed = () => sessionStorage.setItem(audioKey, 'true');
+
       audio.play()
-        .then(() => {
-          sessionStorage.setItem(audioKey, 'true');
-        })
+        .then(markPlayed)
         .catch(() => {
           // Autoplay blocked - wait for user interaction
           const playOnInteraction = () => {
-            audio.play()
-              .then(() => {
-                sessionStorage.setItem(audioKey, 'true');
-              })
-              .catch(() => {});
+            audio?.play().then(markPlayed).catch(() => {});
             document.removeEventListener('click', playOnInteraction);
             document.removeEventListener('touchstart', playOnInteraction);
             document.removeEventListener('keydown', playOnInteraction);
@@ -1117,13 +1056,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           document.addEventListener('touchstart', playOnInteraction, { once: true });
           document.addEventListener('keydown', playOnInteraction, { once: true });
         });
-    };
-
-    playAudio();
+    });
 
     return () => {
-      audio.pause();
-      audio.src = '';
+      cancelled = true;
+      if (typeof cancelIdleCallback !== 'undefined' && typeof idleId === 'number') {
+        cancelIdleCallback(idleId);
+      }
+      if (audio) {
+        audio.pause();
+        audio.src = '';
+      }
     };
   }, []);
   
@@ -1157,16 +1100,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const isXM = activeBroker === 'XM';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";
   
-  // Helper to get neon classes based on active broker
-  const neonTextClass = isXM ? "neon-red-text" : "neon-blue-text";
-  const neonBorderClass = isXM ? "neon-red-border" : "neon-blue-border";
+  // Helper to get neon icon class based on active broker
   const neonIconClass = isXM ? "neon-red-icon" : "neon-blue-icon";
-
-  // --- PAUSE LOADER ON STEP 4 - BUTTON STAYS VISIBLE ---
-  // No auto-advance, button stays clickable indefinitely
-  useEffect(() => {
-    // Step 4 just pauses - button needs to be clicked to continue
-  }, [step]);
 
   // --- DRAFT SAVER (Auto-Save partial progress) ---
   useEffect(() => {
@@ -1597,7 +1532,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       {loading && (
           <div 
              // CRITICAL: Fixed, full coverage, max z-index to overlay native browser UI
-             className="fixed inset-0 z-[99999999] w-screen bg-black"
+             className="fixed inset-0 z-99999999 w-screen bg-black"
              style={{ height: '100dvh', minHeight: '-webkit-fill-available' }}
              // We render the loader component inside this wrapper
           >
@@ -1627,7 +1562,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           marginBottom: 24,
           zIndex: 100,
           borderBottom: '1px solid rgba(0,0,0,0.06)',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
+          fontFamily: FONT_FAMILY_SHORT,
         }}>
           <h1 style={{ fontSize: 18, fontWeight: 600, color: '#000', letterSpacing: '-0.02em', animation: 'apple-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
             BullMoney <span style={{ color: 'rgba(0,0,0,0.4)', fontWeight: 400 }}>Free</span>
@@ -1643,7 +1578,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       )} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: isWelcomeScreen ? 'transparent' : '#fff' }}>
 
         {/* Existing background elements */}
-        <div className={cn("absolute bottom-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel -z-10", isXM ? "bg-red-900/10" : "bg-white/10")} />
+        <div className={cn("absolute bottom-0 right-0 w-75 md:w-125 h-75 md:h-125 rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel -z-10", isXM ? "bg-red-900/10" : "bg-white/10")} />
 
         {/* ================= WELCOME SCREEN (Step -1) ================= */}
         {step === -1 && (
@@ -1699,7 +1634,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       color: '#fff',
                       textShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
                       letterSpacing: '-0.03em',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
+                      fontFamily: FONT_FAMILY_SHORT,
                     }}
                   >
                     BullMoney
@@ -1723,7 +1658,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       background: '#fff',
                       boxShadow: '0 1px 12px rgba(0, 0, 0, 0.06)',
                       border: '1px solid rgba(0,0,0,0.08)',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
+                      fontFamily: FONT_FAMILY_FULL,
                     }}
                   >
                     <motion.div
@@ -1793,8 +1728,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   deviceTier="high"
                   prices={prices}
                   isMinimized={isHubMinimized}
-                  onToggleMinimized={() => setIsHubMinimized(!isHubMinimized)}
-                  onOpenPanel={() => setIsHubOpen(true)}
+                  onToggleMinimized={toggleHubMinimized}
+                  onOpenPanel={openHubPanel}
                   topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
                   topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
                   mobileAlignment="center"
@@ -1805,7 +1740,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {typeof window !== 'undefined' && createPortal(
                 <UnifiedHubPanel
                   isOpen={isHubOpen}
-                  onClose={() => setIsHubOpen(false)}
+                  onClose={closeHubPanel}
                   fps={60}
                   deviceTier="high"
                   isAdmin={false}
@@ -1854,7 +1789,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'relative', zIndex: 10, paddingTop: 56, paddingBottom: 24, textAlign: 'center', pointerEvents: 'none', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif', backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
+                style={{ position: 'relative', zIndex: 10, paddingTop: 56, paddingBottom: 24, textAlign: 'center', pointerEvents: 'none', fontFamily: FONT_FAMILY_SHORT, backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
               >
                 <h1 style={{ fontSize: 24, fontWeight: 600, color: '#000', letterSpacing: '-0.03em' }}>
                   BullMoney
@@ -1868,7 +1803,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                   className="apple-card"
-                  style={{ borderRadius: 16, padding: 24, textAlign: 'center', width: '100%', maxWidth: 320, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', background: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}
+                  style={{ borderRadius: 16, padding: 24, textAlign: 'center', width: '100%', maxWidth: 320, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', background: '#fff', fontFamily: FONT_FAMILY_FULL }}
                 >
                   <motion.div
                     initial={{ opacity: 0, scale: 0.7, rotateY: -20 }}
@@ -1900,8 +1835,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 deviceTier="high"
                 prices={prices}
                 isMinimized={isHubMinimized}
-                onToggleMinimized={() => setIsHubMinimized(!isHubMinimized)}
-                onOpenPanel={() => setIsHubOpen(true)}
+                onToggleMinimized={toggleHubMinimized}
+                onOpenPanel={openHubPanel}
                 topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
                 topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
                 mobileAlignment="left"
@@ -1912,7 +1847,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             {typeof window !== 'undefined' && createPortal(
               <UnifiedHubPanel
                 isOpen={isHubOpen}
-                onClose={() => setIsHubOpen(false)}
+                onClose={closeHubPanel}
                 fps={60}
                 deviceTier="high"
                 isAdmin={false}
@@ -1943,7 +1878,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                transition={{ delay: 0.4, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                onClick={() => setStep(-1)}
                className="btn-3d-secondary cursor-target"
-               style={{ position: 'fixed', top: 56, left: 16, display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.5)', fontSize: 13, fontWeight: 500, padding: '8px 12px', borderRadius: 12, backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.08)', zIndex: 2147483646, cursor: 'pointer' }}
+               style={STYLE_BACK_BTN}
              >
                <ChevronLeft style={{ width: 16, height: 16 }} /> Back
              </motion.button>
@@ -1964,13 +1899,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                  marginRight: 16,
                  border: '1px solid rgba(0,0,0,0.08)',
                  boxShadow: '0 8px 32px -8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.04)',
-                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
+                 fontFamily: FONT_FAMILY_FULL,
                  perspective: 1200,
                  transformStyle: 'preserve-3d' as any,
                }}
              >
                 {/* Top edge highlight */}
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)', zIndex: 20, pointerEvents: 'none' }} />
+                <div style={STYLE_TOP_EDGE} />
 
                 <motion.div
                   initial={{ opacity: 0, scale: 0.7, rotateY: -20 }}
@@ -2150,7 +2085,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                        }
                      }}
                      className="btn-3d-secondary cursor-target"
-                     style={{ position: 'fixed', top: 56, left: 16, display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.5)', fontSize: 13, fontWeight: 500, padding: '8px 12px', borderRadius: 12, backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.08)', zIndex: 2147483646, cursor: 'pointer' }}
+                     style={STYLE_BACK_BTN}
                    >
                      <ChevronLeft style={{ width: 16, height: 16 }} /> {returnToAccountManager ? 'Account Manager' : 'Back'}
                    </motion.button>
@@ -2173,13 +2108,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                        border: '1px solid rgba(0,0,0,0.08)',
                        boxShadow: '0 8px 32px -8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.04)',
                        zIndex: 1,
-                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
+                       fontFamily: FONT_FAMILY_FULL,
                        perspective: 1200,
                        transformStyle: 'preserve-3d' as any,
                      }}
                    >
                       {/* Top edge highlight */}
-                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)', zIndex: 20, pointerEvents: 'none' }} />
+                      <div style={STYLE_TOP_EDGE} />
 
                       {/* Logo */}
                       <motion.div
@@ -2586,13 +2521,13 @@ const StepCard = memo(({ number, number2, title, children, actions, className, i
         backgroundColor: '#fff',
         border: '1px solid rgba(0,0,0,0.08)',
         boxShadow: '0 4px 24px -4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
+        fontFamily: FONT_FAMILY_FULL,
         perspective: 1200,
         transformStyle: 'preserve-3d' as any,
       }}
     >
       {/* Subtle top-edge highlight for 3D depth */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)', zIndex: 20, pointerEvents: 'none' }} />
+      <div style={STYLE_TOP_EDGE} />
 
       {/* Logo */}
       <motion.div
@@ -2681,119 +2616,3 @@ const StepCard = memo(({ number, number2, title, children, actions, className, i
   );
 });
 StepCard.displayName = "StepCard";
-
-function IconPlusCorners() {
-  return (
-    <>
-      <Plus className="absolute h-4 w-4 -top-2 -left-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -bottom-2 -left-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -top-2 -right-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -bottom-2 -right-2 text-white/70" />
-    </>
-  );
-}
-
-const characters = "BULLMONEY";
-const generateRandomString = (length: number) => {
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
-
-// --- XM Card (Red Neon Glow) ---
-export const EvervaultCard = memo(({ text }: { text?: string }) => {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const [randomString, setRandomString] = useState("");
-  useEffect(() => { setRandomString(generateRandomString(1500)); }, []);
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-    setRandomString(generateRandomString(1500));
-  }
-  return (
-    <div className="p-0.5 bg-transparent aspect-square flex items-center justify-center w-full h-full relative">
-      <div 
-        onMouseMove={onMouseMove}
-        className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center border border-black/[0.2] dark:border-white/[0.2]"
-      >
-        <CardPattern mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
-        <div className="relative z-10 flex items-center justify-center">
-          <div className="relative h-44 w-44 rounded-full flex items-center justify-center text-white font-bold text-4xl">
-            <div className="absolute w-full h-full bg-white/[0.8] dark:bg-black/[0.8] blur-sm rounded-full" />
-            <span className="dark:text-white text-black z-20">{text}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-});
-EvervaultCard.displayName = "EvervaultCard";
-
-function CardPattern({ mouseX, mouseY, randomString }: any) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
-  const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
-  return (
-    <div className="pointer-events-none">
-      <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50"></div>
-      <motion.div 
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" 
-        style={style}
-      />
-      <motion.div className="absolute inset-0 rounded-2xl opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 text-xs h-full break-words whitespace-pre-wrap text-white font-mono font-bold transition duration-500">{randomString}</p>
-      </motion.div>
-    </div>
-  );
-};
-
-// --- Vantage Card (Blue Neon Glow) ---
-export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const [randomString, setRandomString] = useState("");
-  useEffect(() => { setRandomString(generateRandomString(1500)); }, []);
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-    setRandomString(generateRandomString(1500));
-  }
-  return (
-    <div className="p-0.5 bg-transparent aspect-square flex items-center justify-center w-full h-full relative">
-      <div 
-        onMouseMove={onMouseMove}
-        className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center border border-black/[0.2] dark:border-white/[0.2]"
-      >
-        <CardPatternRed mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
-        <div className="relative z-10 flex items-center justify-center">
-          <div className="relative h-44 w-44 rounded-full flex items-center justify-center text-white font-bold text-4xl">
-            <div className="absolute w-full h-full bg-white/[0.8] dark:bg-black/[0.8] blur-sm rounded-full" />
-            <span className="dark:text-white text-black z-20">{text}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-});
-EvervaultCardRed.displayName = "EvervaultCardRed";
-
-function CardPatternRed({ mouseX, mouseY, randomString }: any) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
-  const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
-  return (
-    <div className="pointer-events-none">
-      <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50"></div>
-      <motion.div 
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" 
-        style={style}
-      />
-      <motion.div className="absolute inset-0 rounded-2xl opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 text-xs h-full break-words whitespace-pre-wrap text-white font-mono font-bold transition duration-500">{randomString}</p>
-      </motion.div>
-    </div>
-  );
-}

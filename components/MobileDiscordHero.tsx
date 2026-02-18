@@ -2033,282 +2033,108 @@ const YouTubePlayer: React.FC<{ videoId: string; loading?: boolean; error?: bool
 );
 
 // --- SPLINE BACKGROUND COMPONENT (for cycling backgrounds) ---
-// Mobile: lower canvas resolution, renderOnDemand, pause when off-screen
+// Optimised: uses global load-lock (same as store page) to serialise GPU access.
+// No retry loops, no blob-URL caching, no SVG filters, no mix-blend-mode overlays.
+// Simple opacity crossfade once the scene is ready.
+
+function getSplineLoadLock() {
+  if (typeof window === 'undefined') return { locked: false, waiting: [] as (() => void)[] };
+  if (!(window as any).__BM_SPLINE_LOAD_LOCK__) {
+    (window as any).__BM_SPLINE_LOAD_LOCK__ = { locked: false, waiting: [] as (() => void)[] };
+  }
+  return (window as any).__BM_SPLINE_LOAD_LOCK__ as { locked: boolean; waiting: (() => void)[] };
+}
+
+function waitForSplineSlot(): Promise<() => void> {
+  const lock = getSplineLoadLock();
+  const release = () => {
+    lock.locked = false;
+    const next = lock.waiting.shift();
+    if (next) next();
+  };
+  if (!lock.locked) {
+    lock.locked = true;
+    return Promise.resolve(release);
+  }
+  return new Promise<() => void>((resolve) => {
+    lock.waiting.push(() => {
+      lock.locked = true;
+      resolve(release);
+    });
+  });
+}
+
 const SplineBackground = memo(function SplineBackground({ grayscale = true, sceneUrl }: { grayscale?: boolean; sceneUrl: string }) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [retryKey, setRetryKey] = useState(0);
-  const [useDirectScene, setUseDirectScene] = useState(false);
-  const [cachedSceneUrl, setCachedSceneUrl] = useState<string | null>(null);
-  const [cacheChecked, setCacheChecked] = useState(false);
-  const splineRef = useRef<any>(null);
+  const [ready, setReady] = useState(false);
+  const [show, setShow] = useState(false);
+  const releaseRef = useRef<(() => void) | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const loadStartTime = useRef<number>(0);
-  const blobUrlRef = useRef<string | null>(null);
-  const isVisibleRef = useRef(true);
-  const retryTimerRef = useRef<number | null>(null);
-  const MAX_RETRIES = 2;
-  
-  // Use provided scene URL
-  const scene = sceneUrl;
 
-  // Initialize cache and get cached URL
+  // Acquire the global load-lock before mounting the Spline component
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    loadStartTime.current = performance.now();
-    setRetryCount(0);
-    setRetryKey(0);
-    setUseDirectScene(false);
-    setHasError(false);
-    setIsLoaded(false);
+    let cancelled = false;
+    waitForSplineSlot().then((release) => {
+      if (cancelled) { release(); return; }
+      releaseRef.current = release;
+      setReady(true);
 
-    // Ensure cache is initialized
-    initSplineCache().then(() => {
-      // Get cached blob URL for instant loading
-      const url = getCachedSplineScene(scene);
-      blobUrlRef.current = url.startsWith('blob:') ? url : null;
-      setCachedSceneUrl(url);
-      setCacheChecked(true);
-      
-      if (isSplineCached(scene)) {
-        console.log(`[SplineBackground] Using cached scene (${(performance.now() - loadStartTime.current).toFixed(1)}ms to blob URL)`);
-      }
-    }).catch(() => {
-      // Cache failed - still allow direct load
-      setCacheChecked(true);
+      // Safety: release the lock after 15 s even if onLoad never fires
+      const safety = window.setTimeout(() => {
+        if (releaseRef.current) { releaseRef.current(); releaseRef.current = null; }
+      }, 15_000);
+      return () => window.clearTimeout(safety);
     });
-    
-    // Fallback: if cache takes too long, proceed with direct URL after 2s
-    const timeout = setTimeout(() => {
-      setCacheChecked(true);
-    }, 2000);
-
-    // Cleanup blob URL on unmount
     return () => {
-      clearTimeout(timeout);
-      if (retryTimerRef.current) {
-        window.clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current);
-      }
+      cancelled = true;
+      if (releaseRef.current) { releaseRef.current(); releaseRef.current = null; }
     };
-  }, [scene]);
+  }, [sceneUrl]);
 
-  const queueRetry = useCallback((reason: 'error' | 'context') => {
-    setRetryCount((prev) => {
-      if (prev >= MAX_RETRIES) {
-        console.error(`[SplineBackground] Max retries reached (${reason}), showing fallback`);
-        setHasError(true);
-        return prev;
-      }
-
-      const next = prev + 1;
-      const delay = 700 + next * 450;
-      console.warn(`[SplineBackground] Retrying after ${reason} (${next}/${MAX_RETRIES}) in ${delay}ms`);
-
-      if (retryTimerRef.current) {
-        window.clearTimeout(retryTimerRef.current);
-      }
-
-      if (!useDirectScene) {
-        setUseDirectScene(true);
-      }
-
-      retryTimerRef.current = window.setTimeout(() => {
-        setHasError(false);
-        setIsLoaded(false);
-        setRetryKey((k) => k + 1);
-      }, delay);
-
-      return next;
-    });
-  }, [MAX_RETRIES, useDirectScene]);
-
-  // Mobile: IntersectionObserver to pause/play Spline when off-screen
-  useEffect(() => {
-    if (!IS_MOBILE) return;
-    const ctn = containerRef.current;
-    if (!ctn) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isVisibleRef.current = entry.isIntersecting;
-        const app = splineRef.current;
-        if (!app) return;
-        if (entry.isIntersecting) {
-          try { app.play(); } catch (_e) { /* ignore */ }
-        } else {
-          try { app.stop(); } catch (_e) { /* ignore */ }
-        }
-      },
-      { threshold: 0.05 }
-    );
-    observer.observe(ctn);
-    return () => observer.disconnect();
-  }, [isLoaded]);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const canvas = containerRef.current.querySelector('canvas');
-    if (!canvas) return;
-
-    const onContextLost = (event: Event) => {
-      event.preventDefault();
-      setIsLoaded(false);
-      queueRetry('context');
-    };
-
-    canvas.addEventListener('webglcontextlost', onContextLost, false);
-    return () => {
-      canvas.removeEventListener('webglcontextlost', onContextLost, false);
-    };
-  }, [isLoaded, retryKey, queueRetry]);
-
-  const handleLoad = useCallback((splineApp: any) => {
-    const loadTime = performance.now() - loadStartTime.current;
-    console.log(`[SplineBackground] ✅ Spline loaded in ${loadTime.toFixed(1)}ms`);
-    splineRef.current = splineApp;
-    setIsLoaded(true);
-    setHasError(false);
-
-    // THERMAL-AWARE: Reduce Spline canvas resolution based on device heat
-    // Always renders but at reduced quality when device is warm/hot
-    if (splineApp) {
-      try {
-        const canvas = splineApp.canvas as HTMLCanvasElement | undefined;
-        if (canvas) {
-          // Get thermal-aware quality multiplier (0.4 to 1.0)
-          const thermalMultiplier = getThermalQualityMultiplier();
-          // Mobile gets 60% base, desktop gets 80% base
-          const baseFactor = IS_MOBILE ? 0.6 : 0.8;
-          // Apply thermal reduction on top of base factor
-          const scaleFactor = Math.max(0.3, baseFactor * thermalMultiplier);
-          const w = Math.round(canvas.clientWidth * scaleFactor);
-          const h = Math.round(canvas.clientHeight * scaleFactor);
-          splineApp.setSize(w, h);
-          console.log(`[SplineBackground] Thermal-adjusted canvas to ${w}x${h} (${Math.round(scaleFactor * 100)}% quality)`);
-        }
-      } catch (e) {
-        console.warn('[SplineBackground] Could not reduce canvas size:', e);
-      }
-    }
+  const handleLoad = useCallback(() => {
+    setShow(true);
+    // Release the GPU slot so the next queued Spline can start
+    if (releaseRef.current) { releaseRef.current(); releaseRef.current = null; }
   }, []);
 
-  const handleError = useCallback((error: any) => {
-    console.error('[SplineBackground] Load error:', error);
-    queueRetry('error');
-  }, [queueRetry]);
-
-  // Use cached URL if available, otherwise fall back to direct URL once cache check is done
-  const sceneToLoad = useDirectScene
-    ? (cacheChecked ? scene : null)
-    : (cachedSceneUrl || (cacheChecked ? scene : null));
-
   return (
-    <div 
+    <div
       ref={containerRef}
       className="absolute inset-0 w-full h-full overflow-hidden"
-      style={{ 
+      style={{
         zIndex: 0,
-        touchAction: 'pan-y', // Allow vertical scrolling
+        touchAction: 'pan-y',
         backgroundColor: '#000',
-        pointerEvents: 'auto', // Allow Spline to initialize — canvas needs events
-        WebkitOverflowScrolling: 'touch', // Smooth scroll on iOS
-      }}
+        filter: grayscale ? 'grayscale(1) contrast(1.1)' : 'none',
+        WebkitFilter: grayscale ? 'grayscale(1) contrast(1.1)' : 'none',
+      } as React.CSSProperties}
     >
-      {/* SVG Filter for grayscale compatibility */}
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-        <defs>
-          <filter id="grayscale-filter-hero">
-            <feColorMatrix type="saturate" values="0" />
-            <feComponentTransfer>
-              <feFuncR type="linear" slope="1.1" />
-              <feFuncG type="linear" slope="1.1" />
-              <feFuncB type="linear" slope="1.1" />
-            </feComponentTransfer>
-          </filter>
-        </defs>
-      </svg>
-
-      {/* Animated gradient fallback */}
+      {/* Simple gradient shown while Spline loads */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 40%), #000',
-          opacity: hasError || !isLoaded ? 1 : 0,
-          transition: 'opacity 500ms ease-out',
-          zIndex: -1,
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 30%, transparent 60%), #000',
+          opacity: show ? 0 : 1,
+          transition: 'opacity 700ms ease-out',
+          zIndex: 0,
         }}
-      >
-        {hasError && (
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%)',
-              animation: 'pulse 4s ease-in-out infinite',
-            }}
-          />
-        )}
-      </div>
+      />
 
-      {/* Spline container - uses cached blob URL for instant loading, falls back to direct URL */}
-      {!hasError && sceneToLoad && (
-        <div className="absolute inset-0 spline-scene">
-          <div className="spline-scene-inner">
-            <Spline
-              key={`mobile-hero-spline-${retryKey}`}
-              scene={sceneToLoad}
-              renderOnDemand={IS_MOBILE}
-              onLoad={handleLoad}
-              onError={handleError}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                display: 'block',
-                opacity: isLoaded ? 1 : 0.6,
-                filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-                WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-                pointerEvents: IS_MOBILE ? 'none' : 'auto', // Mobile: disable pointer events to save GPU (no interaction needed for background)
-                zIndex: 1,
-                touchAction: 'pan-y',
-                transition: 'opacity 400ms ease-out, filter 300ms ease-out',
-              } as React.CSSProperties}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Color-kill overlay - above Spline for color effect, but pointer-events:none lets clicks through */}
-      {grayscale && (
-        <div
-          className="absolute inset-0"
+      {/* Spline — only mounted once we hold the load-lock */}
+      {ready && (
+        <Spline
+          scene={sceneUrl}
+          onLoad={handleLoad}
           style={{
-            zIndex: 10,
-            backgroundColor: '#808080',
-            mixBlendMode: 'color',
-            WebkitMixBlendMode: 'color',
-            pointerEvents: 'none',
-            transition: 'opacity 300ms ease-out',
-          } as React.CSSProperties}
-        />
-      )}
-
-      {/* Extra saturation kill overlay - above Spline for effect, pointer-events:none lets clicks through */}
-      {grayscale && (
-        <div
-          className="absolute inset-0"
-          style={{
-            zIndex: 11,
-            backgroundColor: 'rgba(128, 128, 128, 0.3)',
-            mixBlendMode: 'saturation',
-            WebkitMixBlendMode: 'saturation',
-            pointerEvents: 'none',
-            transition: 'opacity 300ms ease-out',
-          } as React.CSSProperties}
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            display: 'block',
+            opacity: show ? 1 : 0,
+            transition: 'opacity 700ms ease-out',
+            pointerEvents: IS_MOBILE ? 'none' : 'auto',
+            zIndex: 1,
+          }}
         />
       )}
     </div>

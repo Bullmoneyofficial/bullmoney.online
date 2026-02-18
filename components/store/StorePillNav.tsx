@@ -151,6 +151,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
           className="w-full px-6 md:px-10 h-12 flex items-center justify-between gap-6"
           style={{ background: 'rgb(255,255,255)' }}
           data-apple-section
+          onMouseEnter={onDesktopMenuEnter}
+          onMouseLeave={onDesktopMenuLeave}
         >
           {/* Left: Logo & Title */}
           <div className="flex items-center gap-3">
@@ -253,29 +255,31 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                   <Link
                     key={mode}
                     href={hrefForMode(mode)}
-                    onClick={() => {
+                    onClick={(event) => {
                       onHeroModeChange(mode);
 
-                      // Fallback: if client-side navigation fails (stale chunk cache, slow hydration),
-                      // force a full navigation so the route still opens on the first click.
+                      // Force full navigation to refresh the view on switch.
                       if (typeof window !== 'undefined') {
+                        event.preventDefault();
                         const target = hrefForMode(mode);
-                        window.setTimeout(() => {
-                          try {
-                            if (window.location.pathname !== target) {
-                              window.location.assign(target);
-                            }
-                          } catch {
-                            // ignore
+                        try {
+                          if (window.location.pathname !== target) {
+                            window.location.assign(target);
                           }
-                        }, 600);
+                        } catch {
+                          // ignore
+                        }
                       }
                     }}
-                    className={`px-3 h-full inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.12em] transition-all whitespace-nowrap ${
-                      heroMode === mode
-                        ? 'bg-black text-white'
-                        : 'bg-white text-black hover:bg-black/5'
-                    }`}
+                    className="px-3 h-full inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.12em] transition-all whitespace-nowrap"
+                    style={{
+                      color: heroMode === mode ? '#ffffff' : '#111111',
+                      backgroundColor: heroMode === mode ? '#000000' : '#ffffff',
+                      borderLeft: mode === 'store' ? 'none' : '1px solid rgba(0,0,0,0.08)',
+                      colorScheme: 'light',
+                      opacity: 1,
+                      WebkitTextFillColor: heroMode === mode ? '#ffffff' : '#111111',
+                    }}
                     aria-current={heroMode === mode ? 'page' : undefined}
                   >
                     {mode === 'store' ? 'Store' : mode === 'trader' ? 'Trader' : 'Design'}
@@ -367,8 +371,6 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                   desktopMenuOpen ? 'bg-black text-white border-black' : 'bg-white text-black/85'
                 }`}
                 onClick={onDesktopMenuToggle}
-                onMouseEnter={onDesktopMenuEnter}
-                onMouseLeave={onDesktopMenuLeave}
                 aria-label="Toggle menu"
               >
                 <Menu className="w-4 h-4" />

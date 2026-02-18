@@ -14,10 +14,10 @@ import { useHydrated, useIdleCallback } from '@/hooks/useHydrationOptimization';
 
 // ✅ PERF: Telegram gate for first-time store visitors
 const TelegramUnlockScreen = dynamic(
-  () => import("@/components/REGISTER USERS/TelegramConfirmationResponsive").then(mod => ({
-    default: mod.TelegramConfirmationResponsive,
+  () => import("@/components/REGISTER USERS/TelegramConfirmationStoreResponsive").then(mod => ({
+    default: mod.TelegramConfirmationStoreResponsive,
   })),
-  { ssr: false, loading: () => <div className="fixed inset-0 z-[99999] bg-black" /> }
+  { ssr: false, loading: () => <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "#ffffff" }} /> }
 );
 
 // ✅ PERF: ProductCard (1,279 lines + framer-motion) lazy-loaded — not needed at compile time
@@ -898,14 +898,14 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       setTimeout(() => {
         const target = document.querySelector('[data-products-grid]');
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          target.scrollIntoView({ behavior: 'auto', block: 'start' });
         }
       }, 0);
       return;
     }
     const target = document.querySelector('[data-products-grid]');
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      target.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
   }, [showProducts, showProductSections]);
 
@@ -1439,7 +1439,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         );
       case 'ribbon':
         return (
-          <div className="flex gap-4 overflow-x-auto pb-4 [scrollbar-width:none] snap-x snap-mandatory scroll-smooth grid-perf">
+          <div className="flex gap-4 overflow-x-auto pb-4 [scrollbar-width:none] snap-x snap-mandatory grid-perf">
             {items.map((product, index) => (
               <div key={product.id} className={`min-w-[220px] snap-start grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
                 <ProductCard product={product} compact />
