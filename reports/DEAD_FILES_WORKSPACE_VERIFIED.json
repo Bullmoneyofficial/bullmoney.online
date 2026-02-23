@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-02-23T15:59:24.371Z",
+  "generatedAt": "2026-02-23T16:02:44.633Z",
   "counts": {
     "universe": 1312,
     "reachable": 766,
     "unused": 547,
-    "unusedWithSignals": 71
+    "unusedWithSignals": 38
   },
   "buckets": {
     "toolchain": [
@@ -101,7 +101,8 @@
       "scripts/platform-detect.mjs",
       "scripts/pre-deploy.mjs",
       "scripts/seed-translations.ts",
-      "scripts/telegram-session-setup.js"
+      "scripts/telegram-session-setup.js",
+      "scripts/verify-dead-files.mjs"
     ],
     "style": [
       "styles/120hz-performance.css",
@@ -559,7 +560,6 @@
       "hooks/useVipStatus.ts"
     ],
     "other": [
-      ".venv/lib/python3.14/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
       "CASINO_PAGE_EXAMPLES.tsx",
       "COMPLETE_SECTION_EXAMPLE.tsx",
       "ENHANCED_SETTINGS_MODAL.tsx",
@@ -574,10 +574,6 @@
     ]
   },
   "verified": [
-    {
-      "path": ".venv/lib/python3.14/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
-      "signals": []
-    },
     {
       "path": "CASINO_PAGE_EXAMPLES.tsx",
       "signals": []
@@ -636,861 +632,135 @@
     },
     {
       "path": "app/games/bullcasino/css/admin_style.css",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/css/flappybird.css",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/css/notifyme.css",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/css/style.css",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/admin_app.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/app.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/chart.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/admin_app.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/app.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/chart.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/crash.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/dice.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/jquery.flot.min.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/jquery.kinetic.min.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/mines.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/notifyme.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/notifyme.min.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/plinko.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/socket.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/compiled/wallet.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/crash.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/dice.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/flappybird.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/jquery.flot.min.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/jquery.kinetic.min.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/mines.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/notifyme.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/notifyme.min.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/plinko.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/socket.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/js/wallet.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/server/app.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/bullcasino/server/crash.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "app/games/components/BullcasinoShell.tsx",
@@ -3016,35 +2286,9 @@
           "pattern": "/games/bullcasino/css/flappybird.css",
           "examples": [
             {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
               "file": "/Users/justin/Documents/newbullmoney/app/games/[game]/GamePageClient.tsx",
               "line": 44,
               "text": "        <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\" />"
-            }
-          ]
-        },
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
             }
           ]
         }
@@ -3052,40 +2296,7 @@
     },
     {
       "path": "public/games/bullcasino/js/flappybird.js",
-      "signals": [
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/js/flappybird.js",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        },
-        {
-          "type": "string-ref",
-          "pattern": "/games/bullcasino/",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 15,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 16,
-              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
-              "line": 166,
-              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
-            }
-          ]
-        }
-      ]
+      "signals": []
     },
     {
       "path": "public/process.js",
@@ -3138,11 +2349,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1100,
               "text": "        <Script id=\"device-capabilities\" src=\"/scripts/BMBRAIN/device-capabilities.js\" strategy=\"lazyOnload\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
-              "line": 147,
-              "text": "  '/scripts/BMBRAIN/device-capabilities.js',"
             }
           ]
         }
@@ -3159,11 +2365,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1020,
               "text": "        <Script id=\"inapp-shield\" src=\"/scripts/BMBRAIN/inapp-shield.js\" strategy=\"afterInteractive\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
-              "line": 142,
-              "text": "  '/scripts/BMBRAIN/inapp-shield.js'"
             }
           ]
         }
@@ -3180,11 +2381,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1101,
               "text": "        <Script id=\"input-controller\" src=\"/scripts/BMBRAIN/input-controller.js\" strategy=\"lazyOnload\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
-              "line": 148,
-              "text": "  '/scripts/BMBRAIN/input-controller.js',"
             }
           ]
         }
@@ -3217,11 +2413,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1019,
               "text": "        <Script id=\"mobile-crash-shield\" src=\"/scripts/BMBRAIN/mobile-crash-shield.js\" strategy=\"afterInteractive\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
-              "line": 141,
-              "text": "  '/scripts/BMBRAIN/mobile-crash-shield.js',"
             }
           ]
         }
@@ -3238,11 +2429,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1104,
               "text": "          <Script id=\"network-optimizer\" src=\"/scripts/BMBRAIN/network-optimizer.js\" strategy=\"lazyOnload\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
-              "line": 150,
-              "text": "  '/scripts/BMBRAIN/network-optimizer.js',"
             }
           ]
         }
@@ -3259,11 +2445,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1107,
               "text": "        <Script id=\"offline-detect\" src=\"/scripts/BMBRAIN/offline-detect.js\" strategy=\"lazyOnload\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
-              "line": 151,
-              "text": "  '/scripts/BMBRAIN/offline-detect.js'"
             }
           ]
         }
@@ -3280,11 +2461,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1102,
               "text": "        <Script id=\"push-manager\" src=\"/scripts/BMBRAIN/push-manager.js\" strategy=\"lazyOnload\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
-              "line": 149,
-              "text": "  '/scripts/BMBRAIN/push-manager.js',"
             }
           ]
         }
@@ -3301,11 +2477,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1106,
               "text": "        <Script id=\"spline-universal\" src=\"/scripts/BMBRAIN/spline-universal.js\" strategy=\"lazyOnload\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/desktop-homepage-optimizer.js",
-              "line": 206,
-              "text": "        assetsToPreload.push('/scripts/BMBRAIN/spline-universal.js');"
             }
           ]
         }
@@ -3554,11 +2725,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
               "line": 1099,
               "text": "        <Script id=\"device-detect\" src=\"/scripts/device-detect.js\" strategy=\"lazyOnload\" />"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
-              "line": 146,
-              "text": "  '/scripts/device-detect.js',"
             }
           ]
         }
@@ -3680,19 +2846,19 @@
           "pattern": "/sw.js",
           "examples": [
             {
+              "file": "/Users/justin/Documents/newbullmoney/hooks/useNotifications.ts",
+              "line": 187,
+              "text": "        await navigator.serviceWorker.register('/sw.js', { scope: '/' });"
+            },
+            {
               "file": "/Users/justin/Documents/newbullmoney/components/NotificationPermissionModal.tsx",
               "line": 63,
               "text": "    const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });"
             },
             {
-              "file": "/Users/justin/Documents/newbullmoney/lib/serviceWorker.ts",
-              "line": 32,
-              "text": "      this.registration = await navigator.serviceWorker.register('/sw.js', {"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/hooks/useNotifications.ts",
-              "line": 187,
-              "text": "        await navigator.serviceWorker.register('/sw.js', { scope: '/' });"
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 402,
+              "text": "        source: '/sw.js',"
             }
           ]
         }
@@ -3756,6 +2922,10 @@
     },
     {
       "path": "scripts/telegram-session-setup.js",
+      "signals": []
+    },
+    {
+      "path": "scripts/verify-dead-files.mjs",
       "signals": []
     },
     {
@@ -3997,11 +3167,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
               "line": 15,
               "text": "@import \"../styles/themes/supreme-z-index.css\";"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx",
-              "line": 10,
-              "text": "import '@/styles/themes/supreme-z-index.css';"
             }
           ]
         }
@@ -4056,7 +3221,19 @@
     },
     {
       "path": "styles/performance-optimizations.css",
-      "signals": []
+      "signals": [
+        {
+          "type": "basename-ref",
+          "pattern": "performance-optimizations.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/styles/_combined-layout.css",
+              "line": 358,
+              "text": " * This file MUST be imported after performance-optimizations.css"
+            }
+          ]
+        }
+      ]
     },
     {
       "path": "styles/performance/_cls-prevention.css",
@@ -4121,22 +3298,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
               "line": 15,
               "text": "@import \"../styles/themes/supreme-z-index.css\";"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx",
-              "line": 10,
-              "text": "import '@/styles/themes/supreme-z-index.css';"
-            }
-          ]
-        },
-        {
-          "type": "path-ref",
-          "pattern": "@/styles/themes/supreme-z-index.css",
-          "examples": [
-            {
-              "file": "/Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx",
-              "line": 10,
-              "text": "import '@/styles/themes/supreme-z-index.css';"
             }
           ]
         },
@@ -4148,11 +3309,6 @@
               "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
               "line": 15,
               "text": "@import \"../styles/themes/supreme-z-index.css\";"
-            },
-            {
-              "file": "/Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx",
-              "line": 10,
-              "text": "import '@/styles/themes/supreme-z-index.css';"
             }
           ]
         }

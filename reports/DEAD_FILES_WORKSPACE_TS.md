@@ -1,6 +1,6 @@
 # Dead File Report (TypeScript-resolved) — Workspace universe
 
-Generated: 2026-02-23T15:57:19.472Z
+Generated: 2026-02-23T16:02:33.445Z
 
 tsconfig: tsconfig.json
 
@@ -35,7 +35,7 @@ Not referenced (dead-file candidates): 547
 - styles: 52
 - lib: 32
 - hooks: 22
-- scripts: 15
+- scripts: 16
 - stores: 3
 - models: 2
 - contexts: 2
@@ -53,7 +53,6 @@ Not referenced (dead-file candidates): 547
 - tailwind.config.ts: 1
 - turbopack.config.mjs: 1
 - types: 1
-- .venv: 1
 
 ### Not referenced (workspace universe)
 
@@ -141,6 +140,7 @@ Not referenced (dead-file candidates): 547
 - scripts/pre-deploy.mjs
 - scripts/seed-translations.ts
 - scripts/telegram-session-setup.js
+- scripts/verify-dead-files.mjs
 - public/draco_wasm_wrapper.js
 - public/process.js
 - public/sw.js
@@ -603,7 +603,6 @@ Not referenced (dead-file candidates): 547
 - app/Blogs/Livestreams.tsx
 - app/Blogs/text-generate-effect.tsx
 - app/(auth)/vip/heromain.tsx
-- .venv/lib/python3.14/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js
 ## Entrypoints
 
 - app/(shop)/crypto-guide/page.tsx

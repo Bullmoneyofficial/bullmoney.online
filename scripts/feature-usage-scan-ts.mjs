@@ -38,6 +38,7 @@ const EXCLUDE_DIRS = new Set([
   'node_modules',
   '.next',
   '.git',
+  '.venv',
   'static-app',
   'my-app',
   'portfolio-overlay',

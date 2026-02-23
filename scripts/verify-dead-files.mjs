@@ -72,34 +72,23 @@ function walkFiles(dir) {
   return out;
 }
 
-function collectSearchFiles() {
-  // Focus on runtime/code references (avoid docs noise).
-  const roots = [
-    'app',
-    'components',
-    'lib',
-    'hooks',
-    'contexts',
-    'context',
-    'stores',
-    'types',
-    // public can reference other public assets (html/js/json)
-    'public',
-  ];
-
+function collectSearchFiles(usedFilesRel) {
+  // Stronger signal: only consider references from files that are actually reachable/used
+  // (plus selected config files that may inject URLs).
   const files = [];
-  for (const r of roots) {
-    const full = path.join(ROOT, r);
-    if (fs.existsSync(full)) files.push(...walkFiles(full));
+  for (const relPath of usedFilesRel || []) {
+    const full = path.join(ROOT, relPath);
+    if (!isFile(full)) continue;
+    const ext = path.extname(full);
+    if (!SEARCH_EXTS.has(ext)) continue;
+    files.push(full);
   }
 
-  // Include a couple of root config files that can reference public scripts.
   for (const p of ['next.config.mjs']) {
     const full = path.join(ROOT, p);
     if (isFile(full)) files.push(full);
   }
 
-  // De-dup
   return Array.from(new Set(files));
 }
 
@@ -197,7 +186,7 @@ function main() {
   const unused = (json.workspaceUnusedFiles || []).slice().sort();
 
   // Search corpus files once.
-  const searchFiles = collectSearchFiles();
+  const searchFiles = collectSearchFiles(json.usedFiles || []);
 
   // Build string patterns to detect non-import usages.
   // 1) public assets: search for URL path /<path-without-public>
@@ -209,11 +198,7 @@ function main() {
   const stylePathPatterns = styleUnused.flatMap((p) => [p, `@/${p}`]);
   const styleFileNames = Array.from(new Set(styleUnused.map((p) => path.basename(p))));
 
-  // 3) app/games/bullcasino legacy: look for "/games/bullcasino/" references
-  const bullcasinoPatterns = ['/games/bullcasino/'];
-
   const patterns = [
-    ...bullcasinoPatterns,
     ...publicPatterns,
     ...stylePathPatterns,
     ...styleFileNames,
@@ -271,10 +256,6 @@ function main() {
         const examples = (matchMap.get(base) || []).filter((ex) => !toPosix(ex.file).endsWith(`/${p}`)).slice(0, 3);
         if (examples.length) info.signals.push({ type: 'basename-ref', pattern: base, examples });
       }
-    }
-
-    if (p.includes('games/bullcasino')) {
-      if (matchMap.has('/games/bullcasino/')) info.signals.push({ type: 'string-ref', pattern: '/games/bullcasino/', examples: matchMap.get('/games/bullcasino/').slice(0, 3) });
     }
 
     verified.push(info);
