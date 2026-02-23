@@ -1,6 +1,5 @@
 "use client";
 
-import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
 const HomePageClientMobile = dynamic(
@@ -12,9 +11,5 @@ const HomePageClientMobile = dynamic(
 );
 
 export default function HomePageMobileEntry() {
-  return (
-    <Suspense fallback={null}>
-      <HomePageClientMobile />
-    </Suspense>
-  );
+  return <HomePageClientMobile />;
 }

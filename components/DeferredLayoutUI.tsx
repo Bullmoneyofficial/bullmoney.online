@@ -11,16 +11,10 @@ const GamesModalProvider = dynamic(
   { ssr: false }
 );
 
-const PWAInstallPrompt = dynamic(
-  () => import("@/components/PWAInstallPrompt"),
-  { ssr: false }
-);
-
 export function DeferredLayoutUI() {
   return (
     <>
       <GamesModalProvider />
-      <PWAInstallPrompt />
     </>
   );
 }

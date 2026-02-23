@@ -1,136 +1,37 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Suspense, ReactNode, useEffect, useState, useRef, startTransition } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { markHydrationComplete } from "@/components/FastHydrationWrapper";
 
-// ✅ LAZY-LOADED: SEO/analytics/audio deferred to avoid blocking first paint
-const ScrollSciFiAudio = dynamic(
-  () => import("@/components/ScrollSciFiAudio").then(mod => ({ default: mod.ScrollSciFiAudio })),
-  { ssr: false }
-);
-
-const WebVitalsEnhanced = dynamic(
-  () => import("@/components/WebVitalsEnhanced"),
-  { ssr: false }
-);
-
-const AllSEOSchemas = dynamic(
-  () => import("@/components/SEOSchemas"),
-  { ssr: false }
-);
-
-const AdvancedSEO = dynamic(
-  () => import("@/components/AdvancedSEO"),
-  { ssr: false }
-);
-
-const GoogleSEOBoost = dynamic(
-  () => import("@/components/GoogleSEOBoost"),
-  { ssr: false }
-);
-
-const MemoryBoostClient = dynamic(
-  () => import("@/components/MemoryBoostClient"),
-  { ssr: false }
-);
-
-const HreflangMeta = dynamic(
-  () => import("@/components/HreflangMeta").then((mod) => ({ default: mod.HreflangMeta })),
-  { ssr: false }
-);
-
-// ✅ PERF: VercelAnalytics lazy-loaded to avoid compile-time weight
-const VercelAnalyticsWrapper = dynamic(
-  () => import("@/components/VercelAnalyticsWrapper"),
-  { ssr: false }
-);
-
-// ✅ OFF-SCREEN ANIMATION CONTROLLER - Pauses animations we can't see
-const OffscreenAnimationController = dynamic(
-  () => import("@/hooks/useOffscreenAnimationPause").then(mod => ({ default: mod.OffscreenAnimationController })),
-  { ssr: false }
-);
-
 // ✅ LOADING FALLBACKS - Mobile optimized
 import {
-  NavbarSkeleton,
   MinimalFallback,
 } from "@/components/MobileLazyLoadingFallback";
-
-// ✅ LAZY LOADED: Performance components
-const ClientProviders = dynamic(
-  () => import("@/components/ClientProviders").then(mod => ({ default: mod.ClientProviders })),
-  { ssr: false }
-);
-
-const ShimmerStylesProvider = dynamic(
-  () => import("@/components/ui/UnifiedShimmer").then(mod => ({ default: mod.ShimmerStylesProvider })),
-  { ssr: false }
-);
-
-const CacheManagerProvider = dynamic(
-  () => import("@/components/CacheManagerProvider"),
-  { ssr: false }
-);
-
-// ✅ ULTIMATE HUB - Unified component replacing TradingQuickAccess, CommunityQuickAccess, UltimateControlPanel
-// Contains: Left side pills (Trading, Community, TV) + Right side FPS pill with Device Center Panel
-const UltimateHub = dynamic(
-  () => import("@/components/UltimateHub").then(mod => ({ default: mod.UltimateHub })),
-  { ssr: false }
-);
-
-const AppSupportButton = dynamic(
-  () => import("@/components/shop/StoreSupportButton").then(mod => ({ default: mod.AppSupportButton })),
-  { ssr: false }
-);
-
-// ✅ NAVBAR - Lazy load for mobile (named export)
-const Navbar = dynamic(
-  () => import("@/components/navbar").then(mod => ({ default: mod.Navbar })),
-  { ssr: false, loading: () => <NavbarSkeleton /> }
-);
-
-// ✅ StoreHeader - Used for standalone (installed) home screen app navigation
-const StoreHeader = dynamic(
-  () => import("@/components/store/StoreHeader").then(mod => ({ default: mod.StoreHeader })),
-  { ssr: false }
-);
-
-
-// 🔔 NOTIFICATION PERMISSION MODAL - Shows IMMEDIATELY on first load asking for push notifications
-// Using eager loading to ensure it appears before anything else
-const NotificationPermissionModal = dynamic(
-  () => import("@/components/NotificationPermissionModal").then(mod => mod.NotificationPermissionModal),
-  { ssr: false, loading: () => null }
-);
-
-const CookieConsent = dynamic(
-  () => import("@/components/CookieConsent"),
-  { ssr: false, loading: () => null }
-);
-
-// ✅ PERF: PWAInstallPrompt pulls in framer-motion; keep it out of the critical path
-const PWAInstallPrompt = dynamic(
-  () => import("@/components/PWAInstallPrompt"),
-  { ssr: false, loading: () => null }
-);
-
-// ✅ GLOBAL V3 LOADER - Shows randomly on ~20% of reloads across ALL pages
-const GlobalV3Loader = dynamic(
-  () => import("@/components/GlobalV3Loader"),
-  { ssr: false, loading: () => null }
-);
-
-// ThemesPanel needs both ThemesProvider (from AppProviders) AND UIStateProvider (from ClientProviders)
-const ThemesPanel = dynamic(
-  () => import("@/contexts/ThemesContext").then(m => ({ default: m.ThemesPanel })),
-  { ssr: false }
-);
+import {
+  AllSEOSchemas,
+  AdvancedSEO,
+  AppSupportButton,
+  CacheManagerProvider,
+  ClientProviders,
+  CookieConsent,
+  GlobalV3Loader,
+  GoogleSEOBoost,
+  HreflangMeta,
+  MemoryBoostClient,
+  Navbar,
+  NotificationPermissionModal,
+  OffscreenAnimationController,
+  PWAInstallPrompt,
+  ScrollSciFiAudio,
+  ShimmerStylesProvider,
+  StoreHeader,
+  ThemesPanel,
+  UltimateHub,
+  VercelAnalyticsWrapper,
+} from "@/components/layout/LayoutProviders.dynamic";
 
 interface LayoutProvidersProps {
   children: ReactNode;

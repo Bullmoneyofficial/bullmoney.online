@@ -250,3 +250,273 @@ export function syncSessionLayers(): void {
     persistSession(data);
   }
 }
+
+// ============================================================================
+// IP-BASED SESSION API (Server-side persistence via Vercel/Supabase)
+// ============================================================================
+
+interface IPSessionResponse {
+  success: boolean;
+  hasSession?: boolean;
+  recruit?: {
+    id: string;
+    email: string;
+    mt5_id?: string;
+    is_vip?: boolean;
+    affiliate_code?: string;
+    social_handle?: string;
+    status?: string;
+    commission_balance?: number;
+    image_url?: string;
+  };
+  error?: string;
+}
+
+/**
+ * Generate a device fingerprint based on browser characteristics.
+ * This stays consistent across incognito/regular mode on the same device.
+ */
+function generateDeviceFingerprint(): string {
+  if (typeof window === 'undefined') return 'server';
+  
+  try {
+    const components = [
+      // Screen characteristics
+      window.screen.width,
+      window.screen.height,
+      window.screen.colorDepth,
+      window.devicePixelRatio || 1,
+      
+      // Time zone
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      
+      // Language
+      navigator.language,
+      navigator.languages?.join(',') || '',
+      
+      // Platform
+      navigator.platform,
+      
+      // Hardware concurrency (CPU cores)
+      navigator.hardwareConcurrency || 0,
+      
+      // User agent
+      navigator.userAgent,
+      
+      // Touch support
+      'ontouchstart' in window ? 'touch' : 'no-touch',
+      navigator.maxTouchPoints || 0,
+      
+      // WebGL renderer (GPU info)
+      getWebGLRenderer(),
+    ];
+    
+    // Create a hash from all components
+    const fingerprint = components.join('|');
+    return simpleHash(fingerprint);
+  } catch (e) {
+    // Fallback to user agent only
+    return simpleHash(navigator.userAgent || 'unknown');
+  }
+}
+
+/**
+ * Get WebGL renderer info (identifies GPU)
+ */
+function getWebGLRenderer(): string {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (gl && gl instanceof WebGLRenderingContext) {
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'unknown';
+      }
+    }
+  } catch (e) {
+    // WebGL not available
+  }
+  return 'no-webgl';
+}
+
+/**
+ * Simple hash function for fingerprinting
+ */
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  // Convert to hex and pad to ensure consistent length
+  const hex = Math.abs(hash).toString(16).padStart(8, '0');
+  // Add a second hash for more uniqueness
+  let hash2 = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash2 = ((hash2 << 5) + hash2) + str.charCodeAt(i);
+  }
+  return hex + Math.abs(hash2).toString(16).padStart(8, '0');
+}
+
+// Cache the device ID to avoid regenerating on every call
+let cachedDeviceId: string | null = null;
+
+function getDeviceId(): string {
+  if (cachedDeviceId) return cachedDeviceId;
+  cachedDeviceId = generateDeviceFingerprint();
+  return cachedDeviceId;
+}
+
+/**
+ * Check for an existing device-based session on the server.
+ * Uses device fingerprint for identification (works in incognito, across networks).
+ */
+
+/**
+ * Check for an existing device-based session on the server.
+ * Uses device fingerprint for identification (works in incognito, across networks).
+ */
+export async function checkIPSession(): Promise<IPSessionResponse> {
+  if (typeof window === 'undefined') {
+    return { success: false, hasSession: false };
+  }
+
+  try {
+    const deviceId = getDeviceId();
+    const response = await fetch('/api/recruit-auth/ip-session', {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-device-id': deviceId,
+      },
+      // Include credentials so cookies are sent (helps with some proxy setups)
+      credentials: 'same-origin',
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('[IPSession] Check failed:', error);
+    return { success: false, hasSession: false, error: 'Network error' };
+  }
+}
+
+/**
+ * Store a new device-based session on the server.
+ * Call this after successful login/registration.
+ */
+export async function saveIPSession(recruitId: string, email: string): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    const deviceId = getDeviceId();
+    const response = await fetch('/api/recruit-auth/ip-session', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-device-id': deviceId,
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({ recruitId, email }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      console.log('[IPSession] Session saved for device');
+      return true;
+    }
+    console.warn('[IPSession] Failed to save:', data.error);
+    return false;
+  } catch (error) {
+    console.error('[IPSession] Save failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Clear the device-based session on the server (logout).
+ */
+export async function clearIPSession(): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    const deviceId = getDeviceId();
+    const response = await fetch('/api/recruit-auth/ip-session', {
+      method: 'DELETE',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-device-id': deviceId,
+      },
+      credentials: 'same-origin',
+    });
+
+    const data = await response.json();
+    return data.success;
+  } catch (error) {
+    console.error('[IPSession] Clear failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Full session restoration: tries IP-based session first, then falls back to local storage.
+ * Returns the session data if found, null otherwise.
+ */
+export async function restoreSession(): Promise<SessionData | null> {
+  // First, try IP-based session (server-side, most reliable)
+  try {
+    const ipResult = await checkIPSession();
+    if (ipResult.success && ipResult.hasSession && ipResult.recruit) {
+      const sessionData: SessionData = {
+        recruitId: ipResult.recruit.id,
+        email: ipResult.recruit.email,
+        mt5Id: ipResult.recruit.mt5_id,
+        isVip: ipResult.recruit.is_vip,
+        timestamp: Date.now(),
+      };
+      // Also sync to local storage for faster subsequent loads
+      persistSession(sessionData);
+      console.log('[SessionPersistence] Restored from IP session');
+      return sessionData;
+    }
+  } catch (e) {
+    console.warn('[SessionPersistence] IP session check failed, trying local storage');
+  }
+
+  // Fall back to local storage
+  const localSession = loadSession();
+  if (localSession) {
+    console.log('[SessionPersistence] Restored from local storage');
+    return localSession;
+  }
+
+  return null;
+}
+
+/**
+ * Complete login persistence: saves to both IP-based and local storage.
+ * Call this after successful login.
+ */
+export async function persistFullSession(data: SessionData): Promise<void> {
+  // Save to local storage (immediate, works offline)
+  persistSession(data);
+
+  // Save to IP-based session (server-side, survives cache clears)
+  await saveIPSession(data.recruitId, data.email);
+}
+
+/**
+ * Complete logout: clears both IP-based and local storage sessions.
+ */
+export async function clearFullSession(): Promise<void> {
+  // Clear local storage
+  clearSession();
+
+  // Clear IP-based session
+  await clearIPSession();
+}

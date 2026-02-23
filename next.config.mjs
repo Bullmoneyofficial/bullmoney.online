@@ -13,6 +13,7 @@ const isAppleSilicon = platform === 'darwin' && arch === 'arm64';
 const isWindows = platform === 'win32';
 const isMac = platform === 'darwin';
 const isLinux = platform === 'linux';
+const isVercel = process.env.VERCEL === '1';
 
 // Dev-server safety: allow requests for /_next assets from your LAN origin
 // when testing on phones/other devices (e.g. http://192.168.x.x:3000).
@@ -105,6 +106,12 @@ const nextConfig = {
   ...(isDev ? { allowedDevOrigins: devAllowedOrigins } : {}),
   // COMPILATION SPEED: Disable source maps in development (massive speed boost)
   webpack: (config, { dev, isServer }) => {
+    // Vercel production builds are already tuned by Next.js.
+    // Skipping local machine-specific webpack overrides avoids extra compile overhead on deploys.
+    if (isVercel && !dev) {
+      return config;
+    }
+
     if (dev) {
       config.devtool = false; // Disable source maps in dev = 2-3x faster compilation
     }

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 import { cn } from "@/lib/utils";
-import { persistSession } from '@/lib/sessionPersistence';
+import { persistSession, restoreSession, persistFullSession } from '@/lib/sessionPersistence';
 
 // ---------------------------------------------------------------------------
 // Turbopack HMR stability + faster desktop paint
@@ -819,6 +819,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // Check if user came from Account Manager
   const [returnToAccountManager, setReturnToAccountManager] = useState(false);
   
+  // --- IP SESSION AUTO-LOGIN STATE ---
+  const [checkingIPSession, setCheckingIPSession] = useState(true); // Start with checking
+  
   // --- INIT: Read localStorage flags on mount (single effect) ---
   useEffect(() => {
     const shouldReturn = localStorage.getItem('return_to_account_manager');
@@ -834,6 +837,45 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       localStorage.removeItem('bullmoney_pagemode_login_view');
     }
   }, []);
+
+  // --- IP-BASED SESSION CHECK: Auto-login if session exists by IP ---
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkForIPSession() {
+      try {
+        // Try to restore session (checks IP first, then local storage)
+        const session = await restoreSession();
+        
+        if (cancelled) return;
+        
+        if (session && session.recruitId && session.email) {
+          console.log('[PageMode] IP session found, auto-unlocking for:', session.email);
+          // Session found - trigger unlock after brief delay for smooth UX
+          window.dispatchEvent(new Event('bullmoney_session_changed'));
+          setTimeout(() => {
+            if (!cancelled) {
+              onUnlock();
+            }
+          }, 100);
+          return;
+        }
+      } catch (error) {
+        console.warn('[PageMode] IP session check failed:', error);
+      }
+      
+      // No session found - allow normal login flow
+      if (!cancelled) {
+        setCheckingIPSession(false);
+      }
+    }
+
+    checkForIPSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onUnlock]);
   
   // --- DESKTOP DETECTION FOR WELCOME SCREEN ---
   const isDesktop = useIsDesktop();
@@ -1443,7 +1485,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       }
 
       const newUser = result.recruit;
-      persistSession({
+      await persistFullSession({
         recruitId: newUser.id,
         email: newUser.email,
         mt5Id: newUser.mt5_id || formData.mt5Number,
@@ -1508,7 +1550,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       }
 
       const recruit = result.recruit;
-      persistSession({
+      await persistFullSession({
         recruitId: recruit.id,
         email: recruit.email,
         mt5Id: recruit.mt5_id,
