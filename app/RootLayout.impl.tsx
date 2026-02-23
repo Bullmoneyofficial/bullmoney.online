@@ -1,12 +1,8 @@
 import Script from "next/script";
-import "./globals.css";
-// Combined 12 CSS files into 1 for faster compilation (fewer modules to resolve)
-import "../styles/_combined-layout.css";
 // import "./styles/90-scroll-anywhere.css"; // Temporarily disabled - causing PostCSS parse errors, scroll fixes moved to inline styles
 import { cn } from "@/lib/utils";
 import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";
 import { SPLASH_MIN_MS, SPLASH_FALLBACK_MS, SPLASH_MAX_MS, SPLASH_FADE_MS } from "@/components/splashConfig";
-export { metadata, viewport } from "./layout.metadata";
 
 // ✅ CUSTOM EVENT TRACKING - Removed from layout (static import pulled analytics into every page)
 // Import trackEvent in individual client components that need it instead.
