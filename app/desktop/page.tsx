@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { detectBrowser } from "@/lib/browserDetection";
 import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
+import { loadSession, persistSession } from "@/lib/sessionPersistence";
 
 // ==========================================
 // DESKTOP-ONLY VERSION - 1K to 8K SCREEN SUPPORT
@@ -366,12 +367,23 @@ function DesktopHomeContent() {
   // Check localStorage on client mount to determine the correct view
   // This runs once on mount and sets the view based on user's previous progress
   useEffect(() => {
-    const hasSession = localStorage.getItem("bullmoney_session");
+    // CRITICAL: Use loadSession() to recover from cookies/sessionStorage when localStorage is cleared
+    // This prevents users from having to re-sign in after cache clears
+    const recoveredSession = loadSession();
+    const hasSession = recoveredSession !== null;
+    
+    // If session was recovered from backup (cookie/sessionStorage), repair localStorage too
+    if (recoveredSession && !localStorage.getItem("bullmoney_session")) {
+      console.log('[Desktop] Session recovered from backup storage, repairing localStorage');
+      persistSession(recoveredSession);
+      localStorage.setItem("bullmoney_pagemode_completed", "true");
+    }
+    
     const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
     const hasCompletedTelegram = localStorage.getItem("bullmoney_telegram_confirmed");
 
     const now = Date.now();
-    console.log('[Desktop] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedTelegram });
+    console.log('[Desktop] Session check:', { hasSession, hasCompletedPagemode, hasCompletedTelegram });
 
     if (hasSession || hasCompletedPagemode === "true") {
       // Skip pagemode if user has session OR has ever completed pagemode

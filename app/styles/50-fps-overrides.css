@@ -288,8 +288,9 @@ html.is-scrolling [data-fps-chart] * {
   transition: all 0.2s ease !important;
 }
 
-/* GPU compositing for critical elements */
-nav,
+/* GPU compositing for critical elements
+   EXCEPTION: Store header nav exempt — transform breaks its fixed overlays */
+nav:not(header[data-apple-section] > nav),
 footer,
 .modal,
 [data-spline],
@@ -297,6 +298,12 @@ canvas {
   transform: translateZ(0);
   backface-visibility: hidden;
   contain: layout style paint;
+}
+/* Store header nav: no transform/contain that would break position:fixed */
+header[data-apple-section] > nav {
+  transform: none !important;
+  contain: none !important;
+  will-change: auto !important;
 }
 
 /* Disable Framer Motion hover effects during scroll

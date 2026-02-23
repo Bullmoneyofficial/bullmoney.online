@@ -11,6 +11,8 @@ declare module '@/lib/spline-wrapper' {
     priority?: boolean;
     /** Alias for priority - optimizes for hero section with 200ms load target */
     isHero?: boolean;
+    /** CRITICAL: Bypasses battery saver and emergency shutdown - ensures Spline ALWAYS shows on ALL devices (iOS, in-app browsers, low memory) */
+    neverDisable?: boolean;
     /** Optional: cap render FPS for this scene */
     targetFPS?: number;
     /** Optional: cap devicePixelRatio used for canvas resolution */

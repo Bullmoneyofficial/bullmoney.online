@@ -6,6 +6,7 @@ import "../styles/_combined-layout.css";
 // import "./styles/90-scroll-anywhere.css"; // Temporarily disabled - causing PostCSS parse errors, scroll fixes moved to inline styles
 import { cn } from "@/lib/utils";
 import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";
+import { SPLASH_MIN_MS, SPLASH_FALLBACK_MS, SPLASH_MAX_MS, SPLASH_FADE_MS } from "@/components/splashConfig";
 
 // ✅ CUSTOM EVENT TRACKING - Removed from layout (static import pulled analytics into every page)
 // Import trackEvent in individual client components that need it instead.
@@ -638,68 +639,6 @@ export default function RootLayout({
         pointer-events: auto !important;
         touch-action: auto !important;
       }
-      /* ═══════════════════════════════════════════════════════════════════ */
-      #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;transform:translateX(3px);}
-      #bm-splash .bm-step.active span:last-child{background:linear-gradient(100deg,#0f0f12 0%,#3f3f46 35%,#0f0f12 70%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-step-sheen 1.4s ease-in-out infinite;}
-      #bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}
-      #bm-splash .bm-step.done span:last-child{animation:bm-step-settle .5s ease-out both;}
-      #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
-      #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
-      #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
-
-      /* In-app webviews (Instagram/TikTok/Facebook etc): keep splash reliable by disabling heavy animations */
-      #bm-splash.bm-splash-lite .bm-orb{display:none!important;}
-      #bm-splash.bm-splash-lite .bm-bar-outer::after{animation:none!important;opacity:.35!important;}
-      #bm-splash.bm-splash-lite .bm-bar-inner{animation:none!important;background:#18181b!important;}
-      #bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle{animation:none!important;background-color:#000000!important;}
-      #bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:none!important;filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;-webkit-filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;}
-
-
-      /* === Splash Finale: logo grows to playing-card size, all else disappears === */
-      #bm-splash.bm-splash-finale{justify-content:center;align-items:center;background:#0a0a0a;background-color:#0a0a0a;}
-      #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:transform!important;--bm-finale-scale:1;transform:translateX(-15px) scale(var(--bm-finale-scale))!important;transition:transform .8s cubic-bezier(.22,1,.36,1),width .8s cubic-bezier(.22,1,.36,1),height .8s cubic-bezier(.22,1,.36,1)!important;}
-      /* Use filter invert() so the inline SVG (black) can become white on dark bg (Safari-friendly) */
-      #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));-webkit-filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));}
-      /* In-app: force white finale + black logo (no invert/glow, no bg animation) */
-      html.is-in-app-browser #bm-splash.bm-splash-finale{background:#ffffff!important;background-color:#ffffff!important;}
-      html.is-in-app-browser #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;background:#ffffff!important;background-color:#ffffff!important;}
-      html.is-in-app-browser #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:none!important;-webkit-filter:none!important;}
-      /* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS */
-      #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
-      #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}
-      /* Extra idle motion: spin + synced contrast/glow (doesn't fight wrapper transform/scale) */
-      #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{transform-origin:50% 50%;will-change:transform,filter;animation:bm-finale-spin 8s cubic-bezier(.4,0,.2,1) infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
-      #bm-splash.bm-splash-finale .bm-title,
-      #bm-splash.bm-splash-finale .bm-subtitle,
-      #bm-splash.bm-splash-finale .bm-progress-wrap{animation:bm-finale-fadeout .35s cubic-bezier(.4,0,.2,1) forwards!important;pointer-events:none;}
-      #bm-splash.bm-splash-finale .bm-orb{animation:bm-finale-fadeout .25s ease-out forwards!important;}
-      #bm-splash.bm-splash-finale::before,
-      #bm-splash.bm-splash-finale::after{animation:bm-finale-fadeout .25s ease-out forwards!important;}
-
-      @keyframes bm-finale-fadeout{0%{opacity:1}100%{opacity:0;visibility:hidden}}
-
-      @keyframes bm-bar-flow{0%{background-position:0% 50%}100%{background-position:240% 50%}}
-      @keyframes bm-bar-sheen{0%{transform:translate3d(-130%,0,0)}100%{transform:translate3d(130%,0,0)}}
-
-      @keyframes bm-finale-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-      @keyframes bm-finale-float-y{0%,100%{transform:translate3d(0,-10px,0)}50%{transform:translate3d(0,10px,0)}}
-      /* Smooth off-black↔off-white cycle with long dwell at endpoints */
-      @keyframes bm-finale-bg{0%,12%{background-color:#0a0a0a}30%{background-color:#222}50%{background-color:#777}70%{background-color:#ccc}88%,100%{background-color:#f2f2f2}}
-      @keyframes bm-finale-filter-contrast{
-        0%,12%{filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16));-webkit-filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16))}
-        30%{filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14));-webkit-filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14))}
-        50%{filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12));-webkit-filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12))}
-        70%{filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10));-webkit-filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10))}
-        88%,100%{filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12));-webkit-filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12))}
-      }
-
-      @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9);will-change:transform}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
-      @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
-      @keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
-      @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
-
-      @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-logo-wrap svg,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
-      @media(min-width:768px){#bm-splash .bm-logo-wrap{width:216px;height:216px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}\n      @media(min-width:768px){#bm-splash.bm-splash-finale .bm-logo-wrap{width:380px;height:380px;}#bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:bm-finale-float-y 1.5s ease-in-out infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}}
         ` }} />
         {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
         <Script id="splash-init" src="/scripts/splash-init.js" strategy="beforeInteractive" />
@@ -1075,17 +1014,109 @@ export default function RootLayout({
             __html: `
               (function(){
                 try {
-                  window.setTimeout(function(){
+                  // Timing constants (mirrored from splashConfig.ts)
+                  var FADE = ${SPLASH_FADE_MS};
+
+                  // In-app browsers (Instagram, TikTok, Facebook, Snapchat, etc.) need
+                  // longer minimums — their WKWebView/WebView can render a cached page in
+                  // <200 ms, making the splash feel invisible at the default 600 ms MIN.
+                  // splash-init.js already detected the UA and set this class on <html>,
+                  // so we can read it directly without re-parsing the user-agent string.
+                  var isInApp = !!(
+                    document.documentElement.classList &&
+                    document.documentElement.classList.contains('is-in-app-browser')
+                  );
+
+                  var MIN      = isInApp ? 1400 : ${SPLASH_MIN_MS};
+                  var FALLBACK = isInApp ? 3000 : ${SPLASH_FALLBACK_MS};
+                  var MAX      = ${SPLASH_MAX_MS};
+
+                  var minDone    = false;
+                  var splineDone = false;
+                  var dismissed  = false;
+
+                  function playDismissSound() {
+                    try {
+                      var AC = window.AudioContext || window.webkitAudioContext;
+                      if (!AC) return;
+                      var ctx = new AC();
+                      var t = ctx.currentTime;
+                      // Soft C-major chord (C5 + E5 + G5) — warm reveal chime
+                      [[523.25, 0.13], [659.25, 0.08], [783.99, 0.05]].forEach(function(p) {
+                        var osc = ctx.createOscillator();
+                        var env = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = p[0];
+                        env.gain.setValueAtTime(0, t);
+                        env.gain.linearRampToValueAtTime(p[1], t + 0.018);
+                        env.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+                        osc.connect(env);
+                        env.connect(ctx.destination);
+                        osc.start(t);
+                        osc.stop(t + 0.6);
+                      });
+                      window.setTimeout(function(){ try { ctx.close(); } catch(e) {} }, 800);
+                    } catch(e) {}
+                  }
+
+                  function dismiss() {
+                    if (dismissed) return;
+                    dismissed = true;
+                    playDismissSound();
                     var splash = document.getElementById('bm-splash');
-                    if (!splash || splash.classList.contains('hide')) return;
-                    splash.classList.add('hide');
+                    if (!splash) return;
+
+                    // Primary: CSS keyframe animation via .bm-ready class
+                    splash.classList.add('bm-ready');
+
+                    // Fallback: direct CSS transition on opacity — guarantees the element
+                    // visually fades even in WebViews where @keyframes with forwards-fill
+                    // can silently no-op (seen in some WKWebView versions used by Instagram,
+                    // TikTok, Facebook, Snapchat). The transition fires a few ms after the
+                    // class add so both can run; whichever finishes first wins visually.
+                    try {
+                      if (splash.style) {
+                        splash.style.transition = 'opacity ' + FADE + 'ms cubic-bezier(0.4,0,0.2,1)';
+                        window.setTimeout(function(){ if (splash.style) splash.style.opacity = '0'; }, 16);
+                      }
+                    } catch(e) {}
+
                     document.documentElement.classList.add('bm-splash-done');
                     window.__BM_SPLASH_FINISHED__ = true;
-                    try { window.dispatchEvent(new Event('bm-splash-finished')); } catch (e) {}
+                    try { window.dispatchEvent(new CustomEvent('bm-splash-finished')); } catch (e) {}
+
+                    // Remove from DOM after animation/transition completes
                     window.setTimeout(function(){
                       if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
-                    }, 450);
-                  }, 4000);
+                    }, FADE + 120);
+                  }
+
+                  // 1. Minimum display guard — avoids a flash when Spline loads instantly
+                  window.setTimeout(function(){
+                    minDone = true;
+                    if (splineDone) dismiss();
+                  }, MIN);
+
+                  // 2. Fallback for pages WITHOUT a Spline scene (blogs, store, etc.)
+                  //    Dismissed at FALLBACK ms if Spline never signals — same feel as before.
+                  window.setTimeout(function(){
+                    if (!splineDone) dismiss();
+                  }, FALLBACK);
+
+                  // 3. Hard cap — Spline page with very slow / failed load
+                  window.setTimeout(function(){
+                    dismiss();
+                  }, MAX);
+
+                  // 4. Spline signal — dispatched by WelcomeSplineBackground.handleLoad
+                  //    in pagemode.tsx (mobile) and WelcomeScreenDesktop.tsx (desktop).
+                  window.addEventListener('bm-spline-ready', function onSplineReady(){
+                    splineDone = true;
+                    if (minDone) dismiss();
+                    // If minDone is still false the MIN timer above will call dismiss().
+                    window.removeEventListener('bm-spline-ready', onSplineReady);
+                  });
+
                 } catch (e) {}
               })();
             `,

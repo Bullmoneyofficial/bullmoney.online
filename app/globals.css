@@ -74,6 +74,15 @@ html.bm-modal-open body {
   transform: none !important;
 }
 
+/* CRITICAL: Also clear body transform when store header has modals/drawers open.
+   Without this, position:fixed overlays portaled to document.body get positioned
+   relative to the transform instead of the viewport, appearing at wrong scroll offsets. */
+body[data-storeheader-scroll-lock="true"],
+body[data-account-drawer-open="true"] {
+  transform: none !important;
+  will-change: auto !important;
+}
+
 /* Showcase perf mode: temporarily disable heavy render effects globally */
 html[data-showcase-running="true"] *,
 html[data-showcase-running="true"] *::before,

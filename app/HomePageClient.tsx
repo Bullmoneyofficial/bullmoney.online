@@ -48,6 +48,7 @@ const ShimmerRadialGlow = ({ color = "white", intensity = "low" }: { color?: str
 // UnifiedPerformanceSystem (1,641 lines), CrashTracker (1,008 lines), bigDeviceScrollOptimizer (212 lines)
 // = 2,861 fewer lines in the critical compile chain
 import { useLazyUnifiedPerformance, useLazyBigDeviceScrollOptimizer } from "@/lib/lazyPerformanceHooks";
+import { loadSession, persistSession } from "@/lib/sessionPersistence";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
@@ -565,7 +566,18 @@ function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageCli
       return;
     }
 
-    const hasSession = safeGetLocal("bullmoney_session");
+    // CRITICAL: Use loadSession() to recover from cookies/sessionStorage when localStorage is cleared
+    // This prevents users from having to re-sign in after cache clears
+    const recoveredSession = loadSession();
+    const hasSession = recoveredSession !== null;
+    
+    // If session was recovered from backup (cookie/sessionStorage), repair localStorage flags too
+    if (recoveredSession && !safeGetLocal("bullmoney_session")) {
+      console.log('[HomePageClient] Session recovered from backup storage, repairing localStorage');
+      persistSession(recoveredSession);
+      safeSetLocal("bullmoney_pagemode_completed", "true");
+    }
+    
     const hasCompletedPagemode = safeGetLocal("bullmoney_pagemode_completed");
     const hasCompletedLoader = safeGetLocal("bullmoney_loader_completed");
     const hasCompletedTelegram = safeGetLocal("bullmoney_telegram_confirmed");

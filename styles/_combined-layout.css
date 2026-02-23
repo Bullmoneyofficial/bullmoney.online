@@ -3099,11 +3099,21 @@ dialog .backdrop-blur {
    PAINT & LAYOUT CONTAINMENT
    ======================================== */
 
-/* Isolate navbar from rest of page */
-nav {
+/* Isolate navbar from rest of page
+   EXCEPTION: Store header nav uses position:fixed overlays —
+   transform + contain:paint creates a containing block that
+   traps fixed-position children. Exempt [data-apple-section] nav. */
+nav:not([data-apple-section] nav):not(header[data-apple-section] > nav) {
   contain: layout style paint;
   will-change: transform;
   transform: translateZ(0);
+}
+/* Store header nav: NO transform/contain that would break fixed overlays */
+header[data-apple-section] > nav,
+[data-apple-section] nav {
+  contain: none !important;
+  transform: none !important;
+  will-change: auto !important;
 }
 
 /* Isolate footer */
@@ -3472,9 +3482,10 @@ html.is-scrolling [data-framer-component-type] {
   pointer-events: none !important;
 }
 
-/* GPU layer optimization - force compositing for frequently animated elements */
+/* GPU layer optimization - force compositing for frequently animated elements
+   EXCEPTION: Store-header nav exempt — transform breaks fixed overlays */
 .gpu-accelerated,
-nav,
+nav:not(header[data-apple-section] > nav),
 footer,
 .modal,
 [data-spline],
@@ -3486,7 +3497,7 @@ canvas {
 }
 
 /* Avoid forcing containment on interactive layers to preserve stacking order */
-nav,
+nav:not(header[data-apple-section] > nav),
 footer,
 .modal,
 [data-spline],

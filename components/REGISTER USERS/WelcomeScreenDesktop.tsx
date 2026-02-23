@@ -84,6 +84,8 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
+    // Signal the splash controller that Spline has rendered — dismisses the splash.
+    try { window.dispatchEvent(new CustomEvent('bm-spline-ready')); } catch (_) {}
   }, []);
 
   return (

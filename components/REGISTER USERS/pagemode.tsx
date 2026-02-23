@@ -315,6 +315,8 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
 
   const handleLoad = useCallback((_splineApp?: any) => {
     setIsLoaded(true);
+    // Signal the splash controller that Spline has rendered — dismisses the splash.
+    try { window.dispatchEvent(new CustomEvent('bm-spline-ready')); } catch (_) {}
   }, []);
 
   return (
@@ -336,7 +338,8 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         }}
       />
 
-      {/* Spline — only mounts after acquiring load lock (prevents GPU contention) */}
+      {/* Spline — ALWAYS renders on ALL devices (iOS, in-app browsers, low memory) */}
+      {/* neverDisable=true bypasses battery saver and emergency shutdown for hero scenes */}
       {allowLoad && (
         <div
           className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -345,6 +348,8 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
             scene={scene}
             onLoad={handleLoad}
             priority
+            isHero
+            neverDisable
             className="w-full h-full"
           />
         </div>

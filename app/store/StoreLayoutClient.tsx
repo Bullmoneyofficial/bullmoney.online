@@ -271,6 +271,39 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           pointer-events: none !important;
           z-index: -1 !important;
         }
+
+        /* ==============================================================
+           CRITICAL: Protect fixed-position overlays from body transforms
+           When any store modal/drawer/menu is open (scroll-lock active),
+           body MUST NOT have a transform — otherwise position:fixed
+           children inside body become relative to the transform, not
+           the viewport, and modals/drawers appear at wrong positions.
+           ============================================================== */
+        :global(body[data-storeheader-scroll-lock="true"]),
+        :global(body[data-account-drawer-open="true"]) {
+          transform: none !important;
+          will-change: auto !important;
+        }
+
+        /* Store header nav must NEVER have transform/contain that breaks
+           position:fixed on its sibling overlays */
+        :global(header[data-apple-section] > nav) {
+          transform: none !important;
+          contain: none !important;
+          will-change: auto !important;
+        }
+
+        /* Ensure the fixed store header itself is always viewport-fixed */
+        :global(.store-main-nav) {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          z-index: 1000 !important;
+          transform: none !important;
+          will-change: auto !important;
+          contain: none !important;
+        }
         
         /* Ensure html/body allow scrolling */
         :global(html.store-active),

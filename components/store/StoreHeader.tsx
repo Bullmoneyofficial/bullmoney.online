@@ -413,9 +413,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     if (shouldLockBackgroundScroll) {
       body.setAttribute('data-storeheader-scroll-lock', 'true');
       html.setAttribute('data-storeheader-scroll-lock', 'true');
+      // Also add bm-modal-open so body transforms are cleared (globals.css)
+      html.classList.add('bm-modal-open');
     } else {
       body.removeAttribute('data-storeheader-scroll-lock');
       html.removeAttribute('data-storeheader-scroll-lock');
+      // Only remove bm-modal-open if no other provider set it
+      // (GamesModalProvider also uses this class)
+      if (!document.querySelector('[data-games-modal-open]')) {
+        html.classList.remove('bm-modal-open');
+      }
     }
   }, [shouldLockBackgroundScroll]);
 
@@ -1291,8 +1298,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         </div>
       )}
 
-      {/* Desktop Dropdown Menu - Apple-style (disabled on games pages) */}
-      {!isCasinoPage && desktopMenuOpen && (
+      {/* Desktop Dropdown Menu - Portaled to <html> to avoid ancestor transforms breaking position:fixed */}
+      {isMounted && typeof document !== 'undefined' && !isCasinoPage && desktopMenuOpen && createPortal(
         <>
           {/* Backdrop - click to close */}
           <div
@@ -1306,11 +1313,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.95)',
             }}
           />
-        </>
+        </>,
+        document.documentElement
       )}
-      {/* Desktop Dropdown Content — only rendered on non-casino pages to prevent
-          invisible links from capturing clicks over the game area */}
-      {!isCasinoPage && (
+      {/* Desktop Dropdown Content — portaled to <html> so position:fixed always snaps to viewport.
+          Only rendered on non-casino pages to prevent invisible links from capturing clicks over the game area */}
+      {isMounted && typeof document !== 'undefined' && !isCasinoPage && createPortal(
       <div
         className={`fixed left-0 right-0 z-[950] hidden lg:block transition-opacity ${desktopMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         style={{
@@ -1527,11 +1535,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
             </div>
           </div>
         </div>
-      </div>
+      </div>,
+      document.documentElement
       )}
 
-      {/* Manual Dropdown - Inline on Games Pages */}
-      {isCasinoPage && manualDropdownOpen && (
+      {/* Manual Dropdown - Portaled to <html> for Games Pages */}
+      {isMounted && typeof document !== 'undefined' && isCasinoPage && manualDropdownOpen && createPortal(
         <>
           {/* Backdrop - click to close */}
           <div
@@ -1547,10 +1556,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               WebkitBackdropFilter: 'blur(10px)',
             }}
           />
-        </>
+        </>,
+        document.documentElement
       )}
 
-      {isCasinoPage && (
+      {/* Manual Dropdown Content - Portaled to <html> */}
+      {isMounted && typeof document !== 'undefined' && isCasinoPage && createPortal(
         <>
           {/* Desktop Manual Dropdown */}
           <div
@@ -1731,7 +1742,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.documentElement
       )}
 
       {/* Mobile Menu */}
