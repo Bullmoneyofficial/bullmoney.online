@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function HomePageShell() {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', color: '#1d1d1f' }}>
       {/* Inline critical CSS to avoid FOUC */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes bm-shell-spin { to { transform: rotate(360deg); } }
@@ -11,9 +11,9 @@ export default function HomePageShell() {
       `}} />
 
       {/* Header skeleton - matches StoreHeader height (48px) */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-12 bg-black/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, height: 48, backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div className="relative w-8 h-8">
               <Image
                 src="/bullmoney-logo.png"
@@ -24,23 +24,22 @@ export default function HomePageShell() {
                 className="object-contain"
               />
             </div>
-            <span className="text-sm font-semibold tracking-tight text-white/90">BullMoney</span>
+            <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em', color: '#1d1d1f' }}>BullMoney</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-20 h-7 rounded-full bg-white/5 bm-shell-pulse" />
-            <div className="w-8 h-8 rounded-full bg-white/5 bm-shell-pulse" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 80, height: 28, borderRadius: 9999, backgroundColor: 'rgba(0,0,0,0.04)' }} className="bm-shell-pulse" />
+            <div style={{ width: 32, height: 32, borderRadius: 9999, backgroundColor: 'rgba(0,0,0,0.04)' }} className="bm-shell-pulse" />
           </div>
         </div>
       </div>
 
       {/* Hero section skeleton - matches actual hero dimensions */}
       <div
-        className="relative w-full min-h-screen flex items-center justify-center overflow-hidden pt-12"
-        style={{ contain: "layout style paint" }}
+        style={{ position: 'relative', width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', paddingTop: 48, contain: 'layout style paint', backgroundColor: '#ffffff' }}
       >
         {/* Background gradient */}
         <div
-          className="absolute inset-0 bg-linear-to-b from-black via-[#0a0a0a] to-black"
+          style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #ffffff, #f5f5f7, #ffffff)' }}
           aria-hidden="true"
         />
 
@@ -60,15 +59,14 @@ export default function HomePageShell() {
           </div>
 
           {/* Tagline - helps with SEO and perceived performance */}
-          <p className="text-sm md:text-base text-white/60 text-center max-w-md">
+          <p style={{ fontSize: 14, color: '#86868b', textAlign: 'center', maxWidth: '28rem' }}>
             Free Trading Community • Crypto • Gold • Forex
           </p>
 
           {/* Loading indicator */}
-          <div className="flex items-center gap-2 text-white/40 text-sm">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#86868b', fontSize: 14 }}>
             <div
-              className="w-4 h-4 border-2 border-white/15 border-t-white/60 rounded-full"
-              style={{ animation: "bm-shell-spin 0.8s linear infinite" }}
+              style={{ width: 16, height: 16, border: '2px solid rgba(0,0,0,0.08)', borderTopColor: 'rgba(0,0,0,0.4)', borderRadius: 9999, animation: 'bm-shell-spin 0.8s linear infinite' }}
             />
             <span>Loading experience...</span>
           </div>
@@ -76,28 +74,23 @@ export default function HomePageShell() {
 
         {/* Decorative radial glow */}
         <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(255,255,255,0.015) 0%, transparent 60%)",
-          }}
+          style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 50% at 50% 50%, rgba(0,0,0,0.01) 0%, transparent 60%)' }}
           aria-hidden="true"
         />
       </div>
 
       {/* Below-fold skeleton content - helps with CLS */}
-      <div className="bg-black px-4 py-12 space-y-8" style={{ contain: "layout style paint" }}>
+      <div style={{ backgroundColor: '#ffffff', padding: '3rem 1rem', display: 'flex', flexDirection: 'column', gap: '2rem', contain: 'layout style paint' }}>
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="max-w-7xl mx-auto rounded-2xl bg-white/2 border border-white/5 p-6"
-            style={{ minHeight: 200, contentVisibility: "auto", containIntrinsicSize: "auto 200px" }}
+            style={{ maxWidth: '80rem', margin: '0 auto', borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)', padding: 24, minHeight: 200, contentVisibility: 'auto', containIntrinsicSize: 'auto 200px' }}
           >
-            <div className="w-32 h-3 bg-white/5 rounded bm-shell-pulse mb-4" />
-            <div className="w-48 h-6 bg-white/5 rounded bm-shell-pulse mb-6" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div style={{ width: 128, height: 12, backgroundColor: 'rgba(0,0,0,0.04)', borderRadius: 4, marginBottom: 16 }} className="bm-shell-pulse" />
+            <div style={{ width: 192, height: 24, backgroundColor: 'rgba(0,0,0,0.04)', borderRadius: 4, marginBottom: 24 }} className="bm-shell-pulse" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
               {[1, 2, 3, 4].map((j) => (
-                <div key={j} className="aspect-video rounded-lg bg-white/3 bm-shell-pulse" />
+                <div key={j} style={{ aspectRatio: '16/9', borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.03)' }} className="bm-shell-pulse" />
               ))}
             </div>
           </div>

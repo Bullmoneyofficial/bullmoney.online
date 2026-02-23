@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import HomePageShell from "./HomePageShell";
+
 import { useUIState } from "@/contexts/UIStateHook";
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 
@@ -60,7 +60,7 @@ const safeSetSession = (key: string, value: string) => {
 // Importing the aboveFold re-export barrel forces extra modules into the chunk.
 const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), {
   ssr: false,
-  loading: () => <HomePageShell />,
+  loading: () => null,
 });
 
 // NOTE: Loader step removed for PageMode flow (go straight to Telegram/content)
@@ -69,12 +69,12 @@ const TelegramUnlockScreen = dynamic(
   () => import("@/components/REGISTER USERS/TelegramConfirmationResponsive").then(mod => ({
     default: mod.TelegramConfirmationResponsive,
   })),
-  { ssr: false, loading: () => <HomePageShell /> }
+  { ssr: false, loading: () => null }
 );
 
 const HomePageClient = dynamic(
   () => import("./HomePageClient").then(m => ({ default: m.HomePageClient })),
-  { ssr: false, loading: () => <HomePageShell /> }
+  { ssr: false, loading: () => null }
 );
 
 export function HomePageController() {
@@ -228,7 +228,7 @@ export function HomePageController() {
   }, [setV2Unlocked]);
 
   return (
-    <Suspense fallback={<HomePageShell />}>
+    <Suspense fallback={null}>
       {currentView === "pagemode" && (
         <div className="fixed inset-0 z-99999 bg-black">
           <PageMode onUnlock={handlePageModeUnlock} />

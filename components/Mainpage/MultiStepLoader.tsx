@@ -88,9 +88,10 @@ export const MultiStepLoader = ({
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
-              className="text-white text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold"
+              className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold"
               style={{
-                textShadow: '0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 30px #ffffff',
+                color: '#1d1d1f',
+                textShadow: '0 0 10px rgba(0,0,0,0.08), 0 0 20px rgba(0,0,0,0.05)',
                 background: "none"
               }}
             >
@@ -102,11 +103,11 @@ export const MultiStepLoader = ({
               {safeLoadingStates.map((_, index) => (
                 <div
                   key={index}
-                  className={`h-2 w-2 md:h-3 md:w-3 rounded-full transition-all duration-300 ${
-                    index === currentState
-                      ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.8),_0_0_20px_rgba(255,255,255,0.6)]"
-                      : "bg-white/40"
-                  }`}
+                  style={{
+                    height: 10, width: 10, borderRadius: 9999, transition: 'all 0.3s',
+                    backgroundColor: index === currentState ? '#1d1d1f' : 'rgba(0,0,0,0.15)',
+                    boxShadow: index === currentState ? '0 0 10px rgba(0,0,0,0.2)' : 'none'
+                  }}
                 />
               ))}
             </div>

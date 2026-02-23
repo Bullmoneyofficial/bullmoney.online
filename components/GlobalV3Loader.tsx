@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 
@@ -50,6 +50,8 @@ export default function GlobalV3Loader() {
   const pathname = usePathname();
   const [showLoader, setShowLoader] = useState(false);
   const [decided, setDecided] = useState(false);
+  // Ref prevents re-rolls on React re-renders, but resets on actual page reloads (new mount)
+  const hasDecidedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -68,16 +70,12 @@ export default function GlobalV3Loader() {
       return;
     }
 
-    // Check if we already decided for this page load (prevent re-rolls on re-renders)
-    const alreadyDecidedKey = 'bullmoney_global_v3_decided';
-    const alreadyDecided = sessionStorage.getItem(alreadyDecidedKey);
-    if (alreadyDecided === pathname) {
-      // Already decided for this navigation — check if it was a "show"
-      const shouldShow = sessionStorage.getItem('bullmoney_global_v3_show') === 'true';
-      if (shouldShow) setShowLoader(true);
+    // Prevent re-rolls on React re-renders within the same mount
+    if (hasDecidedRef.current) {
       setDecided(true);
       return;
     }
+    hasDecidedRef.current = true;
 
     // ===== Session refresh counter & cache clear =====
     try {
@@ -108,10 +106,6 @@ export default function GlobalV3Loader() {
     const roll = Math.random();
     const shouldShow = roll < 0.20;
     console.log(`[GlobalV3] Roll: ${roll.toFixed(3)} on ${pathname} → ${shouldShow ? 'SHOW' : 'skip'}`);
-
-    // Remember decision so re-renders don't re-roll
-    sessionStorage.setItem(alreadyDecidedKey, pathname);
-    sessionStorage.setItem('bullmoney_global_v3_show', String(shouldShow));
 
     if (shouldShow) {
       setShowLoader(true);

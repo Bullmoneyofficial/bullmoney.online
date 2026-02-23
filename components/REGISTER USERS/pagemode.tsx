@@ -1600,8 +1600,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       {loading && (
           <div 
              // CRITICAL: Fixed, full coverage, max z-index to overlay native browser UI
-             className="fixed inset-0 z-99999999 w-screen bg-black"
-             style={{ height: '100dvh', minHeight: '-webkit-fill-available' }}
+             className="fixed inset-0 z-99999999 w-screen"
+             style={{ height: '100dvh', minHeight: '-webkit-fill-available', backgroundColor: '#ffffff' }}
              // We render the loader component inside this wrapper
           >
             <MultiStepLoader 
