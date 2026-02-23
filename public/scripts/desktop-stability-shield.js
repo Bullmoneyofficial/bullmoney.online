@@ -94,23 +94,13 @@
 
   // Save state periodically and before unload
   var saveInterval = null;
-  var saveCleanup = null;
   function startStateSaving() {
     window.addEventListener("beforeunload", saveState);
-    var visibilityHandler = function () {
+    window.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "hidden") saveState();
-    };
-    window.addEventListener("visibilitychange", visibilityHandler);
-    // Save every 10s but cleanup on page hide to prevent memory leaks
+    });
+    // Save every 10s
     saveInterval = setInterval(saveState, 10000);
-    
-    // Cleanup all timers and listeners on page transition
-    saveCleanup = function () {
-      if (saveInterval) clearInterval(saveInterval);
-      window.removeEventListener("visibilitychange", visibilityHandler);
-      window.removeEventListener("pagehide", saveCleanup);
-    };
-    window.addEventListener("pagehide", saveCleanup);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -118,7 +108,6 @@
    * ═══════════════════════════════════════════════════════════════════ */
   var degradedMode = false;
   var memoryIntervalId = null;
-  var memoryCleanup = null;
 
   function checkMemory() {
     if (!performance.memory) return; // Chrome only
@@ -159,20 +148,6 @@
         window.__SPLINE_MEMORY_CACHE__ = {};
       }
     } catch (e) {}
-  }
-
-  function startMemoryMonitoring() {
-    // Memory check every 30s (Chrome only)
-    if (performance.memory) {
-      memoryIntervalId = setInterval(checkMemory, 30000);
-      
-      // Cleanup on page hide
-      memoryCleanup = function () {
-        if (memoryIntervalId) clearInterval(memoryIntervalId);
-        window.removeEventListener("pagehide", memoryCleanup);
-      };
-      window.addEventListener("pagehide", memoryCleanup);
-    }
   }
 
   function enterDegradedMode() {
@@ -373,7 +348,11 @@
     setupNetworkResilience();
     setupResourceMonitoring();
     setupViewportStability();
-    startMemoryMonitoring();
+
+    // Memory check every 30s (Chrome only)
+    if (performance.memory) {
+      memoryIntervalId = setInterval(checkMemory, 30000);
+    }
 
     // Inject offline/degraded indicator CSS
     var style = document.createElement("style");

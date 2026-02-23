@@ -5,7 +5,7 @@ declare module '@/lib/spline-wrapper' {
     scene: string;
     placeholder?: string | null;
     className?: string;
-    onLoad?: () => void;
+    onLoad?: (splineApp?: any) => void;
     onError?: (error: Error) => void;
     /** Set true for hero/above-fold content - enables instant loading */
     priority?: boolean;

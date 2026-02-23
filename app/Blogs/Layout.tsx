@@ -59,13 +59,13 @@ export const metadata: Metadata = {
     title: "Heavy News & Market Analysis | Gold, Crypto & Forex | BullMoney",
     description:
       "Real-time HEAVY NEWS on Gold, Bitcoin, Crypto & Forex. Breaking market updates, Fed decisions, and daily trade setups. Free analysis from pro traders!",
-    url: "https://www.bullmoney.shop/Blogs",
+    url: "https://bullmoney.online/Blogs",
     type: "website",
     locale: "en_US",
     alternateLocale: ALL_OG_LOCALES.filter(l => l !== 'en_US'),
     images: [
       {
-        url: "/ONcc2l601.svg",
+        url: "/IMG_2921.PNG",
         width: 1200,
         height: 630,
         alt: "BullMoney Heavy News - Gold, Crypto & Forex Market Analysis",

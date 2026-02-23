@@ -16,18 +16,18 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Trading Course | Free Trading Education | BullMoney',
     description: 'Learn to trade for FREE. Crypto, Forex, Gold, Stocks courses from beginner to pro.',
-    url: 'https://www.bullmoney.shop/course',
+    url: 'https://bullmoney.online/course',
     type: 'website',
     siteName: 'BullMoney Trading Community',
     locale: 'en_US',
     alternateLocale: ALL_OG_LOCALES.filter(l => l !== 'en_US'),
-    images: [{ url: '/ONcc2l601.svg', width: 1200, height: 630, alt: 'BullMoney Trading Course' }],
+    images: [{ url: '/IMG_2921.PNG', width: 1200, height: 630, alt: 'BullMoney Trading Course' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Free Trading Course | BullMoney',
     description: 'Learn to trade Crypto, Forex, Gold & Stocks for FREE. Start now!',
-    images: ['/ONcc2l601.svg'],
+    images: ['/IMG_2921.PNG'],
   },
   alternates: makeAlternatesMetadata('/course'),
 };

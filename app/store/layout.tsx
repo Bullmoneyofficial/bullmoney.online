@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     siteName: 'BullMoney Store',
     images: [
       {
-        url: '/ONcc2l601.svg',
+        url: '/IMG_2921.PNG',
         width: 1200,
         height: 630,
         alt: 'BullMoney Store - Premium Trading Lifestyle',
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'BullMoney Store | Trading Lifestyle Apparel & Gear',
     description: 'Premium trading apparel, accessories & tech gear. Worldwide shipping. Shop now!',
-    images: ['/ONcc2l601.svg'],
+    images: ['/IMG_2921.PNG'],
     creator: '@BullMoney',
     site: '@BullMoney',
   },

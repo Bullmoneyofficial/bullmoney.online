@@ -28,11 +28,11 @@ export const metadata: Metadata = {
     title: "Join BullMoney | Become an Affiliate & Earn",
     description:
       "Earn commissions by referring traders! Join the BullMoney affiliate program and unlock unlimited earning potential.",
-    url: "https://www.bullmoney.shop/recruit",
+    url: "https://bullmoney.online/recruit",
     type: "website",
     images: [
       {
-        url: "/ONcc2l601.svg",
+        url: "/IMG_2921.PNG",
         width: 1200,
         height: 630,
         alt: "Join BullMoney Affiliate Program",

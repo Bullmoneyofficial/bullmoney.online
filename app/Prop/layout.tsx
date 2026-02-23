@@ -38,11 +38,11 @@ export const metadata: Metadata = {
     title: "Prop Firm Trading & Funded Accounts | BullMoney",
     description:
       "Pass prop firm challenges with BullMoney! Free setups for FTMO & funded accounts. Get funded faster with community support.",
-    url: "https://www.bullmoney.shop/Prop",
+    url: "https://bullmoney.online/Prop",
     type: "website",
     images: [
       {
-        url: "/ONcc2l601.svg",
+        url: "/IMG_2921.PNG",
         width: 1200,
         height: 630,
         alt: "BullMoney - Prop Firm Trading & Funded Accounts",

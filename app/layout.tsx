@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
-import "./bm-splash.css";
 // Combined 12 CSS files into 1 for faster compilation (fewer modules to resolve)
 import "../styles/_combined-layout.css";
 // import "./styles/90-scroll-anywhere.css"; // Temporarily disabled - causing PostCSS parse errors, scroll fixes moved to inline styles
@@ -16,9 +15,14 @@ import { AppProviders } from "@/components/AppProviders";
 
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
 import { LayoutProviders } from "@/components/LayoutProviders";
-import { GamesModalProvider } from "@/components/GamesModalProvider";
 
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+// ✅ PERF: GamesModalProvider + PWAInstallPrompt deferred via client boundary wrapper.
+// Saves ~720 lines from the SSR compilation critical path.
+// (ssr:false dynamic imports must live inside a Client Component boundary)
+import { DeferredLayoutUI } from "@/components/DeferredLayoutUI";
+
+// ✅ SPLASH SCREEN – shows on every route load/reload with pulse animation
+import { SplashScreen } from "@/components/SplashScreen";
 
 
 
@@ -250,270 +254,460 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* INSTANT SPLASH: Tiny no-flash rule; full splash CSS lives in app/bm-splash.css */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `:root{--app-vh:1vh;}html,body{background:#000000!important;}`,
-          }}
-        />
-        {/* CRITICAL: Combined beforeInteractive init (reduces blocking script tags) */}
-        <Script
-          id="bm-preinteractive"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-(function(){
-  // --- splash-init (desktop inline / mobile external) ---
-  (function(){
-    try{
-      if (typeof window === 'undefined' || typeof document === 'undefined') return;
-      var d = document.documentElement;
-      if (!d) return;
-      var s = d.style || {};
-      var w = window;
-      var ua = String((navigator && navigator.userAgent) || '');
-      var isDesktop = !/mobi|android|iphone|ipad/i.test(ua) && (w.innerWidth||0) >= 769;
+        {/* Base critical CSS (kept inline to prevent initial flash before hydration) */}
+        <style dangerouslySetInnerHTML={{ __html: `
+      :root{--app-vh:1vh;}
+      html,body{background:#000000!important;}
 
-      if (isDesktop) {
-        var addClass = function(cls){ try{ if (d.classList) d.classList.add(cls); } catch(e){} };
-        addClass('desktop-optimized');
-        s.height='auto'; s.overflowY='scroll'; s.overflowX='hidden'; s.scrollBehavior='auto';
-        s.scrollSnapType='none'; s.overscrollBehavior='auto';
-        var b = document.body;
-        if (b && b.style) { b.style.height='auto'; b.style.overflowY='visible'; b.style.overflowX='hidden'; b.style.overscrollBehavior='auto'; }
-        addClass('mouse-device'); addClass('non-touch-device');
-        if ((w.innerWidth||0) >= 1440) {
-          addClass('big-display');
-          s.scrollPaddingTop='80px';
-          try { if (b && b.classList) b.classList.add('big-display-body'); } catch(e) {}
-        }
-        if (/macintosh|mac os x/i.test(ua)) addClass('macos');
-        if (/^((?!chrome|android|crios|fxios|opera|opr|edge|edg).)*safari/i.test(ua)) addClass('is-safari');
-        var setVH = function(){
-          try{
-            var vh = (w.innerHeight * 0.01) + 'px';
-            if (s && typeof s.setProperty === 'function') { s.setProperty('--app-vh', vh); s.setProperty('--vh', vh); }
-          } catch(e) {}
-        };
-        setVH();
-        w.addEventListener('resize', setVH, { passive: true });
-
-        try{
-          var t = localStorage.getItem('bullmoney-theme-data');
-          if (t) {
-            var p = JSON.parse(t);
-            if (p && p.accentColor && s && typeof s.setProperty === 'function') {
-              var h2 = String(p.accentColor || '').replace('#', '');
-              var r = parseInt(h2.substring(0,2),16) || 59;
-              var g = parseInt(h2.substring(2,4),16) || 130;
-              var b2 = parseInt(h2.substring(4,6),16) || 246;
-              var rgb = r + ', ' + g + ', ' + b2;
-              s.setProperty('--accent-color', p.accentColor);
-              s.setProperty('--accent-rgb', rgb);
-              d.setAttribute('data-active-theme', p.id || 'bullmoney-blue');
-              d.setAttribute('data-theme-category', p.category || 'SPECIAL');
-            }
-          } else {
-            d.setAttribute('data-active-theme', 'bullmoney-blue');
-            if (s && typeof s.setProperty === 'function') {
-              s.setProperty('--accent-color', '#ffffff');
-              s.setProperty('--accent-rgb', '255, 255, 255');
-            }
-          }
-        } catch(e) {
-          d.setAttribute('data-active-theme', 'bullmoney-blue');
-          if (s && typeof s.setProperty === 'function') {
-            s.setProperty('--accent-color', '#ffffff');
-            s.setProperty('--accent-rgb', '255, 255, 255');
-          }
-        }
-      } else {
-        var script = document.createElement('script');
-        script.src = '/scripts/splash-init.js';
-        script.async = false;
-        document.head.appendChild(script);
+      /* ═══════════════════════════════════════════════════════════════════ */
+      /* CRITICAL SCROLL FIX - Ensures scrolling works on ALL devices/browsers */
+      /* Fixes: Chrome, Safari, iOS Safari, Android, Samsung Internet */
+      /* Updated 2026-02-13: Enhanced for games/design/store/app pages */
+      /* ═══════════════════════════════════════════════════════════════════ */
+      
+      /* BASE SCROLL ENABLEMENT - Works unless modal is actually open */
+      html:not(:has([role="dialog"]:not([data-state="closed"]))),
+      body:not(:has([role="dialog"]:not([data-state="closed"]))) {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        touch-action: pan-y pan-x !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain !important;
+        scroll-behavior: auto !important;
+        position: relative !important;
       }
-    } catch(e) {}
-  })();
-
-  // --- compat-layer (desktop skips) ---
-  (function(){
-    try{
-      var ua = String((navigator && navigator.userAgent) || '');
-      var isDesktop = !/mobi|android|iphone|ipad/i.test(ua) && (window.innerWidth||0) >= 769;
-      var isModernDesktop = isDesktop && (window.fetch && window.Promise && window.IntersectionObserver && Element.prototype.closest);
-      if (isModernDesktop) return;
-      var s = document.createElement('script');
-      s.src = '/scripts/BMBRAIN/compat-layer.js';
-      s.async = false;
-      document.head.appendChild(s);
-    } catch(e) {}
-  })();
-
-  // --- splash-failsafe (15s) ---
-  (function(){
-    try {
-      window.setTimeout(function(){
-        var splash = document.getElementById('bm-splash');
-        if (!splash || splash.classList.contains('hide')) return;
-        splash.classList.add('hide');
-        document.documentElement.classList.add('bm-splash-done');
-        window.__BM_SPLASH_FINISHED__ = true;
-        try { window.dispatchEvent(new Event('bm-splash-finished')); } catch (e) {}
-        window.setTimeout(function(){
-          if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
-        }, 450);
-      }, 15000);
-    } catch (e) {}
-  })();
-
-  // --- scroll-failsafe ---
-  (function(){
-    try {
-      function unlock(){
-        try{
-          var h = document.documentElement;
-          var b = document.body;
-          if (h && h.style) h.style.overflow = '';
-          if (b && b.style) b.style.overflow = '';
-        } catch(e) {}
+      
+      /* Fallback for browsers without :has() support */
+      @supports not (selector(:has(*))) {
+        html:not(.modal-open):not([data-modal-open="true"]),
+        body:not(.modal-open):not([data-modal-open="true"]) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          height: auto !important;
+          min-height: 100vh !important;
+          touch-action: pan-y pan-x !important;
+          position: relative !important;
+        }
       }
-      unlock();
-      setTimeout(unlock, 100);
-      setTimeout(unlock, 500);
-      window.addEventListener('bm-splash-finished', unlock);
-    } catch (e) {}
-  })();
-
-  // --- splash-hide (desktop inline / mobile external) ---
-  (function(){
-    var ua = String((navigator && navigator.userAgent) || '');
-    var isDesktop = !/mobi|android|iphone|ipad/i.test(ua) && (window.innerWidth||0) >= 769;
-    if (isDesktop) {
-      function run(){
-        var splash = document.getElementById('bm-splash');
-        if (!splash) return false;
-        if (window.__BM_SPLASH_STARTED__) return true;
-        window.__BM_SPLASH_STARTED__ = true;
-        var raf = window.requestAnimationFrame || function(cb){ return setTimeout(cb,16); };
-        var caf = window.cancelAnimationFrame || function(id){ clearTimeout(id); };
-        function forceHide(){
-          if (!splash || splash.classList.contains('hide')) return;
-          splash.classList.add('hide');
-          document.documentElement.classList.add('bm-splash-done');
-          document.documentElement.style.overflow='';
-          document.documentElement.style.height='';
-          if (document.body && document.body.style) {
-            document.body.style.overflow='';
-            document.body.style.height='';
-          }
-          setTimeout(function(){ if(splash && splash.parentNode) splash.parentNode.removeChild(splash); }, 300);
-          window.__BM_SPLASH_FINISHED__ = true;
-          try { window.dispatchEvent(new Event('bm-splash-finished')); } catch(e) {}
-        }
-        var progress = 0;
-        var targetPct = 0;
-        var progressEl = document.getElementById('bm-splash-pct');
-        var barEl = document.getElementById('bm-splash-bar');
-        var animFrame;
-        var startTime = Date.now();
-        splash.classList.add('bm-splash-lite');
-        function updateProgress(pct){
-          progress = Math.max(0, Math.min(pct, 100));
-          var display = Math.floor(progress);
-          if (display < 10) display = '0' + display;
-          if (progressEl) progressEl.textContent = display + '%';
-          if (barEl) barEl.style.width = progress + '%';
-        }
-        function animateProgress(){
-          if (progress < targetPct) {
-            var delta = (targetPct - progress) * 0.15;
-            if (delta < 0.5) delta = 0.5;
-            updateProgress(progress + delta);
-          }
-          if (progress < 100) {
-            animFrame = raf(animateProgress);
-          } else {
-            setTimeout(hide, 200);
-          }
-        }
-        animFrame = raf(animateProgress);
-        targetPct = 30;
-        function onDomReady(){
-          targetPct = 60;
-          if (document.readyState === 'complete') { onLoad(); }
-          else { window.addEventListener('load', onLoad, { once: true }); }
-        }
-        function onLoad(){
-          targetPct = 85;
-          waitForHydration(function(){ targetPct = 100; });
-        }
-        function waitForHydration(cb){
-          var checks = 0;
-          var maxChecks = 60;
-          function check(){
-            try{
-              checks++;
-              var hydrated = false;
-              if (!document.body) {
-                if (checks >= maxChecks) cb();
-                else setTimeout(check, 50);
-                return;
-              }
-              var reactRoot = document.querySelector('[data-reactroot]') || document.getElementById('__next');
-              if (reactRoot && reactRoot.children && reactRoot.children.length > 0) hydrated = true;
-              if (window.__BM_HYDRATED__) hydrated = true;
-              if (hydrated || checks >= maxChecks) cb();
-              else {
-                if (targetPct < 80) targetPct += 1;
-                setTimeout(check, 50);
-              }
-            } catch(e) { cb(); }
-          }
-          check();
-        }
-        window.addEventListener('bm-hydrated', function(){ window.__BM_HYDRATED__ = true; }, { once: true });
-        function hide(){
-          var elapsed = Date.now() - startTime;
-          if (elapsed < 100) { setTimeout(hide, 100 - elapsed); return; }
-          caf(animFrame);
-          splash.classList.add('hide');
-          document.documentElement.classList.add('bm-splash-done');
-          document.documentElement.style.overflow='';
-          document.documentElement.style.height='';
-          if (document.body && document.body.style) {
-            document.body.style.overflow='';
-            document.body.style.height='';
-          }
-          setTimeout(function(){
-            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
-            window.__BM_SPLASH_FINISHED__ = true;
-            try { window.dispatchEvent(new Event('bm-splash-finished')); } catch(e) {}
-          }, 300);
-        }
-        try {
-          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onDomReady, { once: true });
-          else onDomReady();
-          setTimeout(forceHide, 4000);
-        } catch(e) { forceHide(); }
-        return true;
+      
+      /* Remove any blocking pointer events */
+      html:not(:has([role="dialog"])), 
+      body:not(:has([role="dialog"])), 
+      #__next, #root {
+        pointer-events: auto !important;
       }
-      if (run()) return;
-      var tries = 0;
-      var timer = setInterval(function(){ tries += 1; if (run() || tries >= 40) clearInterval(timer); }, 50);
-    } else {
-      try{
-        var script = document.createElement('script');
-        script.src = '/scripts/splash-hide.js';
-        script.async = false;
-        document.head.appendChild(script);
-      } catch(e) {}
-    }
-  })();
-})();
-            `,
-          }}
-        />
+      
+      /* iOS-specific scroll fixes - CRITICAL */
+      @supports (-webkit-touch-callout: none) {
+        html:not(.modal-open), 
+        body:not(.modal-open) {
+          -webkit-overflow-scrolling: touch !important;
+          overflow-y: auto !important;
+        }
+      }
+      
+      /* Android-specific fixes - CRITICAL */
+      @media (max-width: 768px) {
+        html:not(.modal-open) {
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+        }
+        body:not(.modal-open) {
+          overflow-y: auto !important;
+          position: relative !important;
+          min-height: 100vh !important;
+        }
+      }
+      
+      /* Samsung Internet & Chrome Mobile fixes */
+      @supports (-webkit-appearance: none) {
+        html:not(.modal-open), 
+        body:not(.modal-open) {
+          overflow-y: auto !important;
+          touch-action: pan-y pan-x !important;
+        }
+        
+        /* Samsung-specific scroll enhancements */
+        html.samsung-browser:not(.modal-open),
+        body.samsung-scroll:not(.modal-open) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          touch-action: pan-y pan-x !important;
+          -webkit-overflow-scrolling: touch !important;
+          height: auto !important;
+          transform: none !important;
+        }
+        
+        /* Chrome/Chromium scroll enhancements */
+        html.chrome-browser:not(.modal-open),
+        body.chrome-scroll:not(.modal-open) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          touch-action: pan-y pan-x !important;
+          -webkit-overflow-scrolling: touch !important;
+          height: auto !important;
+          transform: none !important;
+        }
+        
+        /* Safari scroll enhancements */
+        html.safari-browser:not(.modal-open),
+        body.safari-scroll:not(.modal-open) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          touch-action: pan-y pan-x !important;
+          -webkit-overflow-scrolling: touch !important;
+          height: auto !important;
+          transform: none !important;
+        }
+        
+        /* In-app browser scroll enhancements */
+        html.inapp-browser:not(.modal-open),
+        html.instagram-browser:not(.modal-open),
+        html.facebook-browser:not(.modal-open),
+        html.google-browser:not(.modal-open),
+        body.inapp-scroll:not(.modal-open) {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          touch-action: pan-y pan-x !important;
+          -webkit-overflow-scrolling: touch !important;
+          height: auto !important;
+          transform: none !important;
+        }
+      }
+      
+      /* UC Browser / Huawei Browser / MIUI Browser scroll fixes */
+      html.uc-browser:not(.modal-open),
+      html.huawei-browser:not(.modal-open),
+      html.miui-browser:not(.modal-open) {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        touch-action: pan-y pan-x !important;
+        -webkit-overflow-scrolling: touch !important;
+        height: auto !important;
+        transform: none !important;
+      }
+      body.uc-browser:not(.modal-open),
+      body.huawei-browser:not(.modal-open),
+      body.miui-browser:not(.modal-open) {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        height: auto !important;
+      }
+      
+      /* Opera Mini - graceful degradation */
+      html.opera-mini *,
+      html.reduce-effects * {
+        animation-duration: 0.01s !important;
+        transition-duration: 0.01s !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      html.opera-mini .glass-effect,
+      html.opera-mini .glassmorphism {
+        background: rgba(5,9,21,.9) !important;
+      }
+      
+      /* Firefox Android specific fixes */
+      @-moz-document url-prefix() {
+        html:not(.modal-open),
+        body:not(.modal-open) {
+          overflow-y: auto !important;
+          touch-action: pan-y pan-x !important;
+        }
+      }
+      
+      /* Foldable device support (Galaxy Z Fold/Flip, Pixel Fold) */
+      html.foldable-device {
+        --fold-width: env(viewport-segment-width 0 0, 100vw);
+      }
+      @media (horizontal-viewport-segments: 2) {
+        body { column-count: 2; column-gap: env(viewport-segment-left 1 0, 0px); }
+      }
+      
+      /* PWA standalone mode */
+      html.is-pwa body,
+      html.standalone-mode body {
+        padding-top: env(safe-area-inset-top, 0px) !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+      }
+      
+      /* ═══════════════════════════════════════════════════════════════════ */
+      /* MAC DESKTOP FIXES — Safari & Chrome on M1-M6 + Intel              */
+      /* ═══════════════════════════════════════════════════════════════════ */
+      
+      /* Mac Safari: fix elastic overscroll color bleed */
+      html[data-os="macos"]:not(.modal-open),
+      html[data-os="macos"]:not(.modal-open) body {
+        overscroll-behavior-y: contain;
+        overscroll-behavior-x: none;
+      }
+      
+      /* Mac Safari: trackpad momentum scroll jitter fix */
+      html.mac-safari .backdrop-blur-sm,
+      html.mac-safari .backdrop-blur-md,
+      html.mac-safari .backdrop-blur-lg,
+      html.mac-safari .backdrop-blur-xl {
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
+      }
+      
+      /* Mac Chrome: prevent sub-pixel rendering artifacts on Retina */
+      html.mac-chrome .glass-effect,
+      html.mac-chrome .glassmorphism {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+      }
+      
+      /* Apple Silicon (M1-M6): higher quality effects */
+      html.apple-silicon .particle-container,
+      html.apple-silicon .aurora {
+        will-change: transform, opacity;
+      }
+      
+      /* Intel Mac: reduce GPU load */
+      html.intel-mac .particle-container { will-change: auto; }
+      html.intel-mac .aurora { animation-duration: 8s !important; }
+      
+      /* ═══════════════════════════════════════════════════════════════════ */
+      /* DESKTOP SCROLL & VIEWPORT — click, scroll, resize support         */
+      /* ═══════════════════════════════════════════════════════════════════ */
+      
+      /* Desktop scrollbar styling */
+      html.is-desktop {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.15) transparent;
+      }
+      html.is-desktop::-webkit-scrollbar { width: 8px; height: 8px; }
+      html.is-desktop::-webkit-scrollbar-track { background: transparent; }
+      html.is-desktop::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15);
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+      html.is-desktop::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.3);
+        background-clip: content-box;
+      }
+      
+      /* Desktop: always show scrollbar gutter to prevent layout shift */
+      html.is-desktop body {
+        overflow-y: scroll;
+        overflow-x: hidden;
+      }
+      
+      /* Desktop: proper click targets */
+      html.is-desktop a,
+      html.is-desktop button,
+      html.is-desktop [role="button"] {
+        cursor: pointer;
+      }
+      
+      /* Desktop hover effects (only with fine pointer) */
+      @media (hover: hover) and (pointer: fine) {
+        a:hover, button:hover, [role="button"]:hover {
+          transition: all 0.15s ease;
+        }
+      }
+      
+      
+      /* Responsive breakpoint classes from sw-touch.js */
+      html.vp-mobile body { font-size: 14px; }
+      html.vp-ultrawide body { max-width: 2560px; margin: 0 auto; }
+      
+      /* Scroll direction classes (for auto-hiding nav) */
+      html.scroll-down .auto-hide-nav {
+        transform: translateY(-100%);
+        transition: transform 0.3s ease;
+      }
+      html.scroll-up .auto-hide-nav,
+      html.at-top .auto-hide-nav {
+        transform: translateY(0);
+        transition: transform 0.3s ease;
+      }
+      
+      /* Page visibility: pause animations when hidden */
+      html.page-hidden *,
+      html.page-hidden *::before,
+      html.page-hidden *::after {
+        animation-play-state: paused !important;
+      }
+      
+      /* ═══════════════════════════════════════════════════════════════════ */
+      /* UNIVERSAL TOUCH ENHANCEMENTS                                      */
+      /* ═══════════════════════════════════════════════════════════════════ */
+      
+      /* Remove tap highlight on all devices */
+      html {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-tap-highlight-color: rgba(0,0,0,0);
+      }
+      
+      
+      /* Prevent text selection on interactive elements */
+      button, [role="button"], a, .no-select {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      
+      /* Allow text selection on content */
+      p, article, span, .selectable, [contenteditable] {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      
+      /* Momentum scrolling for containers */
+      .scroll-container, [data-scroll], [role="listbox"], [role="menu"] {
+        -webkit-overflow-scrolling: touch;
+        overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+      
+      /* Horizontal scroll containers */
+      .scroll-x, .overflow-x-auto, .overflow-x-scroll {
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+      }
+      .scroll-x::-webkit-scrollbar { display: none; }
+      
+      /* Virtual keyboard compensation */
+      html.keyboard-open body {
+        padding-bottom: var(--keyboard-height, 0px);
+      }
+      html.keyboard-open input:focus,
+      html.keyboard-open textarea:focus {
+        scroll-margin-bottom: calc(var(--keyboard-height, 0px) + 20px);
+      }
+      
+      /* Ensure all pages can scroll */
+      main:not(:has([role="dialog"])), 
+      [role="main"]:not(:has([role="dialog"])), 
+      .page-container:not(:has([role="dialog"])) {
+        overflow-y: visible !important;
+        min-height: 100vh !important;
+      }
+      
+      /* Page-specific scroll fixes */
+      [data-games-page]:not(.modal-open),
+      [data-design-page]:not(.modal-open),
+      [data-store-page]:not(.modal-open),
+      [data-app-page]:not(.modal-open) {
+        overflow-y: auto !important;
+        height: auto !important;
+        touch-action: pan-y pan-x !important;
+      }
+      
+      /* CRITICAL: Allow scroll when modal classes exist but no modal is open */
+      body.modal-open:not(:has([role="dialog"]:not([data-state="closed"]))), 
+      html.modal-open:not(:has([role="dialog"]:not([data-state="closed"]))) {
+        overflow-y: auto !important;
+        position: relative !important;
+        height: auto !important;
+        touch-action: pan-y pan-x !important;
+      }
+      
+      /* Ensure scroll position is maintained - AUTO to prevent unwanted smooth scrolling */
+      html {
+        scroll-behavior: auto !important;
+      }
+      
+      html.enable-smooth-scroll {
+        scroll-behavior: smooth !important;
+      }
+      
+      /* Whiteboard/Canvas iframe protection - prevents scroll snapping and auto-focus scroll */
+      iframe[src*="excalidraw"],
+      iframe[title*="Canvas"],
+      iframe[title*="Whiteboard"],
+      [data-whiteboard-container] {
+        pointer-events: none !important;
+        touch-action: none !important;
+        scroll-margin-top: 100vh !important;
+        contain: strict !important;
+      }
+      
+      iframe[src*="excalidraw"].active,
+      iframe[title*="Canvas"].active,
+      iframe[title*="Whiteboard"].active {
+        pointer-events: auto !important;
+        touch-action: auto !important;
+      }
+      /* ═══════════════════════════════════════════════════════════════════ */
+      #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;transform:translateX(3px);}
+      #bm-splash .bm-step.active span:last-child{background:linear-gradient(100deg,#0f0f12 0%,#3f3f46 35%,#0f0f12 70%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-step-sheen 1.4s ease-in-out infinite;}
+      #bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}
+      #bm-splash .bm-step.done span:last-child{animation:bm-step-settle .5s ease-out both;}
+      #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
+      #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
+      #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
+
+      /* In-app webviews (Instagram/TikTok/Facebook etc): keep splash reliable by disabling heavy animations */
+      #bm-splash.bm-splash-lite .bm-orb{display:none!important;}
+      #bm-splash.bm-splash-lite .bm-bar-outer::after{animation:none!important;opacity:.35!important;}
+      #bm-splash.bm-splash-lite .bm-bar-inner{animation:none!important;background:#18181b!important;}
+      #bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle{animation:none!important;background-color:#000000!important;}
+      #bm-splash.bm-splash-lite.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:none!important;filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;-webkit-filter:invert(1) drop-shadow(0 0 24px rgba(255,255,255,0.16))!important;}
+
+
+      /* === Splash Finale: logo grows to playing-card size, all else disappears === */
+      #bm-splash.bm-splash-finale{justify-content:center;align-items:center;background:#0a0a0a;background-color:#0a0a0a;}
+      #bm-splash.bm-splash-finale .bm-logo-wrap{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:auto!important;padding:0!important;z-index:100000!important;width:280px!important;height:280px!important;animation:none!important;will-change:transform!important;--bm-finale-scale:1;transform:translateX(-15px) scale(var(--bm-finale-scale))!important;transition:transform .8s cubic-bezier(.22,1,.36,1),width .8s cubic-bezier(.22,1,.36,1),height .8s cubic-bezier(.22,1,.36,1)!important;}
+      /* Use filter invert() so the inline SVG (black) can become white on dark bg (Safari-friendly) */
+      #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));-webkit-filter:invert(1) drop-shadow(0 0 28px rgba(255,255,255,0.18));}
+      /* In-app: force white finale + black logo (no invert/glow, no bg animation) */
+      html.is-in-app-browser #bm-splash.bm-splash-finale{background:#ffffff!important;background-color:#ffffff!important;}
+      html.is-in-app-browser #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;background:#ffffff!important;background-color:#ffffff!important;}
+      html.is-in-app-browser #bm-splash.bm-splash-finale .bm-logo-wrap svg{filter:none!important;-webkit-filter:none!important;}
+      /* After the finale grow completes, gently pulse the scale by updating --bm-finale-scale via JS */
+      #bm-splash.bm-splash-finale.bm-splash-idle{animation:bm-finale-bg 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+      #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap{transition:transform .9s cubic-bezier(.22,1,.36,1)!important;}
+      /* Extra idle motion: spin + synced contrast/glow (doesn't fight wrapper transform/scale) */
+      #bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{transform-origin:50% 50%;will-change:transform,filter;animation:bm-finale-spin 8s cubic-bezier(.4,0,.2,1) infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}
+      #bm-splash.bm-splash-finale .bm-title,
+      #bm-splash.bm-splash-finale .bm-subtitle,
+      #bm-splash.bm-splash-finale .bm-progress-wrap{animation:bm-finale-fadeout .35s cubic-bezier(.4,0,.2,1) forwards!important;pointer-events:none;}
+      #bm-splash.bm-splash-finale .bm-orb{animation:bm-finale-fadeout .25s ease-out forwards!important;}
+      #bm-splash.bm-splash-finale::before,
+      #bm-splash.bm-splash-finale::after{animation:bm-finale-fadeout .25s ease-out forwards!important;}
+
+      @keyframes bm-finale-fadeout{0%{opacity:1}100%{opacity:0;visibility:hidden}}
+
+      @keyframes bm-bar-flow{0%{background-position:0% 50%}100%{background-position:240% 50%}}
+      @keyframes bm-bar-sheen{0%{transform:translate3d(-130%,0,0)}100%{transform:translate3d(130%,0,0)}}
+
+      @keyframes bm-finale-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+      @keyframes bm-finale-float-y{0%,100%{transform:translate3d(0,-10px,0)}50%{transform:translate3d(0,10px,0)}}
+      /* Smooth off-black↔off-white cycle with long dwell at endpoints */
+      @keyframes bm-finale-bg{0%,12%{background-color:#0a0a0a}30%{background-color:#222}50%{background-color:#777}70%{background-color:#ccc}88%,100%{background-color:#f2f2f2}}
+      @keyframes bm-finale-filter-contrast{
+        0%,12%{filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16));-webkit-filter:invert(100%) drop-shadow(0 0 32px rgba(255,255,255,0.16))}
+        30%{filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14));-webkit-filter:invert(80%) drop-shadow(0 0 28px rgba(255,255,255,0.14))}
+        50%{filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12));-webkit-filter:invert(50%) drop-shadow(0 0 24px rgba(128,128,128,0.12))}
+        70%{filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10));-webkit-filter:invert(20%) drop-shadow(0 0 22px rgba(0,0,0,0.10))}
+        88%,100%{filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12));-webkit-filter:invert(0%) drop-shadow(0 0 20px rgba(0,0,0,0.12))}
+      }
+
+      @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9);will-change:transform}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+      @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
+      @keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
+      @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
+
+      @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-logo-wrap svg,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
+      @media(min-width:768px){#bm-splash .bm-logo-wrap{width:216px;height:216px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}\n      @media(min-width:768px){#bm-splash.bm-splash-finale .bm-logo-wrap{width:380px;height:380px;}#bm-splash.bm-splash-finale.bm-splash-idle .bm-logo-wrap svg{animation:bm-finale-float-y 1.5s ease-in-out infinite, bm-finale-filter-contrast 12s cubic-bezier(.45,.05,.55,.95) infinite alternate;}}
+        ` }} />
+        {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
+        <Script id="splash-init" src="/scripts/splash-init.js" strategy="beforeInteractive" />
+        {/* UNIVERSAL COMPATIBILITY LAYER: Polyfills + feature detection for ALL devices worldwide
+            MUST load BEFORE other BMBRAIN scripts — provides Element.closest, CustomEvent, Promise,
+            fetch, IntersectionObserver polyfills + safe storage for private browsing + CSS fixes
+            for Samsung Internet, UC Browser, Huawei Browser, Opera Mini, MIUI Browser, etc. */}
+        <Script id="compat-layer" src="/scripts/BMBRAIN/compat-layer.js" strategy="beforeInteractive" />
         {/* Cache validation (deferred to avoid blocking first paint) */}
         <Script
           id="cache-buster"
@@ -707,22 +901,6 @@ export default function RootLayout({
         {/* Preload critical assets with proper priorities */}
         <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />
         
-        {/* Lazy-load desktop scroll fixes stylesheet via inline script for better control */}
-        <Script
-          id="load-scroll-fixes"
-          strategy="lazyOnload"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = '/styles/desktop-scroll-fixes.css';
-                document.head.appendChild(link);
-              })();
-            `
-          }}
-        />
-        
         {/* 
           PERFORMANCE FIX: Removed all Spline scene preload/prefetch tags.
           Scene1 (6.9MB) was being preloaded with HIGH priority, competing with 
@@ -832,28 +1010,14 @@ export default function RootLayout({
             `
           }}
         />
-        
-        {/* MOBILE-ONLY SCRIPTS: Skip on desktop for faster loads */}
-        <Script id="mobile-scripts" strategy="afterInteractive" dangerouslySetInnerHTML={{__html: `
-(function(){
-var ua=String((navigator&&navigator.userAgent)||'');
-var isDesktop=!/mobi|android|iphone|ipad/i.test(ua)&&(window.innerWidth||0)>=769;
-if(isDesktop)return;
-// Mobile only: Load SW/touch, crash shields, etc
-var scripts=['sw-touch.js','BMBRAIN/mobile-crash-shield.js','BMBRAIN/inapp-shield.js'];
-scripts.forEach(function(src){
-  var s=document.createElement('script');
-  s.src='/scripts/'+src;
-  s.async=true;
-  document.head.appendChild(s);
-});
-})();
-        `}} />
+        <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
 
         {/* GLOBAL BRAIN ORCHESTRATOR — coordinates all BMBRAIN scripts, shared state, event bus */}
         <Script id="bmbrain-global" src="/scripts/BMBRAIN/bmbrain-global.js" strategy="afterInteractive" />
 
         {/* CRITICAL SCRIPTS - afterInteractive (run after page is interactive) */}
+        <Script id="mobile-crash-shield" src="/scripts/BMBRAIN/mobile-crash-shield.js" strategy="afterInteractive" />
+        <Script id="inapp-shield" src="/scripts/BMBRAIN/inapp-shield.js" strategy="afterInteractive" />
         <Script
           id="memory-manager-loader"
           strategy="afterInteractive"
@@ -904,6 +1068,31 @@ scripts.forEach(function(src){
           }}
         />
 
+        <Script
+          id="splash-failsafe"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                try {
+                  window.setTimeout(function(){
+                    var splash = document.getElementById('bm-splash');
+                    if (!splash || splash.classList.contains('hide')) return;
+                    splash.classList.add('hide');
+                    document.documentElement.classList.add('bm-splash-done');
+                    window.__BM_SPLASH_FINISHED__ = true;
+                    try { window.dispatchEvent(new Event('bm-splash-finished')); } catch (e) {}
+                    window.setTimeout(function(){
+                      if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+                    }, 450);
+                  }, 15000);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+
+
         {/* NON-CRITICAL SCRIPTS - lazyOnload (defer until after everything else) */}
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />
         <Script id="perf-monitor" src="/scripts/perf-monitor.js" strategy="lazyOnload" />
@@ -920,112 +1109,35 @@ scripts.forEach(function(src){
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {/* DESKTOP CORE WEB VITALS OPTIMIZATION SCRIPTS                       */}
         {/* Targets: FCP <1.8s, LCP <2.5s, CLS <0.1, TTFB <0.8s              */}
-        {/* DESKTOP OPTIMIZATION: Single consolidated script for fast loads      */}
+        {/* These scripts self-gate to desktop only (>769px, non-mobile UA)    */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        <Script id="desktop-core" strategy="lazyOnload" dangerouslySetInnerHTML={{__html: `
-(function(){
-var ua=String((navigator&&navigator.userAgent)||'');
-var isDesktop=!/mobi|android|iphone|ipad/i.test(ua)&&(window.innerWidth||0)>=769;
-if(!isDesktop)return;
-// Desktop: Minimal optimizations only - everything else is overkill
-try{
-  // Prefetch critical resources
-  if(window.innerWidth>=1440){
-    var prefetch=function(url,as){var l=document.createElement('link');l.rel='prefetch';l.href=url;if(as)l.as=as;document.head.appendChild(l);};
-    prefetch('/api/products','fetch');
-  }
-  // Single RAF for smooth animations
-  if(!window.__desktop_raf__){
-    window.__desktop_raf__=true;
-    var tasks=[];
-    window.addDesktopTask=function(fn){if(tasks.indexOf(fn)===-1)tasks.push(fn);};
-    window.removeDesktopTask=function(fn){var idx=tasks.indexOf(fn);if(idx>-1)tasks.splice(idx,1);};
-    function tick(){tasks.forEach(function(fn){try{fn();}catch(e){}});requestAnimationFrame(tick);}
-    requestAnimationFrame(tick);
-  }
-}catch(e){}
-})();
-        `}} />
+        <Script id="desktop-fcp-optimizer" src="/scripts/desktop-fcp-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-lcp-optimizer" src="/scripts/desktop-lcp-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-cls-prevention" src="/scripts/desktop-cls-prevention.js" strategy="afterInteractive" />
+        <Script id="desktop-ttfb-optimizer" src="/scripts/desktop-ttfb-optimizer.js" strategy="afterInteractive" />
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* DESKTOP ENHANCEMENTS: Optional lazy features (sounds, effects)     */}
-        {/* Only loads if user actually interacts with the page                */}
+        {/* DESKTOP EXPERIENCE ENHANCEMENT SCRIPTS                             */}
+        {/* Interaction sounds, scroll physics + audio, stability shield       */}
+        {/* Self-gate to desktop only (>769px, non-mobile UA)                  */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        <Script id="desktop-enhancements" strategy="lazyOnload" dangerouslySetInnerHTML={{__html: `
-(function(){
-var ua=String((navigator&&navigator.userAgent)||'');
-var isDesktop=!/mobi|android|iphone|ipad/i.test(ua)&&(window.innerWidth||0)>=769;
-if(!isDesktop)return;
-// Desktop: Only load enhancement features after user interaction
-var loaded=false;
-function loadEnhancements(){
-  if(loaded)return;
-  loaded=true;
-  // Only load if user shows intent (scroll, click, etc)
-  var s=document.createElement('script');
-  s.src='/scripts/desktop-scroll-experience.js';
-  document.head.appendChild(s);
-}
-// Lazy load after first interaction
-var events=['scroll','click','touchstart','keydown'];
-events.forEach(function(e){
-  window.addEventListener(e,loadEnhancements,{once:true,passive:true});
-});
-// Or after 5 seconds of idle
-setTimeout(loadEnhancements,5000);
-})();
-        `}} />
+        <Script id="desktop-interaction-sounds" src="/scripts/desktop-interaction-sounds.js" strategy="lazyOnload" />
+        <Script id="desktop-scroll-experience" src="/scripts/desktop-scroll-experience.js" strategy="lazyOnload" />
+        <Script id="desktop-stability-shield" src="/scripts/desktop-stability-shield.js" strategy="lazyOnload" />
+        <Script id="desktop-fps-boost" src="/scripts/desktop-fps-boost.js" strategy="lazyOnload" />
       </head>
       <body
         className={cn("antialiased bg-[#050915] text-white", inter.className)}
         suppressHydrationWarning
       >
-        {/* INSTANT SPLASH: Shows BullMoney logo + name before React hydrates */}
-        <div id="bm-splash" aria-hidden="true" suppressHydrationWarning>
-          <div className="bm-orb bm-orb-a" />
-          <div className="bm-orb bm-orb-b" />
-          <div className="bm-sway-content">
-          {/* Logo */}
-          <div className="bm-logo-wrap">
-            <svg
-              viewBox="0 0 4830 6000"
-              preserveAspectRatio="xMidYMid meet"
-              aria-hidden="true"
-            >
-              <g fill="#000" stroke="none">
-                <path d="M820 1650v750h760l20-50c20-30 50-70 120-120l140-140c50-70 130-160 210-200l70-40-10-40 10-80c10-30 10-40-20-60l-70-50-40-20 50-30c90-60 140-180 130-310-10-140-80-240-210-300-130-70-170-70-690-70H820v760zm920-440c50 30 70 60 70 120 0 70-20 100-70 130-40 20-60 20-290 20h-250v-290h250c230 0 250 0 290 20zm50 600c50 20 80 70 80 130s-30 110-90 130c-40 20-60 30-310 30h-270v-320h280c250 10 280 10 310 30zm590-610 10 310 130-80 70-70 20-10v70c-10 90-40 150-140 250l-80 90c20 10 90 30 120 20 60-10 120-10 170 20l50 30 10-140 10-130 90 170 100 180 60 10c60 0 80-10 130-100l40-80 10-20-230-420-220-410h-350v310zm1270-190-190 340-150 270-20 30h100l-30 40c-50 70-60 110-80 210-30 130-80 200-180 240l-40 20 20 10c20 10 30 20 30 40v30h220l170-330 190-340c10-10 10 70 10 410v420h350V890h-340l-60 120" />
-                <path d="m2520 1480-140 80-140 80c-60 60-80 140-60 220 10 10-10 20-60 50-80 40-170 110-220 200-30 40-70 90-110 110-150 120-190 180-190 300 0 50 0 60-20 60l-80 40-110 50c-70 20-100 40-120 130-10 50-10 50 20 90 50 80 70 120 90 190 20 90 30 100 80 130l50 40c10 20 20 20 50-20l40-40-40 70-40 90c-10 30 0 50 30 50l20 20c20 40 190 10 220-50l10-70c0-40 0-50 20-50l10 10c0 30 30-10 40-50l20-40 50 60c50 90 130 160 260 230l110 80-30 40c-40 40-60 90-60 120 0 50 40 170 60 200l70 60c70 60 80 70 40 100l-150 60c-50 0-90 20-120 70l-60 70-70 90c-30 80-40 100-10 100l30 10c10 30 150-20 200-60l20-60c-10-40 10-60 30-40 10 20 20 20 50-30 30-40 80-60 250-100l100-40c30-20 30-70 0-110-50-70-40-120 20-140l80-30 40-20 40 60 70 70 60 80 90 110c40 30 60 50 60 70l50 80c70 70 100 160 110 270 10 90 10 100-10 160l-30 60-720 10-770 20-40 10h30a22250 22250 0 00 1770-20l-60-10 10-20c10-30 10-40-10-80s-20-50-10-80c10-20 10-30-10-70-30-60-60-140-70-210-10-80-30-130-50-180l-20-50-30-60c-20-50-20-60-30-250a1690 1690 0 00-30-280l50 20c30 20 70 20 120 30 80 0 140-20 190-90 20-40 30-50 30-110-10-80-10-100-90-200-70-100-70-130 10-160 50-30 70-50 80-80 10-20 10-20-10-10s-20 10 0-30c20-50 30-80 10-130-10-40-50-80-40-40 10 20 0 70-30 100-30 20-40 30-30 0h-20c-40 20-90 80-100 120-20 60 20 160 80 240s70 110 70 170c0 50 0 60-30 90-40 40-90 40-150 10-50-30-210-160-230-200-30-50-60-80-150-130l-120-100c-40-50-110-190-120-250-10-50-20-50-60-70-50-10-100-40-100-50 0-20-60-80-90-90-40-10-70 0-130 40-50 40-130 90-160 90l40-30 100-70 70-50c20-10 20-10 0-30l-80-30-40-10h30c30 0 70 10 130 40 90 50 110 70 150 120 20 30 30 40 70 50 60 10 110 0 120-30l30-10c20 0 60-40 60-70l20-30v-80l-30-90c-10-60-10-70 10-100 10-30 20-30 50-20 30 0 120-30 120-50l-60-40-60-40h80c90-10 160-40 200-90 30-40 40-70 60-160 10-50 20-110 40-130l20-50-40 20c-50 30-80 60-120 150-50 100-100 120-210 100l-110-50c-10-20-50-30-70-40l-100-30c-70-30-90-40-150-20-30 10-50 10-90-10-100-40-90-70 10-160 70-60 110-110 130-170 10-40 10-40-40 0zm-60 70-100 70c-110 70-130 100-150 170l-10 40v-30c0-90 40-130 170-200l90-50zm-150 220 20 40 10 10c-10-20 0-30 20-10l70 40c60 10 90 40 70 70 0 20-10 20-20 10-130-30-180-70-180-130 0-30 10-50 20-50l-10 20zm890 70-20 60c-20 50-60 110-90 120l-110 20c-80 0-80 0-90-30-20-40-10-40 30-30l110 10 70-10c20 0 30-20 60-90 40-80 60-100 40-50zm-560 30c40 20 90 60 90 80l-20-20c-30-30-70-50-120-60-30-10-30-10-30 10v20l-20-20v-30c0-10 70 0 100 20zm-400 50 80 50 30 20h-220l30 50c30 50 80 80 110 80s30 0 20 10c-20 20-90-10-140-60l-40-40-40 40-60 90c-30 60-30 50-10-10l20-60c-20-10-100 140-140 240l-20 50 10-50c0-60 30-140 60-200 40-50 150-150 220-190s70-30 90-20zm570 10 20 30h-10l-40-30c-20-10-20-20-10-20l40 20zm-300 70-20 10c-10 0-10-10 10-10 20-20 30-20 10 0zm-160 40c40 30 40 30 20 30l-40-20-60-20c-60 0-60-20-10-20l90 30zm340 20c20 30 10 40-20 0l-10-30 30 30zm-100 30 40 50 40 50c20 10 20 10 10 20-20 0-50-20-80-80l-40-40-10-10c0-10 10-10 40 10zm280 40v70c-30 40-40 40-20-10v-70c-20-70 0-60 20 10zm-130 10-10 40-10-20-10-50 10-20 20 50zm50 20c-10 40-10 40-10 10l10-50v40zm-200 0c20 20 10 40-20 20-20-10-30-40-10-40l20 20zm-30 40 20 30c-20 0-60-30-60-50 0-10 10-10 40 20zm-80 70v20c-20-10-40-60-30-90 0-20 0-20 10 10l20 60zm-110 80 50 50c60 60 60 70 0 30-90-50-110-100-90-180l10-40 10 60 20 80zm-220-60c-80 80-110 110-160 220-30 60-30 30 0-60 40-100 100-160 180-200l50-30-70 70zm-320-30-40 40c-20 20-40 50-40 80-10 40-20 40-20 20-10-20-10-20-30 20l-30 90-10 40v-50c0-80 20-130 90-190 60-60 80-70 80-50zm780 0h-20l10-10 10 10zm210 90c10 80 0 100-10 40-20-100-20-140-10-130l20 90zm-140 0c0 20-10 10-20-10-10-30-20-50-10-60 0-10 10-10 20 20l10 60zm-100 90c10 0 10 10 0 0l-10-10c0-10 10-10 10 10zm170 0 60 20c40 0 50 20 20 20-10 10-40 0-70-10-50-30-70-20-90 0s-20 20-20 0c0-40 50-50 100-30zm0 70c20 30 10 30-20-10l-10-20 30 30zm90 20-20 10c0-10 30-40 40-30l-20 20zm-1060 70c0 70 0 120 30 190h-10c-20-20-20-20-20 0-10 30-30-120-30-170l40-110-10 90zm830-30 10 30c-20 0-70-60-60-80h10l40 50zm110 0c-10 0-20 0-30-20-30-30-20-50 10-20l20 30zm-440-20c-10 20-60 40-140 70-70 20-180 90-180 110l-10 10c-10-10 60-100 100-130l130-50 100-10zm-640 80c30 20 20 30-10 20-50 0-80 10-60 20 10 0-20 20-80 30l-90 40-20 10c-40 10-70 70-50 110 10 30 10 30-10 20-20-30-20-60 0-110s20-50 90-70l120-50c60-30 80-30 110-20zm1110 0c10 10 10 10-10 10l-60-10c-30-10-30-10 10-10l60 10zm-410 100-40 60-30 20c-20 0-20 0 0-30l90-90-20 40zm-690 10c10 10-10 10-60 10-60 0-80 0-60-10h120zm1020 110-30 120c-40 60-50 60-20 0l30-120 10-60 10 60zm-520-30 90 30c40 0 90 20 110 50 40 30 40 40-10 20l-50-30-30-10 10 20c10 20 0 20-60-20l-80-40-10 20-20-10c-10-20-40-30-60-10s-20 20 0 40l20 20h-30l-40-10c-10-10-20 0-30 20-10 30-160 180-200 200-20 0-40 30-40 50-20 40-60 80-70 80-20 0-10-30 10-50l40-50c0-20 20-40 70-70 80-60 130-110 170-170 20-40 40-60 80-80l60-30 70 30zm260 30c10 10 10 10-10 10l-50-10c-10-20-10-20 10-20l50 20zm170 110c-20 30-190 210-210 210l20-20 40-70 60-70c40-20 70-80 90-130 0-30 0-30 10 10l-10 70zm880-70-40 50-20 10c0-20 20-50 50-60 40-20 40-20 10 0zm-1900 20c50 20 80 20 130 20 70 10 70 10 90 40 20 40 20 40-20 60-50 30-90 70-90 90s-10 10-30-10c-10-20-20-20-40-20-30 10-30 0-30-20l-30-30c-30-20-70-90-70-130s10-40 90 0zm1210 140 20 110v40l-10-50c-20-70-50-170-60-140l-10 30-10-20 10-80v-50l20 40 40 120zm710-130-40 30 70-60c10 0 0 20-30 30zm-1380 80-50 20c-20 0-60 30-100 60-60 40-70 50-50 20 40-40 120-100 140-100l50-10c30-20 40-10 10 10zm230 50c-20 10-80-20-110-50l-20-30 70 40 60 40zm-150 20 80 50c30 10 30 20 10 20-30 0-70-20-110-60-60-60-50-60 20-10zm210 10-10 20-10-10 10-10h10zm580 120c60 40 100 90 130 140 20 50 10 60-20 20l-50-60-20-20v20c10 40 0 30-20-20l-60-80c-40-40-20-40 40 0zm-1350 60c10 10-10 40-30 60-30 40-40 40-30 20 0-30 40-90 50-90l10 10zm570 130c40 40 30 40-20 0-50-30-140-120-140-140l60 60 100 80zm-490-90c20 10 20 10-10 10-20 0-30 0-40 30-10 40-10 50 30 40 20 0 20 0 10 10h-80l20-50c10-50 20-60 70-40zm1130 120-10 80c0 30 0 40-10 30-10-20-10-100 10-160 10-50 20-50 20-30l-10 80zm400-10c60 60 130 90 190 80l40 10c-30 20-100 10-140-10-60-30-140-90-140-110-10-20 0-10 50 30zm-70 190-10 150c-20 40-20 40-10-60 0-90 0-140-20-240l10 20c20 30 30 50 30 130zm-530-130c90 40 120 90 150 200l20 60-50-80c-40-70-80-120-160-180-40-40-30-40 40 0zm-120 150c90 50 90 70 10 30l-110-80 100 50zm400 160 60 90c40 50 40 60-10 20-30-30-80-110-80-160-10-50-10-50 30 50zm-300 290-20 30h-10l10-50v-20l20 40zm-380 100-60 20c-10 10-10 10 0 0 0-20 40-40 70-40 20 0 10 10-10 20zm-190 170-10 30c-20 10-20 10-10-10 10-30 20-40 20-20zm40 20c-20 50-10 50 20 50 30-10 30-10-10 10l-50 10 20-60c20-50 40-50 20-10zm1230 390c-10 40-30 60-30 40l30-70-10 30zm50 20-10 40v-60c10-30 10-20 10 20" />
-                <path d="M1900 3420c0 40 0 40-30 40h-40v490l40 10c30 0 30 0 30 40l10 40 10-40c0-40 0-40 40-40h30v-500h-30c-40 0-40 0-40-40l-10-40-10 40zm-510 210v50h-70v610l40 10c30 0 30 0 30 40l10 40 10-40c0-30 0-40 20-40 50 0 50 10 50-320v-300h-70v-50l-10-60-10 60zm260 200c0 40 0 40-30 40h-40v260h30c30 0 40 0 40 40l10 40v-40c0-40 0-40 40-40h40v-260h-40c-30 0-30-10-40-40l-10-40v40zm90 380zm1690-250 20 30v-50l-20 20zm80 70c-20 30-10 50 10 20l20-30c0-20-20-10-30 10zm-700 30c-10 20 10 40 20 30v-30h-30zm620 40-10 20c0 20 0 20 20 10l10-30c0-10-10-20-20 0zm60 50c-20 20-30 20-20 30h30c10-10 30-30 50-30l40-20h-30l-70 20zm-620 10c-10 20 20 60 40 50 30 0 30-40 0-50h-40zm500 40c0 20 10 20 30 10 50-20 50-20 10-20l-40 10zm160 0-30 10-50 20c-60 10-110 60-60 60l20 20c10 20 20 30 40 30 30 10 80 50 70 60l-40-20h-50l-30 30c0 30 30 100 50 130 20 20 20 40 20 70l10 70 10 30 10 30c10 30 10 30 40 20l60-50c40-40 40-100 10-140-20-20-20-30 10-40 40-20 50-80 30-110-20-20-20-30 10-60l20-60c0-30-40-70-80-90s-50-20-70-10zm80 270-30 10-50 20c-20 30-30 10 0-20 10-20 60-30 70-10zm-620-220h20l-10-10-10 10zm-410 10c10 20 30 20 30 10l-20-10h-10zm220 20c-40 10-70 50-70 80l-20 30-90-40a5150 5150 0 01 230 180 5100 5100 0 00-280-100c100 70 120 80 110 100v40c-10 20-10 30-40 30-40 10-60 40-60 90v30l-100 20-100 30h420l430-10 20-60 10-50v-80l-20-70c-20-20-60 0-80 40s-30 40-20 0c0-30 0-40-20-50-30-20-70-10-100 10-20 30-30 20 0-20 20-30 60-40 110-10 20 20 30 20 40 10 20-20 0-70-30-100s-40-30-90-30c-40 10-50 0-60-20-40-60-130-90-200-50zm110 30c10 10 10 10-10 10l-60 30-30 20c0-20 20-50 50-60h50zm-110 250c40 10 30 30-10 20-30 0-40 0-50 20-20 30-40 20-20-10 10-20 30-30 60-40l20 10zm250 40 20 30-20-10-50-20c-30 0-40 10-60 30l-20 50c10 20 0 20-20 20l-40 10h-10l30-20 20-40c0-70 100-110 150-60zm70 50c30 20 20 30 0 20h-50c-30 10-40 0-10-20h60zm-760-230 30 10c10-10-10-30-30-30v20" />
-                <path d="m2540 4520 30 20 30-10-30-20-30 10" />
-              </g>
-            </svg>
-          </div>
-          {/* Title */}
-          <span className="bm-title">BULLMONEY</span>
-          <span className="bm-subtitle">Premium Gateway</span>
-          {/* Progress section */}
-          <div className="bm-progress-wrap">
-            <span className="bm-percent" id="bm-splash-pct" suppressHydrationWarning>00%</span>
-            <div className="bm-status">
-              <span className="bm-dot-wrap"><span className="bm-dot-ping" /><span className="bm-dot" /></span>
-              <span className="bm-status-text" id="bm-splash-status" suppressHydrationWarning>INITIALIZING</span>
-            </div>
-            <div className="bm-bar-outer"><div className="bm-bar-inner" id="bm-splash-bar" suppressHydrationWarning /></div>
-            <div className="bm-steps" id="bm-splash-steps" suppressHydrationWarning>
-              <div className="bm-step active" data-step="0" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>LOADING CORE</span></div>
-              <div className="bm-step" data-step="1" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>CONNECTING SERVICES</span></div>
-              <div className="bm-step" data-step="2" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>HYDRATING UI</span></div>
-              <div className="bm-step" data-step="3" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>READY</span></div>
-            </div>
-          </div>
-          </div>
-        </div>
+        {/* Splash screen – covers every page load on every route */}
+        <SplashScreen />
         {/* All providers consolidated into AppProviders (heavy ones dynamically imported) */}
         <AppProviders>
           <LayoutProviders modal={modal}>
             {children}
-            <GamesModalProvider />
-            <PWAInstallPrompt />
+            {/* GamesModalProvider + PWAInstallPrompt deferred via client boundary */}
+            <DeferredLayoutUI />
           </LayoutProviders>
         </AppProviders>
 

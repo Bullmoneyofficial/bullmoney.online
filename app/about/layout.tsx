@@ -49,11 +49,11 @@ export const metadata: Metadata = {
     title: "Find Your FREE Trading Mentor | BullMoney Community 2026",
     description:
       "Looking for a FREE trading mentor? BullMoney has professional mentors for Gold, Crypto, Forex & Stocks. Join 10,000+ traders! No paid courses - just real results!",
-    url: "https://www.bullmoney.shop/about",
+    url: "https://bullmoney.online/about",
     type: "website",
     images: [
       {
-        url: "/ONcc2l601.svg",
+        url: "/IMG_2921.PNG",
         width: 1200,
         height: 630,
         alt: "BullMoney - Find Your Free Trading Mentor",

@@ -17,8 +17,13 @@ import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 import { ShopProvider } from "@/components/ShopContext";
 
-// ── PERFORMANCE PROVIDERS (critical for mobile phone heat prevention) ─────
-import { GlobalAnimationPauseProvider } from "@/components/GlobalAnimationPauseProvider";
+// ── PERFORMANCE PROVIDERS (deferred — no children consume its context) ─────
+// GlobalAnimationPauseProvider (465 lines) deferred to idle time: no component outside
+// AppProviders calls useGlobalAnimationPause(), so it's safe to load after first render.
+const GlobalAnimationPauseProvider = dynamic(
+  () => import("@/components/GlobalAnimationPauseProvider").then(m => ({ default: m.GlobalAnimationPauseProvider })),
+  { ssr: false }
+);
 
 // FPSCounter: dev-only, loaded lazily to avoid compiling PerformanceProvider.tsx (997 lines)
 // + deviceMonitor.ts (2737 lines) + browserDetection + safariOptimizations = ~4000 lines
@@ -92,39 +97,38 @@ export function AppProviders({ children }: AppProvidersProps) {
       enableSystem
       disableTransitionOnChange
     >
-      {/* GlobalAnimationPauseProvider: CRITICAL for mobile phone heat prevention
-          - Pauses ALL animations when tab is hidden
-          - Reduces animation speed on mobile
-          - Detects thermal throttling and responds
+      {/* ✅ GlobalAnimationPauseProvider moved inside showDeferred — deferred to idle time.
+          No component outside AppProviders consumes its context, so deferring is safe.
+          Pauses ALL animations when tab is hidden + detects thermal throttling.
       */}
-      <GlobalAnimationPauseProvider idleTimeout={60000}>
-        <ThemesProvider>
-          <GlobalThemeProvider>
-            <ViewportStateProvider>
-              <MobileMenuProvider>
-                <RecruitAuthProvider>
-                  <AudioSettingsProvider>
-                    <StudioProvider>
-                      <ShopProvider>
-                        {/* SmartScreensaver deferred to idle time (ssr: false prevents hydration mismatch) */}
-                        {showDeferred ? (
+      <ThemesProvider>
+        <GlobalThemeProvider>
+          <ViewportStateProvider>
+            <MobileMenuProvider>
+              <RecruitAuthProvider>
+                <AudioSettingsProvider>
+                  <StudioProvider>
+                    <ShopProvider>
+                      {/* All perf/animation providers deferred to idle time */}
+                      {showDeferred ? (
+                        <GlobalAnimationPauseProvider idleTimeout={60000}>
                           <SmartScreensaverProvider>
                             {children}
                             {/* Dev FPS overlay */}
                             <FPSCounter show={process.env.NODE_ENV === 'development'} position="bottom-right" />
                           </SmartScreensaverProvider>
-                        ) : (
-                          children
-                        )}
-                      </ShopProvider>
-                    </StudioProvider>
-                  </AudioSettingsProvider>
-                </RecruitAuthProvider>
-              </MobileMenuProvider>
-            </ViewportStateProvider>
-          </GlobalThemeProvider>
-        </ThemesProvider>
-      </GlobalAnimationPauseProvider>
+                        </GlobalAnimationPauseProvider>
+                      ) : (
+                        children
+                      )}
+                    </ShopProvider>
+                  </StudioProvider>
+                </AudioSettingsProvider>
+              </RecruitAuthProvider>
+            </MobileMenuProvider>
+          </ViewportStateProvider>
+        </GlobalThemeProvider>
+      </ThemesProvider>
     </ThemeProvider>
   );
 }

@@ -7,8 +7,8 @@
  * 
  * Prerequisites for CLI mode:
  * - Install Ookla CLI: https://www.speedtest.net/apps/cli
- *   macOS: brew install speedtest-cli
- *   Ubuntu: apt-get install speedtest-cli
+ *   macOS (Ookla): brew install speedtest
+ *   Ubuntu: see Ookla docs / package manager options
  *   Or download from https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz
  */
 
@@ -204,11 +204,24 @@ export async function GET(request: NextRequest) {
       const backoffMs = Math.min(CLI_FAILURE_TTL, ERROR_CACHE_TTL * Math.pow(2, consecutiveCliFailures - 1));
       cliDisabledUntil = Date.now() + backoffMs;
 
-      if (cliError.message.includes('not found') || cliError.message.includes('command not found')) {
+      const msg = String(cliError?.message || '');
+      const isMissing =
+        msg.includes('not found') ||
+        msg.includes('command not found') ||
+        msg.includes('ENOENT') ||
+        cliError?.code === 127 ||
+        cliError?.code === 'ENOENT' ||
+        cliError?.errno === -2;
+
+      if (isMissing) {
         cliKnownMissing = true;
         logInfo('[Speedtest API] CLI not found — permanently using fallback');
       } else {
-        console.warn(`✖ [Speedtest API] CLI failed (attempt ${consecutiveCliFailures}), falling back to Cloudflare:`, cliError.message);
+        // Keep default dev output clean; enable DEBUG_API_LOGS=true to see details.
+        logWarn(
+          `✖ [Speedtest API] CLI failed (attempt ${consecutiveCliFailures}), falling back to Cloudflare:`,
+          msg
+        );
       }
       // Fall through to Cloudflare fallback below
     }

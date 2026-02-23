@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { VALID_GAMES } from './games/[game]/games/valid-games';
-import { SEO_DOMAINS, PRIMARY_DOMAIN } from '@/lib/seo-domains';
+import { COMMUNITY_DOMAIN } from '@/lib/seo-domains';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -132,32 +132,29 @@ function pageSignals(routePath: string) {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const domains = SEO_DOMAINS;
   const currentDate = new Date().toISOString();
 
   const entries: MetadataRoute.Sitemap = [];
 
   const pages = discoverStaticPublicPages();
 
-  // Generate entries for each discovered page across all configured domains.
+  // Generate entries for each discovered page on the canonical community domain.
   for (const routePath of pages) {
     const { changeFrequency, priority } = pageSignals(routePath);
-    for (const domain of domains) {
-      entries.push({
-        url: `${domain}${routePath}`,
-        lastModified: currentDate,
-        changeFrequency,
-        priority,
-        alternates: {
-          languages: makeLanguages(domain, routePath),
-        },
-      });
-    }
+    entries.push({
+      url: `${COMMUNITY_DOMAIN}${routePath}`,
+      lastModified: currentDate,
+      changeFrequency,
+      priority,
+      alternates: {
+        languages: makeLanguages(COMMUNITY_DOMAIN, routePath),
+      },
+    });
   }
 
   // Static assets (no language alternates needed)
   entries.push({
-    url: `${PRIMARY_DOMAIN}/IMG_2921.PNG`,
+    url: `${COMMUNITY_DOMAIN}/IMG_2921.PNG`,
     lastModified: currentDate,
     changeFrequency: 'yearly',
     priority: 0.5,
@@ -167,17 +164,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   for (const game of VALID_GAMES) {
     const path = `/games/${game}`;
     const { changeFrequency, priority } = pageSignals(path);
-    for (const domain of domains) {
-      entries.push({
-        url: `${domain}${path}`,
-        lastModified: currentDate,
-        changeFrequency,
-        priority,
-        alternates: {
-          languages: makeLanguages(domain, path),
-        },
-      });
-    }
+    entries.push({
+      url: `${COMMUNITY_DOMAIN}${path}`,
+      lastModified: currentDate,
+      changeFrequency,
+      priority,
+      alternates: {
+        languages: makeLanguages(COMMUNITY_DOMAIN, path),
+      },
+    });
   }
 
   return entries;

@@ -4,8 +4,6 @@ import { GAME_SEO, VALID_GAMES } from './[game]/games/valid-games';
 
 import { GamesPageClient } from './GamesPageClient';
 
-const PRIMARY_DOMAIN = 'https://www.bullmoney.shop';
-
 export const metadata: Metadata = {
   title: 'Free Online Games (Demo) — Play in Your Browser',
   description:
@@ -28,12 +26,12 @@ export const metadata: Metadata = {
     'free slots',
     'flappy bird free',
   ],
-  alternates: makeAlternatesMetadata('/games', PRIMARY_DOMAIN),
+  alternates: makeAlternatesMetadata('/games'),
   openGraph: {
     title: 'BullMoney Games — Free Online Demo Games',
     description:
       'Free-to-play demo games with virtual currency only. Play Dice, Mines, Crash, Plinko, Wheel, Jackpot, Slots & more in your browser. 18+.',
-    url: `${PRIMARY_DOMAIN}/games`,
+    url: `https://bullmoney.online/games`,
     siteName: 'BullMoney',
     images: [{ url: '/IMG_2921.PNG', width: 1200, height: 630, alt: 'BullMoney Games — Free Online Demo Games' }],
     locale: 'en_US',
@@ -70,7 +68,7 @@ export default function GamesPage() {
     itemListElement: VALID_GAMES.map((slug, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: `${PRIMARY_DOMAIN}/games/${slug}`,
+      url: `https://bullmoney.online/games/${slug}`,
       name: GAME_SEO[slug].name,
     })),
   };

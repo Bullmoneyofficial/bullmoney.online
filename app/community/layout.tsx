@@ -15,18 +15,18 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Trading Community | 10,000+ Traders | BullMoney',
     description: 'Join 10,000+ traders. Free setups, analysis & support. Crypto, Forex, Gold & Stocks.',
-    url: 'https://www.bullmoney.shop/community',
+    url: 'https://bullmoney.online/community',
     type: 'website',
     siteName: 'BullMoney Trading Community',
     locale: 'en_US',
     alternateLocale: ALL_OG_LOCALES.filter(l => l !== 'en_US'),
-    images: [{ url: '/ONcc2l601.svg', width: 1200, height: 630, alt: 'BullMoney Trading Community' }],
+    images: [{ url: '/IMG_2921.PNG', width: 1200, height: 630, alt: 'BullMoney Trading Community' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Trading Community | BullMoney',
     description: 'Join 10,000+ traders. Free setups & analysis for Crypto, Forex, Gold.',
-    images: ['/ONcc2l601.svg'],
+    images: ['/IMG_2921.PNG'],
   },
   alternates: makeAlternatesMetadata('/community'),
 };

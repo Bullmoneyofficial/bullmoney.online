@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import HomePageShell from "./HomePageShell";
 
@@ -13,16 +13,6 @@ const HomePageClientMobile = dynamic(
 );
 
 export default function HomePageMobileEntry() {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return <HomePageShell />;
-  }
-
   return (
     <Suspense fallback={<HomePageShell />}>
       <HomePageClientMobile />

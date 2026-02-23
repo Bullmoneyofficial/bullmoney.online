@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, memo, useCallback } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { motion } from "framer-motion";
@@ -35,41 +35,15 @@ const Spline = dynamic<SplineWrapperProps>(
 // Available Spline scenes - scene1 is preloaded in layout.tsx for fastest first load
 const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
 
-// --- SPLINE LOAD LOCK (matches store page pattern for smooth loading) ---
-function getSplineLoadLock() {
-  const w = window as typeof window & { __BM_SPLINE_LOAD_LOCK__?: { active: boolean; queue: Array<() => void> } };
-  if (!w.__BM_SPLINE_LOAD_LOCK__) {
-    w.__BM_SPLINE_LOAD_LOCK__ = { active: false, queue: [] };
-  }
-  return w.__BM_SPLINE_LOAD_LOCK__;
-}
-
-function waitForSplineSlot(): Promise<() => void> {
-  return new Promise((resolve) => {
-    const lock = getSplineLoadLock();
-    const grant = () => {
-      lock.active = true;
-      resolve(() => {
-        lock.active = false;
-        const next = lock.queue.shift();
-        if (next) next();
-      });
-    };
-    if (!lock.active) grant();
-    else lock.queue.push(grant);
-  });
-}
-
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (DESKTOP) ---
-// Uses same load-lock pattern as store page hero for smooth, lag-free loading
+// No load-lock — mounting Spline immediately is faster than waiting in a queue.
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [allowLoad, setAllowLoad] = useState(false);
-  const releaseRef = useRef<null | (() => void)>(null);
 
   const scene = SPLINE_SCENES[0]; // Always use scene1 for fastest cold start
 
-  // Acquire load lock — only one Spline loads at a time (prevents GPU contention)
+  // Preload then allow mount immediately — no lock queue overhead
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let cancelled = false;
@@ -80,7 +54,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     const isSlowNet = effectiveType === '2g' || effectiveType === 'slow-2g';
     const preloadPriority: 'high' | 'low' = (!saveData && !isSlowNet) ? 'high' : 'low';
 
-    // Preload the runtime in parallel
+    // Preload the runtime JS chunk in parallel
     import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
 
     // Preconnect to Spline asset origins so scene subresources start faster
@@ -94,7 +68,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       document.head.appendChild(l);
     });
 
-    // Preload the scene file
+    // High-priority preload for the scene file
     let link: HTMLLinkElement | null = null;
     const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`) as HTMLLinkElement | null;
     if (!existing) {
@@ -103,50 +77,24 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       link.as = 'fetch';
       link.href = scene;
       link.crossOrigin = 'anonymous';
-      // fetchPriority isn't in TS DOM typings everywhere yet
       (link as any).fetchPriority = preloadPriority;
       link.setAttribute('fetchpriority', preloadPriority);
       document.head.appendChild(link);
     }
+    // Warm the browser cache immediately
     fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
 
-    // Wait for exclusive GPU slot
-    waitForSplineSlot().then((release) => {
-      if (cancelled) { release(); return; }
-      releaseRef.current = release;
-      setAllowLoad(true);
-    });
+    // Allow Spline to mount right away — no queue wait
+    if (!cancelled) setAllowLoad(true);
 
     return () => {
       cancelled = true;
       if (link && link.parentNode) link.parentNode.removeChild(link);
-      if (releaseRef.current) {
-        releaseRef.current();
-        releaseRef.current = null;
-      }
-      setAllowLoad(false);
     };
   }, [scene]);
 
-  // Safety timeout — release lock after 15s even if Spline never fires onLoad
-  useEffect(() => {
-    if (!allowLoad || !releaseRef.current) return;
-    const timeout = setTimeout(() => {
-      if (releaseRef.current) {
-        releaseRef.current();
-        releaseRef.current = null;
-      }
-    }, 15000);
-    return () => clearTimeout(timeout);
-  }, [allowLoad]);
-
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
-    // Release the load lock so other Spline instances can load
-    if (releaseRef.current) {
-      releaseRef.current();
-      releaseRef.current = null;
-    }
   }, []);
 
   return (

@@ -54,9 +54,8 @@ import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 // Desktop-only keyboard navigation
 const DesktopKeyNavigator = dynamic(() => import("@/components/navigation/DesktopKeyNavigator"), { ssr: false }) as any;
 
-// Import loaders
+// Import pagemode (loader step removed)
 const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), { ssr: false }) as any;
-const TradingUnlockLoader = dynamic(() => import("@/components/MultiStepLoaderv3Simple"), { ssr: false }) as any;
 
 // Lazy imports for 3D components - Desktop optimized
 const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false }) as any;
@@ -195,7 +194,7 @@ function DesktopHomeContent() {
   
   // Start uninitialized - useEffect will check localStorage on client mount
   // This ensures SSR hydration works correctly in production
-  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
+  const [currentView, setCurrentView] = useState<'pagemode' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [screenCategory, setScreenCategory] = useState<string>('FHD');
@@ -204,7 +203,7 @@ function DesktopHomeContent() {
   const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader } = useUIState();
   const { heroMode: mainHeroMode } = useHeroMode();
 
-  // Dev keyboard shortcut to skip pagemode and loader
+  // Dev keyboard shortcut to skip pagemode
   useDevSkipShortcut(() => {
     setDevSkipPageModeAndLoader(true);
     setCurrentView('content');
@@ -316,7 +315,7 @@ function DesktopHomeContent() {
   }, [currentView, setAppLoading]);
 
   useEffect(() => {
-    setLoaderv2Open(currentView === 'loader');
+    setLoaderv2Open(false);
     return () => setLoaderv2Open(false);
   }, [currentView, setLoaderv2Open]);
 
@@ -369,66 +368,17 @@ function DesktopHomeContent() {
   useEffect(() => {
     const hasSession = localStorage.getItem("bullmoney_session");
     const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
-    const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
+    const hasCompletedTelegram = localStorage.getItem("bullmoney_telegram_confirmed");
 
     const now = Date.now();
-    let shouldForceLoader = false;
-    const forceReasons: string[] = [];
+    console.log('[Desktop] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedTelegram });
 
-    // ===== Simple random v3 loader on reload =====
-    try {
-      const sessionCountKey = "bullmoney_refresh_count";
-
-      // Session refresh counter
-      const sessionCount = Number(sessionStorage.getItem(sessionCountKey) || "0") + 1;
-      sessionStorage.setItem(sessionCountKey, String(sessionCount));
-
-      // After 5 reloads in a session, clear non-auth caches
-      if (sessionCount >= 5) {
-        const AUTH_PRESERVE_KEYS = [
-          'bullmoney_session', 'bullmoney_pagemode_completed',
-          'bullmoney_loader_completed', 'bullmoney_telegram_confirmed',
-          'bullmoney_muted', 'bullmoney_xm_redirect_done',
-          'supabase.auth.token', 'sb-', 'bullmoney_user',
-          'bullmoney_auth', 'bullmoney_login', 'bullmoney_token',
-        ];
-        const keysToKeep: Record<string, string> = {};
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (!key) continue;
-          if (AUTH_PRESERVE_KEYS.some(pk => key === pk || key.startsWith(pk))) {
-            keysToKeep[key] = localStorage.getItem(key) || '';
-          }
-        }
-        localStorage.clear();
-        Object.entries(keysToKeep).forEach(([k, v]) => localStorage.setItem(k, v));
-        sessionStorage.setItem(sessionCountKey, "0");
-        console.log('[Desktop] 5+ reloads - cleared cache (auth preserved)');
-      }
-
-      // ~20% random chance to show v3 loader on reload
-      if (Math.random() < 0.20) {
-        shouldForceLoader = true;
-        forceReasons.push('random_20_percent');
-      }
-    } catch (error) {
-      console.warn('[Desktop] Refresh trigger check failed', error);
-    }
-
-    console.log('[Desktop] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, forceReasons });
-
-    if (shouldForceLoader && (hasSession || hasCompletedPagemode === "true")) {
-      console.log('[Desktop] Random v3 loader trigger');
-      setCurrentView('loader');
-    } else if (hasCompletedLoader === "true") {
-      // Skip directly to content if user has completed the full flow before
-      console.log('[Desktop] Skipping to content - loader previously completed');
+    if (hasSession || hasCompletedPagemode === "true") {
+      // Skip pagemode if user has session OR has ever completed pagemode
+      console.log('[Desktop] Skipping to content - session/pagemode previously completed');
+      localStorage.setItem("bullmoney_loader_completed", "true");
       setV2Unlocked(true);
       setCurrentView('content');
-    } else if (hasSession || hasCompletedPagemode === "true") {
-      // Skip pagemode if user has session OR has ever completed pagemode
-      console.log('[Desktop] Skipping to loader - session/pagemode previously completed');
-      setCurrentView('loader');
     } else {
       // First time visitor - show pagemode
       console.log('[Desktop] First time visitor - showing pagemode');
@@ -440,16 +390,11 @@ function DesktopHomeContent() {
   const handlePageModeUnlock = () => {
     // Mark pagemode as completed so user skips it on reload
     localStorage.setItem("bullmoney_pagemode_completed", "true");
-    console.log('[Desktop] Pagemode completed, moving to loader');
-    setCurrentView('loader');
-  };
-
-  const handleLoaderComplete = useCallback(() => {
-    // Mark loader as completed so user skips directly to content on reload
     localStorage.setItem("bullmoney_loader_completed", "true");
+    console.log('[Desktop] Pagemode completed, moving to content');
     setV2Unlocked(true);
     setCurrentView('content');
-  }, [setV2Unlocked]);
+  };
 
   if (!isInitialized || !isDesktop) {
     return (
@@ -461,7 +406,7 @@ function DesktopHomeContent() {
             position: fixed !important;
           }
         `}</style>
-        <div className="fixed inset-0 z-[99999] bg-black flex items-center justify-center">
+        <div className="fixed inset-0 z-99999 bg-black flex items-center justify-center">
           <ShimmerRadialGlow color="blue" intensity="low" />
           <ShimmerSpinner size={48} color="blue" />
         </div>
@@ -472,14 +417,8 @@ function DesktopHomeContent() {
   return (
     <>
       {currentView === 'pagemode' && (
-        <div className="fixed inset-0 z-[99999] bg-black">
+        <div className="fixed inset-0 z-99999 bg-black">
           <PageMode onUnlock={handlePageModeUnlock} />
-        </div>
-      )}
-
-      {currentView === 'loader' && (
-        <div className="fixed inset-0 z-[99999] bg-black">
-          <TradingUnlockLoader onFinished={handleLoaderComplete} />
         </div>
       )}
 
@@ -542,7 +481,7 @@ function DesktopHomeContent() {
                 </h2>
                 <p className="text-xs mt-2 uppercase tracking-widest font-medium" style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.6)' }}>Drag to explore</p>
                 <div className="flex justify-center mt-4">
-                  <div className="w-24 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, var(--accent-color, #ffffff), transparent)' }} />
+                  <div className="w-24 h-0.5" style={{ background: 'linear-gradient(to right, transparent, var(--accent-color, #ffffff), transparent)' }} />
                 </div>
               </div>
               

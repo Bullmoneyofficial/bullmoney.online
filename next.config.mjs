@@ -30,7 +30,9 @@ const devAllowedOrigins = (() => {
     const nets = os.networkInterfaces();
     for (const name of Object.keys(nets)) {
       for (const net of nets[name] || []) {
-        if (!net || net.family !== 'IPv4' || net.internal) continue;
+        // Node may report family as "IPv4" or as the numeric value 4.
+        const isIPv4 = !!net && (net.family === 'IPv4' || net.family === 4);
+        if (!net || !isIPv4 || net.internal) continue;
         origins.add(`http://${net.address}:${port}`);
       }
     }
@@ -292,17 +294,6 @@ const nextConfig = {
   // NOTE: eslint config removed - not supported in Next.js 16+
   // Run `npm run lint` separately instead
 
-  // Allow local network dev origins (localhost, LAN IPs)
-  // Add your specific local IP addresses here
-  allowedDevOrigins: [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://192.168.1.163:3000',
-    'http://192.168.1.162:3000',
-    'http://192.168.1.1:3000',
-    'http://10.0.0.1:3000',
-  ],
-
   // SPEED: Skip transpilation for modern packages (they're already ES6+)
   transpilePackages: [],
 
@@ -321,51 +312,6 @@ const nextConfig = {
     webpackBuildWorker: true,
     // Cache server component HMR responses - huge dev speed win
     serverComponentsHmrCache: true,
-    // Turbopack-specific optimizations for Apple Silicon, Windows, and Linux
-    turbo: isAppleSilicon ? {
-      rules: {
-        // Use SWC native ARM64 binary for transforms
-        '*.{js,jsx,ts,tsx}': {
-          loaders: ['swc-loader'],
-          as: '*.js',
-        },
-      },
-      resolveAlias: {
-        // Faster module resolution
-        canvas: './empty-module',
-      },
-      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-      // Use all P-cores for parallel compilation
-      moduleIdStrategy: 'deterministic',
-    } : isWindows ? {
-      rules: {
-        // Use SWC native Windows x64 binary for transforms
-        '*.{js,jsx,ts,tsx}': {
-          loaders: ['swc-loader'],
-          as: '*.js',
-        },
-      },
-      resolveAlias: {
-        // Faster module resolution on Windows
-        canvas: './empty-module',
-      },
-      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-      moduleIdStrategy: 'deterministic',
-    } : isLinux ? {
-      rules: {
-        // Use SWC native Linux binary for transforms (x64 or ARM64)
-        '*.{js,jsx,ts,tsx}': {
-          loaders: ['swc-loader'],
-          as: '*.js',
-        },
-      },
-      resolveAlias: {
-        // Faster module resolution on Linux
-        canvas: './empty-module',
-      },
-      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-      moduleIdStrategy: 'deterministic',
-    } : undefined,
     // Package import optimizations - tree shake only the most critical heavy packages
     // NOTE: Too many entries (165) can slow down Turbopack compilation
     // Only optimize packages that are actually imported frequently and have large bundle impact
@@ -746,6 +692,16 @@ const nextConfig = {
       'mongoose': 'mongoose',
       'sonner': 'sonner',
       'zustand': 'zustand',
+      // Additional pins — high-frequency imports save repeated node_modules traversal
+      'react': 'react',
+      'react-dom': 'react-dom',
+      'next': 'next',
+      'lucide-react': 'lucide-react',
+      'clsx': 'clsx',
+      'tailwind-merge': 'tailwind-merge',
+      'class-variance-authority': 'class-variance-authority',
+      '@supabase/supabase-js': '@supabase/supabase-js',
+      '@supabase/ssr': '@supabase/ssr',
     },
     // SPEED: Turbopack-specific rules to skip unnecessary processing
     rules: {

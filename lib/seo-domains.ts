@@ -1,13 +1,34 @@
-export const PRIMARY_DOMAIN = 'https://www.bullmoney.shop';
+// Canonical hosts.
+// Community/content pages should canonicalize to COMMUNITY_DOMAIN.
+// Store pages should canonicalize to STORE_DOMAIN.
+export const COMMUNITY_DOMAIN = 'https://bullmoney.online';
+export const STORE_DOMAIN = 'https://www.bullmoney.shop';
 
-// Domains that mirror or serve the same content.
-// Keep PRIMARY_DOMAIN first (preferred canonical host).
-export const SEO_DOMAINS = [
-  PRIMARY_DOMAIN,
-  'https://www.bullmoney.online',
-  'https://www.bullmoney.live',
-  'https://www.bullmoney.co.za',
-  'https://www.bullmoney.site',
+// Aliases / legacy domains that should redirect to the canonical host.
+export const ALIAS_HOSTS = [
+  'bullmoney.online',
+  'www.bullmoney.online',
+  'bullmoney.shop',
+  'www.bullmoney.shop',
+  'bullmoney.live',
+  'www.bullmoney.live',
+  'bullmoney.co.za',
+  'www.bullmoney.co.za',
+  'bullmoney.site',
+  'www.bullmoney.site',
 ] as const;
 
-export type SeoDomain = (typeof SEO_DOMAINS)[number];
+export type AliasHost = (typeof ALIAS_HOSTS)[number];
+
+export function isStorePath(pathname: string) {
+  return (
+    pathname === '/store' ||
+    pathname.startsWith('/store/') ||
+    pathname === '/products' ||
+    pathname.startsWith('/products/')
+  );
+}
+
+export function canonicalBaseForPath(pathname: string) {
+  return isStorePath(pathname) ? STORE_DOMAIN : COMMUNITY_DOMAIN;
+}

@@ -1,6 +1,8 @@
 "use client";
-
-import { useState, useEffect, Suspense } from "react";
+// ✅ PERF: Simplified client component — useHasMounted removed.
+// dynamic() loading prop handles shell↔client transition directly (no extra render cycle).
+// StorePageClient loads async (ssr: false); StorePageShell shows instantly via loading prop.
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 
@@ -12,13 +14,6 @@ const StorePageClient = dynamic(
     loading: () => <StorePageShell />
   }
 );
-
-// ✅ HYDRATION OPTIMIZED: Tracks mount state for progressive enhancement
-function useHasMounted() {
-  const [hasMounted, setHasMounted] = useState(false);
-  useEffect(() => { setHasMounted(true); }, []);
-  return hasMounted;
-}
 
 // ✅ STATIC SHELL: Instant content for fast FCP/LCP
 // Renders immediately while heavy store logic loads
@@ -33,8 +28,8 @@ function StorePageShell() {
         .bm-store-pulse { animation: bm-store-pulse 1.5s ease-in-out infinite; }
       `}} />
       
-      {/* Store header placeholder - matches actual header */}
-      <div className="h-14 bg-white border-b border-black/5 sticky top-0 z-50">
+      {/* Store header placeholder - matches actual StoreHeader height (48px) */}
+      <div className="h-12 bg-white border-b border-black/5 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative w-8 h-8">
@@ -52,7 +47,7 @@ function StorePageShell() {
           </div>
           <div className="flex items-center gap-3">
             {/* Search placeholder */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/[0.03] border border-black/5 w-48">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/3 border border-black/5 w-48">
               <div className="w-4 h-4 rounded bg-black/10" />
               <span className="text-xs text-black/40">Search...</span>
             </div>
@@ -64,7 +59,7 @@ function StorePageShell() {
       
       {/* Hero section skeleton - enhanced with gradient */}
       <div 
-        className="relative w-full bg-gradient-to-b from-white via-gray-50/50 to-white"
+        className="relative w-full bg-linear-to-b from-white via-gray-50/50 to-white"
         style={{ contain: 'layout style paint' }}
       >
         <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
@@ -96,7 +91,7 @@ function StorePageShell() {
               {['All', 'Apparel', 'Accessories', 'Digital'].map((cat, i) => (
                 <div 
                   key={cat}
-                  className="px-4 py-2 rounded-full bg-black/[0.03] border border-black/5 text-xs font-medium text-black/40"
+                  className="px-4 py-2 rounded-full bg-black/3 border border-black/5 text-xs font-medium text-black/40"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
                   {cat}
@@ -125,7 +120,7 @@ function StorePageShell() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div 
               key={i} 
-              className="group flex flex-col rounded-2xl bg-black/[0.02] border border-black/5 overflow-hidden"
+              className="group flex flex-col rounded-2xl bg-black/2 border border-black/5 overflow-hidden"
               style={{ 
                 animationDelay: `${i * 50}ms`,
                 contentVisibility: i > 3 ? 'auto' : 'visible',
@@ -133,11 +128,11 @@ function StorePageShell() {
               }}
             >
               {/* Product image skeleton */}
-              <div className="aspect-square bg-black/[0.03] bm-store-pulse" />
+              <div className="aspect-square bg-black/3 bm-store-pulse" />
               {/* Product info skeleton */}
               <div className="p-3 space-y-2">
                 <div className="h-4 w-3/4 bg-black/5 rounded bm-store-pulse" />
-                <div className="h-3 w-1/2 bg-black/[0.03] rounded bm-store-pulse" />
+                <div className="h-3 w-1/2 bg-black/3 rounded bm-store-pulse" />
                 <div className="h-5 w-1/3 bg-black/5 rounded-full bm-store-pulse mt-2" />
               </div>
             </div>
@@ -149,14 +144,14 @@ function StorePageShell() {
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8" style={{ contain: 'layout style paint' }}>
         {/* Featured section skeleton */}
         <div 
-          className="rounded-2xl bg-black/[0.02] border border-black/5 p-6"
+          className="rounded-2xl bg-black/2 border border-black/5 p-6"
           style={{ minHeight: 200, contentVisibility: 'auto', containIntrinsicSize: 'auto 200px' }}
         >
           <div className="w-24 h-3 bg-black/5 rounded bm-store-pulse mb-3" />
           <div className="w-40 h-6 bg-black/5 rounded bm-store-pulse mb-6" />
           <div className="flex gap-4 overflow-hidden">
             {[1, 2, 3].map((j) => (
-              <div key={j} className="w-40 shrink-0 aspect-square rounded-xl bg-black/[0.03] bm-store-pulse" />
+              <div key={j} className="w-40 shrink-0 aspect-square rounded-xl bg-black/3 bm-store-pulse" />
             ))}
           </div>
         </div>
@@ -166,14 +161,8 @@ function StorePageShell() {
 }
 
 export default function StorePage() {
-  const hasMounted = useHasMounted();
-  
-  // Show shell immediately, then swap to client component after mount
-  // This prevents hydration mismatches and ensures fastest FCP
-  if (!hasMounted) {
-    return <StorePageShell />;
-  }
-  
+  // Server renders StorePageShell as HTML instantly.
+  // StorePageClient loads async on client (ssr: false) — no useHasMounted needed.
   return (
     <Suspense fallback={<StorePageShell />}>
       <StorePageClient />

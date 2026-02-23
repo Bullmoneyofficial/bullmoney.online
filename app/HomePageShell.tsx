@@ -12,8 +12,8 @@ export default function HomePageShell() {
         .bm-shell-pulse { animation: bm-shell-pulse 1.5s ease-in-out infinite; }
       `}} />
 
-      {/* Header skeleton - matches StoreHeader height */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-14 md:h-16 bg-black/80 backdrop-blur-xl border-b border-white/5">
+      {/* Header skeleton - matches StoreHeader height (48px) */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-12 bg-black/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative w-8 h-8">
@@ -37,12 +37,12 @@ export default function HomePageShell() {
 
       {/* Hero section skeleton - matches actual hero dimensions */}
       <div
-        className="relative w-full min-h-screen flex items-center justify-center overflow-hidden pt-14 md:pt-16"
+        className="relative w-full min-h-screen flex items-center justify-center overflow-hidden pt-12"
         style={{ contain: "layout style paint" }}
       >
         {/* Background gradient */}
         <div
-          className="absolute inset-0 bg-gradient-to-b from-black via-[#0a0a0a] to-black"
+          className="absolute inset-0 bg-linear-to-b from-black via-[#0a0a0a] to-black"
           aria-hidden="true"
         />
 
@@ -92,14 +92,14 @@ export default function HomePageShell() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="max-w-7xl mx-auto rounded-2xl bg-white/[0.02] border border-white/5 p-6"
+            className="max-w-7xl mx-auto rounded-2xl bg-white/2 border border-white/5 p-6"
             style={{ minHeight: 200, contentVisibility: "auto", containIntrinsicSize: "auto 200px" }}
           >
             <div className="w-32 h-3 bg-white/5 rounded bm-shell-pulse mb-4" />
             <div className="w-48 h-6 bg-white/5 rounded bm-shell-pulse mb-6" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((j) => (
-                <div key={j} className="aspect-video rounded-lg bg-white/[0.03] bm-shell-pulse" />
+                <div key={j} className="aspect-video rounded-lg bg-white/3 bm-shell-pulse" />
               ))}
             </div>
           </div>

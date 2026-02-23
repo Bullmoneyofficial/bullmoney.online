@@ -17,12 +17,16 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { SplineWrapperProps } from '@/lib/spline-wrapper';
 
-// Dynamic Spline import for code splitting
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-  ssr: false,
-  loading: () => null,
-});
+// Ultra-optimized Spline wrapper (preloads runtime at module import time)
+const Spline = dynamic<SplineWrapperProps>(
+  () => import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper') as any,
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 // Scene configuration - local files for desktop, can be extended
 const SPLINE_SCENES = [
@@ -235,21 +239,33 @@ function SplinePageComponent({
         // Desktop - load immediately with high priority
         const scene = pickNextDesktopScene();
         setDesktopScene(scene);
-        
-        // Aggressive preloading for desktop - use multiple strategies
-        const preloadLink = document.createElement('link');
-        preloadLink.rel = 'preload';
-        preloadLink.href = scene;
-        preloadLink.as = 'fetch';
-        preloadLink.crossOrigin = 'anonymous';
-        document.head.appendChild(preloadLink);
-        
-        // Also prefetch for caching
-        const prefetchLink = document.createElement('link');
-        prefetchLink.rel = 'prefetch';
-        prefetchLink.href = scene;
-        prefetchLink.crossOrigin = 'anonymous';
-        document.head.appendChild(prefetchLink);
+
+        // Preload the runtime chunk so it's ready when Spline mounts
+        import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
+
+        // Preconnect to Spline CDN origins
+        ['https://prod.spline.design', 'https://cdn.spline.design'].forEach(href => {
+          if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
+          const l = document.createElement('link');
+          l.rel = 'preconnect'; l.href = href; l.crossOrigin = 'anonymous';
+          document.head.appendChild(l);
+        });
+
+        // High-priority preload for the scene file
+        const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`);
+        if (!existing) {
+          const preloadLink = document.createElement('link');
+          preloadLink.rel = 'preload';
+          preloadLink.href = scene;
+          preloadLink.as = 'fetch';
+          preloadLink.crossOrigin = 'anonymous';
+          (preloadLink as any).fetchPriority = 'high';
+          preloadLink.setAttribute('fetchpriority', 'high');
+          document.head.appendChild(preloadLink);
+        }
+
+        // Warm the cache immediately
+        fetch(scene, { cache: 'force-cache', priority: 'high' as RequestPriority }).catch(() => undefined);
       }
     }
     
@@ -362,25 +378,16 @@ function SplinePageComponent({
         />
       )}
       
-      {/* Loading Indicator */}
-      <AnimatePresence>
-        {!isLoaded && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0 z-20 flex items-center justify-center"
-            style={{
-              background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), #000',
-            }}
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-2 border-white/30 border-t-blue-500 rounded-full animate-spin" />
-              <p className="text-white/60 text-sm font-medium">Loading 3D Scene...</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Gradient fallback — fades out once Spline is ready, never blocks interaction */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(139,92,246,0.18) 0%, rgba(59,130,246,0.12) 35%, transparent 65%), linear-gradient(180deg,#0a0a0a 0%,#000 100%)',
+          opacity: isLoaded ? 0 : 1,
+          transition: 'opacity 700ms ease-out',
+          zIndex: 1,
+        }}
+      />
 
       {/* Interaction Indicator */}
       {showControls && isLoaded && (

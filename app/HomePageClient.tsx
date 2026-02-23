@@ -243,6 +243,32 @@ function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageCli
     const root = document.documentElement;
     const body = document.body;
 
+    // Safety: recover if StoreHeader (or another overlay) left the document scroll-locked.
+    // Prevents “stuck” home page after opening menus/drawers.
+    try {
+      const hasStoreHeaderLock =
+        body.getAttribute('data-storeheader-scroll-lock') === 'true' ||
+        root.getAttribute('data-storeheader-scroll-lock') === 'true' ||
+        body.style.position === 'fixed';
+
+      if (hasStoreHeaderLock) {
+        const top = body.style.top || '0px';
+        const lockedY = Math.abs(parseInt(top, 10) || 0);
+        body.removeAttribute('data-storeheader-scroll-lock');
+        root.removeAttribute('data-storeheader-scroll-lock');
+        body.style.position = '';
+        body.style.top = '';
+        body.style.left = '';
+        body.style.right = '';
+        body.style.width = '';
+        if (lockedY) {
+          window.scrollTo({ top: lockedY, behavior: 'auto' });
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     // Safety: clear residual splash sway class on route entry
     root.classList.remove('bm-sway', 'bm-sway-safe');
     body.classList.remove('bm-sway', 'bm-sway-safe');

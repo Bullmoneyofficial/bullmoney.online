@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { makeAlternatesMetadata, ALL_OG_LOCALES } from '@/lib/seo-languages';
-import { PRIMARY_DOMAIN } from '@/lib/seo-domains';
 
 // ============================================================================
 // PRODUCTS PAGE SEO — Browse all BullMoney Store products
@@ -21,11 +20,11 @@ export const metadata: Metadata = {
     title: 'All Products | BullMoney Store',
     description: 'Browse premium trading apparel, accessories, tech gear & more. Worldwide shipping.',
     type: 'website',
-    url: `${PRIMARY_DOMAIN}/products`,
+    url: `https://www.bullmoney.shop/products`,
     siteName: 'BullMoney Store',
     images: [
       {
-        url: '/ONcc2l601.svg',
+        url: '/IMG_2921.PNG',
         width: 1200,
         height: 630,
         alt: 'BullMoney Store Products',
@@ -38,7 +37,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'All Products | BullMoney Store',
     description: 'Premium trading apparel, accessories & gear. Shop now!',
-    images: ['/ONcc2l601.svg'],
+    images: ['/IMG_2921.PNG'],
     creator: '@BullMoney',
     site: '@BullMoney',
   },
@@ -52,7 +51,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: makeAlternatesMetadata('/products', PRIMARY_DOMAIN),
+  alternates: makeAlternatesMetadata('/products'),
 };
 
 export default function ProductsLayout({

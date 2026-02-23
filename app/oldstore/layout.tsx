@@ -36,11 +36,11 @@ export const metadata: Metadata = {
     title: "Trading Products & VIP Setups | BullMoney Shop",
     description:
       "Premium trading setups & VIP membership for crypto, gold & forex. Get exclusive setups from professional traders. Upgrade your trading!",
-    url: "https://www.bullmoney.shop/shop",
+    url: "https://bullmoney.online/shop",
     type: "website",
     images: [
       {
-        url: "/ONcc2l601.svg",
+        url: "/IMG_2921.PNG",
         width: 1200,
         height: 630,
         alt: "BullMoney Shop - Trading Products & VIP Setups",

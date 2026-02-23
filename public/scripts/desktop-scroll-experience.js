@@ -44,7 +44,6 @@
   var audioActive = false;
   var audioFadeTimer = null;
   var userUnlocked = false;
-  var audioEnabled = true;
 
   function getVolume() {
     if (window.__BM_SFX_VOLUME__ !== undefined) return Math.min(1, Math.max(0, window.__BM_SFX_VOLUME__));
@@ -52,16 +51,9 @@
   }
 
   function isAudioEnabled() {
-    if (!audioEnabled) return false; // Check tier-based setting
     if (window.__BM_SFX_ENABLED__ === false) return false;
     if (window.__BM_MASTER_MUTED__ === true) return false;
-    if (window.__BM_SCROLL_AUDIO_ENABLED__ === false) return false;
     return true;
-  }
-
-  // Check tier and disable audio on weak devices
-  if (window.__BM_PERFORMANCE_TIER__ && window.__BM_PERFORMANCE_TIER__ < 2) {
-    audioEnabled = false;
   }
 
   function getCtx() {
@@ -256,7 +248,7 @@
     // Scroll audio
     if (userUnlocked && isAudioEnabled()) {
       if (!audioNodes) audioNodes = createScrollNodes();
-      if (audioNodes) updateScrollAudio(normalizedSpeed);
+      updateScrollAudio(normalizedSpeed);
       clearTimeout(audioFadeTimer);
       audioFadeTimer = setTimeout(fadeOutScrollAudio, IDLE_MS);
     }
@@ -297,8 +289,6 @@
     createProgressBar();
 
     // Use passive scroll listener with rAF batching
-    // The scroll event fires for ALL scroll sources: wheel, scrollbar, keyboard, etc.
-    // CSS scroll-behavior: smooth provides the smooth animation
     window.addEventListener("scroll", scrollRAF, { passive: true });
     scrollListenerAttached = true;
 
@@ -359,22 +349,11 @@
       pauseWork();
       window.removeEventListener("click", unlockAudio, true);
       window.removeEventListener("keydown", unlockAudio, true);
-      // Cleanup audio context to free memory
-      if (audioCtx) {
-        fadeOutScrollAudio();
-        setTimeout(function () {
-          try {
-            if (audioCtx && audioCtx.state !== 'closed') {
-              audioCtx.close().catch(function () {});
-            }
-          } catch (e) {}
-        }, 200);
-        audioCtx = null;
-        audioNodes = null;
-      }
-      if (rafId) cancelAnimationFrame(rafId);
-      if (audioFadeTimer) clearTimeout(audioFadeTimer);
     } catch (e) {}
-  }, { once: true });
+    if (rafId) cancelAnimationFrame(rafId);
+    if (audioNodes && audioCtx) {
+      try { audioNodes.master.gain.value = 0; } catch (e) {}
+    }
+  });
 
 })();

@@ -28,11 +28,11 @@ export const metadata: Metadata = {
     title: "Join Our Trading Community | BullMoney Socials",
     description:
       "Connect with 10,000+ traders! Free setups & live discussions on Discord & Telegram. Join now!",
-    url: "https://www.bullmoney.shop/socials",
+    url: "https://bullmoney.online/socials",
     type: "website",
     images: [
       {
-        url: "/ONcc2l601.svg",
+        url: "/IMG_2921.PNG",
         width: 1200,
         height: 630,
         alt: "BullMoney Social Channels",

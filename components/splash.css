@@ -1,0 +1,45 @@
+/* BullMoney Splash Screen – keyframe definitions only.
+   All element styles live inline in SplashScreen.tsx.         */
+
+@keyframes bm-splash-pulse {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-22px) scale(1.06);
+  }
+}
+
+/* Overlay expands slightly and dissolves – smooth cubic-bezier exit */
+@keyframes bm-splash-fade-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+  60% {
+    opacity: 0.55;
+    transform: scale(1.04);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.09);
+    filter: blur(6px);
+  }
+}
+
+/* Image shrinks and fades during exit */
+@keyframes bm-splash-img-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(var(--pulse-y, 0px));
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.82) translateY(12px);
+    filter: blur(4px);
+  }
+}

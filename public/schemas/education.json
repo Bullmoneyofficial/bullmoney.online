@@ -2,7 +2,7 @@
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
   "name": "BullMoney Trading Academy",
-  "url": "https://www.bullmoney.shop/course",
+  "url": "https://bullmoney.online/course",
   "description": "Free trading education and mentorship for beginners to advanced traders",
   "teaches": [
     "Cryptocurrency Trading",
@@ -17,6 +17,6 @@
   "parentOrganization": {
     "@type": "Organization",
     "name": "BullMoney",
-    "url": "https://www.bullmoney.shop"
+    "url": "https://bullmoney.online"
   }
 }

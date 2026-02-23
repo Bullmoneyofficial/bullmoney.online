@@ -4,8 +4,6 @@ import { notFound } from 'next/navigation';
 import { makeAlternatesMetadata, ALL_OG_LOCALES } from '@/lib/seo-languages';
 import { GAME_SEO, VALID_GAMES } from './games/valid-games';
 
-const PRIMARY_DOMAIN = 'https://www.bullmoney.shop';
-
 function isValidGameSlug(game: string): game is (typeof VALID_GAMES)[number] {
   return (VALID_GAMES as readonly string[]).includes(game);
 }
@@ -27,13 +25,13 @@ export async function generateMetadata({
 
   const seo = GAME_SEO[game];
   const path = `/games/${game}`;
-  const canonical = `${PRIMARY_DOMAIN}${path}`;
+  const canonical = `https://bullmoney.online${path}`;
 
   return {
     title: seo.title,
     description: seo.description,
     keywords: [...seo.keywords, 'free online games', 'free games website', 'play free games online', 'demo games'],
-    alternates: makeAlternatesMetadata(path, PRIMARY_DOMAIN),
+    alternates: makeAlternatesMetadata(path),
     openGraph: {
       title: `BullMoney Games — ${seo.name}`,
       description: seo.description,
@@ -88,8 +86,8 @@ export default async function GamePage({
     '@type': 'VideoGame',
     name: seo.name,
     description: seo.description,
-    url: `${PRIMARY_DOMAIN}/games/${game}`,
-    image: [`${PRIMARY_DOMAIN}${seo.image}`],
+    url: `https://bullmoney.online/games/${game}`,
+    image: [`https://bullmoney.online${seo.image}`],
     operatingSystem: 'Web',
     applicationCategory: 'Game',
     genre: ['Free online game', 'Demo game'],

@@ -54,6 +54,32 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     const html = document.documentElement;
     const body = document.body;
 
+    // Safety: recover if StoreHeader (or another overlay) left the document scroll-locked.
+    // This prevents “can’t scroll” / stuck pages after closing menus or navigating.
+    try {
+      const hasStoreHeaderLock =
+        body.getAttribute('data-storeheader-scroll-lock') === 'true' ||
+        html.getAttribute('data-storeheader-scroll-lock') === 'true' ||
+        body.style.position === 'fixed';
+
+      if (hasStoreHeaderLock) {
+        const top = body.style.top || '0px';
+        const lockedY = Math.abs(parseInt(top, 10) || 0);
+        body.removeAttribute('data-storeheader-scroll-lock');
+        html.removeAttribute('data-storeheader-scroll-lock');
+        body.style.position = '';
+        body.style.top = '';
+        body.style.left = '';
+        body.style.right = '';
+        body.style.width = '';
+        if (lockedY) {
+          window.scrollTo({ top: lockedY, behavior: 'auto' });
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     // Safety: clear residual splash sway class on route entry
     html.classList.remove('bm-sway', 'bm-sway-safe');
     body.classList.remove('bm-sway', 'bm-sway-safe');

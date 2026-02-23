@@ -4,7 +4,9 @@
 // Used by sitemap.ts, layout.tsx metadata, and all sub-layouts.
 // ============================================================================
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.bullmoney.shop';
+import { canonicalBaseForPath } from '@/lib/seo-domains';
+
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 /** All 36 supported language codes */
 export const ALL_LANG_CODES = [
@@ -38,14 +40,15 @@ export const ALL_OG_LOCALES = [
  * Generate Next.js metadata `alternates.languages` object for a given path.
  * Returns { 'x-default': url, en: url?lang=en, es: url?lang=es, ... }
  */
-export function makeLanguageAlternates(path: string, baseUrl = BASE_URL): Record<string, string> {
+export function makeLanguageAlternates(path: string, baseUrl?: string): Record<string, string> {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const resolvedBaseUrl = baseUrl || DEFAULT_BASE_URL || canonicalBaseForPath(cleanPath);
   const sep = cleanPath.includes('?') ? '&' : '?';
   const result: Record<string, string> = {
-    'x-default': `${baseUrl}${cleanPath}`,
+    'x-default': `${resolvedBaseUrl}${cleanPath}`,
   };
   for (const lang of ALL_LANG_CODES) {
-    result[lang] = `${baseUrl}${cleanPath}${sep}lang=${lang}`;
+    result[lang] = `${resolvedBaseUrl}${cleanPath}${sep}lang=${lang}`;
   }
   return result;
 }
@@ -53,9 +56,11 @@ export function makeLanguageAlternates(path: string, baseUrl = BASE_URL): Record
 /**
  * Generate a complete `alternates` object for Next.js Metadata.
  */
-export function makeAlternatesMetadata(path: string, baseUrl = BASE_URL) {
+export function makeAlternatesMetadata(path: string, baseUrl?: string) {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const resolvedBaseUrl = baseUrl || DEFAULT_BASE_URL || canonicalBaseForPath(cleanPath);
   return {
-    canonical: `${baseUrl}${path}`,
-    languages: makeLanguageAlternates(path, baseUrl),
+    canonical: `${resolvedBaseUrl}${cleanPath}`,
+    languages: makeLanguageAlternates(cleanPath, resolvedBaseUrl),
   };
 }

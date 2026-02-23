@@ -114,6 +114,12 @@ const CookieConsent = dynamic(
   { ssr: false, loading: () => null }
 );
 
+// ✅ PERF: PWAInstallPrompt pulls in framer-motion; keep it out of the critical path
+const PWAInstallPrompt = dynamic(
+  () => import("@/components/PWAInstallPrompt"),
+  { ssr: false, loading: () => null }
+);
+
 // ✅ GLOBAL V3 LOADER - Shows randomly on ~20% of reloads across ALL pages
 const GlobalV3Loader = dynamic(
   () => import("@/components/GlobalV3Loader"),
@@ -426,6 +432,8 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       {/* ✅ SEO STRUCTURED DATA - Deferred to idle for faster first paint */}
       {canShowCursor && (
         <Suspense fallback={null}>
+          {/* ✅ PWA prompt: only mount during idle and after splash is gone */}
+          {isSplashFinished ? <PWAInstallPrompt /> : null}
           <MemoryBoostClient />
           <HreflangMeta />
           <AllSEOSchemas />

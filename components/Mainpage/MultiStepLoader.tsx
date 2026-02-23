@@ -8,7 +8,7 @@ interface LoadingState {
 }
 
 interface MultiStepLoaderProps {
-  loadingStates?: LoadingState[];
+  loadingStates?: ReadonlyArray<LoadingState>;
   loading?: boolean;
   duration?: number;
   loop?: boolean;

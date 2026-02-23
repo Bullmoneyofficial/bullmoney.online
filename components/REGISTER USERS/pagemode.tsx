@@ -20,9 +20,128 @@ import {
   Copy, Eye, EyeOff, ShieldCheck
 } from 'lucide-react';
 
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { persistSession } from '@/lib/sessionPersistence';
+
+// ---------------------------------------------------------------------------
+// Turbopack HMR stability + faster desktop paint
+// ---------------------------------------------------------------------------
+// framer-motion occasionally triggers a Turbopack HMR bug:
+//   "motion-template.mjs ... module factory is not available"
+// on hot updates, crashing PageMode during module evaluation.
+//
+// For the welcome/pagemode screen we can safely degrade animations to CSS,
+// rendering plain DOM elements and stripping motion-only props.
+//
+// NOTE: This affects dev + prod equally (no framer-motion runtime here).
+// If you want animations back later, we can re-introduce them behind a
+// runtime-loaded wrapper once Turbopack is stable.
+type MotionLikeProps = {
+  initial?: any;
+  animate?: any;
+  exit?: any;
+  transition?: any;
+  variants?: any;
+  whileHover?: any;
+  whileTap?: any;
+  whileInView?: any;
+  viewport?: any;
+  layout?: any;
+  layoutId?: any;
+  onAnimationStart?: any;
+  onAnimationComplete?: any;
+  onUpdate?: any;
+};
+
+const MOTION_PROP_KEYS: Record<string, true> = {
+  initial: true,
+  animate: true,
+  exit: true,
+  transition: true,
+  variants: true,
+  whileHover: true,
+  whileTap: true,
+  whileInView: true,
+  viewport: true,
+  layout: true,
+  layoutId: true,
+  onAnimationStart: true,
+  onAnimationComplete: true,
+  onUpdate: true,
+};
+
+function stripMotionProps<T extends Record<string, any>>(props: T): Omit<T, keyof MotionLikeProps> {
+  const next: Record<string, any> = {};
+  for (const key of Object.keys(props)) {
+    if (MOTION_PROP_KEYS[key]) continue;
+    next[key] = props[key];
+  }
+  return next as any;
+}
+
+const _motionComponentCache = new Map<string, React.ComponentType<any>>();
+const motion = new Proxy(
+  {},
+  {
+    get(_target, tagName) {
+      if (typeof tagName !== 'string') return undefined;
+      const cached = _motionComponentCache.get(tagName);
+      if (cached) return cached;
+
+      const Component = React.forwardRef<any, any>(function MotionShim(props, ref) {
+        const { children, ...rest } = props || {};
+        return React.createElement(tagName, { ref, ...stripMotionProps(rest) }, children);
+      });
+      Component.displayName = `MotionShim(${tagName})`;
+      _motionComponentCache.set(tagName, Component);
+      return Component;
+    },
+  }
+) as any;
+
+function AnimatePresence({ children }: { children: React.ReactNode; [key: string]: any }) {
+  return <>{children}</>;
+}
+
+// ---------------------------------------------------------------------------
+// SafePortal — lazy-load react-dom.createPortal to avoid Turbopack HMR crashes
+// ---------------------------------------------------------------------------
+type PortalCreator = (children: React.ReactNode, container: Element) => React.ReactPortal;
+let _createPortal: PortalCreator | null = null;
+
+function SafePortal({
+  children,
+  container,
+}: {
+  children: React.ReactNode;
+  container?: Element | null;
+}) {
+  const [portalCreator, setPortalCreator] = useState<PortalCreator | null>(() => _createPortal);
+
+  useEffect(() => {
+    if (portalCreator) return;
+    let alive = true;
+
+    import('react-dom')
+      .then((mod: any) => {
+        const creator = (mod && mod.createPortal) as PortalCreator | undefined;
+        if (!creator) return;
+        _createPortal = creator;
+        if (alive) setPortalCreator(() => creator);
+      })
+      .catch(() => {
+        // Ignore — portals are optional for this screen.
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [portalCreator]);
+
+  const target = container ?? (typeof document !== 'undefined' ? document.body : null);
+  if (!portalCreator || !target) return null;
+  return portalCreator(children, target);
+}
 
 // --- UI STATE CONTEXT ---
 import { useUIState, UI_Z_INDEX } from "@/contexts/UIStateContext";
@@ -46,7 +165,6 @@ const WelcomeScreenDesktop = dynamic(
 const UnifiedFpsPill = dynamic(() => import('@/components/ultimate-hub/pills/UnifiedFpsPill').then(m => ({ default: m.UnifiedFpsPill })), { ssr: false, loading: () => null });
 const UnifiedHubPanel = dynamic(() => import('@/components/ultimate-hub/panel/UnifiedHubPanel').then(m => ({ default: m.UnifiedHubPanel })), { ssr: false, loading: () => null });
 import { useLivePrices } from '@/components/ultimate-hub/hooks/useAccess';
-import { createPortal } from 'react-dom';
 
 // Spline scene for welcome background (preloaded in layout.tsx for fastest first load)
 const SPLINE_SCENE = '/scene1.splinecode';
@@ -136,41 +254,16 @@ const isLowMemoryDevice = (): boolean => {
   return _cachedIsLowMemory;
 };
 
-// --- SPLINE LOAD LOCK (matches store page pattern for smooth loading) ---
-function getSplineLoadLock() {
-  const w = window as typeof window & { __BM_SPLINE_LOAD_LOCK__?: { active: boolean; queue: Array<() => void> } };
-  if (!w.__BM_SPLINE_LOAD_LOCK__) {
-    w.__BM_SPLINE_LOAD_LOCK__ = { active: false, queue: [] };
-  }
-  return w.__BM_SPLINE_LOAD_LOCK__;
-}
-
-function waitForSplineSlot(): Promise<() => void> {
-  return new Promise((resolve) => {
-    const lock = getSplineLoadLock();
-    const grant = () => {
-      lock.active = true;
-      resolve(() => {
-        lock.active = false;
-        const next = lock.queue.shift();
-        if (next) next();
-      });
-    };
-    if (!lock.active) grant();
-    else lock.queue.push(grant);
-  });
-}
-
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (MOBILE) ---
-// Uses same load-lock pattern as store page hero for smooth, lag-free loading
+// No load-lock needed here — this is the only Spline on the register screen.
+// Locking only adds queuing overhead; skipping it means Spline starts immediately.
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [allowLoad, setAllowLoad] = useState(false);
-  const releaseRef = useRef<null | (() => void)>(null);
 
   const scene = SPLINE_SCENE;
 
-  // Acquire load lock — only one Spline loads at a time (prevents GPU contention)
+  // Kick off preloading and set allowLoad immediately — no queue wait
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let cancelled = false;
@@ -181,10 +274,10 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     const isSlowNet = effectiveType === '2g' || effectiveType === 'slow-2g';
     const preloadPriority: 'high' | 'low' = (!saveData && !isSlowNet) ? 'high' : 'low';
 
-    // Preload the runtime in parallel
+    // Preload the runtime JS chunk in parallel (fires immediately)
     import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
 
-    // Preconnect to Spline asset origins so scene subresources start faster
+    // Preconnect to Spline asset origins so subresources start sooner
     const preconnectOrigins = ['https://prod.spline.design', 'https://cdn.spline.design'] as const;
     preconnectOrigins.forEach((href) => {
       if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
@@ -195,7 +288,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       document.head.appendChild(l);
     });
 
-    // Preload the scene file
+    // Preload the scene file with high priority
     let link: HTMLLinkElement | null = null;
     const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`) as HTMLLinkElement | null;
     if (!existing) {
@@ -208,45 +301,20 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       link.setAttribute('fetchpriority', preloadPriority);
       document.head.appendChild(link);
     }
+    // Warm the browser cache immediately
     fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
 
-    // Wait for exclusive GPU slot
-    waitForSplineSlot().then((release) => {
-      if (cancelled) { release(); return; }
-      releaseRef.current = release;
-      setAllowLoad(true);
-    });
+    // Allow Spline to mount right away — no lock queue
+    if (!cancelled) setAllowLoad(true);
 
     return () => {
       cancelled = true;
       if (link && link.parentNode) link.parentNode.removeChild(link);
-      if (releaseRef.current) {
-        releaseRef.current();
-        releaseRef.current = null;
-      }
-      setAllowLoad(false);
     };
   }, [scene]);
 
-  // Safety timeout — release lock after 15s even if Spline never fires onLoad
-  useEffect(() => {
-    if (!allowLoad || !releaseRef.current) return;
-    const timeout = setTimeout(() => {
-      if (releaseRef.current) {
-        releaseRef.current();
-        releaseRef.current = null;
-      }
-    }, 15000);
-    return () => clearTimeout(timeout);
-  }, [allowLoad]);
-
-  const handleLoad = useCallback((splineApp: any) => {
+  const handleLoad = useCallback((_splineApp?: any) => {
     setIsLoaded(true);
-    // Release the load lock so other Spline instances can load
-    if (releaseRef.current) {
-      releaseRef.current();
-      releaseRef.current = null;
-    }
   }, []);
 
   return (
@@ -1737,7 +1805,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               </motion.div>
 
               {/* Ultimate Hub Panel - Portal for z-index */}
-              {typeof window !== 'undefined' && createPortal(
+              <SafePortal>
                 <UnifiedHubPanel
                   isOpen={isHubOpen}
                   onClose={closeHubPanel}
@@ -1748,9 +1816,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   userId={undefined}
                   userEmail={undefined}
                   prices={prices}
-                />,
-                document.body
-              )}
+                />
+              </SafePortal>
             </>
           )
         )}
@@ -1844,7 +1911,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             </motion.div>
 
             {/* Ultimate Hub Panel - Portal for z-index */}
-            {typeof window !== 'undefined' && createPortal(
+            <SafePortal>
               <UnifiedHubPanel
                 isOpen={isHubOpen}
                 onClose={closeHubPanel}
@@ -1855,9 +1922,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 userId={undefined}
                 userEmail={undefined}
                 prices={prices}
-              />,
-              document.body
-            )}
+              />
+            </SafePortal>
           </>
         )}
 

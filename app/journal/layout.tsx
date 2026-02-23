@@ -15,18 +15,18 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Trading Journal | Track Your Trades | BullMoney',
     description: 'Log trades, analyze performance, and become more profitable with BullMoney Journal.',
-    url: 'https://www.bullmoney.shop/journal',
+    url: 'https://bullmoney.online/journal',
     type: 'website',
     siteName: 'BullMoney Trading Community',
     locale: 'en_US',
     alternateLocale: ALL_OG_LOCALES.filter(l => l !== 'en_US'),
-    images: [{ url: '/ONcc2l601.svg', width: 1200, height: 630, alt: 'BullMoney Trading Journal' }],
+    images: [{ url: '/IMG_2921.PNG', width: 1200, height: 630, alt: 'BullMoney Trading Journal' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Trading Journal | BullMoney',
     description: 'Track and analyze your trades. Become a more profitable trader.',
-    images: ['/ONcc2l601.svg'],
+    images: ['/IMG_2921.PNG'],
   },
   alternates: makeAlternatesMetadata('/journal'),
 };

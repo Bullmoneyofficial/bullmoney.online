@@ -2,7 +2,7 @@
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "BullMoney",
-  "url": "https://www.bullmoney.shop",
+  "url": "https://bullmoney.online",
   "description": "Free trading community with crypto setups, market analysis & mentorship",
   "inLanguage": [
     "en",
@@ -46,7 +46,7 @@
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://www.bullmoney.shop/Blogs?search={search_term_string}"
+      "urlTemplate": "https://bullmoney.online/Blogs?search={search_term_string}"
     },
     "query-input": "required name=search_term_string"
   }
