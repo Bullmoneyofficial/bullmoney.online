@@ -3,6 +3,7 @@ import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 export default [
   {
     ignores: [
+      "_deadfiles_backup/**",
       "Bullcasino/**",
       "casino-backend/**",
       "**/*.min.js",
