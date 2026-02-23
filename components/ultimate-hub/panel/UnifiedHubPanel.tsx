@@ -90,6 +90,7 @@ import { useBrowserCapabilities } from '@/components/ultimate-hub/hooks/useBrows
 import { useConsoleLogs } from '@/components/ultimate-hub/hooks/useConsoleLogs';
 import { calculate3DPerformanceScore, getPerformanceGrade } from '@/components/ultimate-hub/utils/performance';
 import { getFpsColor } from '@/components/ultimate-hub/styles';
+import { useScrollLock } from '@/hooks/useScrollLock';
 const ChannelCarousel = dynamic(
   () => import('@/components/ultimate-hub/components/ChannelCarousel').then(m => ({ default: m.ChannelCarousel })),
   { ssr: false, loading: () => null }

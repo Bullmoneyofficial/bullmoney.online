@@ -5,6 +5,7 @@ import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "fram
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Copy, Check, Sparkles, Scissors, QrCode, X, Users, Timer } from "lucide-react";
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // --- GLOBAL STYLES & UTILS ---
 function cn(...inputs: ClassValue[]) {
@@ -137,10 +138,7 @@ const useModal = () => {
 
 export function Modal({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : 'auto';
-    return () => { document.body.style.overflow = 'visible'; };
-  }, [open]);
+  useScrollLock(open);
 
   return (
     <ModalContext.Provider value={{ open, setOpen }}>

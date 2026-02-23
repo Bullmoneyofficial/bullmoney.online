@@ -16,7 +16,8 @@ import { twMerge } from 'tailwind-merge';
 import { gsap } from 'gsap';
 
 // Import the Context Hook
-import { useStudio } from '@/context/StudioContext'; 
+import { useStudio } from '@/context/StudioContext';
+import { useScrollLock } from '@/hooks/useScrollLock'; 
 
 // --- UTILS ---
 function cn(...inputs: ClassValue[]) {
@@ -46,10 +47,7 @@ const useModal = () => {
 export function Modal({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    // Prevent scrolling when modal is open
-    document.body.style.overflow = open ? 'hidden' : 'auto';
-  }, [open]);
+  useScrollLock(open);
 
   return (
     <ModalContext.Provider value={{ open, setOpen }}>

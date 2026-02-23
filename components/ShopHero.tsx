@@ -28,6 +28,7 @@ import Faq from "@/app/oldstore/Faq";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // --- UTILS ---
 function cn(...inputs: ClassValue[]) {
@@ -337,18 +338,8 @@ const HeroParallax = () => {
     }
   }
 
-  useEffect(() => {
-    // Only disable scroll on mobile when a product modal is open
-    const isMobileViewport = window.innerWidth < 768;
-    if (isMobileViewport && activeProduct) {
-        document.body.style.overflow = "hidden";
-    } else {
-        document.body.style.overflow = "visible";
-    }
-    return () => { 
-        document.body.style.overflow = "visible"; 
-    }
-  }, [activeProduct]);
+  const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < 768;
+  useScrollLock(Boolean(isMobileViewport && activeProduct));
 
   if (loading) {
       return (

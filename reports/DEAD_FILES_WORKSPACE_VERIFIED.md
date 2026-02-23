@@ -1,0 +1,344 @@
+# Dead File Verification Report
+Generated: 2026-02-23T15:59:24.370Z
+
+Universe(code/css): 1312
+Reachable(import graph): 766
+Unused candidates: 547
+Unused candidates with string/URL signals: 71
+
+## Buckets (unused candidates)
+- toolchain: 10
+- publicAsset: 65
+- script: 15
+- style: 52
+- app: 84
+- component: 255
+- lib: 32
+- hook: 22
+- other: 12
+
+## Unused candidates with signals (sample)
+- app/games/bullcasino/css/admin_style.css
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/css/flappybird.css
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/css/notifyme.css
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/css/style.css
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/admin_app.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/app.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/chart.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/admin_app.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/app.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/chart.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/crash.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/dice.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/jquery.flot.min.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/jquery.kinetic.min.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/mines.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/notifyme.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/notifyme.min.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/plinko.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/socket.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/compiled/wallet.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/crash.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/dice.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/flappybird.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/jquery.flot.min.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/jquery.kinetic.min.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/mines.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/notifyme.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/notifyme.min.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/plinko.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/socket.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/js/wallet.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/server/app.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- app/games/bullcasino/server/crash.js
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- public/assets/css/notifyme.css
+  - string-ref: /assets/css/notifyme.css
+    - /Users/justin/Documents/newbullmoney/app/games/[game]/GamePageClient.tsx:42
+- public/assets/css/style.css
+  - string-ref: /assets/css/style.css
+    - /Users/justin/Documents/newbullmoney/app/games/[game]/GamePageClient.tsx:41
+- public/games/bullcasino/css/flappybird.css
+  - string-ref: /games/bullcasino/css/flappybird.css
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/[game]/GamePageClient.tsx:44
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- public/games/bullcasino/js/flappybird.js
+  - string-ref: /games/bullcasino/js/flappybird.js
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+  - string-ref: /games/bullcasino/
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:15
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:16
+    - /Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html:166
+- public/scripts/BMBRAIN/bmbrain-global.js
+  - string-ref: /scripts/BMBRAIN/bmbrain-global.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1016
+- public/scripts/BMBRAIN/compat-layer.js
+  - string-ref: /scripts/BMBRAIN/compat-layer.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:710
+- public/scripts/BMBRAIN/device-capabilities.js
+  - string-ref: /scripts/BMBRAIN/device-capabilities.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1100
+    - /Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js:147
+- public/scripts/BMBRAIN/inapp-shield.js
+  - string-ref: /scripts/BMBRAIN/inapp-shield.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1020
+    - /Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js:142
+- public/scripts/BMBRAIN/input-controller.js
+  - string-ref: /scripts/BMBRAIN/input-controller.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1101
+    - /Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js:148
+- public/scripts/BMBRAIN/memory-manager.js
+  - string-ref: /scripts/BMBRAIN/memory-manager.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1048
+- public/scripts/BMBRAIN/mobile-crash-shield.js
+  - string-ref: /scripts/BMBRAIN/mobile-crash-shield.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1019
+    - /Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js:141
+- public/scripts/BMBRAIN/network-optimizer.js
+  - string-ref: /scripts/BMBRAIN/network-optimizer.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1104
+    - /Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js:150
+- public/scripts/BMBRAIN/offline-detect.js
+  - string-ref: /scripts/BMBRAIN/offline-detect.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1107
+    - /Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js:151
+- public/scripts/BMBRAIN/push-manager.js
+  - string-ref: /scripts/BMBRAIN/push-manager.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1102
+    - /Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js:149
+- public/scripts/BMBRAIN/spline-universal.js
+  - string-ref: /scripts/BMBRAIN/spline-universal.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1106
+    - /Users/justin/Documents/newbullmoney/public/scripts/desktop-homepage-optimizer.js:206
+- public/scripts/desktop-cls-prevention.js
+  - string-ref: /scripts/desktop-cls-prevention.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1116
+    - /Users/justin/Documents/newbullmoney/next.config.mjs:568
+- public/scripts/desktop-fcp-optimizer.js
+  - string-ref: /scripts/desktop-fcp-optimizer.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1114
+    - /Users/justin/Documents/newbullmoney/next.config.mjs:546
+- public/scripts/desktop-fps-boost.js
+  - string-ref: /scripts/desktop-fps-boost.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1127
+    - /Users/justin/Documents/newbullmoney/next.config.mjs:613
+- public/scripts/desktop-interaction-sounds.js
+  - string-ref: /scripts/desktop-interaction-sounds.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1124
+    - /Users/justin/Documents/newbullmoney/next.config.mjs:586
+- public/scripts/desktop-lcp-optimizer.js
+  - string-ref: /scripts/desktop-lcp-optimizer.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1115
+    - /Users/justin/Documents/newbullmoney/next.config.mjs:559
+- public/scripts/desktop-scroll-experience.js
+  - string-ref: /scripts/desktop-scroll-experience.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1125
+    - /Users/justin/Documents/newbullmoney/next.config.mjs:595
+- public/scripts/desktop-stability-shield.js
+  - string-ref: /scripts/desktop-stability-shield.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1126
+    - /Users/justin/Documents/newbullmoney/next.config.mjs:604
+- public/scripts/desktop-ttfb-optimizer.js
+  - string-ref: /scripts/desktop-ttfb-optimizer.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1117
+    - /Users/justin/Documents/newbullmoney/next.config.mjs:577
+- public/scripts/detect-120hz.js
+  - string-ref: /scripts/detect-120hz.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1097
+- public/scripts/device-detect.js
+  - string-ref: /scripts/device-detect.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1099
+    - /Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js:146
+- public/scripts/perf-monitor.js
+  - string-ref: /scripts/perf-monitor.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1098
+- public/scripts/splash-init.js
+  - string-ref: /scripts/splash-init.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:705
+- public/scripts/spline-preload.js
+  - string-ref: /scripts/spline-preload.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:913
+- public/scripts/sw-touch.js
+  - string-ref: /scripts/sw-touch.js
+    - /Users/justin/Documents/newbullmoney/app/layout.tsx:1013
+- public/sw.js
+  - string-ref: /sw.js
+    - /Users/justin/Documents/newbullmoney/components/NotificationPermissionModal.tsx:63
+    - /Users/justin/Documents/newbullmoney/lib/serviceWorker.ts:32
+    - /Users/justin/Documents/newbullmoney/hooks/useNotifications.ts:187
+- styles/browsers/_chrome.css
+  - path-ref: styles/browsers/_chrome.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:18
+  - basename-ref: _chrome.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:18
+- styles/browsers/_inapp.css
+  - path-ref: styles/browsers/_inapp.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:20
+  - basename-ref: _inapp.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:20
+- styles/browsers/_safari.css
+  - path-ref: styles/browsers/_safari.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:19
+  - basename-ref: _safari.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:19
+- styles/browsers/_samsung.css
+  - path-ref: styles/browsers/_samsung.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:17
+  - basename-ref: _samsung.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:17
+- styles/fps-optimization.css
+  - basename-ref: fps-optimization.css
+    - /Users/justin/Documents/newbullmoney/components/FpsScrollOptimizer.tsx:11
+- styles/index.css
+  - basename-ref: index.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:15
+    - /Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx:10
+- styles/modal-scroll-lock.css
+  - path-ref: styles/modal-scroll-lock.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:16
+  - basename-ref: modal-scroll-lock.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:16
+- styles/themes/supreme-z-index.css
+  - path-ref: styles/themes/supreme-z-index.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:15
+    - /Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx:10
+  - path-ref: @/styles/themes/supreme-z-index.css
+    - /Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx:10
+  - basename-ref: supreme-z-index.css
+    - /Users/justin/Documents/newbullmoney/app/globals.css:15
+    - /Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx:10

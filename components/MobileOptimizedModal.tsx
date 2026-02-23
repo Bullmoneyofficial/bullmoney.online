@@ -15,6 +15,7 @@ import React, { useEffect, useCallback, useRef, memo } from 'react';
 import { motion, AnimatePresence, TargetAndTransition } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -69,50 +70,8 @@ const POSITION_CLASSES = {
 };
 
 // ============================================================================
-// BODY SCROLL LOCK
+// BODY SCROLL LOCK - Delegated to centralized useScrollLock hook
 // ============================================================================
-
-let scrollLockCount = 0;
-let originalOverflow = '';
-let originalPaddingRight = '';
-
-function lockBodyScroll() {
-  if (typeof window === 'undefined') return;
-  
-  if (scrollLockCount === 0) {
-    originalOverflow = document.body.style.overflow;
-    originalPaddingRight = document.body.style.paddingRight;
-    
-    // Calculate scrollbar width to prevent layout shift
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    
-    document.body.style.overflow = 'hidden';
-    document.body.style.paddingRight = `${scrollbarWidth}px`;
-    
-    // iOS fix
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-    }
-  }
-  scrollLockCount++;
-}
-
-function unlockBodyScroll() {
-  if (typeof window === 'undefined') return;
-  
-  scrollLockCount--;
-  if (scrollLockCount === 0) {
-    document.body.style.overflow = originalOverflow;
-    document.body.style.paddingRight = originalPaddingRight;
-    
-    // iOS fix cleanup
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      document.body.style.position = '';
-      document.body.style.width = '';
-    }
-  }
-}
 
 // ============================================================================
 // MODAL COMPONENT
@@ -165,20 +124,8 @@ export const MobileOptimizedModal = memo(function MobileOptimizedModal({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, closeOnEscape, onClose]);
   
-  // Handle body scroll lock
-  useEffect(() => {
-    if (!lockScroll) return;
-    
-    if (isOpen) {
-      lockBodyScroll();
-    }
-    
-    return () => {
-      if (isOpen) {
-        unlockBodyScroll();
-      }
-    };
-  }, [isOpen, lockScroll]);
+  // Handle body scroll lock via centralized hook
+  useScrollLock(Boolean(isOpen && lockScroll));
   
   // Focus trap
   useEffect(() => {

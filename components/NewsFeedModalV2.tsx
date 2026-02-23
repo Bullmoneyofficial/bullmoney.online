@@ -13,6 +13,7 @@ import { ShimmerLine, ShimmerBorder } from "@/components/ui/UnifiedShimmer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import { trackEvent } from "@/lib/analytics";
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // --- UTILS ---
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -899,16 +900,7 @@ export const NewsFeedModalV2 = memo(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  useScrollLock(isOpen);
 
   // ESC key support
   useEffect(() => {
@@ -948,16 +940,7 @@ export const NewsFeedButton = memo(({ className }: { className?: string }) => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  useScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;

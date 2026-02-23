@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { createSupabaseClient } from '@/lib/supabase';
 import { useUIState } from '@/contexts/UIStateContext';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // ==========================================
 // 0. CONFIGURATION & CONSTANTS
@@ -761,23 +762,21 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean; o
     };
   }, []);
 
+  useScrollLock(isOpen);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
 
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = '';
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
 
-    document.body.style.overflow = '';
     return () => {
-      document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

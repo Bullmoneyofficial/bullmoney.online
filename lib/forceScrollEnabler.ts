@@ -69,11 +69,38 @@ export function forceEnableScrolling() {
       }
     }
 
-    // SAFETY: Don't override scroll lock if modal is actually open
-    const hasOpenModal = document.querySelector('[role="dialog"]:not([data-state="closed"])');
+    // SAFETY: Respect the centralized useScrollLock ref-counting system.
+    // If a scroll-lock-count attribute exists and is > 0, a modal/menu/drawer
+    // has intentionally locked scroll — do NOT fight it.
+    const scrollLockCount = parseInt(body.getAttribute('data-scroll-lock-count') || '0', 10);
+    if (scrollLockCount > 0) {
+      return;
+    }
+
+    // SAFETY: Don't override scroll lock if modal is actually *visible* on screen.
+    // Previous check `[role="dialog"]:not([data-state="closed"])` was too broad —
+    // many modals stay in the DOM but are hidden (display:none, visibility:hidden,
+    // opacity:0) and their role="dialog" prevents scroll from ever being restored.
+    // Now we only respect dialogs that are actually visible to the user.
+    const allDialogs = document.querySelectorAll('[role="dialog"]:not([data-state="closed"])');
+    let hasVisibleModal = false;
+    for (let i = 0; i < allDialogs.length; i++) {
+      const el = allDialogs[i] as HTMLElement;
+      // Quick checks that avoid getComputedStyle (cheaper on low-memory devices)
+      if (el.offsetParent !== null || el.style.display === 'flex' || el.style.display === 'block') {
+        // Element is likely visible
+        hasVisibleModal = true;
+        break;
+      }
+      // Fallback: check computed style only for position:fixed elements (modals)
+      if (el.style.position === 'fixed' && el.style.display !== 'none') {
+        hasVisibleModal = true;
+        break;
+      }
+    }
     const hasOpenAffiliate = document.querySelector('[data-affiliate-modal]:not([data-state="closed"])');
     
-    if (hasOpenModal || hasOpenAffiliate || (storeHeaderLockAttr && hasStoreHeaderLockUi)) {
+    if (hasVisibleModal || hasOpenAffiliate || (storeHeaderLockAttr && hasStoreHeaderLockUi)) {
       // Skip scroll enablement when modals are genuinely open
       return;
     }
@@ -157,13 +184,13 @@ export function forceEnableScrolling() {
     }
 
     // Remove modal-open class if no modal is actually open
-    if (body.classList.contains('modal-open') && !hasOpenModal) {
+    if (body.classList.contains('modal-open') && !hasVisibleModal) {
       body.classList.remove('modal-open');
     }
-    if (body.hasAttribute('data-modal-open') && !hasOpenModal) {
+    if (body.hasAttribute('data-modal-open') && !hasVisibleModal) {
       body.removeAttribute('data-modal-open');
     }
-    if (html.hasAttribute('data-modal-open') && !hasOpenModal) {
+    if (html.hasAttribute('data-modal-open') && !hasVisibleModal) {
       html.removeAttribute('data-modal-open');
     }
 
@@ -317,7 +344,9 @@ export function forceEnableScrolling() {
     // Avoid hijacking wheel inside inputs/editors
     if (isEditableTarget(event.target)) return;
 
-    // If a modal is open, let the modal manage its own scroll.
+    // If a modal is open (scroll lock active), let the modal manage its own scroll.
+    const scrollLockActive = parseInt(document.body.getAttribute('data-scroll-lock-count') || '0', 10) > 0;
+    if (scrollLockActive) return;
     const hasOpenModal = document.querySelector('[role="dialog"]:not([data-state="closed"])');
     if (hasOpenModal) return;
 
@@ -412,6 +441,56 @@ export function forceEnableScrolling() {
   };
   document.addEventListener('click', onClick, { passive: true });
 
+  // ---------------------------------------------------------------------------
+  // Mobile / in-app browser stale-lock recovery
+  //
+  // On mobile (especially in-app browsers like Instagram, Facebook, TikTok)
+  // and low-memory devices, the MutationObserver debounce (250ms) plus the
+  // isScrolling guard can leave the page locked for seconds — or permanently.
+  //
+  // This interval runs every 800ms and checks:
+  //  1. Is body overflow hidden / position fixed?
+  //  2. Is there NO visible modal / lock UI / scroll-lock-count?
+  //  3. If so, force-unlock.
+  // ---------------------------------------------------------------------------
+  let staleLockIntervalId: ReturnType<typeof setInterval> | null = null;
+  const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(ua) || isInAppBrowser;
+  if (isMobileDevice) {
+    staleLockIntervalId = setInterval(() => {
+      const b = document.body;
+      const h = document.documentElement;
+      // Skip if centralized scroll lock is active
+      const lockCount = parseInt(b.getAttribute('data-scroll-lock-count') || '0', 10);
+      if (lockCount > 0) return;
+      // Skip if StoreHeader lock UI is present
+      if (document.querySelector('[data-storeheader-lock-ui="true"]')) return;
+
+      const isLocked =
+        b.style.overflow === 'hidden' ||
+        b.style.overflowY === 'hidden' ||
+        h.style.overflow === 'hidden' ||
+        h.style.overflowY === 'hidden' ||
+        b.style.position === 'fixed';
+
+      if (!isLocked) return;
+
+      // Check if any visible dialog is actually on screen
+      const dialogs = document.querySelectorAll('[role="dialog"]:not([data-state="closed"])');
+      let anyVisible = false;
+      for (let i = 0; i < dialogs.length; i++) {
+        const el = dialogs[i] as HTMLElement;
+        if (el.offsetParent !== null || el.style.position === 'fixed' && el.style.display !== 'none') {
+          anyVisible = true;
+          break;
+        }
+      }
+      if (anyVisible) return;
+
+      // No legitimate lock detected — force unlock
+      enableScroll();
+    }, 800);
+  }
+
   // Cleanup function
   return () => {
     window.removeEventListener('wheel', onWheelCapture as any, true as any);
@@ -427,6 +506,10 @@ export function forceEnableScrolling() {
     if (scrollEndTimer) {
       clearTimeout(scrollEndTimer);
       scrollEndTimer = null;
+    }
+    if (staleLockIntervalId) {
+      clearInterval(staleLockIntervalId);
+      staleLockIntervalId = null;
     }
     observer.disconnect();
     if (clickTimeout) {

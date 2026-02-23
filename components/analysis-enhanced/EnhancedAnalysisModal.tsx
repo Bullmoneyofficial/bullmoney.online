@@ -37,6 +37,7 @@ import { SentimentBadge } from './SentimentBadge';
 import { AttachmentCarousel } from './AttachmentCarousel';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import type { Analysis, ReactionType, Attachment, ContentType, MarketType, Direction, ChartConfig } from '@/types/feed';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // Dynamically import other components to avoid circular dependencies
 import dynamic from 'next/dynamic';
@@ -165,19 +166,7 @@ export const EnhancedAnalysisModal = memo(() => {
     };
   }, [setIsOpen]);
 
-  useEffect(() => {
-    console.log('[EnhancedAnalysisModal] isOpen effect triggered:', isOpen);
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      console.log('[EnhancedAnalysisModal] Modal OPENING - body overflow hidden');
-    } else {
-      document.body.style.overflow = '';
-      console.log('[EnhancedAnalysisModal] Modal CLOSING - body overflow reset');
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useScrollLock(isOpen);
 
   // Always render when mounted - the AnimatePresence handles show/hide
   if (!mounted) {

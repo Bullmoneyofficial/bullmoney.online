@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { getGameContent } from '@/app/games/[game]/games';
 import { GAME_STYLES } from '@/app/games/[game]/games/game-styles';
 import { VALID_GAMES } from '@/app/games/[game]/games/valid-games';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 const GAME_PATH_RE = /^\/games\/([^/?#]+)\/?$/;
 
@@ -63,19 +64,14 @@ export function GamesModalProvider() {
     return () => document.removeEventListener('click', onClick, true);
   }, [mounted, validGames]);
 
+  useScrollLock(Boolean(mounted && activeGame));
+
   useEffect(() => {
     if (!mounted) return;
-    const body = document.body;
     const html = document.documentElement;
     if (activeGame) {
-      const prevOverflow = body.style.overflow;
-      const prevTransform = body.style.transform;
-      body.style.overflow = 'hidden';
-      body.style.transform = 'none';
       html.classList.add('bm-modal-open');
       return () => {
-        body.style.overflow = prevOverflow;
-        body.style.transform = prevTransform;
         html.classList.remove('bm-modal-open');
       };
     }

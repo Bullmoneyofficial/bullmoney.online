@@ -1085,7 +1085,7 @@ export default function RootLayout({
                     window.setTimeout(function(){
                       if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
                     }, 450);
-                  }, 15000);
+                  }, 4000);
                 } catch (e) {}
               })();
             `,
@@ -1111,10 +1111,10 @@ export default function RootLayout({
         {/* Targets: FCP <1.8s, LCP <2.5s, CLS <0.1, TTFB <0.8s              */}
         {/* These scripts self-gate to desktop only (>769px, non-mobile UA)    */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        <Script id="desktop-fcp-optimizer" src="/scripts/desktop-fcp-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-lcp-optimizer" src="/scripts/desktop-lcp-optimizer.js" strategy="afterInteractive" />
-        <Script id="desktop-cls-prevention" src="/scripts/desktop-cls-prevention.js" strategy="afterInteractive" />
-        <Script id="desktop-ttfb-optimizer" src="/scripts/desktop-ttfb-optimizer.js" strategy="afterInteractive" />
+        <Script id="desktop-fcp-optimizer" src="/scripts/desktop-fcp-optimizer.js" strategy="lazyOnload" />
+        <Script id="desktop-lcp-optimizer" src="/scripts/desktop-lcp-optimizer.js" strategy="lazyOnload" />
+        <Script id="desktop-cls-prevention" src="/scripts/desktop-cls-prevention.js" strategy="lazyOnload" />
+        <Script id="desktop-ttfb-optimizer" src="/scripts/desktop-ttfb-optimizer.js" strategy="lazyOnload" />
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {/* DESKTOP EXPERIENCE ENHANCEMENT SCRIPTS                             */}

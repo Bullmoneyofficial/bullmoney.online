@@ -15,6 +15,7 @@ import { useChartNewsUI } from '@/contexts/UIStateContext';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import { TradingViewDropdown } from '@/components/Chartnews';
 import { NewsFeedButton } from '@/components/NewsFeedModalV2';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // Modal Context
 interface ModalState {
@@ -40,16 +41,7 @@ export const ChartNewsModal = memo(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useScrollLock(isOpen);
 
   if (!mounted) return null;
 

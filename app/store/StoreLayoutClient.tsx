@@ -7,7 +7,7 @@ import { StoreHeader } from '@/components/store/StoreHeader';
 import dynamic from 'next/dynamic';
 
 const StoreSupportButton = dynamic(() => import('@/components/shop/StoreSupportButton'), { ssr: false });
-import { Toaster } from 'sonner';
+import { toast, Toaster } from 'sonner';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { syncSessionLayers } from '@/lib/sessionPersistence';
 // AutoTranslateProvider moved to root LayoutProviders for global coverage
@@ -29,6 +29,41 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // If user arrived here via bullmoney.online first-visit redirect, offer a quick “go back” CTA.
+  // Also warm the trading site in the background so return navigation feels faster.
+  useEffect(() => {
+    if (!mounted) return;
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const from = (params.get('bm_from') || '').toLowerCase();
+    if (from !== 'online') return;
+
+    const returnTo = params.get('bm_return') || 'https://bullmoney.online/';
+    const shownKey = 'bm_store_return_prompt_shown';
+    if (sessionStorage.getItem(shownKey) === '1') return;
+    sessionStorage.setItem(shownKey, '1');
+
+    // Background warm-up (best-effort, opaque request)
+    try {
+      const warm = new URL(returnTo);
+      warm.searchParams.set('bm_warm', '1');
+      fetch(warm.toString(), { mode: 'no-cors', keepalive: true }).catch(() => {});
+    } catch {
+      // ignore
+    }
+
+    toast('Go back to the trading site?', {
+      description: 'You were redirected here from bullmoney.online.',
+      action: {
+        label: 'Go back',
+        onClick: () => {
+          window.location.href = returnTo;
+        },
+      },
+    });
+  }, [mounted]);
 
   // Auto-login check using pagemode session + sync all storage layers
   useEffect(() => {

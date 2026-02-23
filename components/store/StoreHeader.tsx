@@ -22,6 +22,7 @@ import { useCourseDrawerUI, useSocialsDrawerUI, useProductsModalUI, useThemeSele
 import dynamic from 'next/dynamic';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useHeroMode } from '@/hooks/useHeroMode';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import type { HeroMode } from '@/hooks/useHeroMode';
 
 // Lazy-load framer-motion — only needed when mobile menu is opened
@@ -384,136 +385,39 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     return () => window.removeEventListener('store_audio_widget_toggle', handleAudioToggle);
   }, []);
 
+  // ---- Centralized scroll lock via useScrollLock (reference-counted) ----
+  const shouldLockBackgroundScroll = Boolean(
+    mobileMenuOpen ||
+    siteSearchOpen ||
+    affiliateModalOpen ||
+    faqModalOpen ||
+    adminModalOpen ||
+    gamesManualOpen ||
+    isProductsModalOpen ||
+    isCartOpen ||
+    accountManagerOpen ||
+    isCourseDrawerOpen ||
+    isSocialsDrawerOpen ||
+    isLiveStreamModalOpen
+  );
+
+  useScrollLock(shouldLockBackgroundScroll);
+
+  // Keep the data-storeheader-scroll-lock attributes for forceScrollEnabler
+  // and data-storeheader-lock-ui detection in the old code paths that read them.
   useEffect(() => {
     if (typeof document === 'undefined') return;
-
-    const shouldLockBackgroundScroll = Boolean(
-      mobileMenuOpen ||
-      siteSearchOpen ||
-      affiliateModalOpen ||
-      faqModalOpen ||
-      adminModalOpen ||
-      gamesManualOpen ||
-      isProductsModalOpen ||
-      isCartOpen ||
-      accountManagerOpen ||
-      isCourseDrawerOpen ||
-      isSocialsDrawerOpen ||
-      isLiveStreamModalOpen
-    );
-
     const html = document.documentElement;
     const body = document.body;
 
-    const unlockScroll = () => {
-      const top = body.style.top;
-      const lockedY = top && top.startsWith('-') ? Math.abs(parseInt(top, 10)) : null;
-
-      body.removeAttribute('data-storeheader-scroll-lock');
-      html.removeAttribute('data-storeheader-scroll-lock');
-
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      body.style.overflow = '';
-      html.style.overflow = '';
-
-      // Store pages rely on a normally scrolling document; be explicit.
-      html.style.overflowY = 'auto';
-      html.style.overflowX = 'hidden';
-      body.style.overflowY = 'auto';
-      body.style.overflowX = 'hidden';
-
-      const targetY = (typeof lockedY === 'number' && !Number.isNaN(lockedY))
-        ? lockedY
-        : storeHeaderScrollYRef.current;
-      if (targetY) {
-        try {
-          window.scrollTo(0, targetY);
-        } catch {
-          // Ignore
-        }
-      }
-    };
-
     if (shouldLockBackgroundScroll) {
-      if (body.getAttribute('data-storeheader-scroll-lock') !== 'true') {
-        storeHeaderScrollYRef.current = window.scrollY || window.pageYOffset || 0;
-      }
-
       body.setAttribute('data-storeheader-scroll-lock', 'true');
       html.setAttribute('data-storeheader-scroll-lock', 'true');
-
-      if (mobileMenuOpen) {
-        html.style.overflow = 'hidden';
-        body.style.overflow = 'hidden';
-        body.style.position = '';
-        body.style.top = '';
-        body.style.left = '';
-        body.style.right = '';
-        body.style.width = '';
-        return;
-      }
-
-      body.style.position = 'fixed';
-      body.style.top = `-${storeHeaderScrollYRef.current}px`;
-      body.style.left = '0';
-      body.style.right = '0';
-      body.style.width = '100%';
-      body.style.overflow = 'hidden';
-      return;
-    }
-
-    // Release scroll lock.
-    // IMPORTANT: Some flows can leave body in a locked state without the attribute
-    // (e.g. interrupted route transitions). If no overlay is open, always ensure
-    // the document is scrollable again.
-    const hasStoreHeaderAttr = body.getAttribute('data-storeheader-scroll-lock') === 'true'
-      || html.getAttribute('data-storeheader-scroll-lock') === 'true';
-    const looksLocked =
-      body.style.position === 'fixed' ||
-      body.style.overflow === 'hidden' ||
-      html.style.overflow === 'hidden' ||
-      body.style.top.startsWith('-');
-
-    if (hasStoreHeaderAttr || looksLocked) {
-      unlockScroll();
-    }
-  }, [
-    mobileMenuOpen,
-    siteSearchOpen,
-    affiliateModalOpen,
-    faqModalOpen,
-    adminModalOpen,
-    gamesManualOpen,
-    isProductsModalOpen,
-    isCartOpen,
-    accountManagerOpen,
-    isCourseDrawerOpen,
-    isSocialsDrawerOpen,
-    isLiveStreamModalOpen,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (typeof document === 'undefined') return;
-      const html = document.documentElement;
-      const body = document.body;
-      if (body.getAttribute('data-storeheader-scroll-lock') !== 'true') return;
-
+    } else {
       body.removeAttribute('data-storeheader-scroll-lock');
       html.removeAttribute('data-storeheader-scroll-lock');
-
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      body.style.overflow = '';
-    };
-  }, []);
+    }
+  }, [shouldLockBackgroundScroll]);
 
   // Load Design Sections preference
   useEffect(() => {

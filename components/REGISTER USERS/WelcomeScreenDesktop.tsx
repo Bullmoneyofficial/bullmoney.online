@@ -1,22 +1,11 @@
 "use client";
 
-import { useState, useEffect, memo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, User } from 'lucide-react';
 import { UI_Z_INDEX } from "@/contexts/UIStateContext";
 import type { SplineWrapperProps } from '@/lib/spline-wrapper';
-
-const UnifiedFpsPill = dynamic(
-  () => import('@/components/ultimate-hub/pills/UnifiedFpsPill').then(m => ({ default: m.UnifiedFpsPill })),
-  { ssr: false, loading: () => null }
-);
-const UnifiedHubPanel = dynamic(
-  () => import('@/components/ultimate-hub/panel/UnifiedHubPanel').then(m => ({ default: m.UnifiedHubPanel })),
-  { ssr: false, loading: () => null }
-);
-import { useLivePrices } from '@/components/ultimate-hub/hooks/useAccess';
 
 const LegalDisclaimerModal = dynamic(
   () => import("@/components/Mainpage/footer/LegalDisclaimerModal").then(m => ({ default: m.LegalDisclaimerModal })),
@@ -178,7 +167,21 @@ const NEON_STYLES = `
   .float-animation {
     animation: float-up 3s ease-in-out infinite;
   }
+
+  .welcome-pull-tab {
+    overflow: hidden;
+  }
 `;
+
+type PullEdge = 'left' | 'right' | 'top' | 'bottom';
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function pickOne<T>(items: readonly T[]) {
+  return items[Math.floor(Math.random() * items.length)]!;
+}
 
 interface WelcomeScreenDesktopProps {
   onSignUp: () => void;
@@ -188,23 +191,201 @@ interface WelcomeScreenDesktopProps {
 }
 
 export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackground = false }: WelcomeScreenDesktopProps) {
-  const [isHubOpen, setIsHubOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy' | 'disclaimer'>('terms');
 
   // Ghost animation state - card pulses gently until user interacts
   const [userInteracted, setUserInteracted] = useState(false);
 
-  // Use live prices from UltimateHub
-  const prices = useLivePrices();
+  // Bubble animation pauses on interaction, then resumes after inactivity.
+  const [bubblePaused, setBubblePaused] = useState(false);
+  const resumeBubbleTimerRef = useRef<number | null>(null);
+
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const lastGlobalActivityRef = useRef(0);
+
+  const prefersReducedMotion = useReducedMotion();
+
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [pullTabEdge, setPullTabEdge] = useState<PullEdge | null>(null);
+  const [bubblePose, setBubblePose] = useState({ x: 0, y: 0, scale: 1 });
+  const bubbleTimersRef = useRef<number[]>([]);
+
+  const bubbleEnabled = useMemo(() => {
+    if (prefersReducedMotion) return false;
+    return !bubblePaused;
+  }, [prefersReducedMotion, bubblePaused]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  useEffect(() => {
+    bubbleTimersRef.current.forEach((t) => window.clearTimeout(t));
+    bubbleTimersRef.current = [];
+
+    if (!bubbleEnabled) {
+      // Bubble loop is paused; keep current pose/pull-tab state (other handlers may control it).
+      return;
+    }
+
+    const edges: readonly PullEdge[] = ['left', 'right'] as const;
+
+    const schedule = (fn: () => void, ms: number) => {
+      const id = window.setTimeout(fn, ms);
+      bubbleTimersRef.current.push(id);
+    };
+
+    const computeBounds = () => {
+      // Approximate card size to keep it on-screen while moving.
+      // It doesn’t need to be perfect; it just prevents drifting off-canvas.
+      const margin = 18;
+      const approxCardW = 360;
+      const approxCardH = 480;
+      const safeX = Math.max(0, viewport.width / 2 - approxCardW / 2 - margin);
+      const safeY = Math.max(0, viewport.height / 2 - approxCardH / 2 - margin);
+      return { safeX, safeY };
+    };
+
+    const moveToRandomInterior = () => {
+      const { safeX, safeY } = computeBounds();
+      const x = clamp((Math.random() * 2 - 1) * safeX * 0.85, -safeX, safeX);
+      const y = clamp((Math.random() * 2 - 1) * safeY * 0.75, -safeY, safeY);
+      const edgeFactor = Math.max(safeX ? Math.abs(x) / safeX : 0, safeY ? Math.abs(y) / safeY : 0);
+      const scale = clamp(1.05 - edgeFactor * 0.25, 0.82, 1.06);
+
+      setPullTabEdge(null);
+      setBubblePose({ x, y, scale });
+    };
+
+    const dockAsPullTab = () => {
+      const { safeX, safeY } = computeBounds();
+      const edge = pickOne(edges);
+
+      const x = edge === 'left' ? -safeX : safeX;
+      const y = clamp((Math.random() * 2 - 1) * safeY * 0.65, -safeY, safeY);
+
+      setPullTabEdge(edge);
+      setBubblePose({ x, y, scale: 0.78 });
+    };
+
+    const loop = () => {
+      // 1) Float around to a new spot
+      moveToRandomInterior();
+
+      // 2) Occasionally “dock” as a pull tab, pause for ~2s, then move again
+      schedule(() => {
+        // ~60% chance to dock each cycle so it feels like it “hits” the edges regularly
+        if (Math.random() < 0.6) {
+          dockAsPullTab();
+          schedule(() => {
+            moveToRandomInterior();
+            schedule(loop, 2600);
+          }, 2000);
+        } else {
+          schedule(loop, 3200);
+        }
+      }, 2400);
+    };
+
+    // Start quickly so it feels alive on load
+    schedule(loop, 450);
+
+    return () => {
+      bubbleTimersRef.current.forEach((t) => window.clearTimeout(t));
+      bubbleTimersRef.current = [];
+    };
+  }, [bubbleEnabled, viewport.height, viewport.width]);
 
   // Handle user interaction to stop ghost mode; keep it local to the card to avoid auto-disabling from background mouse moves
   const handleUserInteraction = useCallback(() => {
     if (!userInteracted) {
       setUserInteracted(true);
     }
-  }, [userInteracted]);
+
+    // If we're currently docked as a pull-tab, interacting with it should pull it open.
+    if (pullTabEdge) {
+      setPullTabEdge(null);
+    }
+
+    // Pause the bubble while the user is active, then resume after a short idle period.
+    setBubblePaused(true);
+    if (resumeBubbleTimerRef.current) window.clearTimeout(resumeBubbleTimerRef.current);
+    resumeBubbleTimerRef.current = window.setTimeout(() => {
+      setBubblePaused(false);
+    }, 4500);
+  }, [pullTabEdge, userInteracted]);
+
+  const computeSafeBounds = useCallback(() => {
+    const margin = 18;
+    const approxCardW = 360;
+    const approxCardH = 480;
+    const safeX = Math.max(0, viewport.width / 2 - approxCardW / 2 - margin);
+    const safeY = Math.max(0, viewport.height / 2 - approxCardH / 2 - margin);
+    return { safeX, safeY };
+  }, [viewport.height, viewport.width]);
+
+  const dockAsAccessWebsiteTab = useCallback(
+    (clientY: number) => {
+      // Dock as a small tab — compute bounds using tab-like dimensions so it can sit closer
+      // to the screen edge than the full card.
+      const margin = 16;
+      const approxTabW = 240;
+      const approxTabH = 64;
+      const safeX = Math.max(0, viewport.width / 2 - approxTabW / 2 - margin);
+      const safeY = Math.max(0, viewport.height / 2 - approxTabH / 2 - margin);
+
+      // Keep it in the lower half so it doesn't cover the bot's face.
+      const yFromPointer = clientY - viewport.height / 2 + 220;
+      const minLower = safeY * 0.25;
+      const y = clamp(Math.max(yFromPointer, minLower), -safeY, safeY);
+
+      setPullTabEdge('right');
+      setBubblePose({ x: safeX, y, scale: 0.78 });
+      setBubblePaused(true);
+      if (resumeBubbleTimerRef.current) window.clearTimeout(resumeBubbleTimerRef.current);
+      resumeBubbleTimerRef.current = window.setTimeout(() => {
+        setBubblePaused(false);
+      }, 4500);
+    },
+    [viewport.height, viewport.width]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (resumeBubbleTimerRef.current) window.clearTimeout(resumeBubbleTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    if (typeof window === 'undefined') return;
+
+    const onPointerMove = (ev: PointerEvent) => {
+      // Throttle: we only need occasional checks.
+      const now = Date.now();
+      if (now - lastGlobalActivityRef.current < 250) return;
+      lastGlobalActivityRef.current = now;
+
+      const target = ev.target as Node | null;
+      // Ignore movement that’s already over the card itself (card handlers cover that).
+      const overCard = !!(target && cardRef.current && cardRef.current.contains(target));
+      if (overCard) {
+        return;
+      }
+
+      // Pointer is over background/Spline area => become a pull tab that says ACCESS WEBSITE
+      if (!userInteracted) setUserInteracted(true);
+      dockAsAccessWebsiteTab(ev.clientY);
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onPointerMove);
+  }, [dockAsAccessWebsiteTab, prefersReducedMotion, userInteracted]);
   
   // Handle guest click - immediate transition, no animation delay
   const handleGuestClick = useCallback(() => {
@@ -256,19 +437,6 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
           </div>
         )}
 
-        {/* ========== ULTIMATE HUB PILL - Positioned below header from top ========== */}
-        <UnifiedFpsPill
-          fps={60}
-          deviceTier="high"
-          prices={prices}
-          isMinimized={isMinimized}
-          onToggleMinimized={() => setIsMinimized(!isMinimized)}
-          onOpenPanel={() => setIsHubOpen(true)}
-          topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
-          topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
-          mobileAlignment="center"
-        />
-
         {/* Desktop Layout: Centered */}
         <div className="relative z-10 h-full w-full flex" style={{ pointerEvents: 'none' }}>
           {/* Centered Action Buttons */}
@@ -277,54 +445,106 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
             className="w-full h-full flex flex-col justify-center items-center px-6 lg:px-10 xl:px-12"
             style={{ pointerEvents: 'none' }}
           >
-            {/* Card Container - Gentle pulse animation until interaction (ultra-transparent glass) */}
+            {/* Floating wrapper (desktop welcome menu “bubbles” around until user interacts) */}
             <motion.div
-              initial={{ opacity: 0.6, scale: 0.98 }}
-              animate={
-                userInteracted
-                  ? { opacity: 1, scale: 1 }
-                  : {
-                      // Smoother animation - never fully invisible to prevent black flash
-                      opacity: [0.4, 0.85, 0.4],
-                      scale: [0.97, 1, 0.97],
-                    }
-              }
-              transition={
-                userInteracted
-                  ? { duration: 0.3, ease: 'easeOut' }
-                  : {
-                      duration: 4.5,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }
-              }
-                className="w-full max-w-[22rem] rounded-2xl p-6 xl:p-7 border border-white/10"
+              initial={{ x: 0, y: 0, scale: 1 }}
+              animate={pullTabEdge ? bubblePose : bubbleEnabled ? bubblePose : { x: 0, y: 0, scale: 1 }}
+              transition={{ duration: pullTabEdge ? 0.9 : 1.15, ease: 'easeInOut' }}
+              style={{ pointerEvents: 'none' }}
+            >
+              {/* Card Container - Gentle opacity pulse until interaction (ultra-transparent glass) */}
+              <motion.div
+                initial={{ opacity: 0.6 }}
+                animate={
+                  userInteracted
+                    ? { opacity: 1 }
+                    : {
+                        // Never fully invisible to prevent black flash
+                        opacity: [0.45, 0.9, 0.45],
+                      }
+                }
+                transition={
+                  userInteracted
+                    ? { duration: 0.25, ease: 'easeOut' }
+                    : {
+                        duration: 4.5,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }
+                }
+                className={
+                  pullTabEdge
+                    ? "welcome-pull-tab inline-flex rounded-full border border-white/10"
+                    : "w-full max-w-[22rem] rounded-2xl p-6 xl:p-7 border border-white/10"
+                }
+                ref={cardRef}
                 onMouseEnter={handleUserInteraction}
+                onMouseMove={handleUserInteraction}
+                onFocus={handleUserInteraction}
                 onTouchStart={handleUserInteraction}
                 onClick={handleUserInteraction}
-              style={{
-                pointerEvents: 'auto',
-                background: hideBackground ? '#fff' : 'rgba(0, 0, 0, 0.3)',
-                backdropFilter: hideBackground ? undefined : 'blur(16px)',
-                WebkitBackdropFilter: hideBackground ? undefined : 'blur(16px)',
-                boxShadow: hideBackground
-                  ? '0 8px 40px rgba(0, 0, 0, 0.10), inset 0 0 0 1px rgba(0, 0, 0, 0.06)'
-                  : '0 8px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(255, 255, 255, 0.12)',
-                border: hideBackground ? '1px solid rgba(0,0,0,0.10)' : undefined,
-              }}
-            >
-              {/* Card Header - Only show on smaller desktop */}
-              <div className="lg:hidden text-center mb-6">
-                <h1
-                  className="text-2xl font-black tracking-tight neon-title-desktop"
-                  style={{ color: hideBackground ? '#000' : undefined, textShadow: hideBackground ? 'none' : undefined, animation: hideBackground ? 'none' : undefined }}
-                >
-                  BULLMONEY
-                </h1>
-                <p className="text-xs text-white/50 mt-1.5" style={{ color: hideBackground ? 'rgba(0,0,0,0.55)' : undefined }}>
-                  The Ultimate Trading Hub
-                </p>
-              </div>
+                style={{
+                  pointerEvents: 'auto',
+                  background: hideBackground ? '#fff' : 'rgba(0, 0, 0, 0.3)',
+                  backdropFilter: hideBackground ? undefined : 'blur(16px)',
+                  WebkitBackdropFilter: hideBackground ? undefined : 'blur(16px)',
+                  boxShadow: hideBackground
+                    ? '0 8px 40px rgba(0, 0, 0, 0.10), inset 0 0 0 1px rgba(0, 0, 0, 0.06)'
+                    : '0 8px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(255, 255, 255, 0.12)',
+                  border: hideBackground ? '1px solid rgba(0,0,0,0.10)' : undefined,
+                  // Pull-tab presentation (briefly docks to an edge)
+                  padding:
+                    pullTabEdge
+                      ? '12px 14px'
+                      : undefined,
+                  display: pullTabEdge ? 'inline-flex' : undefined,
+                  alignItems: pullTabEdge ? 'center' : undefined,
+                  justifyContent: pullTabEdge ? 'center' : undefined,
+                  minHeight: pullTabEdge ? 52 : undefined,
+                  // Keep the tab readable; let content define width/height.
+                  width: pullTabEdge ? 'auto' : undefined,
+                  height: pullTabEdge ? 'auto' : undefined,
+                }}
+              >
+                {pullTabEdge ? (
+                  <div
+                    className="flex items-center justify-center"
+                    style={{
+                      minHeight: 52,
+                    }}
+                  >
+                    <div
+                      className="flex items-center justify-center gap-2"
+                      style={{
+                        color: hideBackground ? '#000' : '#fff',
+                        letterSpacing: '0.12em',
+                        fontWeight: 900,
+                        fontSize: 12,
+                        lineHeight: 1,
+                        opacity: hideBackground ? 0.88 : 0.95,
+                        userSelect: 'none',
+                      }}
+                    >
+                      <span>ACCESS WEBSITE</span>
+                      <span style={{ transform: pullTabEdge === 'right' ? 'rotate(180deg)' : undefined, display: 'inline-flex' }}>
+                        <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Card Header - Only show on smaller desktop */}
+                    <div className="lg:hidden text-center mb-6">
+                      <h1
+                        className="text-2xl font-black tracking-tight neon-title-desktop"
+                        style={{ color: hideBackground ? '#000' : undefined, textShadow: hideBackground ? 'none' : undefined, animation: hideBackground ? 'none' : undefined }}
+                      >
+                        BULLMONEY
+                      </h1>
+                      <p className="text-xs text-white/50 mt-1.5" style={{ color: hideBackground ? 'rgba(0,0,0,0.55)' : undefined }}>
+                        The Ultimate Trading Hub
+                      </p>
+                    </div>
 
               {/* Action Header */}
               <div className="text-center mb-6 lg:mb-8">
@@ -434,6 +654,9 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   Disclaimer
                 </button>
               </p>
+                  </>
+                )}
+              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -445,22 +668,6 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
         onClose={() => setIsLegalModalOpen(false)} 
         initialTab={legalModalTab}
       />
-      
-      {/* ========== ULTIMATE HUB PANEL - Rendered via Portal to ensure it's on top ========== */}
-      {typeof window !== 'undefined' && createPortal(
-        <UnifiedHubPanel
-          isOpen={isHubOpen}
-          onClose={() => setIsHubOpen(false)}
-          fps={60}
-          deviceTier="high"
-          isAdmin={false}
-          isVip={false}
-          userId={undefined}
-          userEmail={undefined}
-          prices={prices}
-        />,
-        document.body
-      )}
     </>
   );
 }

@@ -6,6 +6,7 @@ import { motion, AnimatePresence, TargetAndTransition } from 'framer-motion';
 import { X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // Dynamically import the RecruitPage to avoid SSR issues
 const RecruitPage = dynamic(() => import('@/app/recruit/RecruitPage'), {
@@ -35,18 +36,16 @@ export default function RecruitModal({ isOpen, onClose }: RecruitModalProps) {
     setMounted(true);
   }, []);
 
+  useScrollLock(isOpen);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
-    } else {
-      document.body.style.overflow = 'visible';
     }
     return () => {
-      document.body.style.overflow = 'visible';
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

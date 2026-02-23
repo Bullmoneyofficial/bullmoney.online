@@ -11,6 +11,7 @@ import { Navbar } from "@/components/Mainpage/navbar";
 import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
 import { safeGetItem, safeSetItem } from '@/lib/localStorage';
 import { useUIState } from '@/contexts/UIStateContext';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // --- LOADER IMPORTS ---
 import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate"; 
@@ -350,19 +351,7 @@ export default function AffiliatePage({ searchParams }: { searchParams?: { src?:
   }, [currentStage]);
 
   // Scroll Lock
-  useEffect(() => {
-    if (currentStage !== "content") {
-      document.body.style.overflow = 'hidden';
-      document.body.style.height = '100vh';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.height = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.height = '';
-    };
-  }, [currentStage]);
+  useScrollLock(currentStage !== "content");
 
 
   const dismissHelper = () => {

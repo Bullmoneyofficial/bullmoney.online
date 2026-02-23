@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { useCartStore } from '@/stores/cart-store';
 import type { ProductWithDetails, Variant } from '@/types/store';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 
@@ -407,7 +408,7 @@ function DigitalArtViewer({ art, onClose }: { art: DigitalArt; onClose: () => vo
     setTimeout(() => setAdded(false), 2000);
   };
 
-  useEffect(() => { const p = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = p; }; }, []);
+  useScrollLock(true);
   useEffect(() => { const h = (e: KeyboardEvent) => { if (serviceModal) { setServiceModal(null); } else { onClose(); } }; const kh = (e: KeyboardEvent) => { if (e.key === 'Escape') h(e); }; window.addEventListener('keydown', kh); return () => window.removeEventListener('keydown', kh); }, [onClose, serviceModal]);
 
   const screenPresets = PRESETS.filter((p) => p.type === 'screen');

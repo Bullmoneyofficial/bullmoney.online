@@ -13,6 +13,7 @@ import { gsap } from 'gsap';
 import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import Image from 'next/image';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 // IMPORT YOUR CONTEXT
 // Ensure these match your actual exports in StudioContext
@@ -86,7 +87,7 @@ const ModalProvider = ({ children, externalOpen, onExternalOpenChange }: {
     }
   };
   
-  useEffect(() => { document.body.style.overflow = open ? 'hidden' : 'auto'; }, [open]);
+  useScrollLock(open);
   return <ModalContext.Provider value={{ open, setOpen }}>{children}</ModalContext.Provider>;
 };
 const useModal = () => {

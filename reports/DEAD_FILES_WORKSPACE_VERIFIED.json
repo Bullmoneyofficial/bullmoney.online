@@ -1,0 +1,4182 @@
+{
+  "generatedAt": "2026-02-23T15:59:24.371Z",
+  "counts": {
+    "universe": 1312,
+    "reachable": 766,
+    "unused": 547,
+    "unusedWithSignals": 71
+  },
+  "buckets": {
+    "toolchain": [
+      "Tailwind.Config.js",
+      "declarations.d.ts",
+      "eslint.config.mjs",
+      "global.d.ts",
+      "next-env.d.ts",
+      "next.config.mjs",
+      "postcss.config.mjs",
+      "proxy.ts",
+      "tailwind.config.ts",
+      "turbopack.config.mjs"
+    ],
+    "publicAsset": [
+      "public/Types/supabase.ts",
+      "public/assets/css/admin_style.css",
+      "public/assets/css/notifyme.css",
+      "public/assets/css/style.css",
+      "public/assets/js/app.js",
+      "public/assets/js/chart.js",
+      "public/assets/js/jquery.flot.min.js",
+      "public/assets/js/jquery.kinetic.min.js",
+      "public/assets/js/notifyme.js",
+      "public/assets/js/notifyme.min.js",
+      "public/assets/js/socket.js",
+      "public/draco_wasm_wrapper.js",
+      "public/games/bullcasino/css/flappybird.css",
+      "public/games/bullcasino/js/flappybird.js",
+      "public/process.js",
+      "public/scripts/BMBRAIN/bmbrain-global.js",
+      "public/scripts/BMBRAIN/bmbrain.min.js",
+      "public/scripts/BMBRAIN/compat-layer.js",
+      "public/scripts/BMBRAIN/device-capabilities.js",
+      "public/scripts/BMBRAIN/inapp-shield.js",
+      "public/scripts/BMBRAIN/input-controller.js",
+      "public/scripts/BMBRAIN/memory-manager.js",
+      "public/scripts/BMBRAIN/mobile-crash-shield.js",
+      "public/scripts/BMBRAIN/network-optimizer.js",
+      "public/scripts/BMBRAIN/offline-detect.js",
+      "public/scripts/BMBRAIN/push-manager.js",
+      "public/scripts/BMBRAIN/spline-universal.js",
+      "public/scripts/desktop-arm64-optimizer.js",
+      "public/scripts/desktop-cls-prevention.js",
+      "public/scripts/desktop-fast-rendering.js",
+      "public/scripts/desktop-fcp-optimizer.js",
+      "public/scripts/desktop-fps-boost.js",
+      "public/scripts/desktop-hero-controller.js",
+      "public/scripts/desktop-homepage-optimizer.js",
+      "public/scripts/desktop-image-optimizer.js",
+      "public/scripts/desktop-instant-hero.js",
+      "public/scripts/desktop-interaction-optimizer.js",
+      "public/scripts/desktop-interaction-sounds.js",
+      "public/scripts/desktop-lcp-optimizer.js",
+      "public/scripts/desktop-memory-optimizer.js",
+      "public/scripts/desktop-network-optimizer.js",
+      "public/scripts/desktop-orchestrator.js",
+      "public/scripts/desktop-performance-tuning.js",
+      "public/scripts/desktop-scroll-experience.js",
+      "public/scripts/desktop-scroll-smoothness.js",
+      "public/scripts/desktop-stability-shield.js",
+      "public/scripts/desktop-ttfb-optimizer.js",
+      "public/scripts/detect-120hz.js",
+      "public/scripts/device-detect.js",
+      "public/scripts/font-boost.css",
+      "public/scripts/perf-monitor.js",
+      "public/scripts/scroll-unlock-failsafe.js",
+      "public/scripts/splash-hide-desktop.js",
+      "public/scripts/splash-hide.js",
+      "public/scripts/splash-init-desktop.js",
+      "public/scripts/splash-init.js",
+      "public/scripts/spline-preload.js",
+      "public/scripts/spline-turbo.js",
+      "public/scripts/sw-touch.js",
+      "public/scripts/thirdparty-optimizer.js",
+      "public/src/global.d.ts",
+      "public/styles/desktop-scroll-fixes.css",
+      "public/styles/game-animations.css",
+      "public/styles/globalStyles.ts",
+      "public/sw.js"
+    ],
+    "script": [
+      "scripts/dependency-checker.mjs",
+      "scripts/dev-logger.mjs",
+      "scripts/dev-warmup.mjs",
+      "scripts/feature-usage-scan-ts.mjs",
+      "scripts/feature-usage-scan.mjs",
+      "scripts/generate-affiliate-codes.mjs",
+      "scripts/generate-lanyard.js",
+      "scripts/optimize-arm64.mjs",
+      "scripts/optimize-linux.mjs",
+      "scripts/optimize-windows.mjs",
+      "scripts/platform-check.mjs",
+      "scripts/platform-detect.mjs",
+      "scripts/pre-deploy.mjs",
+      "scripts/seed-translations.ts",
+      "scripts/telegram-session-setup.js"
+    ],
+    "style": [
+      "styles/120hz-performance.css",
+      "styles/60fps-ultra.css",
+      "styles/animations/_game-effects.css",
+      "styles/animations/_keyframes.css",
+      "styles/animations/_transitions.css",
+      "styles/base/_reset.css",
+      "styles/base/_scrollbar.css",
+      "styles/base/_typography.css",
+      "styles/base/_variables.css",
+      "styles/big-device-scroll.css",
+      "styles/browsers/_chrome.css",
+      "styles/browsers/_firefox.css",
+      "styles/browsers/_inapp.css",
+      "styles/browsers/_safari.css",
+      "styles/browsers/_samsung.css",
+      "styles/components/_buttons.css",
+      "styles/components/_cards.css",
+      "styles/components/_forms.css",
+      "styles/components/_glass.css",
+      "styles/components/_hero.css",
+      "styles/components/_modals.css",
+      "styles/components/_navbar.css",
+      "styles/components/_shimmer.css",
+      "styles/device-tier-optimizations.css",
+      "styles/fps-optimization.css",
+      "styles/game-animations.css",
+      "styles/globalStyles.ts",
+      "styles/gpu-animations.css",
+      "styles/index.css",
+      "styles/instagram-ios-optimizations.css",
+      "styles/iphone-android-touch-fix.css",
+      "styles/mobile-optimizations.css",
+      "styles/mobile-scroll-optimization.css",
+      "styles/modal-scroll-lock.css",
+      "styles/no-spin.css",
+      "styles/performance-optimizations.css",
+      "styles/performance/_cls-prevention.css",
+      "styles/performance/_fps-tiers.css",
+      "styles/performance/_gpu-layers.css",
+      "styles/performance/_scroll-performance.css",
+      "styles/performance/_smart-freeze.css",
+      "styles/responsive/_desktop.css",
+      "styles/responsive/_mobile.css",
+      "styles/safari-optimizations.css",
+      "styles/smart-mount.css",
+      "styles/spline-interactivity-fix.css",
+      "styles/themes/_illusions.css",
+      "styles/themes/_overlay.css",
+      "styles/themes/_utilities.css",
+      "styles/themes/supreme-z-index.css",
+      "styles/trading-journal-neon.css",
+      "styles/unified-ui.css"
+    ],
+    "app": [
+      "app/(auth)/vip/heromain.tsx",
+      "app/Blogs/Chart.tsx",
+      "app/Blogs/Layout.tsx",
+      "app/Blogs/Livestreams.tsx",
+      "app/Blogs/text-generate-effect.tsx",
+      "app/SplinePage.tsx",
+      "app/VIP/VipSuccessModal.tsx",
+      "app/api/Chart.tsx",
+      "app/bm-splash.css",
+      "app/design/DesignLayoutClient.tsx",
+      "app/games/bullcasino/css/admin_style.css",
+      "app/games/bullcasino/css/flappybird.css",
+      "app/games/bullcasino/css/notifyme.css",
+      "app/games/bullcasino/css/style.css",
+      "app/games/bullcasino/js/admin_app.js",
+      "app/games/bullcasino/js/app.js",
+      "app/games/bullcasino/js/chart.js",
+      "app/games/bullcasino/js/compiled/admin_app.js",
+      "app/games/bullcasino/js/compiled/app.js",
+      "app/games/bullcasino/js/compiled/chart.js",
+      "app/games/bullcasino/js/compiled/crash.js",
+      "app/games/bullcasino/js/compiled/dice.js",
+      "app/games/bullcasino/js/compiled/jquery.flot.min.js",
+      "app/games/bullcasino/js/compiled/jquery.kinetic.min.js",
+      "app/games/bullcasino/js/compiled/mines.js",
+      "app/games/bullcasino/js/compiled/notifyme.js",
+      "app/games/bullcasino/js/compiled/notifyme.min.js",
+      "app/games/bullcasino/js/compiled/plinko.js",
+      "app/games/bullcasino/js/compiled/socket.js",
+      "app/games/bullcasino/js/compiled/wallet.js",
+      "app/games/bullcasino/js/crash.js",
+      "app/games/bullcasino/js/dice.js",
+      "app/games/bullcasino/js/flappybird.js",
+      "app/games/bullcasino/js/jquery.flot.min.js",
+      "app/games/bullcasino/js/jquery.kinetic.min.js",
+      "app/games/bullcasino/js/mines.js",
+      "app/games/bullcasino/js/notifyme.js",
+      "app/games/bullcasino/js/notifyme.min.js",
+      "app/games/bullcasino/js/plinko.js",
+      "app/games/bullcasino/js/socket.js",
+      "app/games/bullcasino/js/wallet.js",
+      "app/games/bullcasino/server/app.js",
+      "app/games/bullcasino/server/crash.js",
+      "app/games/components/BullcasinoShell.tsx",
+      "app/games/components/CasinoMusicAutoplay.tsx",
+      "app/hooks/use-binance.ts",
+      "app/models/BlogHero.ts",
+      "app/models/Category.ts",
+      "app/models/Posts.ts",
+      "app/models/Product.ts",
+      "app/oldstore/ShopFunnel.css",
+      "app/recruit/affrec.tsx",
+      "app/register/AffiliateAdmin.tsx",
+      "app/register/New.tsx",
+      "app/robots.ts",
+      "app/sitemap.ts",
+      "app/store/admin/middleware.ts",
+      "app/store/sitemap.ts",
+      "app/store/store-scoped.css",
+      "app/store/store.hooks.ts",
+      "app/store/store.imports.tsx",
+      "app/styles/00-base.css",
+      "app/styles/10-scroll-foundation.css",
+      "app/styles/20-cls-lcp.css",
+      "app/styles/30-performance-scroll.css",
+      "app/styles/40-theme-overlays.css",
+      "app/styles/50-fps-overrides.css",
+      "app/styles/60-desktop-zindex-fix.css",
+      "app/styles/70-mobile-performance.css",
+      "app/styles/90-scroll-anywhere.css",
+      "app/styles/desktop-zindex-fix/01-core-1024.css",
+      "app/styles/desktop-zindex-fix/02-breakpoints-1440-2560.css",
+      "app/styles/desktop-zindex-fix/03-body-scroll-lock.css",
+      "app/styles/desktop-zindex-fix/04-backdrop-highres-1024.css",
+      "app/styles/desktop-zindex-fix/05-animation-and-anchors-1024.css",
+      "app/styles/desktop-zindex-fix/06-high-res-1440-1920-2560.css",
+      "app/styles/desktop-zindex-fix/07-4k-8k.css",
+      "app/styles/desktop-zindex-fix/08-comprehensive-modals-1024.css",
+      "app/styles/desktop-zindex-fix/09-quick-access-menus-1024.css",
+      "app/styles/desktop-zindex-fix/10-cursor-1024.css",
+      "app/styles/desktop-zindex-fix/11-clicks-1024.css",
+      "app/styles/desktop-zindex-fix/12-desktop-aesthetics.css",
+      "app/styles/desktop-zindex-fix/13-theme-aware-aesthetics.css",
+      "app/styles/desktop-zindex-fix/14-brand-blue.css"
+    ],
+    "component": [
+      "components/AdminReflectiveCard.tsx",
+      "components/AnalysisModal.tsx",
+      "components/AppleStyleErrorPage.tsx",
+      "components/AudioWidget.old.tsx",
+      "components/AudioWidget.tsx",
+      "components/AutoTranslateProvider.tsx",
+      "components/BatteryAwareSpline.tsx",
+      "components/BrowserSwitchTab.tsx",
+      "components/BullMoneyPromoScrollDesktop.tsx",
+      "components/Chart.tsx",
+      "components/ClientCursor.tsx",
+      "components/CommunityNotification.tsx",
+      "components/CommunityQuickAccess.tsx",
+      "components/CurrencyRateSync.tsx",
+      "components/DevLanguageTestPanel.tsx",
+      "components/DomeGallery.css",
+      "components/DomeGallery.tsx",
+      "components/ElectricBorder.css",
+      "components/FaqSection.tsx",
+      "components/FaultyTerminal.css",
+      "components/FaultyTerminal.tsx",
+      "components/FlowingMenu.css",
+      "components/FlowingMenu.tsx",
+      "components/FlyingPosters.css",
+      "components/FlyingPosters.tsx",
+      "components/GamesDrawer.tsx",
+      "components/GhostCursor.css",
+      "components/GhostCursor.tsx",
+      "components/GlobalLiteModeToggle.tsx",
+      "components/GooeyNav.css",
+      "components/GooeyNav.tsx",
+      "components/HtmlLangSync.tsx",
+      "components/ImageTrail.css",
+      "components/InfiniteMenu.css",
+      "components/InfiniteMenu.tsx",
+      "components/InlineFaq.tsx",
+      "components/InternalLinkingSEO.tsx",
+      "components/LiveMarketTicker.tsx",
+      "components/LiveThemePreviewOverlay.tsx",
+      "components/Livestreams.tsx",
+      "components/LogoLoop.css",
+      "components/LogoLoop.tsx",
+      "components/LoyaltyCard.tsx",
+      "components/Mainpage/AudioPlayer.jsx",
+      "components/Mainpage/BottomControls.tsx",
+      "components/Mainpage/Chart.tsx",
+      "components/Mainpage/CrashSafeSplineLoader.tsx",
+      "components/Mainpage/FAQOverlay.tsx",
+      "components/Mainpage/FlipCountdown.tsx",
+      "components/Mainpage/FloatingMusicController.tsx",
+      "components/Mainpage/GhostCursor.tsx",
+      "components/Mainpage/GlassSurface.css",
+      "components/Mainpage/GradualBlur.tsx",
+      "components/Mainpage/HeroParallax.tsx",
+      "components/Mainpage/HeroParallaxDemo.tsx",
+      "components/Mainpage/InlineFaq.tsx",
+      "components/Mainpage/LaserFlow.css",
+      "components/Mainpage/LaserFlow.tsx",
+      "components/Mainpage/LiveMarketTicker.tsx",
+      "components/Mainpage/Main.tsx",
+      "components/Mainpage/MediaCarousel.tsx",
+      "components/Mainpage/Mediastream.tsx",
+      "components/Mainpage/MobileOptimizer.tsx",
+      "components/Mainpage/MobileQuickActions.tsx",
+      "components/Mainpage/MobileScrollIndicator.tsx",
+      "components/Mainpage/MobileStaticContent.tsx",
+      "components/Mainpage/ModernPageScenes.tsx",
+      "components/Mainpage/ModernSplineLoader.tsx",
+      "components/Mainpage/Monthly.tsx",
+      "components/Mainpage/MultiStepLoaderAffiliate.tsx",
+      "components/Mainpage/MultiStepLoaderVip.tsx",
+      "components/Mainpage/OptimizedComponentLoader.tsx",
+      "components/Mainpage/OptimizedSplineLoader.tsx",
+      "components/Mainpage/PageElements.tsx",
+      "components/Mainpage/PageScenes.tsx",
+      "components/Mainpage/PerfToast.tsx",
+      "components/Mainpage/PerformancePrompt.tsx",
+      "components/Mainpage/ProgressBar.tsx",
+      "components/Mainpage/QuickThemePicker.tsx",
+      "components/Mainpage/ShopMarketingSection.tsx",
+      "components/Mainpage/SkeletonScreens.tsx",
+      "components/Mainpage/SmartSplineLoader.tsx",
+      "components/Mainpage/Socials.tsx",
+      "components/Mainpage/SparklesBackground.tsx",
+      "components/Mainpage/StaticPageWrapper.tsx",
+      "components/Mainpage/SuccessScreen.tsx",
+      "components/Mainpage/Support.tsx",
+      "components/Mainpage/SwipeablePanel.tsx",
+      "components/Mainpage/TargertCursor.css",
+      "components/Mainpage/ThemeComponentsui.tsx",
+      "components/Mainpage/ThemeEffects.tsx",
+      "components/Mainpage/ThemeUI.tsx",
+      "components/Mainpage/ThreeDHintIcon.tsx",
+      "components/Mainpage/UltimateControlPanel.tsx",
+      "components/Mainpage/UltraSplineLoader.tsx",
+      "components/Mainpage/UnifiedControls.tsx",
+      "components/Mainpage/UnifiedNavigation.tsx",
+      "components/Mainpage/UniversalSceneLoader.tsx",
+      "components/Mainpage/VerticalPageScroll.tsx",
+      "components/Mainpage/Vorb.tsx",
+      "components/Mainpage/button.tsx",
+      "components/Mainpage/container.tsx",
+      "components/Mainpage/cta.tsx",
+      "components/Mainpage/encrypted-text.tsx",
+      "components/Mainpage/flip-countdown.tsx",
+      "components/Mainpage/flip-words.tsx",
+      "components/Mainpage/footer/EnhancedModal.tsx",
+      "components/Mainpage/footer/PixelCard.tsx",
+      "components/Mainpage/hero.tsx",
+      "components/Mainpage/lamp.tsx",
+      "components/Mainpage/login.tsx",
+      "components/Mainpage/mode-toggle.tsx",
+      "components/Mainpage/optimizations.css",
+      "components/Mainpage/text-generate-effect.tsx",
+      "components/Mainpage/ui.tsx",
+      "components/MetallicPaint.css",
+      "components/MetallicPaint.tsx",
+      "components/MobileOptimizedModal.tsx",
+      "components/MobilePerformanceUtils.tsx",
+      "components/MultiStepLoader.tsx",
+      "components/MultiStepLoaderAffiliate.tsx",
+      "components/MultiStepLoaderVip.tsx",
+      "components/MultiStepLoaderv2.tsx",
+      "components/MultiStepLoaderv3.tsx",
+      "components/OptimizedWrapper.tsx",
+      "components/PillNav.css",
+      "components/PillNav.tsx",
+      "components/PixelTrail.css",
+      "components/PixelTrail.tsx",
+      "components/ProfileCard.tsx",
+      "components/REGISTER USERS/AFFILIATE/AffiliateRecruitsDashboard.tsx",
+      "components/REGISTER USERS/AFFILIATE/RecruitPage.tsx",
+      "components/REGISTER USERS/AFFILIATE/page.tsx",
+      "components/REGISTER USERS/AffiliateAdmin.tsx",
+      "components/REGISTER USERS/New.tsx",
+      "components/REGISTER USERS/pageVip.tsx",
+      "components/ReflectiveCard.css",
+      "components/SEOContent.tsx",
+      "components/SEODomination.tsx",
+      "components/SEOTrackingLinks.tsx",
+      "components/ScrambledText.css",
+      "components/ScrambledText.tsx",
+      "components/ServerHreflangMeta.tsx",
+      "components/ShopFunnel.css",
+      "components/ShopFunnel.tsx",
+      "components/ShopHero.tsx",
+      "components/ShopScrollFunnel.css",
+      "components/ShopScrollFunnel.tsx",
+      "components/Silk.tsx",
+      "components/Socialsfooter.tsx",
+      "components/SolarSystem3D.tsx",
+      "components/SparklesBackground.tsx",
+      "components/SplineCanvasWrapper.tsx",
+      "components/SplineWithAudio.tsx",
+      "components/StaggeredMenu.css",
+      "components/StaggeredMenu.tsx",
+      "components/TargertCursor.css",
+      "components/TargertCursor.tsx",
+      "components/TargetCursor.tsx",
+      "components/TelegramModal.tsx",
+      "components/TelegramPreview.tsx",
+      "components/TextPressure.tsx",
+      "components/TranslatedText.tsx",
+      "components/VipSuccessModal.tsx",
+      "components/Vorb.tsx",
+      "components/WebVitals.tsx",
+      "components/YouTubeVideoEmbed.tsx",
+      "components/analysis-enhanced/index.ts",
+      "components/audio-widget/iPhoneFrame.tsx",
+      "components/audio-widget/modals/CameraModal.tsx",
+      "components/audio-widget/types/audioWidget.ts",
+      "components/button.tsx",
+      "components/composer/MediaUploader.tsx",
+      "components/composer/PostComposer.tsx",
+      "components/composer/RichTextEditor.tsx",
+      "components/composer/TickerSelector.tsx",
+      "components/composer/index.ts",
+      "components/container.tsx",
+      "components/cta.tsx",
+      "components/desktop/DesktopSplineScene.tsx",
+      "components/encrypted-text.tsx",
+      "components/evervault-card.tsx",
+      "components/examples/PerformanceShowcase.tsx",
+      "components/examples/SmartSplineExample.tsx",
+      "components/footer.tsx",
+      "components/footer/AppsToolsModal.tsx",
+      "components/footer/DesktopFooter.tsx",
+      "components/footer/SocialsRow.tsx",
+      "components/games/DonationHero.tsx",
+      "components/home/SplineComponents.tsx",
+      "components/home/index.ts",
+      "components/logo.tsx",
+      "components/macbook-scroll-demo.tsx",
+      "components/mode-toggle.tsx",
+      "components/navbar/Dock.css",
+      "components/navbar/Dock.tsx",
+      "components/navbar/DockIcon.css",
+      "components/navbar/DockIcon.tsx",
+      "components/navbar/MobileStaticHelper.css",
+      "components/navbar/MobileStaticHelper.tsx",
+      "components/navbar/ThemeSelectorModal.tsx",
+      "components/navbar/index.ts",
+      "components/navigation/MobileSwipeNavigator.tsx",
+      "components/pricing.tsx",
+      "components/shop/AppleProductsSection.tsx",
+      "components/shop/CheckoutWizard.tsx",
+      "components/shop/CryptoAcceptedBanner.tsx",
+      "components/shop/CurrencyLanguageSelector.tsx",
+      "components/shop/FeaturedProductSpotlight.tsx",
+      "components/shop/FeaturedProductsTimeline.tsx",
+      "components/shop/FilterSheet.tsx",
+      "components/shop/MarketPriceTicker.tsx",
+      "components/shop/MobileProductsDome.tsx",
+      "components/shop/StoreFluidGlassSection.tsx",
+      "components/shop/StoreHeader.tsx",
+      "components/shop/StoreHero3D.tsx",
+      "components/shop/StoreHeroFluidGlass.tsx",
+      "components/shop/StoreRewardsBanner.tsx",
+      "components/shop/TimelineProductsSection.tsx",
+      "components/shop/VIP3DProducts.tsx",
+      "components/shop/admin/index.ts",
+      "components/signup-form-demo.tsx",
+      "components/sparkles.tsx",
+      "components/splash.css",
+      "components/stripe/StripeCheckoutButton.tsx",
+      "components/ui/3d-globe.tsx",
+      "components/ui/3d-pin.tsx",
+      "components/ui/About.tsx",
+      "components/ui/GPUMotion.tsx",
+      "components/ui/Hint.tsx",
+      "components/ui/InteractiveElements.tsx",
+      "components/ui/OptimizedImage.tsx",
+      "components/ui/SeviceModal.tsx",
+      "components/ui/Socials.tsx",
+      "components/ui/ThemeUI.tsx",
+      "components/ui/animated-testimonials.tsx",
+      "components/ui/apple-cards-carousel.tsx",
+      "components/ui/container-scroll-animation.tsx",
+      "components/ui/cta.tsx",
+      "components/ui/evervault-card.tsx",
+      "components/ui/focus-cards.tsx",
+      "components/ui/hero-parallax.tsx",
+      "components/ui/input.tsx",
+      "components/ui/label.tsx",
+      "components/ui/logo.tsx",
+      "components/ui/macbook-scroll.tsx",
+      "components/ui/pointer-highlight.tsx",
+      "components/ui/sidebar.tsx",
+      "components/ui/svg-mask-effect.tsx",
+      "components/ultimate-hub/components/LiveTradesTicker.tsx",
+      "components/ultimate-hub/context.tsx",
+      "components/ultimate-hub/pills/BullMoneyTVPill.tsx",
+      "components/ultimate-hub/pills/CommunityPill.tsx",
+      "components/ultimate-hub/pills/FpsPill.tsx",
+      "components/ultimate-hub/pills/TradingPill.tsx"
+    ],
+    "lib": [
+      "lib/FpsAudit.ts",
+      "lib/SmartMountSystem.tsx",
+      "lib/desktopOptimizations.ts",
+      "lib/deviceProfile.ts",
+      "lib/gameAnimations.ts",
+      "lib/gpuAnimation.ts",
+      "lib/inputManager.ts",
+      "lib/interactionUtils.tsx",
+      "lib/memoryBoost.js",
+      "lib/mobileLoaderOptimization.ts",
+      "lib/mobileMemoryManager.ts",
+      "lib/mobileOptimizations.tsx",
+      "lib/mobileSplineOptimizer.ts",
+      "lib/pageConfig.ts",
+      "lib/performance.ts",
+      "lib/performanceMonitor.ts",
+      "lib/renderingOptimizations.ts",
+      "lib/sceneStorage.ts",
+      "lib/seo-keywords.ts",
+      "lib/serviceWorker.ts",
+      "lib/smartLoading.ts",
+      "lib/spline-wrapper.js",
+      "lib/splineCache.ts",
+      "lib/splineStreamer.ts",
+      "lib/stripe-client.ts",
+      "lib/telemetry.ts",
+      "lib/tickerParser.ts",
+      "lib/uiLayers.ts",
+      "lib/universalFallback.ts",
+      "lib/use120Hz.ts",
+      "lib/useOptimizations.ts",
+      "lib/web3-config.ts"
+    ],
+    "hook": [
+      "hooks/use-outside-click.tsx",
+      "hooks/useAnalytics.ts",
+      "hooks/useAnalyticsTracking.ts",
+      "hooks/useBatterySaver.ts",
+      "hooks/useCacheManager.ts",
+      "hooks/useCasinoUser.ts",
+      "hooks/useMobileCrashShield.ts",
+      "hooks/useMusicState.ts",
+      "hooks/usePageInitialization.ts",
+      "hooks/usePageState.ts",
+      "hooks/usePerformanceHooks.ts",
+      "hooks/usePerformanceState.ts",
+      "hooks/useScrollManagement.ts",
+      "hooks/useSplineCache.ts",
+      "hooks/useThemeState.ts",
+      "hooks/useTradingSounds.ts",
+      "hooks/useTranslation.ts",
+      "hooks/useUIState.ts",
+      "hooks/useUltraFpsOptimization.ts",
+      "hooks/useVersionedCache.ts",
+      "hooks/useViewportDetection.ts",
+      "hooks/useVipStatus.ts"
+    ],
+    "other": [
+      ".venv/lib/python3.14/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
+      "CASINO_PAGE_EXAMPLES.tsx",
+      "COMPLETE_SECTION_EXAMPLE.tsx",
+      "ENHANCED_SETTINGS_MODAL.tsx",
+      "contexts/ColorOverlayContext.tsx",
+      "contexts/ThemeEffectsContext.tsx",
+      "models/Category.ts",
+      "models/Product.ts",
+      "stores/index.ts",
+      "stores/uiStore.ts",
+      "stores/welcomeControlsStore.ts",
+      "types/lucide-icons.d.ts"
+    ]
+  },
+  "verified": [
+    {
+      "path": ".venv/lib/python3.14/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
+      "signals": []
+    },
+    {
+      "path": "CASINO_PAGE_EXAMPLES.tsx",
+      "signals": []
+    },
+    {
+      "path": "COMPLETE_SECTION_EXAMPLE.tsx",
+      "signals": []
+    },
+    {
+      "path": "ENHANCED_SETTINGS_MODAL.tsx",
+      "signals": []
+    },
+    {
+      "path": "Tailwind.Config.js",
+      "signals": []
+    },
+    {
+      "path": "app/(auth)/vip/heromain.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/Blogs/Chart.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/Blogs/Layout.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/Blogs/Livestreams.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/Blogs/text-generate-effect.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/SplinePage.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/VIP/VipSuccessModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/api/Chart.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/bm-splash.css",
+      "signals": []
+    },
+    {
+      "path": "app/design/DesignLayoutClient.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/games/bullcasino/css/admin_style.css",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/css/flappybird.css",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/css/notifyme.css",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/css/style.css",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/admin_app.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/app.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/chart.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/admin_app.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/app.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/chart.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/crash.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/dice.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/jquery.flot.min.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/jquery.kinetic.min.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/mines.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/notifyme.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/notifyme.min.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/plinko.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/socket.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/compiled/wallet.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/crash.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/dice.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/flappybird.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/jquery.flot.min.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/jquery.kinetic.min.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/mines.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/notifyme.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/notifyme.min.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/plinko.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/socket.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/js/wallet.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/server/app.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/bullcasino/server/crash.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "app/games/components/BullcasinoShell.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/games/components/CasinoMusicAutoplay.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/hooks/use-binance.ts",
+      "signals": []
+    },
+    {
+      "path": "app/models/BlogHero.ts",
+      "signals": []
+    },
+    {
+      "path": "app/models/Category.ts",
+      "signals": []
+    },
+    {
+      "path": "app/models/Posts.ts",
+      "signals": []
+    },
+    {
+      "path": "app/models/Product.ts",
+      "signals": []
+    },
+    {
+      "path": "app/oldstore/ShopFunnel.css",
+      "signals": []
+    },
+    {
+      "path": "app/recruit/affrec.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/register/AffiliateAdmin.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/register/New.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/robots.ts",
+      "signals": []
+    },
+    {
+      "path": "app/sitemap.ts",
+      "signals": []
+    },
+    {
+      "path": "app/store/admin/middleware.ts",
+      "signals": []
+    },
+    {
+      "path": "app/store/sitemap.ts",
+      "signals": []
+    },
+    {
+      "path": "app/store/store-scoped.css",
+      "signals": []
+    },
+    {
+      "path": "app/store/store.hooks.ts",
+      "signals": []
+    },
+    {
+      "path": "app/store/store.imports.tsx",
+      "signals": []
+    },
+    {
+      "path": "app/styles/00-base.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/10-scroll-foundation.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/20-cls-lcp.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/30-performance-scroll.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/40-theme-overlays.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/50-fps-overrides.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/60-desktop-zindex-fix.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/70-mobile-performance.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/90-scroll-anywhere.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/01-core-1024.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/02-breakpoints-1440-2560.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/03-body-scroll-lock.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/04-backdrop-highres-1024.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/05-animation-and-anchors-1024.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/06-high-res-1440-1920-2560.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/07-4k-8k.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/08-comprehensive-modals-1024.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/09-quick-access-menus-1024.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/10-cursor-1024.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/11-clicks-1024.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/12-desktop-aesthetics.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/13-theme-aware-aesthetics.css",
+      "signals": []
+    },
+    {
+      "path": "app/styles/desktop-zindex-fix/14-brand-blue.css",
+      "signals": []
+    },
+    {
+      "path": "components/AdminReflectiveCard.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/AnalysisModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/AppleStyleErrorPage.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/AudioWidget.old.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/AudioWidget.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/AutoTranslateProvider.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/BatteryAwareSpline.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/BrowserSwitchTab.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/BullMoneyPromoScrollDesktop.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Chart.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ClientCursor.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/CommunityNotification.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/CommunityQuickAccess.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/CurrencyRateSync.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/DevLanguageTestPanel.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/DomeGallery.css",
+      "signals": []
+    },
+    {
+      "path": "components/DomeGallery.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ElectricBorder.css",
+      "signals": []
+    },
+    {
+      "path": "components/FaqSection.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/FaultyTerminal.css",
+      "signals": []
+    },
+    {
+      "path": "components/FaultyTerminal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/FlowingMenu.css",
+      "signals": []
+    },
+    {
+      "path": "components/FlowingMenu.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/FlyingPosters.css",
+      "signals": []
+    },
+    {
+      "path": "components/FlyingPosters.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/GamesDrawer.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/GhostCursor.css",
+      "signals": []
+    },
+    {
+      "path": "components/GhostCursor.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/GlobalLiteModeToggle.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/GooeyNav.css",
+      "signals": []
+    },
+    {
+      "path": "components/GooeyNav.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/HtmlLangSync.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ImageTrail.css",
+      "signals": []
+    },
+    {
+      "path": "components/InfiniteMenu.css",
+      "signals": []
+    },
+    {
+      "path": "components/InfiniteMenu.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/InlineFaq.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/InternalLinkingSEO.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/LiveMarketTicker.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/LiveThemePreviewOverlay.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Livestreams.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/LogoLoop.css",
+      "signals": []
+    },
+    {
+      "path": "components/LogoLoop.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/LoyaltyCard.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/AudioPlayer.jsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/BottomControls.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/Chart.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/CrashSafeSplineLoader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/FAQOverlay.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/FlipCountdown.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/FloatingMusicController.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/GhostCursor.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/GlassSurface.css",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/GradualBlur.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/HeroParallax.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/HeroParallaxDemo.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/InlineFaq.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/LaserFlow.css",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/LaserFlow.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/LiveMarketTicker.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/Main.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/MediaCarousel.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/Mediastream.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/MobileOptimizer.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/MobileQuickActions.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/MobileScrollIndicator.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/MobileStaticContent.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ModernPageScenes.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ModernSplineLoader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/Monthly.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/MultiStepLoaderAffiliate.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/MultiStepLoaderVip.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/OptimizedComponentLoader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/OptimizedSplineLoader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/PageElements.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/PageScenes.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/PerfToast.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/PerformancePrompt.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ProgressBar.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/QuickThemePicker.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ShopMarketingSection.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/SkeletonScreens.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/SmartSplineLoader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/Socials.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/SparklesBackground.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/StaticPageWrapper.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/SuccessScreen.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/Support.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/SwipeablePanel.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/TargertCursor.css",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ThemeComponentsui.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ThemeEffects.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ThemeUI.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ThreeDHintIcon.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/UltimateControlPanel.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/UltraSplineLoader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/UnifiedControls.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/UnifiedNavigation.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/UniversalSceneLoader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/VerticalPageScroll.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/Vorb.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/button.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/container.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/cta.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/encrypted-text.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/flip-countdown.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/flip-words.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/footer/EnhancedModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/footer/PixelCard.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/hero.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/lamp.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/login.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/mode-toggle.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/optimizations.css",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/text-generate-effect.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Mainpage/ui.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/MetallicPaint.css",
+      "signals": []
+    },
+    {
+      "path": "components/MetallicPaint.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/MobileOptimizedModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/MobilePerformanceUtils.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/MultiStepLoader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/MultiStepLoaderAffiliate.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/MultiStepLoaderVip.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/MultiStepLoaderv2.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/MultiStepLoaderv3.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/OptimizedWrapper.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/PillNav.css",
+      "signals": []
+    },
+    {
+      "path": "components/PillNav.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/PixelTrail.css",
+      "signals": []
+    },
+    {
+      "path": "components/PixelTrail.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ProfileCard.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/REGISTER USERS/AFFILIATE/AffiliateRecruitsDashboard.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/REGISTER USERS/AFFILIATE/RecruitPage.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/REGISTER USERS/AFFILIATE/page.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/REGISTER USERS/AffiliateAdmin.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/REGISTER USERS/New.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/REGISTER USERS/pageVip.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ReflectiveCard.css",
+      "signals": []
+    },
+    {
+      "path": "components/SEOContent.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/SEODomination.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/SEOTrackingLinks.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ScrambledText.css",
+      "signals": []
+    },
+    {
+      "path": "components/ScrambledText.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ServerHreflangMeta.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ShopFunnel.css",
+      "signals": []
+    },
+    {
+      "path": "components/ShopFunnel.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ShopHero.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ShopScrollFunnel.css",
+      "signals": []
+    },
+    {
+      "path": "components/ShopScrollFunnel.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Silk.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Socialsfooter.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/SolarSystem3D.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/SparklesBackground.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/SplineCanvasWrapper.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/SplineWithAudio.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/StaggeredMenu.css",
+      "signals": []
+    },
+    {
+      "path": "components/StaggeredMenu.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/TargertCursor.css",
+      "signals": []
+    },
+    {
+      "path": "components/TargertCursor.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/TargetCursor.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/TelegramModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/TelegramPreview.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/TextPressure.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/TranslatedText.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/VipSuccessModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/Vorb.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/WebVitals.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/YouTubeVideoEmbed.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/analysis-enhanced/index.ts",
+      "signals": []
+    },
+    {
+      "path": "components/audio-widget/iPhoneFrame.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/audio-widget/modals/CameraModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/audio-widget/types/audioWidget.ts",
+      "signals": []
+    },
+    {
+      "path": "components/button.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/composer/MediaUploader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/composer/PostComposer.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/composer/RichTextEditor.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/composer/TickerSelector.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/composer/index.ts",
+      "signals": []
+    },
+    {
+      "path": "components/container.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/cta.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/desktop/DesktopSplineScene.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/encrypted-text.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/evervault-card.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/examples/PerformanceShowcase.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/examples/SmartSplineExample.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/footer.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/footer/AppsToolsModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/footer/DesktopFooter.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/footer/SocialsRow.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/games/DonationHero.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/home/SplineComponents.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/home/index.ts",
+      "signals": []
+    },
+    {
+      "path": "components/logo.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/macbook-scroll-demo.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/mode-toggle.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/navbar/Dock.css",
+      "signals": []
+    },
+    {
+      "path": "components/navbar/Dock.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/navbar/DockIcon.css",
+      "signals": []
+    },
+    {
+      "path": "components/navbar/DockIcon.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/navbar/MobileStaticHelper.css",
+      "signals": []
+    },
+    {
+      "path": "components/navbar/MobileStaticHelper.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/navbar/ThemeSelectorModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/navbar/index.ts",
+      "signals": []
+    },
+    {
+      "path": "components/navigation/MobileSwipeNavigator.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/pricing.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/AppleProductsSection.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/CheckoutWizard.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/CryptoAcceptedBanner.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/CurrencyLanguageSelector.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/FeaturedProductSpotlight.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/FeaturedProductsTimeline.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/FilterSheet.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/MarketPriceTicker.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/MobileProductsDome.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/StoreFluidGlassSection.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/StoreHeader.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/StoreHero3D.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/StoreHeroFluidGlass.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/StoreRewardsBanner.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/TimelineProductsSection.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/VIP3DProducts.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/shop/admin/index.ts",
+      "signals": []
+    },
+    {
+      "path": "components/signup-form-demo.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/sparkles.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/splash.css",
+      "signals": []
+    },
+    {
+      "path": "components/stripe/StripeCheckoutButton.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/3d-globe.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/3d-pin.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/About.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/GPUMotion.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/Hint.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/InteractiveElements.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/OptimizedImage.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/SeviceModal.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/Socials.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/ThemeUI.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/animated-testimonials.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/apple-cards-carousel.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/container-scroll-animation.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/cta.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/evervault-card.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/focus-cards.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/hero-parallax.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/input.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/label.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/logo.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/macbook-scroll.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/pointer-highlight.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/sidebar.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ui/svg-mask-effect.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ultimate-hub/components/LiveTradesTicker.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ultimate-hub/context.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ultimate-hub/pills/BullMoneyTVPill.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ultimate-hub/pills/CommunityPill.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ultimate-hub/pills/FpsPill.tsx",
+      "signals": []
+    },
+    {
+      "path": "components/ultimate-hub/pills/TradingPill.tsx",
+      "signals": []
+    },
+    {
+      "path": "contexts/ColorOverlayContext.tsx",
+      "signals": []
+    },
+    {
+      "path": "contexts/ThemeEffectsContext.tsx",
+      "signals": []
+    },
+    {
+      "path": "declarations.d.ts",
+      "signals": []
+    },
+    {
+      "path": "eslint.config.mjs",
+      "signals": []
+    },
+    {
+      "path": "global.d.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/use-outside-click.tsx",
+      "signals": []
+    },
+    {
+      "path": "hooks/useAnalytics.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useAnalyticsTracking.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useBatterySaver.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useCacheManager.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useCasinoUser.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useMobileCrashShield.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useMusicState.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/usePageInitialization.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/usePageState.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/usePerformanceHooks.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/usePerformanceState.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useScrollManagement.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useSplineCache.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useThemeState.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useTradingSounds.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useTranslation.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useUIState.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useUltraFpsOptimization.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useVersionedCache.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useViewportDetection.ts",
+      "signals": []
+    },
+    {
+      "path": "hooks/useVipStatus.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/FpsAudit.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/SmartMountSystem.tsx",
+      "signals": []
+    },
+    {
+      "path": "lib/desktopOptimizations.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/deviceProfile.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/gameAnimations.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/gpuAnimation.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/inputManager.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/interactionUtils.tsx",
+      "signals": []
+    },
+    {
+      "path": "lib/memoryBoost.js",
+      "signals": []
+    },
+    {
+      "path": "lib/mobileLoaderOptimization.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/mobileMemoryManager.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/mobileOptimizations.tsx",
+      "signals": []
+    },
+    {
+      "path": "lib/mobileSplineOptimizer.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/pageConfig.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/performance.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/performanceMonitor.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/renderingOptimizations.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/sceneStorage.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/seo-keywords.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/serviceWorker.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/smartLoading.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/spline-wrapper.js",
+      "signals": []
+    },
+    {
+      "path": "lib/splineCache.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/splineStreamer.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/stripe-client.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/telemetry.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/tickerParser.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/uiLayers.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/universalFallback.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/use120Hz.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/useOptimizations.ts",
+      "signals": []
+    },
+    {
+      "path": "lib/web3-config.ts",
+      "signals": []
+    },
+    {
+      "path": "models/Category.ts",
+      "signals": []
+    },
+    {
+      "path": "models/Product.ts",
+      "signals": []
+    },
+    {
+      "path": "next-env.d.ts",
+      "signals": []
+    },
+    {
+      "path": "next.config.mjs",
+      "signals": []
+    },
+    {
+      "path": "postcss.config.mjs",
+      "signals": []
+    },
+    {
+      "path": "proxy.ts",
+      "signals": []
+    },
+    {
+      "path": "public/Types/supabase.ts",
+      "signals": []
+    },
+    {
+      "path": "public/assets/css/admin_style.css",
+      "signals": []
+    },
+    {
+      "path": "public/assets/css/notifyme.css",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/assets/css/notifyme.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/[game]/GamePageClient.tsx",
+              "line": 42,
+              "text": "      <link rel=\"stylesheet\" href=\"/assets/css/notifyme.css\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/assets/css/style.css",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/assets/css/style.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/[game]/GamePageClient.tsx",
+              "line": 41,
+              "text": "      <link rel=\"stylesheet\" href=\"/assets/css/style.css\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/assets/js/app.js",
+      "signals": []
+    },
+    {
+      "path": "public/assets/js/chart.js",
+      "signals": []
+    },
+    {
+      "path": "public/assets/js/jquery.flot.min.js",
+      "signals": []
+    },
+    {
+      "path": "public/assets/js/jquery.kinetic.min.js",
+      "signals": []
+    },
+    {
+      "path": "public/assets/js/notifyme.js",
+      "signals": []
+    },
+    {
+      "path": "public/assets/js/notifyme.min.js",
+      "signals": []
+    },
+    {
+      "path": "public/assets/js/socket.js",
+      "signals": []
+    },
+    {
+      "path": "public/draco_wasm_wrapper.js",
+      "signals": []
+    },
+    {
+      "path": "public/games/bullcasino/css/flappybird.css",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/css/flappybird.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/[game]/GamePageClient.tsx",
+              "line": 44,
+              "text": "        <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\" />"
+            }
+          ]
+        },
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/games/bullcasino/js/flappybird.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/js/flappybird.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        },
+        {
+          "type": "string-ref",
+          "pattern": "/games/bullcasino/",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 15,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/style.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 16,
+              "text": "    <link rel=\"stylesheet\" href=\"/games/bullcasino/css/flappybird.css\">"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/games/bullcasino/flappybird.html",
+              "line": 166,
+              "text": "    <script src=\"/games/bullcasino/js/flappybird.js\"></script>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/process.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/BMBRAIN/bmbrain-global.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/bmbrain-global.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1016,
+              "text": "        <Script id=\"bmbrain-global\" src=\"/scripts/BMBRAIN/bmbrain-global.js\" strategy=\"afterInteractive\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/bmbrain.min.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/BMBRAIN/compat-layer.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/compat-layer.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 710,
+              "text": "        <Script id=\"compat-layer\" src=\"/scripts/BMBRAIN/compat-layer.js\" strategy=\"beforeInteractive\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/device-capabilities.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/device-capabilities.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1100,
+              "text": "        <Script id=\"device-capabilities\" src=\"/scripts/BMBRAIN/device-capabilities.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
+              "line": 147,
+              "text": "  '/scripts/BMBRAIN/device-capabilities.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/inapp-shield.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/inapp-shield.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1020,
+              "text": "        <Script id=\"inapp-shield\" src=\"/scripts/BMBRAIN/inapp-shield.js\" strategy=\"afterInteractive\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
+              "line": 142,
+              "text": "  '/scripts/BMBRAIN/inapp-shield.js'"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/input-controller.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/input-controller.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1101,
+              "text": "        <Script id=\"input-controller\" src=\"/scripts/BMBRAIN/input-controller.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
+              "line": 148,
+              "text": "  '/scripts/BMBRAIN/input-controller.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/memory-manager.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/memory-manager.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1048,
+              "text": "                  s.src = '/scripts/BMBRAIN/memory-manager.js';"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/mobile-crash-shield.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/mobile-crash-shield.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1019,
+              "text": "        <Script id=\"mobile-crash-shield\" src=\"/scripts/BMBRAIN/mobile-crash-shield.js\" strategy=\"afterInteractive\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
+              "line": 141,
+              "text": "  '/scripts/BMBRAIN/mobile-crash-shield.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/network-optimizer.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/network-optimizer.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1104,
+              "text": "          <Script id=\"network-optimizer\" src=\"/scripts/BMBRAIN/network-optimizer.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
+              "line": 150,
+              "text": "  '/scripts/BMBRAIN/network-optimizer.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/offline-detect.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/offline-detect.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1107,
+              "text": "        <Script id=\"offline-detect\" src=\"/scripts/BMBRAIN/offline-detect.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
+              "line": 151,
+              "text": "  '/scripts/BMBRAIN/offline-detect.js'"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/push-manager.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/push-manager.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1102,
+              "text": "        <Script id=\"push-manager\" src=\"/scripts/BMBRAIN/push-manager.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
+              "line": 149,
+              "text": "  '/scripts/BMBRAIN/push-manager.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/BMBRAIN/spline-universal.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/BMBRAIN/spline-universal.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1106,
+              "text": "        <Script id=\"spline-universal\" src=\"/scripts/BMBRAIN/spline-universal.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/desktop-homepage-optimizer.js",
+              "line": 206,
+              "text": "        assetsToPreload.push('/scripts/BMBRAIN/spline-universal.js');"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/desktop-arm64-optimizer.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-cls-prevention.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/desktop-cls-prevention.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1116,
+              "text": "        <Script id=\"desktop-cls-prevention\" src=\"/scripts/desktop-cls-prevention.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 568,
+              "text": "        source: '/scripts/desktop-cls-prevention.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/desktop-fast-rendering.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-fcp-optimizer.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/desktop-fcp-optimizer.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1114,
+              "text": "        <Script id=\"desktop-fcp-optimizer\" src=\"/scripts/desktop-fcp-optimizer.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 546,
+              "text": "        source: '/scripts/desktop-fcp-optimizer.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/desktop-fps-boost.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/desktop-fps-boost.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1127,
+              "text": "        <Script id=\"desktop-fps-boost\" src=\"/scripts/desktop-fps-boost.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 613,
+              "text": "        source: '/scripts/desktop-fps-boost.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/desktop-hero-controller.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-homepage-optimizer.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-image-optimizer.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-instant-hero.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-interaction-optimizer.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-interaction-sounds.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/desktop-interaction-sounds.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1124,
+              "text": "        <Script id=\"desktop-interaction-sounds\" src=\"/scripts/desktop-interaction-sounds.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 586,
+              "text": "        source: '/scripts/desktop-interaction-sounds.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/desktop-lcp-optimizer.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/desktop-lcp-optimizer.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1115,
+              "text": "        <Script id=\"desktop-lcp-optimizer\" src=\"/scripts/desktop-lcp-optimizer.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 559,
+              "text": "        source: '/scripts/desktop-lcp-optimizer.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/desktop-memory-optimizer.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-network-optimizer.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-orchestrator.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-performance-tuning.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-scroll-experience.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/desktop-scroll-experience.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1125,
+              "text": "        <Script id=\"desktop-scroll-experience\" src=\"/scripts/desktop-scroll-experience.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 595,
+              "text": "        source: '/scripts/desktop-scroll-experience.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/desktop-scroll-smoothness.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/desktop-stability-shield.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/desktop-stability-shield.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1126,
+              "text": "        <Script id=\"desktop-stability-shield\" src=\"/scripts/desktop-stability-shield.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 604,
+              "text": "        source: '/scripts/desktop-stability-shield.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/desktop-ttfb-optimizer.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/desktop-ttfb-optimizer.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1117,
+              "text": "        <Script id=\"desktop-ttfb-optimizer\" src=\"/scripts/desktop-ttfb-optimizer.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/next.config.mjs",
+              "line": 577,
+              "text": "        source: '/scripts/desktop-ttfb-optimizer.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/detect-120hz.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/detect-120hz.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1097,
+              "text": "        <Script id=\"detect-120hz\" src=\"/scripts/detect-120hz.js\" strategy=\"lazyOnload\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/device-detect.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/device-detect.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1099,
+              "text": "        <Script id=\"device-detect\" src=\"/scripts/device-detect.js\" strategy=\"lazyOnload\" />"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/public/scripts/BMBRAIN/bmbrain-global.js",
+              "line": 146,
+              "text": "  '/scripts/device-detect.js',"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/font-boost.css",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/perf-monitor.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/perf-monitor.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1098,
+              "text": "        <Script id=\"perf-monitor\" src=\"/scripts/perf-monitor.js\" strategy=\"lazyOnload\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/scroll-unlock-failsafe.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/splash-hide-desktop.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/splash-hide.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/splash-init-desktop.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/splash-init.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/splash-init.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 705,
+              "text": "        <Script id=\"splash-init\" src=\"/scripts/splash-init.js\" strategy=\"beforeInteractive\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/spline-preload.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/spline-preload.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 913,
+              "text": "        <Script id=\"spline-preload\" src=\"/scripts/spline-preload.js\" strategy=\"lazyOnload\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/spline-turbo.js",
+      "signals": []
+    },
+    {
+      "path": "public/scripts/sw-touch.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/scripts/sw-touch.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/layout.tsx",
+              "line": 1013,
+              "text": "        <Script id=\"sw-and-touch\" src=\"/scripts/sw-touch.js\" strategy=\"afterInteractive\" />"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "public/scripts/thirdparty-optimizer.js",
+      "signals": []
+    },
+    {
+      "path": "public/src/global.d.ts",
+      "signals": []
+    },
+    {
+      "path": "public/styles/desktop-scroll-fixes.css",
+      "signals": []
+    },
+    {
+      "path": "public/styles/game-animations.css",
+      "signals": []
+    },
+    {
+      "path": "public/styles/globalStyles.ts",
+      "signals": []
+    },
+    {
+      "path": "public/sw.js",
+      "signals": [
+        {
+          "type": "string-ref",
+          "pattern": "/sw.js",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/components/NotificationPermissionModal.tsx",
+              "line": 63,
+              "text": "    const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/lib/serviceWorker.ts",
+              "line": 32,
+              "text": "      this.registration = await navigator.serviceWorker.register('/sw.js', {"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/hooks/useNotifications.ts",
+              "line": 187,
+              "text": "        await navigator.serviceWorker.register('/sw.js', { scope: '/' });"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "scripts/dependency-checker.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/dev-logger.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/dev-warmup.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/feature-usage-scan-ts.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/feature-usage-scan.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/generate-affiliate-codes.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/generate-lanyard.js",
+      "signals": []
+    },
+    {
+      "path": "scripts/optimize-arm64.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/optimize-linux.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/optimize-windows.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/platform-check.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/platform-detect.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/pre-deploy.mjs",
+      "signals": []
+    },
+    {
+      "path": "scripts/seed-translations.ts",
+      "signals": []
+    },
+    {
+      "path": "scripts/telegram-session-setup.js",
+      "signals": []
+    },
+    {
+      "path": "stores/index.ts",
+      "signals": []
+    },
+    {
+      "path": "stores/uiStore.ts",
+      "signals": []
+    },
+    {
+      "path": "stores/welcomeControlsStore.ts",
+      "signals": []
+    },
+    {
+      "path": "styles/120hz-performance.css",
+      "signals": []
+    },
+    {
+      "path": "styles/60fps-ultra.css",
+      "signals": []
+    },
+    {
+      "path": "styles/animations/_game-effects.css",
+      "signals": []
+    },
+    {
+      "path": "styles/animations/_keyframes.css",
+      "signals": []
+    },
+    {
+      "path": "styles/animations/_transitions.css",
+      "signals": []
+    },
+    {
+      "path": "styles/base/_reset.css",
+      "signals": []
+    },
+    {
+      "path": "styles/base/_scrollbar.css",
+      "signals": []
+    },
+    {
+      "path": "styles/base/_typography.css",
+      "signals": []
+    },
+    {
+      "path": "styles/base/_variables.css",
+      "signals": []
+    },
+    {
+      "path": "styles/big-device-scroll.css",
+      "signals": []
+    },
+    {
+      "path": "styles/browsers/_chrome.css",
+      "signals": [
+        {
+          "type": "path-ref",
+          "pattern": "styles/browsers/_chrome.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 18,
+              "text": "@import \"../styles/browsers/_chrome.css\";"
+            }
+          ]
+        },
+        {
+          "type": "basename-ref",
+          "pattern": "_chrome.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 18,
+              "text": "@import \"../styles/browsers/_chrome.css\";"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "styles/browsers/_firefox.css",
+      "signals": []
+    },
+    {
+      "path": "styles/browsers/_inapp.css",
+      "signals": [
+        {
+          "type": "path-ref",
+          "pattern": "styles/browsers/_inapp.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 20,
+              "text": "@import \"../styles/browsers/_inapp.css\";"
+            }
+          ]
+        },
+        {
+          "type": "basename-ref",
+          "pattern": "_inapp.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 20,
+              "text": "@import \"../styles/browsers/_inapp.css\";"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "styles/browsers/_safari.css",
+      "signals": [
+        {
+          "type": "path-ref",
+          "pattern": "styles/browsers/_safari.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 19,
+              "text": "@import \"../styles/browsers/_safari.css\";"
+            }
+          ]
+        },
+        {
+          "type": "basename-ref",
+          "pattern": "_safari.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 19,
+              "text": "@import \"../styles/browsers/_safari.css\";"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "styles/browsers/_samsung.css",
+      "signals": [
+        {
+          "type": "path-ref",
+          "pattern": "styles/browsers/_samsung.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 17,
+              "text": "@import \"../styles/browsers/_samsung.css\";"
+            }
+          ]
+        },
+        {
+          "type": "basename-ref",
+          "pattern": "_samsung.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 17,
+              "text": "@import \"../styles/browsers/_samsung.css\";"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "styles/components/_buttons.css",
+      "signals": []
+    },
+    {
+      "path": "styles/components/_cards.css",
+      "signals": []
+    },
+    {
+      "path": "styles/components/_forms.css",
+      "signals": []
+    },
+    {
+      "path": "styles/components/_glass.css",
+      "signals": []
+    },
+    {
+      "path": "styles/components/_hero.css",
+      "signals": []
+    },
+    {
+      "path": "styles/components/_modals.css",
+      "signals": []
+    },
+    {
+      "path": "styles/components/_navbar.css",
+      "signals": []
+    },
+    {
+      "path": "styles/components/_shimmer.css",
+      "signals": []
+    },
+    {
+      "path": "styles/device-tier-optimizations.css",
+      "signals": []
+    },
+    {
+      "path": "styles/fps-optimization.css",
+      "signals": [
+        {
+          "type": "basename-ref",
+          "pattern": "fps-optimization.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/components/FpsScrollOptimizer.tsx",
+              "line": 11,
+              "text": " * CSS rules in globals.css and fps-optimization.css respond to these classes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "styles/game-animations.css",
+      "signals": []
+    },
+    {
+      "path": "styles/globalStyles.ts",
+      "signals": []
+    },
+    {
+      "path": "styles/gpu-animations.css",
+      "signals": []
+    },
+    {
+      "path": "styles/index.css",
+      "signals": [
+        {
+          "type": "basename-ref",
+          "pattern": "index.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 15,
+              "text": "@import \"../styles/themes/supreme-z-index.css\";"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx",
+              "line": 10,
+              "text": "import '@/styles/themes/supreme-z-index.css';"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "styles/instagram-ios-optimizations.css",
+      "signals": []
+    },
+    {
+      "path": "styles/iphone-android-touch-fix.css",
+      "signals": []
+    },
+    {
+      "path": "styles/mobile-optimizations.css",
+      "signals": []
+    },
+    {
+      "path": "styles/mobile-scroll-optimization.css",
+      "signals": []
+    },
+    {
+      "path": "styles/modal-scroll-lock.css",
+      "signals": [
+        {
+          "type": "path-ref",
+          "pattern": "styles/modal-scroll-lock.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 16,
+              "text": "@import \"../styles/modal-scroll-lock.css\";"
+            }
+          ]
+        },
+        {
+          "type": "basename-ref",
+          "pattern": "modal-scroll-lock.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 16,
+              "text": "@import \"../styles/modal-scroll-lock.css\";"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "styles/no-spin.css",
+      "signals": []
+    },
+    {
+      "path": "styles/performance-optimizations.css",
+      "signals": []
+    },
+    {
+      "path": "styles/performance/_cls-prevention.css",
+      "signals": []
+    },
+    {
+      "path": "styles/performance/_fps-tiers.css",
+      "signals": []
+    },
+    {
+      "path": "styles/performance/_gpu-layers.css",
+      "signals": []
+    },
+    {
+      "path": "styles/performance/_scroll-performance.css",
+      "signals": []
+    },
+    {
+      "path": "styles/performance/_smart-freeze.css",
+      "signals": []
+    },
+    {
+      "path": "styles/responsive/_desktop.css",
+      "signals": []
+    },
+    {
+      "path": "styles/responsive/_mobile.css",
+      "signals": []
+    },
+    {
+      "path": "styles/safari-optimizations.css",
+      "signals": []
+    },
+    {
+      "path": "styles/smart-mount.css",
+      "signals": []
+    },
+    {
+      "path": "styles/spline-interactivity-fix.css",
+      "signals": []
+    },
+    {
+      "path": "styles/themes/_illusions.css",
+      "signals": []
+    },
+    {
+      "path": "styles/themes/_overlay.css",
+      "signals": []
+    },
+    {
+      "path": "styles/themes/_utilities.css",
+      "signals": []
+    },
+    {
+      "path": "styles/themes/supreme-z-index.css",
+      "signals": [
+        {
+          "type": "path-ref",
+          "pattern": "styles/themes/supreme-z-index.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 15,
+              "text": "@import \"../styles/themes/supreme-z-index.css\";"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx",
+              "line": 10,
+              "text": "import '@/styles/themes/supreme-z-index.css';"
+            }
+          ]
+        },
+        {
+          "type": "path-ref",
+          "pattern": "@/styles/themes/supreme-z-index.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx",
+              "line": 10,
+              "text": "import '@/styles/themes/supreme-z-index.css';"
+            }
+          ]
+        },
+        {
+          "type": "basename-ref",
+          "pattern": "supreme-z-index.css",
+          "examples": [
+            {
+              "file": "/Users/justin/Documents/newbullmoney/app/globals.css",
+              "line": 15,
+              "text": "@import \"../styles/themes/supreme-z-index.css\";"
+            },
+            {
+              "file": "/Users/justin/Documents/newbullmoney/components/navbar/ThemeSelectorModal.tsx",
+              "line": 10,
+              "text": "import '@/styles/themes/supreme-z-index.css';"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "styles/trading-journal-neon.css",
+      "signals": []
+    },
+    {
+      "path": "styles/unified-ui.css",
+      "signals": []
+    },
+    {
+      "path": "tailwind.config.ts",
+      "signals": []
+    },
+    {
+      "path": "turbopack.config.mjs",
+      "signals": []
+    },
+    {
+      "path": "types/lucide-icons.d.ts",
+      "signals": []
+    }
+  ]
+}
