@@ -15,10 +15,7 @@ import { syncSessionLayers } from '@/lib/sessionPersistence';
 // ============================================================================
 // STORE LAYOUT CLIENT WRAPPER
 // Handles client-side rendering, scroll fixes, and overlay isolation
-// Positions store below StoreHeader (fixed 48px)
 // ============================================================================
-
-const STORE_HEADER_HEIGHT = 48;
 
 export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -207,7 +204,7 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
       data-theme-aware
       style={{
         position: 'relative',
-        paddingTop: `${STORE_HEADER_HEIGHT}px`,
+        paddingTop: '0px',
         width: '100%',
         height: 'auto',
         overflow: 'visible',
@@ -216,12 +213,6 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     >
       {/* CSS for responsive navbar offset and overlay hiding */}
       <style jsx>{`
-        @media (min-width: 768px) {
-          .store-layout {
-            padding-top: ${STORE_HEADER_HEIGHT}px !important;
-          }
-        }
-        
         /* CRITICAL: Force store containers to expand infinitely on mobile */
         @media (max-width: 767px) {
           .store-layout,
@@ -293,18 +284,6 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           will-change: auto !important;
         }
 
-        /* Ensure the fixed store header itself is always viewport-fixed */
-        :global(.store-main-nav) {
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          z-index: 1000 !important;
-          transform: none !important;
-          will-change: auto !important;
-          contain: none !important;
-        }
-        
         /* Ensure html/body allow scrolling */
         :global(html.store-active),
         :global(html.store-active body),

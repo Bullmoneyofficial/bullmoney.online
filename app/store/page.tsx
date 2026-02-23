@@ -29,7 +29,7 @@ function StorePageShell() {
       `}} />
       
       {/* Store header placeholder - matches actual StoreHeader height (48px) */}
-      <div className="h-12 bg-white border-b border-black/5 sticky top-0 z-50">
+      <div className="h-12 bg-white border-b border-black/5">
         <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative w-8 h-8">

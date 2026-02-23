@@ -61,7 +61,15 @@ const safeSetSession = (key: string, value: string) => {
 // Importing the aboveFold re-export barrel forces extra modules into the chunk.
 const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), {
   ssr: false,
-  loading: () => null,
+  // Show a lightweight overlay while the heavy pagemode bundle loads
+  loading: () => (
+    <div className="fixed inset-0 z-[99999] bg-black flex items-center justify-center text-white text-sm tracking-tight">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-6 w-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+        <span>Preparing access…</span>
+      </div>
+    </div>
+  ),
 });
 
 // NOTE: Loader step removed for PageMode flow (go straight to Telegram/content)
@@ -101,6 +109,14 @@ export function HomePageController() {
         console.log('[HomePageController] Session recovered from backup storage, repairing localStorage');
         persistSession(recoveredSession);
         safeSetLocal("bullmoney_pagemode_completed", "true");
+      }
+
+      // Fast-path: if a valid session exists, skip pagemode/telegram entirely
+      if (hasSession) {
+        safeSetLocal("bullmoney_pagemode_completed", "true");
+        safeSetLocal("bullmoney_telegram_confirmed", "true");
+        safeSetLocal("bullmoney_loader_completed", "true");
+        return { currentView: "content", shouldUnlock: true };
       }
       
       const hasCompletedPagemode = safeGetLocal("bullmoney_pagemode_completed");

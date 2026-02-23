@@ -7,80 +7,72 @@ import { ArrowRight, User } from 'lucide-react';
 import { UI_Z_INDEX } from "@/contexts/UIStateContext";
 import type { SplineWrapperProps } from '@/lib/spline-wrapper';
 
+// Lazy-load heavy pieces only when needed
 const LegalDisclaimerModal = dynamic(
   () => import("@/components/Mainpage/footer/LegalDisclaimerModal").then(m => ({ default: m.LegalDisclaimerModal })),
   { ssr: false, loading: () => null }
 );
 
-// --- DYNAMIC SPLINE IMPORT (ultra-optimized wrapper) ---
-const Spline = dynamic<SplineWrapperProps>(
-  () => import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper') as any,
-  {
-    ssr: false,
-    loading: () => null,
-  }
-);
-
-// Available Spline scenes - scene1 is preloaded in layout.tsx for fastest first load
-const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
+// Available Spline scenes - use scene1 only; load lazily to keep first paint fast
+const SPLINE_SCENES = ['/scene1.splinecode'];
 
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (DESKTOP) ---
 // No load-lock — mounting Spline immediately is faster than waiting in a queue.
-const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
+const WelcomeSplineBackground = memo(function WelcomeSplineBackground({ enable }: { enable: boolean }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [allowLoad, setAllowLoad] = useState(false);
+  const [SplineComp, setSplineComp] = useState<React.ComponentType<SplineWrapperProps> | null>(null);
 
   const scene = SPLINE_SCENES[0]; // Always use scene1 for fastest cold start
 
-  // Preload then allow mount immediately — no lock queue overhead
+  // Preload after a short delay and only when enabled
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!enable || typeof window === 'undefined') return;
     let cancelled = false;
-
-    const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection || {};
-    const saveData = !!conn.saveData;
-    const effectiveType = String(conn.effectiveType || '');
-    const isSlowNet = effectiveType === '2g' || effectiveType === 'slow-2g';
-    const preloadPriority: 'high' | 'low' = (!saveData && !isSlowNet) ? 'high' : 'low';
-
-    // Preload the runtime JS chunk in parallel
-    import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
-
-    // Preconnect to Spline asset origins so scene subresources start faster
-    const preconnectOrigins = ['https://prod.spline.design', 'https://cdn.spline.design'] as const;
-    preconnectOrigins.forEach((href) => {
-      if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
-      const l = document.createElement('link');
-      l.rel = 'preconnect';
-      l.href = href;
-      l.crossOrigin = 'anonymous';
-      document.head.appendChild(l);
-    });
-
-    // High-priority preload for the scene file
     let link: HTMLLinkElement | null = null;
-    const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`) as HTMLLinkElement | null;
-    if (!existing) {
-      link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'fetch';
-      link.href = scene;
-      link.crossOrigin = 'anonymous';
-      (link as any).fetchPriority = preloadPriority;
-      link.setAttribute('fetchpriority', preloadPriority);
-      document.head.appendChild(link);
-    }
-    // Warm the browser cache immediately
-    fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
+    const timer = window.setTimeout(() => {
+      const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection || {};
+      const saveData = !!conn.saveData;
+      const effectiveType = String(conn.effectiveType || '');
+      const isSlowNet = effectiveType === '2g' || effectiveType === 'slow-2g';
+      const preloadPriority: 'high' | 'low' = (!saveData && !isSlowNet) ? 'high' : 'low';
 
-    // Allow Spline to mount right away — no queue wait
-    if (!cancelled) setAllowLoad(true);
+      import('@/lib/spline-wrapper')
+        .then(mod => { if (!cancelled) setSplineComp(() => mod.default as any); })
+        .catch(() => {});
+
+      const preconnectOrigins = ['https://prod.spline.design', 'https://cdn.spline.design'] as const;
+      preconnectOrigins.forEach((href) => {
+        if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
+        const l = document.createElement('link');
+        l.rel = 'preconnect';
+        l.href = href;
+        l.crossOrigin = 'anonymous';
+        document.head.appendChild(l);
+      });
+
+      const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`) as HTMLLinkElement | null;
+      if (!existing) {
+        link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'fetch';
+        link.href = scene;
+        link.crossOrigin = 'anonymous';
+        (link as any).fetchPriority = preloadPriority;
+        link.setAttribute('fetchpriority', preloadPriority);
+        document.head.appendChild(link);
+      }
+      fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
+
+      if (!cancelled) setAllowLoad(true);
+    }, 1200);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
       if (link && link.parentNode) link.parentNode.removeChild(link);
     };
-  }, [scene]);
+  }, [scene, enable]);
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -107,7 +99,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       />
 
       {/* Spline — only mounts after acquiring load lock (prevents GPU contention) */}
-      {allowLoad && (
+      {allowLoad && SplineComp && (
         <div
           className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           style={{
@@ -115,7 +107,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
             WebkitFilter: 'grayscale(100%) saturate(0)',
           } as React.CSSProperties}
         >
-          <Spline
+          <SplineComp
             scene={scene}
             onLoad={handleLoad}
             priority
@@ -154,7 +146,7 @@ const NEON_STYLES = `
     50% { transform: translateY(-8px); }
   }
 
-  .neon-title-desktop {
+                     <WelcomeSplineBackground enable={enableSpline} />
     color: #ffffff;
     text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 16px #ffffff;
     animation: neon-pulse-desktop 2s ease-in-out infinite;
@@ -195,6 +187,7 @@ interface WelcomeScreenDesktopProps {
 export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackground = false }: WelcomeScreenDesktopProps) {
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy' | 'disclaimer'>('terms');
+  const [legalModalReady, setLegalModalReady] = useState(false);
 
   // Ghost animation state - card pulses gently until user interacts
   const [userInteracted, setUserInteracted] = useState(false);
@@ -202,6 +195,9 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
   // Bubble animation pauses on interaction, then resumes after inactivity.
   const [bubblePaused, setBubblePaused] = useState(false);
   const resumeBubbleTimerRef = useRef<number | null>(null);
+
+  // Enable heavy visuals only after first interaction
+  const [enableSpline, setEnableSpline] = useState(false);
 
   const cardRef = useRef<HTMLDivElement | null>(null);
   const lastGlobalActivityRef = useRef(0);
@@ -303,10 +299,29 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
     };
   }, [bubbleEnabled, viewport.height, viewport.width]);
 
+  // First user interaction enables heavy assets (Spline + legal modal import trigger)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const enableHeavy = () => {
+      setUserInteracted(true);
+      setEnableSpline(true);
+      setLegalModalReady(true);
+    };
+    const opts = { once: true } as AddEventListenerOptions;
+    window.addEventListener('pointerdown', enableHeavy, opts);
+    window.addEventListener('keydown', enableHeavy, opts);
+    return () => {
+      window.removeEventListener('pointerdown', enableHeavy, opts as any);
+      window.removeEventListener('keydown', enableHeavy, opts as any);
+    };
+  }, []);
+
   // Handle user interaction to stop ghost mode; keep it local to the card to avoid auto-disabling from background mouse moves
   const handleUserInteraction = useCallback(() => {
     if (!userInteracted) {
       setUserInteracted(true);
+      setEnableSpline(true);
+      setLegalModalReady(true);
     }
 
     // If we're currently docked as a pull-tab, interacting with it should pull it open.
@@ -665,11 +680,13 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
       </motion.div>
       
       {/* Legal Disclaimer Modal */}
-      <LegalDisclaimerModal 
-        isOpen={isLegalModalOpen} 
-        onClose={() => setIsLegalModalOpen(false)} 
-        initialTab={legalModalTab}
-      />
+      {legalModalReady && (
+        <LegalDisclaimerModal 
+          isOpen={isLegalModalOpen} 
+          onClose={() => setIsLegalModalOpen(false)} 
+          initialTab={legalModalTab}
+        />
+      )}
     </>
   );
 }

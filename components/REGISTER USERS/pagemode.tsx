@@ -147,23 +147,17 @@ function SafePortal({
 import { useUIState, UI_Z_INDEX } from "@/contexts/UIStateContext";
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
-// --- IMPORT SEPARATE LOADER COMPONENT ---
-const MultiStepLoader = dynamic(() => import("@/components/Mainpage/MultiStepLoader").then(m => ({ default: m.MultiStepLoader })), { ssr: false, loading: () => null });
+// --- IMPORT SEPARATE LOADER COMPONENT (lazy, event-driven) ---
 const TelegramConfirmationResponsive = dynamic(() => import("./TelegramConfirmationResponsive").then(m => ({ default: m.TelegramConfirmationResponsive })), { ssr: false, loading: () => null });
 
-// --- IMPORT LEGAL DISCLAIMER MODAL ---
-const LegalDisclaimerModal = dynamic(() => import("@/components/Mainpage/footer/LegalDisclaimerModal").then(m => ({ default: m.LegalDisclaimerModal })), { ssr: false, loading: () => null });
-
 // --- DESKTOP WELCOME SCREEN (separate layout for larger screens) ---
-// Keep SSR enabled so desktop gets HTML immediately (faster first paint in production)
 const WelcomeScreenDesktop = dynamic(
   () => import("./WelcomeScreenDesktop").then(m => ({ default: m.WelcomeScreenDesktop })),
-  { loading: () => null }
+  {
+    ssr: false, // Avoid server-rendering the heavy desktop hero to reduce prod compile + TTFB
+    loading: () => null,
+  }
 );
-
-// --- ULTIMATE HUB COMPONENTS (for mobile welcome screen to match desktop) ---
-const UnifiedFpsPill = dynamic(() => import('@/components/ultimate-hub/pills/UnifiedFpsPill').then(m => ({ default: m.UnifiedFpsPill })), { ssr: false, loading: () => null });
-const UnifiedHubPanel = dynamic(() => import('@/components/ultimate-hub/panel/UnifiedHubPanel').then(m => ({ default: m.UnifiedHubPanel })), { ssr: false, loading: () => null });
 import { useLivePrices } from '@/components/ultimate-hub/hooks/useAccess';
 
 // Spline scene for welcome background (preloaded in layout.tsx for fastest first load)
@@ -257,61 +251,59 @@ const isLowMemoryDevice = (): boolean => {
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (MOBILE) ---
 // No load-lock needed here — this is the only Spline on the register screen.
 // Locking only adds queuing overhead; skipping it means Spline starts immediately.
-const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
+const WelcomeSplineBackground = memo(function WelcomeSplineBackground({ isDesktop }: { isDesktop: boolean }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [allowLoad, setAllowLoad] = useState(false);
 
   const scene = SPLINE_SCENE;
 
-  // Kick off preloading and set allowLoad immediately — no queue wait
+  // Kick off preloading after a short delay (desktop) to protect TTFB
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let cancelled = false;
-
-    const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection || {};
-    const saveData = !!conn.saveData;
-    const effectiveType = String(conn.effectiveType || '');
-    const isSlowNet = effectiveType === '2g' || effectiveType === 'slow-2g';
-    const preloadPriority: 'high' | 'low' = (!saveData && !isSlowNet) ? 'high' : 'low';
-
-    // Preload the runtime JS chunk in parallel (fires immediately)
-    import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
-
-    // Preconnect to Spline asset origins so subresources start sooner
-    const preconnectOrigins = ['https://prod.spline.design', 'https://cdn.spline.design'] as const;
-    preconnectOrigins.forEach((href) => {
-      if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
-      const l = document.createElement('link');
-      l.rel = 'preconnect';
-      l.href = href;
-      l.crossOrigin = 'anonymous';
-      document.head.appendChild(l);
-    });
-
-    // Preload the scene file with high priority
+    const delay = isDesktop ? 1200 : 0;
     let link: HTMLLinkElement | null = null;
-    const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`) as HTMLLinkElement | null;
-    if (!existing) {
-      link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'fetch';
-      link.href = scene;
-      link.crossOrigin = 'anonymous';
-      (link as any).fetchPriority = preloadPriority;
-      link.setAttribute('fetchpriority', preloadPriority);
-      document.head.appendChild(link);
-    }
-    // Warm the browser cache immediately
-    fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
+    const timer = window.setTimeout(() => {
+      const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection || {};
+      const saveData = !!conn.saveData;
+      const effectiveType = String(conn.effectiveType || '');
+      const isSlowNet = effectiveType === '2g' || effectiveType === 'slow-2g';
+      const preloadPriority: 'high' | 'low' = (!saveData && !isSlowNet) ? 'high' : 'low';
 
-    // Allow Spline to mount right away — no lock queue
-    if (!cancelled) setAllowLoad(true);
+      import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
+
+      const preconnectOrigins = ['https://prod.spline.design', 'https://cdn.spline.design'] as const;
+      preconnectOrigins.forEach((href) => {
+        if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
+        const l = document.createElement('link');
+        l.rel = 'preconnect';
+        l.href = href;
+        l.crossOrigin = 'anonymous';
+        document.head.appendChild(l);
+      });
+
+      const existing = document.querySelector(`link[rel="preload"][as="fetch"][href="${scene}"]`) as HTMLLinkElement | null;
+      if (!existing) {
+        link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'fetch';
+        link.href = scene;
+        link.crossOrigin = 'anonymous';
+        (link as any).fetchPriority = preloadPriority;
+        link.setAttribute('fetchpriority', preloadPriority);
+        document.head.appendChild(link);
+      }
+      fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
+
+      if (!cancelled) setAllowLoad(true);
+    }, delay);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
       if (link && link.parentNode) link.parentNode.removeChild(link);
     };
-  }, [scene]);
+  }, [scene, isDesktop]);
 
   const handleLoad = useCallback((_splineApp?: any) => {
     setIsLoaded(true);
@@ -821,6 +813,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   
   // --- IP SESSION AUTO-LOGIN STATE ---
   const [checkingIPSession, setCheckingIPSession] = useState(true); // Start with checking
+
+  // Lazy-loaded heavy components — imported only after user interaction/loading
+  const [MultiStepLoaderComp, setMultiStepLoaderComp] = useState<React.ComponentType<any> | null>(null);
+  const [LegalDisclaimerModalComp, setLegalDisclaimerModalComp] = useState<React.ComponentType<any> | null>(null);
+  const [UnifiedFpsPillComp, setUnifiedFpsPillComp] = useState<React.ComponentType<any> | null>(null);
+  const [UnifiedHubPanelComp, setUnifiedHubPanelComp] = useState<React.ComponentType<any> | null>(null);
+  const [hubReady, setHubReady] = useState(false);
   
   // --- INIT: Read localStorage flags on mount (single effect) ---
   useEffect(() => {
@@ -837,6 +836,60 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       localStorage.removeItem('bullmoney_pagemode_login_view');
     }
   }, []);
+
+  // Load loader component only when we actually enter a loading state
+  useEffect(() => {
+    if (!loading || MultiStepLoaderComp) return;
+    let cancelled = false;
+    import("@/components/Mainpage/MultiStepLoader")
+      .then(m => {
+        if (!cancelled) setMultiStepLoaderComp(() => m.MultiStepLoader);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [loading, MultiStepLoaderComp]);
+
+  // Load legal modal only when the modal is requested
+  useEffect(() => {
+    if (!isLegalModalOpen || LegalDisclaimerModalComp) return;
+    let cancelled = false;
+    import("@/components/Mainpage/footer/LegalDisclaimerModal")
+      .then(m => { if (!cancelled) setLegalDisclaimerModalComp(() => m.LegalDisclaimerModal); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [isLegalModalOpen, LegalDisclaimerModalComp]);
+
+  // User interaction gate for hub widgets
+  const ensureHubReady = useCallback(() => setHubReady(true), []);
+
+  useEffect(() => {
+    if (hubReady) return;
+    const handler = () => setHubReady(true);
+    const opts = { once: true } as AddEventListenerOptions;
+    window.addEventListener('pointerdown', handler, opts);
+    window.addEventListener('touchstart', handler, opts);
+    window.addEventListener('keydown', handler, opts);
+    return () => {
+      window.removeEventListener('pointerdown', handler, opts as any);
+      window.removeEventListener('touchstart', handler, opts as any);
+      window.removeEventListener('keydown', handler, opts as any);
+    };
+  }, [hubReady]);
+
+  // Load hub components once user has interacted
+  useEffect(() => {
+    if (!hubReady) return;
+    if (!UnifiedFpsPillComp) {
+      import('@/components/ultimate-hub/pills/UnifiedFpsPill')
+        .then(m => setUnifiedFpsPillComp(() => m.UnifiedFpsPill))
+        .catch(() => {});
+    }
+    if (!UnifiedHubPanelComp) {
+      import('@/components/ultimate-hub/panel/UnifiedHubPanel')
+        .then(m => setUnifiedHubPanelComp(() => m.UnifiedHubPanel))
+        .catch(() => {});
+    }
+  }, [hubReady, UnifiedFpsPillComp, UnifiedHubPanelComp]);
 
   // --- IP-BASED SESSION CHECK: Auto-login if session exists by IP ---
   useEffect(() => {
@@ -880,19 +933,21 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- DESKTOP DETECTION FOR WELCOME SCREEN ---
   const isDesktop = useIsDesktop();
 
-  // Desktop perf: prefetch the desktop welcome chunk + Spline runtime as soon as we know we're on desktop.
-  // This avoids an extra round-trip that can delay first interaction in production.
-  useEffect(() => {
-    if (!isDesktop) return;
-    import('./WelcomeScreenDesktop').catch(() => undefined);
-    import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper').catch(() => undefined);
-  }, [isDesktop]);
-
   // --- MOBILE PERFORMANCE PROFILE ---
   const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur } = useMobilePerformance();
   const isLowMemoryRuntime = useMemo(() => isLowMemoryDevice(), []);
   const shouldReduceEffects = isMobile || shouldSkipHeavyEffects || isLowMemoryRuntime;
   const disableBackdropBlur = shouldDisableBackdropBlur || isLowMemoryRuntime;
+
+  // Idle-load desktop-only assets after first paint to keep TTFB low
+  useEffect(() => {
+    if (!isDesktop || isMobile) return;
+    const timer = window.setTimeout(() => {
+      import('./WelcomeScreenDesktop').catch(() => undefined);
+      import('@/lib/spline-wrapper').catch(() => undefined);
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [isDesktop, isMobile]);
 
   // --- iOS / In-App viewport shield (match Android/Samsung visual sizing + centering) ---
   const [iosInAppScale, setIosInAppScale] = useState(1);
@@ -993,8 +1048,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const prices = useLivePrices();
 
   // Memoized hub callbacks (prevents re-renders of UnifiedFpsPill / UnifiedHubPanel)
-  const toggleHubMinimized = useCallback(() => setIsHubMinimized(prev => !prev), []);
-  const openHubPanel = useCallback(() => setIsHubOpen(true), []);
+  const toggleHubMinimized = useCallback(() => { ensureHubReady(); setIsHubMinimized(prev => !prev); }, [ensureHubReady]);
+  const openHubPanel = useCallback(() => { ensureHubReady(); setIsHubOpen(true); }, [ensureHubReady]);
   const closeHubPanel = useCallback(() => setIsHubOpen(false), []);
 
   const [formData, setFormData] = useState({
@@ -1631,7 +1686,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             backgroundColor: 'transparent',
           }}
         >
-          <WelcomeSplineBackground />
+          <WelcomeSplineBackground isDesktop={isDesktop} />
         </div>
       )}
       
@@ -1644,14 +1699,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       
       {/* === FIX: HIGH Z-INDEX WRAPPER FOR LOADER === */}
       {/* This fixed container ensures the loader covers the entire viewport and overlays native browser bars. */}
-      {loading && (
+      {loading && MultiStepLoaderComp && (
           <div 
              // CRITICAL: Fixed, full coverage, max z-index to overlay native browser UI
              className="fixed inset-0 z-99999999 w-screen"
              style={{ height: '100dvh', minHeight: '-webkit-fill-available', backgroundColor: '#ffffff' }}
              // We render the loader component inside this wrapper
           >
-            <MultiStepLoader 
+        <MultiStepLoaderComp 
               loadingStates={isCelebration ? celebrationStates : loadingStates} 
               loading={loading} 
               duration={isCelebration ? 1000 : 300} 
@@ -1838,32 +1893,36 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 </div>
 
                 {/* Ultimate Hub Pill - Positioned below header+subheading from top */}
-                <UnifiedFpsPill
-                  fps={60}
-                  deviceTier="high"
-                  prices={prices}
-                  isMinimized={isHubMinimized}
-                  onToggleMinimized={toggleHubMinimized}
-                  onOpenPanel={openHubPanel}
-                  topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
-                  topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
-                  mobileAlignment="center"
-                />
+                {UnifiedFpsPillComp && (
+                  <UnifiedFpsPillComp
+                    fps={60}
+                    deviceTier="high"
+                    prices={prices}
+                    isMinimized={isHubMinimized}
+                    onToggleMinimized={toggleHubMinimized}
+                    onOpenPanel={openHubPanel}
+                    topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
+                    topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
+                    mobileAlignment="center"
+                  />
+                )}
               </motion.div>
 
               {/* Ultimate Hub Panel - Portal for z-index */}
               <SafePortal>
-                <UnifiedHubPanel
-                  isOpen={isHubOpen}
-                  onClose={closeHubPanel}
-                  fps={60}
-                  deviceTier="high"
-                  isAdmin={false}
-                  isVip={false}
-                  userId={undefined}
-                  userEmail={undefined}
-                  prices={prices}
-                />
+                {UnifiedHubPanelComp && (
+                  <UnifiedHubPanelComp
+                    isOpen={isHubOpen}
+                    onClose={closeHubPanel}
+                    fps={60}
+                    deviceTier="high"
+                    isAdmin={false}
+                    isVip={false}
+                    userId={undefined}
+                    userEmail={undefined}
+                    prices={prices}
+                  />
+                )}
               </SafePortal>
             </>
           )
@@ -1944,32 +2003,36 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               </div>
 
               {/* Ultimate Hub Pill - Positioned below header from top */}
-              <UnifiedFpsPill
-                fps={60}
-                deviceTier="high"
-                prices={prices}
-                isMinimized={isHubMinimized}
-                onToggleMinimized={toggleHubMinimized}
-                onOpenPanel={openHubPanel}
-                topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
-                topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
-                mobileAlignment="left"
-              />
+              {UnifiedFpsPillComp && (
+                <UnifiedFpsPillComp
+                  fps={60}
+                  deviceTier="high"
+                  prices={prices}
+                  isMinimized={isHubMinimized}
+                  onToggleMinimized={toggleHubMinimized}
+                  onOpenPanel={openHubPanel}
+                  topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
+                  topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
+                  mobileAlignment="left"
+                />
+              )}
             </motion.div>
 
             {/* Ultimate Hub Panel - Portal for z-index */}
             <SafePortal>
-              <UnifiedHubPanel
-                isOpen={isHubOpen}
-                onClose={closeHubPanel}
-                fps={60}
-                deviceTier="high"
-                isAdmin={false}
-                isVip={false}
-                userId={undefined}
-                userEmail={undefined}
-                prices={prices}
-              />
+              {UnifiedHubPanelComp && (
+                <UnifiedHubPanelComp
+                  isOpen={isHubOpen}
+                  onClose={closeHubPanel}
+                  fps={60}
+                  deviceTier="high"
+                  isAdmin={false}
+                  isVip={false}
+                  userId={undefined}
+                  userEmail={undefined}
+                  prices={prices}
+                />
+              )}
             </SafePortal>
           </>
         )}
@@ -2606,11 +2669,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       </div>
       
       {/* Legal Disclaimer Modal */}
-      <LegalDisclaimerModal 
-        isOpen={isLegalModalOpen} 
-        onClose={() => setIsLegalModalOpen(false)} 
-        initialTab={legalModalTab}
-      />
+      {LegalDisclaimerModalComp && (
+        <LegalDisclaimerModalComp
+          isOpen={isLegalModalOpen}
+          onClose={() => setIsLegalModalOpen(false)}
+          initialTab={legalModalTab}
+        />
+      )}
     </div>
   );
 }

@@ -26,6 +26,9 @@ const WARMUP_ROUTES = [
   '/store',
 ];
 
+// Skip warmup/keep-alive for fastest cold compile (export FAST_DEV=1 or SKIP_WARMUP=1)
+const SKIP_WARMUP = process.env.FAST_DEV === '1' || process.env.SKIP_WARMUP === '1';
+
 // Keep-alive interval (2 minutes in dev - more aggressive than prod)
 const KEEPALIVE_INTERVAL = 2 * 60 * 1000;
 let keepAliveTimer = null;
@@ -44,6 +47,7 @@ async function warmupRoute(route) {
 }
 
 async function runWarmup(silent = false) {
+  if (SKIP_WARMUP) return [];
   if (!isServerReady) return;
   
   const results = await Promise.all(WARMUP_ROUTES.map(warmupRoute));
@@ -68,6 +72,7 @@ async function runWarmup(silent = false) {
 }
 
 function startKeepAlive() {
+  if (SKIP_WARMUP) return;
   if (keepAliveTimer) clearInterval(keepAliveTimer);
   
   // Initial warmup after server starts (with small delay for full initialization)

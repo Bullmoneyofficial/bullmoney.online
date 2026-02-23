@@ -202,6 +202,7 @@ function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageCli
 
   // ✅ HYDRATION OPTIMIZED: Defer analytics + prefetch to after hydration and idle time
   useIdleCallback(() => {
+    if (currentView !== 'content') return;
     import("@/lib/prefetchHelper").then(({ deferAnalytics, smartPrefetch }) => {
       deferAnalytics(() => {
         import("@/lib/analytics").then(() => {
@@ -215,7 +216,7 @@ function HomeContent({ initialView = 'pagemode', skipInit = false }: HomePageCli
         { href: '/course', options: { priority: 'low' } },
       ]);
     });
-  }, { timeout: 3000, enabled: isHydrated });
+  }, { timeout: 3000, enabled: isHydrated && currentView === 'content' });
 
   // Check for Account Manager query parameter and open modal
   useEffect(() => {

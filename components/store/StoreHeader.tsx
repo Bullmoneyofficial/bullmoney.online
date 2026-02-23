@@ -1253,6 +1253,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         items={STORE_NAV_ITEMS}
         desktopLinks={desktopLinks}
         className="store-main-nav"
+        position="static"
         ease="power2.easeOut"
         baseColor="#ffffff"
         pillColor="#f5f5f7"
