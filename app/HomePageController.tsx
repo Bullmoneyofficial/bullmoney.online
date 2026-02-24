@@ -6,60 +6,21 @@ import dynamic from "next/dynamic";
 import { useUIState } from "@/contexts/UIStateHook";
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 import { loadSession, persistSession } from "@/lib/sessionPersistence";
+import {
+  safeGetLocal,
+  safeSetLocal,
+  safeRemoveLocal,
+  safeGetSession,
+  safeSetSession,
+  PAGEMODE_FORCE_LOGIN_KEY,
+  PAGEMODE_REDIRECT_PATH_KEY,
+} from "./HomePageClient/constants";
 
 type HomeView = "pagemode" | "loader" | "telegram" | "content";
 
-const PAGEMODE_FORCE_LOGIN_KEY = "bullmoney_pagemode_force_login";
-const PAGEMODE_REDIRECT_PATH_KEY = "bullmoney_pagemode_redirect_path";
-
-const safeGetLocal = (key: string): string | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const safeSetLocal = (key: string, value: string) => {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(key, value);
-  } catch {
-    // ignore
-  }
-};
-
-const safeRemoveLocal = (key: string) => {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
-};
-
-const safeGetSession = (key: string): string | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.sessionStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const safeSetSession = (key: string, value: string) => {
-  if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.setItem(key, value);
-  } catch {
-    // ignore
-  }
-};
-
 // IMPORTANT: Import PageMode directly.
 // Importing the aboveFold re-export barrel forces extra modules into the chunk.
-const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), {
+const PageMode = dynamic(() => import("@/components/SIGNUPS/pagemode"), {
   ssr: false,
   // Show a lightweight overlay while the heavy pagemode bundle loads
   loading: () => (
@@ -75,7 +36,7 @@ const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), {
 // NOTE: Loader step removed for PageMode flow (go straight to Telegram/content)
 
 const TelegramUnlockScreen = dynamic(
-  () => import("@/components/REGISTER USERS/TelegramConfirmationResponsive").then(mod => ({
+  () => import("@/components/SIGNUPS/TelegramConfirmationResponsive").then(mod => ({
     default: mod.TelegramConfirmationResponsive,
   })),
   { ssr: false, loading: () => null }
@@ -93,6 +54,32 @@ export function HomePageController() {
   }>(() => {
     // Synchronous init so desktop doesn't sit on <HomePageShell /> waiting for effects.
     try {
+      // DEV TOOL: ?dev_reset=1 wipes all auth flags and forces the registration flow.
+      // Use this in incognito to test the unauthenticated experience without the
+      // device-fingerprint IP session auto-logging you back in.
+      if (typeof window !== "undefined") {
+        const devReset = new URLSearchParams(window.location.search).get("dev_reset");
+        if (devReset === "1") {
+          // Clear every auth/onboarding key so the page behaves like a fresh visitor.
+          const keysToRemove = [
+            "bullmoney_recruit_auth",
+            "bullmoney_session",
+            "bullmoney_pagemode_completed",
+            "bullmoney_telegram_confirmed",
+            "bullmoney_loader_completed",
+            "bullmoney_loader_daily_last",
+            "bullmoney_pagemode_login_view",
+            "bullmoney_draft",
+          ];
+          keysToRemove.forEach((k) => { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (_) {} });
+          // Signal pagemode to skip the IP-session auto-login for this tab session.
+          try { sessionStorage.setItem("bm_dev_skip_ip_session", "1"); } catch (_) {}
+          // NOTE: URL cleanup (?dev_reset=1 removal) happens in a useEffect below —
+          // history.replaceState cannot be called during render.
+          return { currentView: "pagemode", shouldUnlock: false };
+        }
+      }
+
       const forcePagemodeLogin = safeGetLocal(PAGEMODE_FORCE_LOGIN_KEY);
       if (forcePagemodeLogin === "true") {
         safeRemoveLocal(PAGEMODE_FORCE_LOGIN_KEY);
@@ -170,7 +157,9 @@ export function HomePageController() {
         return { currentView: "pagemode", shouldUnlock: false };
       }
 
-      if (!hasCompletedPagemode && !hasSession) {
+      // Always require pagemode if there is no valid session, regardless of stale localStorage flags.
+      // This prevents stale bullmoney_pagemode_completed from skipping straight to telegram.
+      if (!hasSession) {
         return { currentView: "pagemode", shouldUnlock: false };
       }
 
@@ -193,6 +182,16 @@ export function HomePageController() {
   useEffect(() => {
     if (shouldUnlock) setV2Unlocked(true);
   }, [shouldUnlock, setV2Unlocked]);
+
+  // Strip ?dev_reset=1 from the URL after mount (can't do it during render).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("dev_reset") === "1") {
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, []);
 
   // Dev keyboard shortcut to skip pagemode and loader (works even before content mounts)
   useDevSkipShortcut(() => {

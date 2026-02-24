@@ -16,15 +16,27 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from '
 const DEV_PORT = process.env.PORT || 3000;
 const BASE_URL = `http://localhost:${DEV_PORT}`;
 
-// Critical routes to pre-warm on dev server start
-const WARMUP_ROUTES = [
+// Warmup strategy:
+// - Always safe/fast: API warmup (keeps edge/node handlers hot)
+// - Expensive in dev: page warmup (forces large route compiles like /store)
+//
+// Opt-in page warmup via:
+//   WARMUP_PAGES=1   → warms '/'
+//   WARMUP_STORE=1   → also warms '/store'
+const WARMUP_API_ROUTES = [
   '/api/warmup',
   '/api/health',
   '/api/version',
   '/api/geo-detect',
-  '/',
-  '/store',
 ];
+
+const WARMUP_PAGE_ROUTES = [];
+if (process.env.WARMUP_PAGES === '1') {
+  WARMUP_PAGE_ROUTES.push('/');
+  if (process.env.WARMUP_STORE === '1') WARMUP_PAGE_ROUTES.push('/store');
+}
+
+const WARMUP_ROUTES = [...WARMUP_API_ROUTES, ...WARMUP_PAGE_ROUTES];
 
 // Skip warmup/keep-alive for fastest cold compile (export FAST_DEV=1 or SKIP_WARMUP=1)
 const SKIP_WARMUP = process.env.FAST_DEV === '1' || process.env.SKIP_WARMUP === '1';

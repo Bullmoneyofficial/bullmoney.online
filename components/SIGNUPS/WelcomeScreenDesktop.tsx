@@ -450,7 +450,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
               backgroundColor: '#000',
             }}
           >
-            <WelcomeSplineBackground />
+            <WelcomeSplineBackground enable />
           </div>
         )}
 

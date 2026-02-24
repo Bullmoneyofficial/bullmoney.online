@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import type { SplineWrapperProps } from '@/lib/spline-wrapper';
@@ -14,11 +14,7 @@ const Spline = dynamic<SplineWrapperProps>(
   }
 );
 import { trackEvent, BullMoneyAnalytics } from '@/lib/analytics';
-import {
-  Check, Hash, Lock,
-  ArrowRight, ChevronLeft, ExternalLink, AlertCircle,
-  Copy, Eye, EyeOff, ShieldCheck
-} from 'lucide-react';
+import { Check, Hash, Lock, ArrowRight, ChevronLeft, ExternalLink, AlertCircle, Copy, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 import { cn } from "@/lib/utils";
 import { persistSession, restoreSession, persistFullSession } from '@/lib/sessionPersistence';
@@ -147,8 +143,20 @@ function SafePortal({
 import { useUIState, UI_Z_INDEX } from "@/contexts/UIStateContext";
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
+import { WelcomeStep } from "./pagemode/steps/WelcomeStep";
+import { WelcomeStepMobile } from "./pagemode/steps/WelcomeStepMobile";
+import { WelcomeStepGuest } from "./pagemode/steps/WelcomeStepGuest";
+
 // --- IMPORT SEPARATE LOADER COMPONENT (lazy, event-driven) ---
 const TelegramConfirmationResponsive = dynamic(() => import("./TelegramConfirmationResponsive").then(m => ({ default: m.TelegramConfirmationResponsive })), { ssr: false, loading: () => null });
+
+// --- EXTRACTED STEPS (code-split to reduce first-load bundle + dev compile graph) ---
+const BrokerSelector = dynamic(() => import("./pagemode/steps/BrokerSelector"), { ssr: false, loading: () => null });
+const Step0EntryGate = dynamic(() => import("./pagemode/steps/Step0EntryGate"), { ssr: false, loading: () => null });
+const Step1OpenAccount = dynamic(() => import("./pagemode/steps/Step1OpenAccount"), { ssr: false, loading: () => null });
+const Step2VerifyId = dynamic(() => import("./pagemode/steps/Step2VerifyId"), { ssr: false, loading: () => null });
+const Step3CreateLogin = dynamic(() => import("./pagemode/steps/Step3CreateLogin"), { ssr: false, loading: () => null });
+const LoginView = dynamic(() => import("./pagemode/steps/LoginView"), { ssr: false, loading: () => null });
 
 // --- DESKTOP WELCOME SCREEN (separate layout for larger screens) ---
 const WelcomeScreenDesktop = dynamic(
@@ -896,6 +904,31 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     let cancelled = false;
 
     async function checkForIPSession() {
+      // DEV: skip IP auto-login when ?dev_reset=1 was used this tab session.
+      try {
+        if (sessionStorage.getItem('bm_dev_skip_ip_session') === '1') {
+          console.log('[PageMode] Dev mode: skipping IP session auto-login');
+          setCheckingIPSession(false);
+          return;
+        }
+      } catch (_) {}
+
+      // Skip IP auto-login when there is no prior local session indicator.
+      // The bm_auth cookie and localStorage keys are only present in a browser
+      // context that has previously authenticated here. Incognito/private windows
+      // start with none of these, so they always see the registration flow instead
+      // of being silently logged in via the device fingerprint API.
+      try {
+        const hasCookie = document.cookie.includes('bm_auth=');
+        const hasLocalAuth =
+          localStorage.getItem('bullmoney_recruit_auth') !== null ||
+          localStorage.getItem('bullmoney_session') !== null;
+        if (!hasCookie && !hasLocalAuth) {
+          setCheckingIPSession(false);
+          return;
+        }
+      } catch (_) {}
+
       try {
         // Try to restore session (checks IP first, then local storage)
         const session = await restoreSession();
@@ -904,6 +937,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         
         if (session && session.recruitId && session.email) {
           console.log('[PageMode] IP session found, auto-unlocking for:', session.email);
+          // Returning user — mark telegram as confirmed so they skip the Telegram screen.
+          // (Telegram confirmation is only required for brand-new sign-ups, not returning users.)
+          try { localStorage.setItem('bullmoney_telegram_confirmed', 'true'); } catch (_) {}
           // Session found - trigger unlock after brief delay for smooth UX
           window.dispatchEvent(new Event('bullmoney_session_changed'));
           setTimeout(() => {
@@ -949,9 +985,155 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     return () => window.clearTimeout(timer);
   }, [isDesktop, isMobile]);
 
+  // Idle-prefetch the register step chunks so the first click feels instant
+  // while keeping the initial JS graph smaller.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // Only prefetch while still on the welcome/early flow.
+    if (step > 1) return;
+
+    const schedule = (cb: () => void) => {
+      const ric = (window as any).requestIdleCallback as ((fn: () => void, opts?: any) => any) | undefined;
+      if (typeof ric === 'function') return ric(cb, { timeout: 1500 });
+      return window.setTimeout(cb, 900);
+    };
+
+    const id = schedule(() => {
+      import('./pagemode/steps/BrokerSelector').catch(() => undefined);
+      import('./pagemode/steps/Step0EntryGate').catch(() => undefined);
+      import('./pagemode/steps/Step1OpenAccount').catch(() => undefined);
+      import('./pagemode/steps/Step2VerifyId').catch(() => undefined);
+      import('./pagemode/steps/Step3CreateLogin').catch(() => undefined);
+      import('./pagemode/steps/LoginView').catch(() => undefined);
+    });
+
+    return () => {
+      const cic = (window as any).cancelIdleCallback as ((id: any) => void) | undefined;
+      if (typeof cic === 'function') {
+        try { cic(id); } catch (_) {}
+      } else {
+        window.clearTimeout(id);
+      }
+    };
+  }, [step]);
+
   // --- iOS / In-App viewport shield (match Android/Samsung visual sizing + centering) ---
   const [iosInAppScale, setIosInAppScale] = useState(1);
   const [isIOSInAppShield, setIsIOSInAppShield] = useState(false);
+
+  // --- LOGIN FORM STATE ---
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // --- REGISTRATION FORM STATE ---
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    mt5Number: '',
+    referralCode: '',
+  });
+
+  // --- AFFILIATE / REFERRAL URL PARAMS ---
+  const [affiliateCode, setAffiliateCode] = useState<string | null>(null);
+  const [resolvedAffiliateCode, setResolvedAffiliateCode] = useState<string | null>(null);
+  const [resolvedAffiliateId, setResolvedAffiliateId] = useState<string | null>(null);
+  const [resolvedSource, setResolvedSource] = useState<string | null>(null);
+  const [resolvedMedium, setResolvedMedium] = useState<string | null>(null);
+  const [resolvedCampaign, setResolvedCampaign] = useState<string | null>(null);
+  const [referralAttribution, setReferralAttribution] = useState<{
+    affiliateCode: string | null;
+    affiliateId: string | null;
+    affiliateName: string | null;
+    affiliateEmail: string | null;
+    source: string | null;
+    medium: string | null;
+    campaign: string | null;
+  } | null>(null);
+
+  // --- HUB PANEL STATE ---
+  const [isHubOpen, setIsHubOpen] = useState(false);
+  const [isHubMinimized, setIsHubMinimized] = useState(false);
+  const closeHubPanel = useCallback(() => setIsHubOpen(false), []);
+  const openHubPanel = useCallback(() => setIsHubOpen(true), []);
+  const toggleHubMinimized = useCallback(() => setIsHubMinimized(prev => !prev), []);
+
+  // --- iOS SHIELD STYLE (computed from scale) ---
+  const iosInAppShieldStyle: React.CSSProperties | undefined = isIOSInAppShield
+    ? { transform: `scale(${iosInAppScale})`, transformOrigin: 'top center' }
+    : undefined;
+
+  // --- LIVE PRICES (for hub panel tickers) ---
+  const prices = useLivePrices();
+
+  // --- REFERRAL ATTRIBUTION: Extract URL params & track affiliate click ---
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('ref') || params.get('affiliate') || params.get('code');
+    const src = params.get('utm_source') || params.get('source');
+    const med = params.get('utm_medium') || params.get('medium');
+    const cam = params.get('utm_campaign') || params.get('campaign');
+
+    if (!code) return;
+
+    setAffiliateCode(code);
+    setResolvedSource(src);
+    setResolvedMedium(med);
+    setResolvedCampaign(cam);
+
+    // Resolve affiliate details from API
+    fetch(`/api/affiliate/resolve?code=${encodeURIComponent(code)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        setResolvedAffiliateCode(data.affiliateCode ?? code);
+        setResolvedAffiliateId(data.affiliateId ?? null);
+        setReferralAttribution({
+          affiliateCode: data.affiliateCode ?? code,
+          affiliateId: data.affiliateId ?? null,
+          affiliateName: data.affiliateName ?? null,
+          affiliateEmail: data.affiliateEmail ?? null,
+          source: src,
+          medium: med,
+          campaign: cam,
+        });
+
+        // Track referral click (once per session per code)
+        const clickTrackKey = `bm_ref_click_tracked_${data.affiliateCode ?? code}`;
+        if (!sessionStorage.getItem(clickTrackKey)) {
+          fetch('/api/affiliate/track-click', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              affiliateCode: data.affiliateCode ?? code,
+              affiliateId: data.affiliateId ?? null,
+              source: src || 'affiliate',
+              medium: med || 'qr_code',
+              campaign: cam || 'partner_link',
+            }),
+          })
+            .then(() => sessionStorage.setItem(clickTrackKey, '1'))
+            .catch((error) => console.error('[PageMode] Referral click track failed:', error));
+        }
+      })
+      .catch(() => {
+        // Fallback: use the raw code without full resolution
+        setResolvedAffiliateCode(code);
+        setReferralAttribution({
+          affiliateCode: code,
+          affiliateId: null,
+          affiliateName: null,
+          affiliateEmail: null,
+          source: src,
+          medium: med,
+          campaign: cam,
+        });
+      });
+
+    // Clean URL params after extraction (keeps URL clean)
+    window.history.replaceState({}, '', window.location.pathname);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -1008,185 +1190,25 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
       setIsIOSInAppShield(shouldShield);
       setIosInAppScale(scale);
-      rootStyle.setProperty('--pagemode-ios-ui-scale', `${scale}`);
-    };
-
-    // Debounced version for resize events (fires at most every 150ms)
-    const debouncedUpdate = () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(updateViewportMetrics, 150);
     };
 
     updateViewportMetrics();
 
-    window.addEventListener('resize', debouncedUpdate);
-    window.addEventListener('orientationchange', updateViewportMetrics);
-    window.visualViewport?.addEventListener('resize', debouncedUpdate);
-    window.visualViewport?.addEventListener('scroll', debouncedUpdate);
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener('resize', updateViewportMetrics);
+    } else {
+      window.addEventListener('resize', updateViewportMetrics);
+    }
 
     return () => {
+      if (vv) {
+        vv.removeEventListener('resize', updateViewportMetrics);
+      } else {
+        window.removeEventListener('resize', updateViewportMetrics);
+      }
       if (debounceTimer) clearTimeout(debounceTimer);
-      window.removeEventListener('resize', debouncedUpdate);
-      window.removeEventListener('orientationchange', updateViewportMetrics);
-      window.visualViewport?.removeEventListener('resize', debouncedUpdate);
-      window.visualViewport?.removeEventListener('scroll', debouncedUpdate);
-      rootStyle.removeProperty('--pagemode-vh');
-      rootStyle.removeProperty('--pagemode-ios-ui-scale');
     };
-  }, []);
-
-  const iosInAppShieldStyle = isIOSInAppShield && iosInAppScale < 1
-    ? ({
-        transform: `scale(${iosInAppScale})`,
-        transformOrigin: 'top center',
-      } as React.CSSProperties)
-    : undefined;
-
-  // --- ULTIMATE HUB STATE (for mobile welcome screen) ---
-  const [isHubOpen, setIsHubOpen] = useState(false);
-  const [isHubMinimized, setIsHubMinimized] = useState(false);
-  const prices = useLivePrices();
-
-  // Memoized hub callbacks (prevents re-renders of UnifiedFpsPill / UnifiedHubPanel)
-  const toggleHubMinimized = useCallback(() => { ensureHubReady(); setIsHubMinimized(prev => !prev); }, [ensureHubReady]);
-  const openHubPanel = useCallback(() => { ensureHubReady(); setIsHubOpen(true); }, [ensureHubReady]);
-  const closeHubPanel = useCallback(() => setIsHubOpen(false), []);
-
-  const [formData, setFormData] = useState({
-    email: '',
-    mt5Number: '',
-    password: '',
-    referralCode: ''
-  });
-
-  // --- REFERRAL ATTRIBUTION STATE (populated from URL params / localStorage) ---
-  const [referralAttribution, setReferralAttribution] = useState({
-    affiliateId: '',
-    affiliateName: '',
-    affiliateEmail: '',
-    affiliateCode: '',
-    source: '',
-    medium: '',
-    campaign: '',
-  });
-
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  
-  // --- INJECT GLOBAL APPLE STYLES (idempotent, runs once) ---
-  useEffect(() => {
-    const styleId = 'apple-glow-styles-pagemode';
-    if (document.getElementById(styleId)) return;
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = APPLE_GLOBAL_STYLES;
-    document.head.appendChild(style);
-  }, []);
-
-  // --- EXTRACT REFERRAL CODE & AFFILIATE DETAILS FROM URL PARAMS ---
-  // When users scan QR codes from the affiliate dashboard, the URL contains
-  // ref, aff_code, aff_id, aff_name, aff_email, utm_source, utm_medium, utm_campaign
-  // This auto-fills the referral code and tracks attribution
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const refCode = urlParams.get('ref');
-    const affCode = urlParams.get('aff_code');
-    const affiliateCode = (refCode || affCode || '').trim();
-    const brokerParam = (urlParams.get('broker') || urlParams.get('partner') || urlParams.get('aff_broker') || '').trim().toLowerCase();
-
-    // Auto-select broker if specified in URL
-    if (brokerParam === 'xm') {
-      setActiveBroker('XM');
-    } else if (brokerParam === 'vantage') {
-      setActiveBroker('Vantage');
-    }
-
-    // Extract full affiliate attribution from URL
-    const affiliateId = (urlParams.get('aff_id') || '').trim();
-    const affiliateName = (urlParams.get('aff_name') || '').trim();
-    const affiliateEmail = (urlParams.get('aff_email') || '').trim();
-    const source = (urlParams.get('utm_source') || '').trim();
-    const medium = (urlParams.get('utm_medium') || '').trim();
-    const campaign = (urlParams.get('utm_campaign') || '').trim();
-
-    // Also check localStorage for previously stored referral context
-    let storedContext: any = null;
-    try {
-      const rawStoredContext = localStorage.getItem('bullmoney_referral_context');
-      if (rawStoredContext) {
-        storedContext = JSON.parse(rawStoredContext);
-      }
-    } catch {}
-
-    // Resolve values: URL params take priority over stored context
-    const resolvedAffiliateCode = affiliateCode || String(storedContext?.affiliateCode || '').trim();
-    const resolvedAffiliateId = affiliateId || String(storedContext?.affiliateId || '').trim();
-    const resolvedAffiliateName = affiliateName || String(storedContext?.affiliateName || '').trim();
-    const resolvedAffiliateEmail = affiliateEmail || String(storedContext?.affiliateEmail || '').trim();
-    const resolvedSource = source || String(storedContext?.source || '').trim();
-    const resolvedMedium = medium || String(storedContext?.medium || '').trim();
-    const resolvedCampaign = campaign || String(storedContext?.campaign || '').trim();
-
-    if (resolvedAffiliateCode) {
-      console.log('[PageMode] 🎯 Referral attribution detected:', {
-        affiliateCode: resolvedAffiliateCode,
-        affiliateId: resolvedAffiliateId,
-        affiliateName: resolvedAffiliateName,
-        affiliateEmail: resolvedAffiliateEmail,
-      });
-
-      // Auto-fill referral code in form
-      setFormData(prev => ({ ...prev, referralCode: resolvedAffiliateCode }));
-      setReferralAttribution({
-        affiliateId: resolvedAffiliateId,
-        affiliateName: resolvedAffiliateName,
-        affiliateEmail: resolvedAffiliateEmail,
-        affiliateCode: resolvedAffiliateCode,
-        source: resolvedSource,
-        medium: resolvedMedium,
-        campaign: resolvedCampaign,
-      });
-
-      // Persist referral context in localStorage for session continuity
-      try {
-        localStorage.setItem('bullmoney_referral_context', JSON.stringify({
-          affiliateId: resolvedAffiliateId,
-          affiliateName: resolvedAffiliateName,
-          affiliateEmail: resolvedAffiliateEmail,
-          affiliateCode: resolvedAffiliateCode,
-          source: resolvedSource,
-          medium: resolvedMedium,
-          campaign: resolvedCampaign,
-          capturedAt: new Date().toISOString(),
-        }));
-      } catch {}
-
-      // Track referral click (once per session per code)
-      const clickTrackKey = `bm_ref_click_tracked_${resolvedAffiliateCode}`;
-      const hasQueryCode = Boolean(affiliateCode);
-      if (hasQueryCode && !sessionStorage.getItem(clickTrackKey)) {
-        fetch('/api/affiliate/track-click', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            affiliateCode: resolvedAffiliateCode,
-            affiliateId: resolvedAffiliateId,
-            source: resolvedSource || 'affiliate',
-            medium: resolvedMedium || 'qr_code',
-            campaign: resolvedCampaign || 'partner_link',
-          }),
-        })
-          .then(() => sessionStorage.setItem(clickTrackKey, '1'))
-          .catch((error) => console.error('[PageMode] Referral click track failed:', error));
-      }
-
-      // Clean URL params after extraction (keeps URL clean)
-      if (affiliateCode) {
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-    }
   }, []);
 
   // --- WELCOME AUDIO: Play once on page load (deferred to avoid blocking initial render) ---
@@ -1516,7 +1538,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           password: formData.password,
           mt5_id: formData.mt5Number,
           referred_by_code: formData.referralCode || null,
-          referral_attribution: hasAffiliateAttribution
+          referral_attribution: hasAffiliateAttribution && referralAttribution
             ? {
                 affiliate_id: referralAttribution.affiliateId || null,
                 affiliate_name: referralAttribution.affiliateName || null,
@@ -1752,289 +1774,64 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
         {/* ================= WELCOME SCREEN (Step -1) ================= */}
         {step === -1 && (
-          isDesktop ? (
-            // Desktop Welcome Screen - Split layout with branding
-            <WelcomeScreenDesktop
-              onSignUp={() => {
-                setViewMode('register');
-                setStep(0);
-              }}
-              onGuest={() => {
-                setStep(-2);
-              }}
-              onLogin={() => {
-                setViewMode('login');
-                setStep(0);
-              }}
-              hideBackground
-            />
-          ) : (
-            // Mobile Welcome Screen - Minimalistic Apple-style design
-            <>
-              <motion.div
-                key="welcome-screen"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="fixed inset-0 flex flex-col"
-                style={{
-                  minHeight: '100dvh',
-                  width: '100vw',
-                  height: 'calc(var(--pagemode-vh, 1vh) * 100)',
-                  pointerEvents: 'none',
-                  zIndex: UI_Z_INDEX.PAGEMODE,
-                  backgroundColor: 'transparent',
-                  // No iosInAppShieldStyle scale on welcome screen — it creates visible
-                  // edges around the content. The Spline bg fills the viewport independently.
-                }}
-              >
-                {/* Minimalistic Branding Header */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ position: 'relative', zIndex: 10, paddingTop: 40, paddingBottom: 20, textAlign: 'center', pointerEvents: 'none' }}
-                >
-                  <motion.h1
-                    style={{
-                      position: 'relative',
-                      fontSize: 'clamp(1.8rem,6vw,2.4rem)',
-                      fontWeight: 600,
-                      color: '#fff',
-                      textShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
-                      letterSpacing: '-0.03em',
-                      fontFamily: FONT_FAMILY_SHORT,
-                    }}
-                  >
-                    BullMoney
-                  </motion.h1>
-                </motion.div>
-
-                {/* Main Content Area */}
-                <div
-                  style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px', width: '100%', paddingBottom: 24, zIndex: 10, pointerEvents: 'auto' }}
-                >
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="apple-card"
-                    style={{
-                      width: '100%',
-                      maxWidth: 208,
-                      borderRadius: 12,
-                      padding: 16,
-                      background: '#fff',
-                      boxShadow: '0 1px 12px rgba(0, 0, 0, 0.06)',
-                      border: '1px solid rgba(0,0,0,0.08)',
-                      fontFamily: FONT_FAMILY_FULL,
-                    }}
-                  >
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.7, rotateY: -20 }}
-                      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                      transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                      style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}
-                    >
-                      <img src="/IMG_2921.PNG" alt="BullMoney" className="icon-float" style={{ width: 36, height: 36, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))' }} />
-                    </motion.div>
-                    <h2 style={{ fontSize: 14, fontWeight: 600, color: '#000', marginBottom: 2, textAlign: 'center', letterSpacing: '-0.02em' }}>
-                      BullMoney
-                    </h2>
-                    <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 10, marginBottom: 16, textAlign: 'center', fontWeight: 400 }}>
-                      Free trading tools & community
-                    </p>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <motion.button
-                        onClick={() => { setViewMode('login'); setStep(0); }}
-                        whileHover={{ scale: 1.03, y: -1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="btn-3d-primary"
-                        style={{ width: '100%', padding: '8px 0', borderRadius: 10, fontWeight: 600, fontSize: 11, background: '#000', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 3px 12px -3px rgba(0,0,0,0.3)' }}
-                      >
-                        Sign In
-                      </motion.button>
-
-                      <motion.button
-                        onClick={() => { setViewMode('register'); setStep(0); }}
-                        whileHover={{ scale: 1.03, y: -1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="btn-3d-secondary"
-                        style={{ width: '100%', padding: '8px 0', borderRadius: 10, fontWeight: 600, fontSize: 11, color: '#000', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.15)', cursor: 'pointer' }}
-                      >
-                        Create Account
-                      </motion.button>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0' }}>
-                        <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(0,0,0,0.06)' }} />
-                        <span style={{ color: 'rgba(0,0,0,0.25)', fontSize: 9, fontWeight: 400 }}>or</span>
-                        <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(0,0,0,0.06)' }} />
-                      </div>
-
-                      <motion.button
-                        onClick={() => setStep(-2)}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{ width: '100%', padding: '6px 0', borderRadius: 10, fontWeight: 400, fontSize: 10, color: 'rgba(0,0,0,0.5)', backgroundColor: 'rgba(0,0,0,0.03)', border: 'none', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      >
-                        Browse as Guest
-                      </motion.button>
-                    </div>
-
-                    <p style={{ textAlign: 'center', color: 'rgba(0,0,0,0.25)', fontSize: 9, marginTop: 12, fontWeight: 400, lineHeight: 1.6 }}>
-                      By continuing, you agree to our{' '}
-                      <button type="button" onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 9 }}>Terms</button>
-                      {' & '}
-                      <button type="button" onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 9 }}>Privacy</button>
-                    </p>
-                  </motion.div>
-                </div>
-
-                {/* Ultimate Hub Pill - Positioned below header+subheading from top */}
-                {UnifiedFpsPillComp && (
-                  <UnifiedFpsPillComp
-                    fps={60}
-                    deviceTier="high"
-                    prices={prices}
-                    isMinimized={isHubMinimized}
-                    onToggleMinimized={toggleHubMinimized}
-                    onOpenPanel={openHubPanel}
-                    topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
-                    topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
-                    mobileAlignment="center"
-                  />
-                )}
-              </motion.div>
-
-              {/* Ultimate Hub Panel - Portal for z-index */}
-              <SafePortal>
-                {UnifiedHubPanelComp && (
-                  <UnifiedHubPanelComp
-                    isOpen={isHubOpen}
-                    onClose={closeHubPanel}
-                    fps={60}
-                    deviceTier="high"
-                    isAdmin={false}
-                    isVip={false}
-                    userId={undefined}
-                    userEmail={undefined}
-                    prices={prices}
-                  />
-                )}
-              </SafePortal>
-            </>
-          )
+          <WelcomeStep
+            isDesktop={isDesktop}
+            WelcomeScreenDesktop={WelcomeScreenDesktop as any}
+            onSignUp={() => {
+              setViewMode('register');
+              setStep(0);
+            }}
+            onGuest={() => {
+              setStep(-2);
+            }}
+            onLogin={() => {
+              setViewMode('login');
+              setStep(0);
+            }}
+            mobile={
+              <WelcomeStepMobile
+                motion={motion}
+                onLogin={() => { setViewMode('login'); setStep(0); }}
+                onSignUp={() => { setViewMode('register'); setStep(0); }}
+                onGuest={() => setStep(-2)}
+                onOpenLegal={(tab) => { setLegalModalTab(tab); setIsLegalModalOpen(true); }}
+                SafePortal={SafePortal as any}
+                UnifiedFpsPillComp={UnifiedFpsPillComp as any}
+                UnifiedHubPanelComp={UnifiedHubPanelComp as any}
+                isHubOpen={isHubOpen}
+                closeHubPanel={closeHubPanel}
+                isHubMinimized={isHubMinimized}
+                toggleHubMinimized={toggleHubMinimized}
+                openHubPanel={openHubPanel}
+                prices={prices}
+                UI_Z_INDEX={UI_Z_INDEX as any}
+                FONT_FAMILY_SHORT={FONT_FAMILY_SHORT}
+                FONT_FAMILY_FULL={FONT_FAMILY_FULL}
+              />
+            }
+          />
         )}
 
         {/* ================= GUEST INTERMEDIATE SCREEN (Step -2) ================= */}
         {step === -2 && (
-          <>
-            <motion.div
-              key="guest-screen"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="fixed inset-0 flex flex-col"
-              style={{ 
-                minHeight: '100dvh',
-                height: 'calc(var(--pagemode-vh, 1vh) * 100)',
-                pointerEvents: 'none', // Allow Spline interaction, UI elements override
-                zIndex: UI_Z_INDEX.PAGEMODE,
-                backgroundColor: 'transparent',
-                color: '#000',
-                ...(iosInAppShieldStyle ?? {}),
-              }}
-            >
-              {/* Back Button */}
-              <button
-                onClick={() => setStep(-1)}
-                className="apple-button cursor-target"
-                style={{ position: 'fixed', top: 20, right: 16, display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.5)', fontSize: 13, fontWeight: 500, padding: '8px 12px', borderRadius: 12, zIndex: 50, backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', pointerEvents: 'auto' }}
-              >
-                <ChevronLeft style={{ width: 16, height: 16 }} /> Back
-              </button>
-
-              {/* Header */}
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'relative', zIndex: 10, paddingTop: 56, paddingBottom: 24, textAlign: 'center', pointerEvents: 'none', fontFamily: FONT_FAMILY_SHORT, backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
-              >
-                <h1 style={{ fontSize: 24, fontWeight: 600, color: '#000', letterSpacing: '-0.03em' }}>
-                  BullMoney
-                </h1>
-              </motion.div>
-
-              {/* Card */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', width: '100%', paddingBottom: 40, position: 'relative', zIndex: 10, pointerEvents: 'auto' }}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="apple-card"
-                  style={{ borderRadius: 16, padding: 24, textAlign: 'center', width: '100%', maxWidth: 320, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', background: '#fff', fontFamily: FONT_FAMILY_FULL }}
-                >
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.7, rotateY: -20 }}
-                    animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                    transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}
-                  >
-                    <img src="/IMG_2921.PNG" alt="BullMoney" className="icon-float" style={{ width: 44, height: 44, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))' }} />
-                  </motion.div>
-                  <h2 style={{ fontSize: 18, fontWeight: 600, color: '#000', marginBottom: 4, letterSpacing: '-0.02em' }}>Guest Access</h2>
-                  <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', marginBottom: 20, lineHeight: 1.6, fontWeight: 400 }}>
-                    Browse freely. Some features are limited.
-                  </p>
-                  <motion.button
-                    onClick={() => { setStep(99); onUnlock(); }}
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.96, y: 1 }}
-                    className="btn-3d-primary"
-                    style={{ width: '100%', padding: '12px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, background: '#fff', color: '#000', border: '1px solid rgba(0,0,0,0.15)', cursor: 'pointer', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.12)' }}
-                  >
-                    Continue
-                  </motion.button>
-                </motion.div>
-              </div>
-
-              {/* Ultimate Hub Pill - Positioned below header from top */}
-              {UnifiedFpsPillComp && (
-                <UnifiedFpsPillComp
-                  fps={60}
-                  deviceTier="high"
-                  prices={prices}
-                  isMinimized={isHubMinimized}
-                  onToggleMinimized={toggleHubMinimized}
-                  onOpenPanel={openHubPanel}
-                  topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
-                  topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
-                  mobileAlignment="left"
-                />
-              )}
-            </motion.div>
-
-            {/* Ultimate Hub Panel - Portal for z-index */}
-            <SafePortal>
-              {UnifiedHubPanelComp && (
-                <UnifiedHubPanelComp
-                  isOpen={isHubOpen}
-                  onClose={closeHubPanel}
-                  fps={60}
-                  deviceTier="high"
-                  isAdmin={false}
-                  isVip={false}
-                  userId={undefined}
-                  userEmail={undefined}
-                  prices={prices}
-                />
-              )}
-            </SafePortal>
-          </>
+          <WelcomeStepGuest
+            motion={motion}
+            onBack={() => setStep(-1)}
+            onContinue={() => { setStep(99); onUnlock(); }}
+            SafePortal={SafePortal as any}
+            UnifiedFpsPillComp={UnifiedFpsPillComp as any}
+            UnifiedHubPanelComp={UnifiedHubPanelComp as any}
+            isHubOpen={isHubOpen}
+            closeHubPanel={closeHubPanel}
+            isHubMinimized={isHubMinimized}
+            toggleHubMinimized={toggleHubMinimized}
+            openHubPanel={openHubPanel}
+            prices={prices}
+            UI_Z_INDEX={UI_Z_INDEX as any}
+            iosInAppShieldStyle={iosInAppShieldStyle}
+            FONT_FAMILY_SHORT={FONT_FAMILY_SHORT}
+            FONT_FAMILY_FULL={FONT_FAMILY_FULL}
+          />
         )}
 
        {/* ================= LOGIN VIEW - APPLE STYLE ================= */}
@@ -2197,471 +1994,86 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           /* ================= UNLOCK FLOW VIEW ================= */
           <>
             {step === 1 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}
-              >
-                {(["Vantage", "XM"] as const).map((partner) => {
-                  const isActive = activeBroker === partner;
-                  return (
-                    <motion.button
-                      key={partner}
-                      onClick={() => handleBrokerSwitch(partner)}
-                      whileHover={{ scale: 1.06 }}
-                      whileTap={{ scale: 0.94 }}
-                      className="cursor-target"
-                      style={{
-                        position: 'relative',
-                        padding: '7px 18px',
-                        borderRadius: 9999,
-                        fontWeight: 500,
-                        fontSize: 13,
-                        zIndex: 20,
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease',
-                        color: isActive ? '#fff' : 'rgba(0,0,0,0.5)',
-                        backgroundColor: isActive ? '#000' : 'rgba(0,0,0,0.04)',
-                        boxShadow: isActive ? '0 4px 16px -4px rgba(0,0,0,0.25)' : 'none',
-                      }}
-                    >
-                      {partner}
-                    </motion.button>
-                  );
-                })}
-              </motion.div>
+              <BrokerSelector motion={motion} activeBroker={activeBroker} onSwitch={handleBrokerSwitch} />
             )}
 
             <AnimatePresence mode="wait">
 
               {/* --- SCREEN 1: ENTRY GATE (Step 0) - APPLE STYLE --- */}
               {step === 0 && (
-                 <motion.div
-                  key="step0-apple"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  className="fixed inset-0 flex flex-col items-center justify-center"
-                  style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', backgroundColor: '#fff', zIndex: 99999998, ...(iosInAppShieldStyle ?? {}) }}
-                 >
-                   {/* Back Button */}
-                   <motion.button
-                     initial={{ opacity: 0, x: -20 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     transition={{ delay: 0.4, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                     onClick={() => {
-                       if (returnToAccountManager) {
-                         localStorage.removeItem('return_to_account_manager');
-                         router.push('/?openAccountManager=true');
-                       } else {
-                         setStep(-1);
-                       }
-                     }}
-                     className="btn-3d-secondary cursor-target"
-                     style={STYLE_BACK_BTN}
-                   >
-                     <ChevronLeft style={{ width: 16, height: 16 }} /> {returnToAccountManager ? 'Account Manager' : 'Back'}
-                   </motion.button>
-
-                   <motion.div
-                     initial={{ opacity: 0, rotateX: 10, y: 50, scale: 0.9 }}
-                     animate={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
-                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                     style={{
-                       backgroundColor: '#fff',
-                       padding: 24,
-                       borderRadius: 20,
-                       position: 'relative',
-                       overflow: 'hidden',
-                       textAlign: 'center',
-                       width: '100%',
-                       maxWidth: 384,
-                       marginLeft: 16,
-                       marginRight: 16,
-                       border: '1px solid rgba(0,0,0,0.08)',
-                       boxShadow: '0 8px 32px -8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.04)',
-                       zIndex: 1,
-                       fontFamily: FONT_FAMILY_FULL,
-                       perspective: 1200,
-                       transformStyle: 'preserve-3d' as any,
-                     }}
-                   >
-                      {/* Top edge highlight */}
-                      <div style={STYLE_TOP_EDGE} />
-
-                      {/* Logo */}
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8, rotateY: -20 }}
-                        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                        transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}
-                      >
-                        <img src="/IMG_2921.PNG" alt="BullMoney" style={{ width: 48, height: 48, objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.1))' }} />
-                      </motion.div>
-
-                      <motion.h2
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, color: '#000', letterSpacing: '-0.02em' }}
-                      >
-                        Get Free Access
-                      </motion.h2>
-                      <motion.p
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        style={{ fontSize: 13, marginBottom: 20, color: 'rgba(0,0,0,0.45)', fontWeight: 400 }}
-                      >
-                        3 steps · 2 minutes · No payment needed
-                      </motion.p>
-
-                      {/* 3-Step Preview - staggered animated */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.35, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        style={{ position: 'relative', zIndex: 10, marginBottom: 20, backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: 14, padding: 14, border: '1px solid rgba(0,0,0,0.05)' }}
-                      >
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          {[
-                            { n: '1', text: 'Open a free broker account' },
-                            { n: '2', text: 'Enter your trading ID' },
-                            { n: '3', text: 'Create your login' },
-                          ].map((s, i) => (
-                            <motion.div
-                              key={s.n}
-                              initial={{ opacity: 0, x: -16 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.45 + i * 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                              style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}
-                            >
-                              <span style={{ width: 22, height: 22, borderRadius: '50%', backgroundColor: '#000', color: '#fff', fontSize: 10, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>{s.n}</span>
-                              <span style={{ fontSize: 13, color: 'rgba(0,0,0,0.6)' }}>{s.text}</span>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-
-                      <motion.button
-                        onClick={handleNext}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.65, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.96, y: 1 }}
-                        className="btn-3d-primary cursor-target"
-                        style={{ position: 'relative', zIndex: 10, width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)' }}
-                      >
-                        Get Started <ArrowRight style={{ width: 16, height: 16 }} />
-                      </motion.button>
-
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8, duration: 0.5 }}
-                        style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', zIndex: 10 }}
-                      >
-                         <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)' }}><Lock style={{ width: 12, height: 12, display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />No credit card required</p>
-                         <button
-                           onClick={toggleViewMode}
-                           className="btn-3d-secondary"
-                           style={{ fontSize: 13, fontWeight: 400, color: 'rgba(0,0,0,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }}
-                         >
-                            Already registered? <span style={{ color: '#000', fontWeight: 500 }}>Sign in</span>
-                         </button>
-                      </motion.div>
-                   </motion.div>
-                 </motion.div>
+                <Step0EntryGate
+                  motion={motion}
+                  iosInAppShieldStyle={iosInAppShieldStyle}
+                  returnToAccountManager={returnToAccountManager}
+                  onBackToWelcome={() => setStep(-1)}
+                  onBackToAccountManager={() => {
+                    localStorage.removeItem('return_to_account_manager');
+                    router.push('/?openAccountManager=true');
+                  }}
+                  onGetStarted={handleNext}
+                  onToggleViewMode={toggleViewMode}
+                  STYLE_BACK_BTN={STYLE_BACK_BTN}
+                  STYLE_TOP_EDGE={STYLE_TOP_EDGE}
+                  FONT_FAMILY_FULL={FONT_FAMILY_FULL}
+                />
               )}
 
               {/* --- SCREEN 2: OPEN ACCOUNT (Step 1) --- */}
               {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.97 }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}
-                >
-                  <StepCard
-                    {...getStepProps(1)}
-                    title="Open a Free Broker Account"
-                    className="register-card"
-                    isXM={isXM}
-                    disableEffects={true}
-                    disableBackdropBlur={disableBackdropBlur}
-                    actions={
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <motion.button
-                          onClick={() => copyCode(brokerCode)}
-                          whileHover={{ scale: 1.01, y: -1 }}
-                          whileTap={{ scale: 0.97 }}
-                          className="btn-3d-secondary cursor-target"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 14, padding: '12px 16px', fontSize: 13, fontWeight: 600, width: '100%', justifyContent: 'center', color: '#000', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }}
-                        >
-                          {copied ? <Check style={{ height: 16, width: 16 }} /> : <Copy style={{ height: 16, width: 16 }} />}
-                          <span>{copied ? "Copied!" : `Copy Code: ${brokerCode}`}</span>
-                        </motion.button>
-
-                        <motion.button
-                          onClick={handleBrokerClick}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.96, y: 1 }}
-                          className="btn-3d-primary cursor-target"
-                          style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)' }}
-                        >
-                          Open {activeBroker} Account <ExternalLink style={{ height: 16, width: 16 }} />
-                        </motion.button>
-
-                        <motion.button
-                          onClick={handleNext}
-                          whileHover={{ scale: 1.01, y: -1 }}
-                          whileTap={{ scale: 0.97 }}
-                          className="btn-3d-secondary cursor-target"
-                          style={{ width: '100%', padding: '12px 0', borderRadius: 14, fontWeight: 500, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#000', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }}
-                        >
-                          I've Opened My Account <ArrowRight style={{ width: 16, height: 16 }} />
-                        </motion.button>
-                      </div>
-                    }
-                  >
-                    <p style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 16, color: 'rgba(0,0,0,0.5)' }}>
-                      We partner with regulated brokers so you get free access. Use the code below when signing up.
-                    </p>
-
-                    {/* Broker code display - compact */}
-                    <div style={{ width: '100%', borderRadius: 12, overflow: 'hidden', marginBottom: 12, backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
-                      <div>
-                        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(0,0,0,0.3)', fontWeight: 500, display: 'block' }}>Partner Code</span>
-                        <span style={{ fontSize: 20, fontWeight: 700, color: '#000', letterSpacing: '0.02em' }}>{brokerCode}</span>
-                      </div>
-                      <button onClick={() => copyCode(brokerCode)} style={{ color: 'rgba(0,0,0,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                        {copied ? <Check style={{ height: 16, width: 16 }} /> : <Copy style={{ height: 16, width: 16 }} />}
-                      </button>
-                    </div>
-
-                    {/* How-to steps inline */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
-                      <p><span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>1.</span> Copy the code above</p>
-                      <p><span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>2.</span> Open the broker link & paste it when signing up</p>
-                      <p><span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>3.</span> Come back and tap "I've Opened My Account"</p>
-                    </div>
-                  </StepCard>
-                </motion.div>
+                <Step1OpenAccount
+                  motion={motion}
+                  StepCard={StepCard as any}
+                  getStepProps={getStepProps}
+                  isXM={isXM}
+                  disableBackdropBlur={disableBackdropBlur}
+                  activeBroker={activeBroker}
+                  brokerCode={brokerCode}
+                  copied={copied}
+                  copyCode={copyCode}
+                  onOpenBrokerLink={handleBrokerClick}
+                  onNext={handleNext}
+                />
               )}
 
               {/* --- SCREEN 3: VERIFY ID (Step 2) --- */}
               {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.97 }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full flex flex-col items-center justify-center"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
-                >
-                  <StepCard
-                    {...getStepProps(2)}
-                    title="Enter Your Trading ID"
-                    className="register-card"
-                    isXM={isXM}
-                    disableEffects={shouldReduceEffects}
-                    disableBackdropBlur={disableBackdropBlur}
-                    actions={
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <motion.button
-                          onClick={handleNext}
-                          disabled={!formData.mt5Number}
-                          whileHover={formData.mt5Number ? { scale: 1.02, y: -2 } : {}}
-                          whileTap={formData.mt5Number ? { scale: 0.96, y: 1 } : {}}
-                          className="btn-3d-primary cursor-target"
-                          style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', cursor: formData.mt5Number ? 'pointer' : 'not-allowed', opacity: !formData.mt5Number ? 0.4 : 1, boxShadow: formData.mt5Number ? '0 4px 20px -4px rgba(0,0,0,0.3)' : 'none' }}
-                        >
-                          Continue <ArrowRight style={{ width: 16, height: 16 }} />
-                        </motion.button>
-                        <motion.button
-                          onClick={handleBack}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="cursor-target"
-                          style={{ display: 'flex', alignItems: 'center', fontSize: 13, color: 'rgba(0,0,0,0.4)', margin: '0 auto', background: 'none', border: 'none', cursor: 'pointer' }}
-                        >
-                          <ChevronLeft style={{ width: 14, height: 14, marginRight: 2 }} /> Back
-                        </motion.button>
-                      </div>
-                    }
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 }}>
-                      <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', lineHeight: 1.6 }}>
-                        After signing up with {activeBroker}, check your email for your <span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.7)' }}>MT5 Trading ID</span> (a number like 12345678).
-                      </p>
-
-                      <div style={{ position: 'relative' }}>
-                        <Hash style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(0,0,0,0.25)', width: 18, height: 18 }} className="icon-float" />
-                        <input
-                          autoFocus
-                          type="tel"
-                          name="mt5Number"
-                          value={formData.mt5Number}
-                          onChange={handleChange}
-                          placeholder="e.g. 12345678"
-                          className="apple-input cursor-target"
-                          style={{ width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 14, paddingLeft: 40, paddingRight: 16, paddingTop: 14, paddingBottom: 14, color: '#000', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
-                        />
-                      </div>
-                      <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', gap: 4 }}><Lock style={{ width: 12, height: 12 }}/> Only used to verify access — never shared</p>
-                    </div>
-                  </StepCard>
-                </motion.div>
+                <Step2VerifyId
+                  motion={motion}
+                  StepCard={StepCard as any}
+                  getStepProps={getStepProps}
+                  isXM={isXM}
+                  shouldReduceEffects={shouldReduceEffects}
+                  disableBackdropBlur={disableBackdropBlur}
+                  activeBroker={activeBroker}
+                  mt5Number={formData.mt5Number}
+                  onChangeMt5={handleChange}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
               )}
 
               {/* --- SCREEN 4: CREATE LOGIN (Step 3) --- */}
               {step === 3 && (
-                <motion.div
-                  key="step3"
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.97 }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full flex flex-col items-center justify-center"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
-                >
-                  <StepCard
-                    {...getStepProps(3)}
-                    title="Create Your Login"
-                    className="register-card"
-                    isXM={isXM}
-                    disableEffects={true}
-                    disableBackdropBlur={disableBackdropBlur}
-                    actions={
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <motion.button
-                          onClick={handleNext}
-                          disabled={!formData.email || !formData.password || !acceptedTerms}
-                          whileHover={(formData.email && formData.password && acceptedTerms) ? { scale: 1.02, y: -2 } : {}}
-                          whileTap={(formData.email && formData.password && acceptedTerms) ? { scale: 0.96, y: 1 } : {}}
-                          className="btn-3d-primary cursor-target"
-                          style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', cursor: (formData.email && formData.password && acceptedTerms) ? 'pointer' : 'not-allowed', opacity: (!formData.email || !formData.password || !acceptedTerms) ? 0.4 : 1, boxShadow: (formData.email && formData.password && acceptedTerms) ? '0 4px 20px -4px rgba(0,0,0,0.3)' : 'none' }}
-                        >
-                          Finish &amp; Get Access <ShieldCheck style={{ width: 16, height: 16 }} />
-                        </motion.button>
-                        <motion.button
-                          onClick={handleBack}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="cursor-target"
-                          style={{ display: 'flex', alignItems: 'center', fontSize: 13, color: 'rgba(0,0,0,0.4)', margin: '0 auto', background: 'none', border: 'none', cursor: 'pointer' }}
-                        >
-                          <ChevronLeft style={{ width: 14, height: 14, marginRight: 2 }} /> Back
-                        </motion.button>
-                      </div>
-                    }
-                  >
-                    <p style={{ fontSize: 13, marginBottom: 16, color: 'rgba(0,0,0,0.45)', fontWeight: 400 }}>Last step — set up your email and password.</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <div>
-                        <input
-                          autoFocus
-                          type="email"
-                          name="email"
-                          autoComplete="username"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="Email address"
-                          className="apple-input cursor-target"
-                          style={{ width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '14px 16px', color: '#000', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
-                        />
-                      </div>
-
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          name="password"
-                          autoComplete="new-password"
-                          value={formData.password}
-                          onChange={handleChange}
-                          placeholder="Password (min 6 characters)"
-                          className="apple-input cursor-target"
-                          style={{ width: '100%', backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '14px 16px', paddingRight: 44, color: '#000', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(0,0,0,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                        >
-                          {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
-                        </button>
-                      </div>
-
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          type="text"
-                          name="referralCode"
-                          value={formData.referralCode}
-                          onChange={handleChange}
-                          placeholder="BullMoney Affiliate Code (optional)"
-                          readOnly={!!referralAttribution.affiliateCode}
-                          className="apple-input cursor-target"
-                          style={{
-                            width: '100%',
-                            backgroundColor: referralAttribution.affiliateCode ? 'rgba(240,253,244,0.3)' : '#fff',
-                            border: referralAttribution.affiliateCode ? '1px solid rgba(34,197,94,0.4)' : '1px solid rgba(0,0,0,0.1)',
-                            borderRadius: 12,
-                            padding: '14px 16px',
-                            paddingRight: referralAttribution.affiliateCode ? 44 : 16,
-                            color: '#000',
-                            fontSize: 16,
-                            outline: 'none',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                        {referralAttribution.affiliateCode && (
-                          <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}>
-                            <Check style={{ width: 16, height: 16, color: '#16a34a' }} />
-                          </div>
-                        )}
-                        {referralAttribution.affiliateCode && (
-                          <p style={{ fontSize: 11, marginTop: 4, marginLeft: 4, color: 'rgba(22,163,74,0.7)' }}>
-                            Referred by {referralAttribution.affiliateName || referralAttribution.affiliateEmail || 'a BullMoney partner'}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Terms checkbox - compact */}
-                      <div
-                        onClick={() => setAcceptedTerms(!acceptedTerms)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.02)', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.05)' }}
-                      >
-                        <div
-                          style={{ width: 18, height: 18, borderRadius: 4, border: '1px solid rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer', background: acceptedTerms ? '#000' : 'transparent' }}
-                        >
-                          {acceptedTerms && <Check style={{ width: 12, height: 12, color: '#fff' }} />}
-                        </div>
-                        <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', lineHeight: 1.6, fontWeight: 400, flex: 1 }}>
-                          I agree to the{' '}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModalTab('terms'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.7)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11 }}>Terms</button>
-                          {', '}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModalTab('privacy'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.7)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11 }}>Privacy</button>
-                          {' & '}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }} style={{ color: 'rgba(0,0,0,0.7)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11 }}>Disclaimer</button>
-                        </p>
-                      </div>
-                    </div>
-
-                    {submitError && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', backgroundColor: '#fef2f2', padding: 10, borderRadius: 12, border: '1px solid #fee2e2', marginTop: 12 }}>
-                        <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, fontWeight: 400 }}>{submitError}</span>
-                      </div>
-                    )}
-                  </StepCard>
-                </motion.div>
+                <Step3CreateLogin
+                  motion={motion}
+                  StepCard={StepCard as any}
+                  getStepProps={getStepProps}
+                  isXM={isXM}
+                  disableBackdropBlur={disableBackdropBlur}
+                  formData={formData}
+                  onChange={handleChange}
+                  acceptedTerms={acceptedTerms}
+                  onToggleAcceptedTerms={() => setAcceptedTerms(!acceptedTerms)}
+                  showPassword={showPassword}
+                  onToggleShowPassword={() => setShowPassword(!showPassword)}
+                  referralAttribution={
+                    (referralAttribution ?? { affiliateCode: '', affiliateName: '', affiliateEmail: '' }) as { affiliateCode: string; affiliateName: string; affiliateEmail: string }
+                  }
+                  submitError={submitError}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                  onOpenLegal={(tab) => { setLegalModalTab(tab); setIsLegalModalOpen(true); }}
+                />
               )}
             </AnimatePresence>
           </>

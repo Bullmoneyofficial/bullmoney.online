@@ -1,16 +1,13 @@
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
+import HomePageMobileEntry from "./HomePageMobileEntry";
 import HomePageShell from "./HomePageShell";
 
-// Client boundary, but loaded with SSR-friendly dynamic so Server Components can render the fallback
-const HomePage = dynamic(() => import("./HomePageMobileEntry"), {
-  loading: () => <HomePageShell />,
-});
-
+// HomePageMobileEntry is already a client component with dynamic imports configured
+// No need for additional dynamic() wrapper in Server Component
 export default function Page() {
   return (
     <Suspense fallback={<HomePageShell />}>
-      <HomePage />
+      <HomePageMobileEntry />
     </Suspense>
   );
 }

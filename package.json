@@ -9,6 +9,7 @@
     "optimize:ios": "node scripts/optimize-ios.mjs",
     "optimize:android": "node scripts/optimize-android.mjs",
     "dev": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 node scripts/dev-logger.mjs --turbo",
+    "dev:warmup": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"DEV,WARMUP\" -c \"cyan,yellow\" \"node scripts/dev-logger.mjs --turbo\" \"sleep 3 && node scripts/route-warmup.mjs\"",
     "dev:local": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"NEXT.JS,PHP-LOCAL\" -c \"cyan,yellow\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=0.0.0.0 --port=8000\"",
     "dev:fullstack": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"NEXT.JS,PHP-LOCAL\" -c \"cyan,yellow\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=0.0.0.0 --port=8000\"",
     "dev:with-casino": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"NEXT,CASINO-PHP,CASINO-NODE\" -c \"cyan,yellow,green\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=127.0.0.1 --port=8000\" \"cd Bullcasino/server && node app.js\"",

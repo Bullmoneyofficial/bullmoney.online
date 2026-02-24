@@ -77,10 +77,11 @@ const BUILD_TIMESTAMP = new Date().toISOString();
 // This prevents Turbopack from parsing entire package entry points
 // when only a few exports are used (e.g., 34 icons from lucide-react = whole lib)
 const optimizePackageImports = [
+  // Icons (huge barrel exports)
   'lucide-react',
-  'framer-motion',
   '@tabler/icons-react',
   'react-icons',
+  // UI component libraries (barrel exports)
   '@radix-ui/react-dialog',
   '@radix-ui/react-dropdown-menu',
   '@radix-ui/react-select',
@@ -88,15 +89,48 @@ const optimizePackageImports = [
   '@radix-ui/react-tabs',
   '@radix-ui/react-popover',
   '@radix-ui/react-accordion',
-  'date-fns',
-  'recharts',
-  'three',
+  '@radix-ui/react-hover-card',
+  '@radix-ui/react-label',
+  // Animation libraries
+  'framer-motion',
   'gsap',
-  '@supabase/supabase-js',
-  'sonner',
+  '@use-gesture/react',
+  // 3D libraries (very heavy)
+  'three',
+  '@react-three/fiber',
+  '@react-three/drei',
+  '@react-three/postprocessing',
+  // Utility libraries (barrel exports)
+  'date-fns',
+  'lodash',
+  'lodash-es',
+  'ramda',
+  // Data/charts
+  'recharts',
+  'd3',
+  // State management
   'zustand',
+  'jotai',
+  'valtio',
+  // Supabase
+  '@supabase/supabase-js',
+  '@supabase/auth-ui-react',
+  '@supabase/auth-ui-shared',
+  '@supabase/ssr',
+  // Form libraries
+  '@hookform/resolvers',
+  'react-hook-form',
+  // Utilities
   'class-variance-authority',
   'clsx',
+  'tailwind-merge',
+  // Toast/notifications
+  'sonner',
+  'react-hot-toast',
+  // Particles
+  '@tsparticles/react',
+  '@tsparticles/engine',
+  '@tsparticles/slim',
 ];
 
 const nextConfig = {

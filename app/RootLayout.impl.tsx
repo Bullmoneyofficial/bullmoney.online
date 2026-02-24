@@ -21,207 +21,209 @@ import { DeferredLayoutUI } from "@/components/DeferredLayoutUI";
 // ✅ SPLASH SCREEN – shows on every route load/reload with pulse animation
 import { SplashScreen } from "@/components/SplashScreen";
 
+import type { ReactNode } from "react";
 
 
-// Use system font stack with Inter as preference - avoids network dependency during build
-const inter = {
-  className: "font-sans",
-  style: { fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }
-};
+
+const IS_PROD = process.env.NODE_ENV === "production";
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
+
+const FONT_CLASS = "font-sans";
+
+const HEAD_META = [
+  { name: "mobile-web-app-capable", content: "yes" },
+  { name: "apple-mobile-web-app-capable", content: "yes" },
+  { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+  { name: "apple-mobile-web-app-title", content: "BullMoney" },
+  { name: "application-name", content: "BullMoney" },
+  { name: "format-detection", content: "telephone=no" },
+  { name: "HandheldFriendly", content: "true" },
+  { name: "samsung-mobile-web-app-capable", content: "yes" },
+  { name: "screen-orientation", content: "portrait" },
+  { name: "full-screen", content: "yes" },
+  { name: "browsermode", content: "application" },
+  { name: "huawei-mobile-web-app-capable", content: "yes" },
+  { name: "msapplication-tap-highlight", content: "no" },
+  { name: "msapplication-TileColor", content: "#000000" },
+  { httpEquiv: "X-UA-Compatible", content: "IE=edge" },
+  { name: "format-detection", content: "telephone=no,date=no,email=no,address=no" },
+  { name: "apple-mobile-web-app-capable", content: "yes" },
+  { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+  { name: "apple-mobile-web-app-title", content: "BullMoney" },
+  { name: "mobile-web-app-capable", content: "yes" },
+  { name: "application-name", content: "BullMoney" },
+  { name: "format-detection", content: "telephone=no" },
+  { name: "mobile-web-app-status-bar-style", content: "black-translucent" },
+];
+
+const HEAD_LINKS = [
+  { rel: "preload", href: "/styles/layout-critical.css", as: "style" },
+  { rel: "stylesheet", href: "/styles/layout-critical.css" },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
+  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+  { rel: "dns-prefetch", href: "https://prod.spline.design" },
+  { rel: "dns-prefetch", href: "https://cdn.spline.design" },
+  { rel: "dns-prefetch", href: "https://va.vercel-scripts.com" },
+  { rel: "dns-prefetch", href: "https://www.googletagmanager.com" },
+  { rel: "dns-prefetch", href: "https://images.unsplash.com" },
+  { rel: "preload", href: "/ONcc2l601.svg", as: "image", fetchPriority: "high" },
+  { rel: "manifest", href: "/manifest.json" },
+  { rel: "alternate", href: "https://www.bullmoney.shop" },
+  { rel: "alternate", href: "https://www.bullmoney.online" },
+  { rel: "apple-touch-icon", sizes: "180x180", href: "/icon-180x180.png" },
+  { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192x192.png" },
+  { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512x512.png" },
+  {
+    rel: "apple-touch-startup-image",
+    media:
+      "screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)",
+    href: "/icon-512x512.png",
+  },
+  {
+    rel: "apple-touch-startup-image",
+    media:
+      "screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)",
+    href: "/icon-512x512.png",
+  },
+  {
+    rel: "apple-touch-startup-image",
+    media:
+      "screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)",
+    href: "/icon-512x512.png",
+  },
+  { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192x192.png" },
+  { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+  { rel: "shortcut icon", href: "/icon-192x192.png" },
+];
+
+const BEFORE_INTERACTIVE_SCRIPTS: Array<{ id: string; src?: string; html?: string }> = [
+  { id: "splash-init", src: "/scripts/splash-init.js" },
+  { id: "compat-layer", src: "/scripts/BMBRAIN/compat-layer.js" },
+  {
+    id: "bm-defer-loader",
+    html: `
+      (function(){
+        if (typeof window === 'undefined') return;
+        var loaded = Object.create(null);
+        function inject(item){
+          if (!item || !item.src || loaded[item.id]) return;
+          loaded[item.id] = true;
+          var s = document.createElement('script');
+          s.src = item.src;
+          s.async = true;
+          s.id = item.id || '';
+          (document.head || document.documentElement).appendChild(s);
+        }
+        function onIdle(fn, timeout){
+          if (window.requestIdleCallback) {
+            window.requestIdleCallback(fn, { timeout: timeout || 1500 });
+          } else {
+            setTimeout(fn, timeout || 1500);
+          }
+        }
+        function onFirstInput(fn){
+          var fired = false;
+          var timer = setTimeout(fire, 1800);
+          function fire(){ if (fired) return; fired = true; cleanup(); fn(); }
+          function cleanup(){ clearTimeout(timer); window.removeEventListener('pointerdown', fire, true); window.removeEventListener('keydown', fire, true); window.removeEventListener('touchstart', fire, true); }
+          window.addEventListener('pointerdown', fire, true);
+          window.addEventListener('keydown', fire, true);
+          window.addEventListener('touchstart', fire, true);
+        }
+        window.__bmDeferLoad = function(list){
+          if (!Array.isArray(list)) return;
+          list.forEach(function(item){
+            var trigger = item && item.when ? item.when : 'idle';
+            if (trigger === 'now') return inject(item);
+            if (trigger === 'interactive') return onFirstInput(function(){ inject(item); });
+            return onIdle(function(){ inject(item); }, item && item.timeout);
+          });
+        };
+      })();
+    `,
+  },
+];
+
+const AFTER_INTERACTIVE_SRC_SCRIPTS: Array<{ id: string; src: string }> = [
+  { id: "sw-and-touch", src: "/scripts/sw-touch.js" },
+  { id: "bmbrain-global", src: "/scripts/BMBRAIN/bmbrain-global.js" },
+  { id: "mobile-crash-shield", src: "/scripts/BMBRAIN/mobile-crash-shield.js" },
+  { id: "inapp-shield", src: "/scripts/BMBRAIN/inapp-shield.js" },
+];
+
+type RootLayoutProps = Readonly<{ children: ReactNode; modal: ReactNode }>;
+
+const getCacheBusterConfig = () =>
+  `window.__BM_CACHE_BUSTER__={APP_VERSION:'${APP_VERSION}',PRESERVED_KEYS:${JSON.stringify(PRESERVED_KEYS)}};`;
+
+const getSwInitShim = (swEnabled: boolean, routePrefetchEnabled: boolean) =>
+  `window.__BM_SW_ENABLED__=${swEnabled};window.__BM_ENABLE_ROUTE_PREFETCH__=${routePrefetchEnabled};window.__BM_VAPID_KEY__='${VAPID_PUBLIC_KEY}';window.__BM_SCRIPTS_VIA_NEXTJS__=true;`;
+
+const getDeferSchedule = (routePrefetchEnabled: boolean) => `
+  (function(){
+    if (typeof window === 'undefined' || typeof window.__bmDeferLoad !== 'function') return;
+    var isHome = (window.location && (window.location.pathname === '/' || window.location.pathname === ''));
+
+    var globalScripts = [
+      { id: 'detect-120hz', src: '/scripts/detect-120hz.js', when: 'idle' },
+      { id: 'perf-monitor', src: '/scripts/perf-monitor.js', when: 'idle' },
+      { id: 'device-detect', src: '/scripts/device-detect.js', when: 'idle' },
+      { id: 'device-capabilities', src: '/scripts/BMBRAIN/device-capabilities.js', when: 'idle' },
+      { id: 'input-controller', src: '/scripts/BMBRAIN/input-controller.js', when: 'interactive' },
+      { id: 'push-manager', src: '/scripts/BMBRAIN/push-manager.js', when: 'idle' },
+      ${routePrefetchEnabled ? "{ id: 'network-optimizer', src: '/scripts/BMBRAIN/network-optimizer.js', when: 'idle' }," : ""}
+      { id: 'spline-universal', src: '/scripts/BMBRAIN/spline-universal.js', when: 'idle' },
+      { id: 'offline-detect', src: '/scripts/BMBRAIN/offline-detect.js', when: 'idle' }
+    ];
+
+    var homeScripts = [
+      { id: 'desktop-fcp-optimizer', src: '/scripts/desktop-fcp-optimizer.js', when: 'idle' },
+      { id: 'desktop-lcp-optimizer', src: '/scripts/desktop-lcp-optimizer.js', when: 'idle' },
+      { id: 'desktop-cls-prevention', src: '/scripts/desktop-cls-prevention.js', when: 'idle' },
+      { id: 'desktop-ttfb-optimizer', src: '/scripts/desktop-ttfb-optimizer.js', when: 'idle' },
+      { id: 'desktop-interaction-sounds', src: '/scripts/desktop-interaction-sounds.js', when: 'interactive' },
+      { id: 'desktop-scroll-experience', src: '/scripts/desktop-scroll-experience.js', when: 'interactive' },
+      { id: 'desktop-stability-shield', src: '/scripts/desktop-stability-shield.js', when: 'idle' },
+      { id: 'desktop-fps-boost', src: '/scripts/desktop-fps-boost.js', when: 'interactive' }
+    ];
+
+    var scriptsToLoad = globalScripts.slice();
+    if (isHome) { scriptsToLoad = scriptsToLoad.concat(homeScripts); }
+    window.__bmDeferLoad(scriptsToLoad);
+  })();
+`;
 
 
-export default function RootLayout({
-  children,
-  modal,
-}: Readonly<{
-  children: React.ReactNode;
-  modal: React.ReactNode;
-}>) {
-  const swEnabled = process.env.NODE_ENV === "production";
-  const routePrefetchEnabled = process.env.NODE_ENV === "production";
+export default function RootLayout({ children, modal }: RootLayoutProps) {
+  const swEnabled = IS_PROD;
+  const routePrefetchEnabled = IS_PROD;
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Base critical CSS moved to static file to reduce SSR payload while keeping instant paint */}
-        <link rel="preload" href="/styles/layout-critical.css" as="style" />
-        <link rel="stylesheet" href="/styles/layout-critical.css" />
-        {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
-        <Script id="splash-init" src="/scripts/splash-init.js" strategy="beforeInteractive" />
-        {/* UNIVERSAL COMPATIBILITY LAYER: Polyfills + feature detection for ALL devices worldwide
-            MUST load BEFORE other BMBRAIN scripts — provides Element.closest, CustomEvent, Promise,
-            fetch, IntersectionObserver polyfills + safe storage for private browsing + CSS fixes
-            for Samsung Internet, UC Browser, Huawei Browser, Opera Mini, MIUI Browser, etc. */}
-        <Script id="compat-layer" src="/scripts/BMBRAIN/compat-layer.js" strategy="beforeInteractive" />
-        {/* Lightweight deferred loader - schedules heavy scripts after idle/interaction to keep FCP clean */}
-        <Script
-          id="bm-defer-loader"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(){
-                if (typeof window === 'undefined') return;
-                var loaded = Object.create(null);
-                function inject(item){
-                  if (!item || !item.src || loaded[item.id]) return;
-                  loaded[item.id] = true;
-                  var s = document.createElement('script');
-                  s.src = item.src;
-                  s.async = true;
-                  s.id = item.id || '';
-                  (document.head || document.documentElement).appendChild(s);
-                }
-                function onIdle(fn, timeout){
-                  if (window.requestIdleCallback) {
-                    window.requestIdleCallback(fn, { timeout: timeout || 1500 });
-                  } else {
-                    setTimeout(fn, timeout || 1500);
-                  }
-                }
-                function onFirstInput(fn){
-                  var fired = false;
-                  var timer = setTimeout(fire, 1800);
-                  function fire(){ if (fired) return; fired = true; cleanup(); fn(); }
-                  function cleanup(){ clearTimeout(timer); window.removeEventListener('pointerdown', fire, true); window.removeEventListener('keydown', fire, true); window.removeEventListener('touchstart', fire, true); }
-                  window.addEventListener('pointerdown', fire, true);
-                  window.addEventListener('keydown', fire, true);
-                  window.addEventListener('touchstart', fire, true);
-                }
-                window.__bmDeferLoad = function(list){
-                  if (!Array.isArray(list)) return;
-                  list.forEach(function(item){
-                    var trigger = item && item.when ? item.when : 'idle';
-                    if (trigger === 'now') return inject(item);
-                    if (trigger === 'interactive') return onFirstInput(function(){ inject(item); });
-                    return onIdle(function(){ inject(item); }, item && item.timeout);
-                  });
-                };
-              })();
-            `
-          }}
-        />
-        {/* Cache validation (deferred to avoid blocking first paint) */}
-        <Script
-          id="cache-buster-config"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `window.__BM_CACHE_BUSTER__={APP_VERSION:'${APP_VERSION}',PRESERVED_KEYS:${JSON.stringify(PRESERVED_KEYS)}};`
-          }}
-        />
+        {HEAD_LINKS.map((props, idx) => (
+          <link key={idx} {...(props as any)} />
+        ))}
+        {BEFORE_INTERACTIVE_SCRIPTS.map((s) =>
+          s.src ? (
+            <Script key={s.id} id={s.id} src={s.src} strategy="beforeInteractive" />
+          ) : (
+            <Script
+              key={s.id}
+              id={s.id}
+              strategy="beforeInteractive"
+              dangerouslySetInnerHTML={{ __html: s.html || "" }}
+            />
+          )
+        )}
+        <Script id="cache-buster-config" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: getCacheBusterConfig() }} />
         <Script id="cache-buster" src="/scripts/cache-buster.js" strategy="afterInteractive" />
+        {HEAD_META.map((props, idx) => (
+          <meta key={idx} {...(props as any)} />
+        ))}
 
-        {/* Mobile-Specific Meta Tags */}
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="BullMoney" />
-        <meta name="application-name" content="BullMoney" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="HandheldFriendly" content="true" />
-        
-        {/* Samsung Internet specific */}
-        <meta name="samsung-mobile-web-app-capable" content="yes" />
-        
-        {/* UC Browser specific - improves rendering */}
-        <meta name="screen-orientation" content="portrait" />
-        <meta name="full-screen" content="yes" />
-        <meta name="browsermode" content="application" />
-        
-        {/* Huawei Browser / HarmonyOS */}
-        <meta name="huawei-mobile-web-app-capable" content="yes" />
-        
-        {/* Microsoft/Windows Phone legacy */}
-        <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="msapplication-TileColor" content="#000000" />
-        
-        {/* Force IE/Edge to use latest rendering engine */}
-        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        
-        {/* Prevent auto-detection that can break layouts */}
-        <meta name="format-detection" content="telephone=no,date=no,email=no,address=no" />
-
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* PERFORMANCE: Resource hints for faster loading                       */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        
-        {/* Preconnect to critical origins (establishes connection early) */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* DNS Prefetch for third-party domains (resolves DNS early) */}
-        <link rel="dns-prefetch" href="https://prod.spline.design" />
-        <link rel="dns-prefetch" href="https://cdn.spline.design" />
-        <link rel="dns-prefetch" href="https://va.vercel-scripts.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        
-        {/* Preload critical assets with proper priorities */}
-        <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />
-        
-        {/* 
-          PERFORMANCE FIX: Removed all Spline scene preload/prefetch tags.
-          Scene1 (6.9MB) was being preloaded with HIGH priority, competing with 
-          critical JS/CSS for bandwidth. 5 other scenes (total ~13MB) were prefetched.
-          Spline scenes are now loaded on-demand by the SplineBackground component
-          via the Cache API system, which already handles caching efficiently.
-        */}
-        
-        {/* Spline preloading deferred to lazyOnload  static file avoids Turbopack compile cost */}
         <Script id="spline-preload" src="/scripts/spline-preload.js" strategy="lazyOnload" />
 
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
-
-        {/* Cross-domain SEO: explicitly reference both live domains */}
-        <link rel="alternate" href="https://www.bullmoney.shop" />
-        <link rel="alternate" href="https://www.bullmoney.online" />
-        
-        {/* iOS PWA - Standalone App Mode */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="BullMoney" />
-        
-        {/* Android PWA - Chrome Add to Home Screen */}
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="application-name" content="BullMoney" />
-        
-        {/* iOS Safari - Prevent auto-zoom on input focus */}
-        <meta name="format-detection" content="telephone=no" />
-        
-        {/* Android Chrome - Disable link preview on long press */}
-        <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
-
-        {/* 
-          HREFLANG: Handled by Next.js Metadata API `alternates` in each layout.
-          Each layout (root, store, about, products, etc.) exports its own alternates 
-          via makeAlternatesMetadata()  Next.js renders these as <link rel="alternate"> 
-          tags server-side. No need for a separate ServerHreflangMeta component.
-        */}
-
-        {/* Apple Touch Icon - 180x180 is all modern iOS needs */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/icon-180x180.png" />
-
-        {/* Android/Chrome homescreen icons */}
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
-
-        {/* Splash Screens for iOS - top 3 most common sizes only */}
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
-
-        {/* Favicon for various platforms */}
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="shortcut icon" href="/icon-192x192.png" />
-
-        {/* Service Worker & Touch  tiny inline shim sets globals, bulk logic in static file */}
-        <Script
-          id="sw-init"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `window.__BM_SW_ENABLED__=${swEnabled};window.__BM_ENABLE_ROUTE_PREFETCH__=${routePrefetchEnabled};window.__BM_VAPID_KEY__='${process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""}';window.__BM_SCRIPTS_VIA_NEXTJS__=true;`
-          }}
-        />
+        <Script id="sw-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: getSwInitShim(swEnabled, routePrefetchEnabled) }} />
         {/* PWA install prompt capture: must run early so `beforeinstallprompt` isn't missed */}
         <Script
           id="pwa-install-capture"
@@ -268,12 +270,9 @@ export default function RootLayout({
         />
         <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
 
-        {/* GLOBAL BRAIN ORCHESTRATOR — coordinates all BMBRAIN scripts, shared state, event bus */}
-        <Script id="bmbrain-global" src="/scripts/BMBRAIN/bmbrain-global.js" strategy="afterInteractive" />
-
-        {/* CRITICAL SCRIPTS - afterInteractive (run after page is interactive) */}
-        <Script id="mobile-crash-shield" src="/scripts/BMBRAIN/mobile-crash-shield.js" strategy="afterInteractive" />
-        <Script id="inapp-shield" src="/scripts/BMBRAIN/inapp-shield.js" strategy="afterInteractive" />
+        {AFTER_INTERACTIVE_SRC_SCRIPTS.map((s) => (
+          <Script key={s.id} id={s.id} src={s.src} strategy="afterInteractive" />
+        ))}
         <Script
           id="memory-manager-loader"
           strategy="afterInteractive"
@@ -344,7 +343,7 @@ export default function RootLayout({
                     document.documentElement.classList.contains('is-in-app-browser')
                   );
 
-                  var MIN      = isInApp ? 1400 : ${SPLASH_MIN_MS};
+                  var MIN      = isInApp ? 2400 : ${SPLASH_MIN_MS};
                   var FALLBACK = isInApp ? 3000 : ${SPLASH_FALLBACK_MS};
                   var MAX      = ${SPLASH_MAX_MS};
 
@@ -442,48 +441,10 @@ export default function RootLayout({
 
 
         {/* Deferred non-critical scripts with route/idle gating to keep initial paint fast */}
-        <Script
-          id="bm-defer-schedule"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(){
-                if (typeof window === 'undefined' || typeof window.__bmDeferLoad !== 'function') return;
-                var isHome = (window.location && (window.location.pathname === '/' || window.location.pathname === ''));
-
-                var globalScripts = [
-                  { id: 'detect-120hz', src: '/scripts/detect-120hz.js', when: 'idle' },
-                  { id: 'perf-monitor', src: '/scripts/perf-monitor.js', when: 'idle' },
-                  { id: 'device-detect', src: '/scripts/device-detect.js', when: 'idle' },
-                  { id: 'device-capabilities', src: '/scripts/BMBRAIN/device-capabilities.js', when: 'idle' },
-                  { id: 'input-controller', src: '/scripts/BMBRAIN/input-controller.js', when: 'interactive' },
-                  { id: 'push-manager', src: '/scripts/BMBRAIN/push-manager.js', when: 'idle' },
-                  ${routePrefetchEnabled ? `{ id: 'network-optimizer', src: '/scripts/BMBRAIN/network-optimizer.js', when: 'idle' },` : ''}
-                  { id: 'spline-universal', src: '/scripts/BMBRAIN/spline-universal.js', when: 'idle' },
-                  { id: 'offline-detect', src: '/scripts/BMBRAIN/offline-detect.js', when: 'idle' }
-                ];
-
-                var homeScripts = [
-                  { id: 'desktop-fcp-optimizer', src: '/scripts/desktop-fcp-optimizer.js', when: 'idle' },
-                  { id: 'desktop-lcp-optimizer', src: '/scripts/desktop-lcp-optimizer.js', when: 'idle' },
-                  { id: 'desktop-cls-prevention', src: '/scripts/desktop-cls-prevention.js', when: 'idle' },
-                  { id: 'desktop-ttfb-optimizer', src: '/scripts/desktop-ttfb-optimizer.js', when: 'idle' },
-                  { id: 'desktop-interaction-sounds', src: '/scripts/desktop-interaction-sounds.js', when: 'interactive' },
-                  { id: 'desktop-scroll-experience', src: '/scripts/desktop-scroll-experience.js', when: 'interactive' },
-                  { id: 'desktop-stability-shield', src: '/scripts/desktop-stability-shield.js', when: 'idle' },
-                  { id: 'desktop-fps-boost', src: '/scripts/desktop-fps-boost.js', when: 'interactive' }
-                ];
-
-                var scriptsToLoad = globalScripts.slice();
-                if (isHome) { scriptsToLoad = scriptsToLoad.concat(homeScripts); }
-                window.__bmDeferLoad(scriptsToLoad);
-              })();
-            `
-          }}
-        />
+        <Script id="bm-defer-schedule" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: getDeferSchedule(routePrefetchEnabled) }} />
       </head>
       <body
-        className={cn("antialiased bg-[#050915] text-white", inter.className)}
+        className={cn("antialiased bg-[#050915] text-white", FONT_CLASS)}
         suppressHydrationWarning
       >
         {/* Splash screen – covers every page load on every route */}

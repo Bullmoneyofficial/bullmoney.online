@@ -1,106 +1,72 @@
 "use client";
 
-import { ReactNode, Suspense, useState, useEffect, startTransition } from "react";
+import { ReactNode, useEffect, useState, startTransition } from "react";
 import dynamic from "next/dynamic";
 
 // ============================================================================
-// AppProviders — single consolidated wrapper to reduce layout.tsx module graph
-// ============================================================================
-// Light providers (small, needed for first render): imported statically
-// Heavy providers (large, deferred safely): imported with dynamic()
+// AppProviders — consolidated wrapper to reduce layout module graph
+//
+// IMPORTANT:
+// - Keep small/critical providers static.
+// - Keep very heavy providers behind dynamic() + idle gating.
+// - Children must render immediately (no loading fallbacks that blank the app).
 // ============================================================================
 
-// ── LIGHT PROVIDERS (static imports — <300 lines each) ────────────────────
+// ── LIGHT PROVIDERS (static imports) ─────────────────────────────────────────
 import { ThemeProvider } from "@/context/providers";
 import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
 import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 import { ShopProvider } from "@/components/ShopContext";
 
-// ── PERFORMANCE PROVIDERS (deferred — no children consume its context) ─────
-// GlobalAnimationPauseProvider (465 lines) deferred to idle time: no component outside
-// AppProviders calls useGlobalAnimationPause(), so it's safe to load after first render.
+// These providers are required by many client hooks during initial render.
+// They must be present synchronously (their hooks throw if missing).
+import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
+import { ThemesProvider } from "@/contexts/ThemesContext";
+import { StudioProvider } from "@/context/StudioContext";
+import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
+
+// ── DEFERRED (idle-only) ────────────────────────────────────────────────────
 const GlobalAnimationPauseProvider = dynamic(
-  () => import("@/components/GlobalAnimationPauseProvider").then(m => ({ default: m.GlobalAnimationPauseProvider })),
+  () =>
+    import("@/components/GlobalAnimationPauseProvider").then((m) => ({
+      default: m.GlobalAnimationPauseProvider,
+    })),
   { ssr: false }
 );
 
-// FPSCounter: dev-only, loaded lazily to avoid compiling PerformanceProvider.tsx (997 lines)
-// + deviceMonitor.ts (2737 lines) + browserDetection + safariOptimizations = ~4000 lines
-const FPSCounter = dynamic(
-  () => import("@/components/PerformanceProvider").then(m => ({ default: m.FPSCounter })),
-  { ssr: false }
-);
-
-// ── HEAVY PROVIDERS (dynamic imports — avoid pulling in large module graphs) ─
-// GlobalThemeProvider: 418 lines + theme-data (972 lines) + smartStorage (270 lines) = ~1,660 lines
-const GlobalThemeProvider = dynamic(
-  () => import("@/contexts/GlobalThemeProvider").then(m => ({ default: m.GlobalThemeProvider })),
-  { ssr: true }
-);
-
-// ThemesContext: 3,478 lines — deferred but SSR-safe (renders children immediately)
-const ThemesProvider = dynamic(
-  () => import("@/contexts/ThemesContext").then(m => ({ default: m.ThemesProvider })),
-  { ssr: true }
-);
-
-// StudioContext: 436 lines + Supabase SDK
-const StudioProvider = dynamic(
-  () => import("@/context/StudioContext").then(m => ({ default: m.StudioProvider })),
-  { ssr: true }
-);
-
-// AudioSettingsProvider: 586 lines + audio chain
-const AudioSettingsProvider = dynamic(
-  () => import("@/contexts/AudioSettingsProvider").then(m => ({ default: m.AudioSettingsProvider })),
-  { ssr: true }
-);
-
-// SmartScreensaver: 969 lines + framer-motion + FPS measurement libs
 const SmartScreensaverProvider = dynamic(
-  () => import("@/components/SmartScreensaver").then(m => ({ default: m.SmartScreensaverProvider })),
+  () => import("@/components/SmartScreensaver").then((m) => ({ default: m.SmartScreensaverProvider })),
   { ssr: false }
 );
 
-interface AppProvidersProps {
-  children: ReactNode;
-}
+const FPSCounter = dynamic(
+  () => import("@/components/PerformanceProvider").then((m) => ({ default: m.FPSCounter })),
+  { ssr: false }
+);
 
-// ✅ HYDRATION SAFE: All providers render on both server and client
-// Heavy providers use dynamic() with ssr:true to defer module loading
-// FPSCounter and SmartScreensaver are client-only (ssr: false)
-export function AppProviders({ children }: AppProvidersProps) {
+export function AppProviders({ children }: { children: ReactNode }) {
   const [showDeferred, setShowDeferred] = useState(false);
-  
+
   useEffect(() => {
-    // Enable deferred components during idle time
+    if (typeof window === "undefined") return;
+
     const enableDeferred = () => {
-      startTransition(() => {
-        setShowDeferred(true);
-      });
+      startTransition(() => setShowDeferred(true));
     };
-    
-    if ('requestIdleCallback' in window) {
-      const id = (window as any).requestIdleCallback(enableDeferred, { timeout: 2000 });
-      return () => (window as any).cancelIdleCallback(id);
-    } else {
-      const timeout = setTimeout(enableDeferred, 500);
-      return () => clearTimeout(timeout);
+
+    const w = window as any;
+    if (typeof w.requestIdleCallback === "function") {
+      const id = w.requestIdleCallback(enableDeferred, { timeout: 2000 });
+      return () => w.cancelIdleCallback?.(id);
     }
+
+    const t = setTimeout(enableDeferred, 500);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem
-      disableTransitionOnChange
-    >
-      {/* ✅ GlobalAnimationPauseProvider moved inside showDeferred — deferred to idle time.
-          No component outside AppProviders consumes its context, so deferring is safe.
-          Pauses ALL animations when tab is hidden + detects thermal throttling.
-      */}
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <ThemesProvider>
         <GlobalThemeProvider>
           <ViewportStateProvider>
@@ -109,13 +75,11 @@ export function AppProviders({ children }: AppProvidersProps) {
                 <AudioSettingsProvider>
                   <StudioProvider>
                     <ShopProvider>
-                      {/* All perf/animation providers deferred to idle time */}
                       {showDeferred ? (
                         <GlobalAnimationPauseProvider idleTimeout={60000}>
                           <SmartScreensaverProvider>
                             {children}
-                            {/* Dev FPS overlay */}
-                            <FPSCounter show={process.env.NODE_ENV === 'development'} position="bottom-right" />
+                            <FPSCounter show={process.env.NODE_ENV === "development"} position="bottom-right" />
                           </SmartScreensaverProvider>
                         </GlobalAnimationPauseProvider>
                       ) : (
@@ -132,3 +96,5 @@ export function AppProviders({ children }: AppProvidersProps) {
     </ThemeProvider>
   );
 }
+
+export default AppProviders;
