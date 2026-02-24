@@ -54,7 +54,7 @@ export function SplashScreen() {
         }}
       />
 
-      {/* Apple-style glass hero — Framer Motion animations */}
+      {/* Apple-style glass hero — Framer Motion animations + loading bar */}
       <HeroGlass />
     </div>
   );

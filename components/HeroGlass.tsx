@@ -59,6 +59,8 @@ export function HeroGlass() {
   const [headlineDone, setHeadlineDone] = useState(false);
   // Detect device capability for performance tuning
   const [isLiteMode, setIsLiteMode] = useState(false);
+  // Loading bar — ticks via setInterval, pure inline width
+  const [barWidth, setBarWidth] = useState(0);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -70,6 +72,20 @@ export function HeroGlass() {
     if (isSafari || isInApp || (isMobile && lowMem)) {
       setIsLiteMode(true);
     }
+  }, []);
+
+  // Tick the loading bar from 0→92 over ~2.4s via setInterval
+  useEffect(() => {
+    let w = 0;
+    const interval = setInterval(() => {
+      w += 2;
+      if (w >= 92) {
+        w = 92;
+        clearInterval(interval);
+      }
+      setBarWidth(w);
+    }, 50); // 50ms × 46 ticks ≈ 2.3s to reach 92%
+    return () => clearInterval(interval);
   }, []);
 
   // Typewriter activates once glass has settled
@@ -303,7 +319,73 @@ export function HeroGlass() {
         </motion.div>
       </div>
 
-      {/* Cursor blink keyframe — scoped inside shadow DOM via style tag */}
+      {/* ── Loading bar — single div, gradient fill ── */}
+      <div
+        aria-hidden="true"
+        style={{
+          width: 160,
+          height: 4,
+          borderRadius: 3,
+          marginTop: 24,
+          position: 'relative',
+          zIndex: 2,
+          backgroundImage: `linear-gradient(to right, #333 0%, #333 ${barWidth}%, rgba(0,0,0,0.12) ${barWidth}%, rgba(0,0,0,0.12) 100%)`,
+        }}
+      />
+
+      {/* ── Progress % + trading status text ── */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 6,
+          marginTop: 14,
+          position: 'relative',
+          zIndex: 2,
+          minHeight: 32,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif',
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#222',
+            letterSpacing: '-0.01em',
+            fontVariantNumeric: 'tabular-nums',
+            userSelect: 'none',
+          }}
+        >
+          {barWidth}%
+        </span>
+        <span
+          style={{
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
+            fontSize: 9,
+            fontWeight: 500,
+            color: 'rgba(0,0,0,0.32)',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            userSelect: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {barWidth < 15
+            ? 'Connecting to markets…'
+            : barWidth < 35
+            ? 'Loading live data…'
+            : barWidth < 55
+            ? 'Syncing positions…'
+            : barWidth < 75
+            ? 'Preparing charts…'
+            : barWidth < 90
+            ? 'Finalizing portfolio…'
+            : 'Markets ready'}
+        </span>
+      </div>
+
+      {/* Cursor blink keyframe */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
