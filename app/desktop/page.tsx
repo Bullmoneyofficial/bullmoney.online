@@ -61,7 +61,7 @@ const PageMode = dynamic(() => import("@/components/signups/pagemode"), { ssr: f
 // Lazy imports for 3D components - Desktop optimized
 const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false }) as any;
 const SplineScene = dynamic(() => import('@/components/SplineScene'), { ssr: false }) as any;
-const TestimonialsCarousel = dynamic(() => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })), { ssr: false }) as any;
+const TestimonialsCarousel = dynamic(() => import('@/components/TestimonialDesktop').then(mod => ({ default: mod.DesktopTestimonialsCarousel })), { ssr: false }) as any;
 
 // ==========================================
 // DESKTOP SCREEN SIZE DETECTION CONSTANTS
@@ -525,7 +525,13 @@ function DesktopHomeContent() {
             </section>
 
             {/* Desktop Testimonials Section */}
-            <section id="testimonials" className="w-full max-w-6xl mx-auto px-4 py-12" data-allow-scroll data-content data-theme-aware>
+            <section id="testimonials" className="w-full max-w-6xl mx-auto px-4 py-12" data-allow-scroll data-content data-theme-aware style={{ contentVisibility: 'visible', containIntrinsicSize: 'none' }}>
+              <style>{`
+                #testimonials, #testimonials * {
+                  content-visibility: visible !important;
+                  contain: none !important;
+                }
+              `}</style>
               <div className="relative text-center mb-6">
                 <h2 className="text-xl lg:text-2xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #ffffff), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 255, 255, 255), 0.5))' }}>
                   What Traders Say
@@ -537,14 +543,20 @@ function DesktopHomeContent() {
                 </div>
               </div>
               
-              <div className="relative rounded-2xl overflow-hidden">
-                <ShimmerBorder color="blue" intensity="low" speed="slow" />
-                
-                <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
-                  <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
-                    <TestimonialsCarousel />
-                  </Suspense>
-                </div>
+              <div
+                className="relative rounded-2xl"
+                style={{
+                  border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.2)',
+                  background: 'rgba(5, 5, 5, 0.7)',
+                  minHeight: 260,
+                  zIndex: 2,
+                  contentVisibility: 'visible',
+                  overflow: 'visible',
+                }}
+              >
+                <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
+                  <TestimonialsCarousel />
+                </Suspense>
               </div>
             </section>
 

@@ -1,9 +1,9 @@
 // app/about/AboutContent.tsx
 "use client";
-import { memo, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { memo, useEffect, useMemo, useState } from "react";
+import { Quote, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence  } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -118,34 +118,71 @@ export function AboutContent() {
     </main>
   );
 }
-const testimonials = [
+type TestimonialItem = {
+  name: string;
+  handle?: string;
+  role?: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  text: string;
+  highlight?: string;
+  focus?: string;
+  image?: string;
+  icon?: string;
+};
+
+const testimonials: TestimonialItem[] = [
   {
     name: "Justin P.",
-    text: "BullMoney changed how I view trading I passed my first funded challenge thanks to their mentorship!",
+    handle: "@justinp",
+    role: "Funded Challenge Pass",
+    rating: 5,
+    highlight: "Passed first funded",
+    focus: "Risk + psychology",
+    text: "BullMoney changed how I view trading. The mentorship + accountability made me consistent enough to pass my first funded challenge.",
     image: "/justinftmo.jpg",
     icon: "/bullmoney-logo.png",
   },
   {
     name: "Damian R.",
-    text: "The community and daily insights make such a difference. It’s like having a pro team behind you every day.",
+    handle: "@damianr",
+    role: "Intraday Trader",
+    rating: 5,
+    highlight: "Better entries",
+    focus: "Structure + journaling",
+    text: "The daily breakdowns and community feedback are like having a trading desk behind you. My entries got cleaner and I stopped overtrading.",
     image: "/DamianRudolph.png",
     icon: "/eqlogo.png",
   },
   {
     name: "Litha S.",
-    text: "I’ve been through countless trading groups, but BullMoney’s structured education actually works.",
+    handle: "@lithas",
+    role: "Swing Trader",
+    rating: 5,
+    highlight: "Clear plan",
+    focus: "Top-down analysis",
+    text: "I’ve tried a lot of groups, but BullMoney’s structure is different. The education is simple, repeatable, and the plan stays the same even when emotions don’t.",
     image: "/LithaSilo.png",
     icon: "/eqlogo.png",
   },
   {
     name: "Aya R.",
-    text: "Their market breakdowns are spot on. I’m finally trading with confidence and consistency.",
+    handle: "@ayar",
+    role: "Community Member",
+    rating: 5,
+    highlight: "More confidence",
+    focus: "Execution",
+    text: "The market breakdowns are on point. I’m finally trading with confidence because I know what I’m looking for and what to ignore.",
     image: "/AyaRungqu.png",
     icon: "/eqlogo.png",
   },
   {
     name: "Ntlakanipho B.",
-    text: "Their market breakdowns are spot on. I’m finally trading with confidence and consistency.",
+    handle: "@ntlakaniphob",
+    role: "Beginner → Consistent",
+    rating: 5,
+    highlight: "Stopped gambling",
+    focus: "Rules + discipline",
+    text: "The biggest change is discipline. I stopped gambling trades and started following rules. The community keeps you locked in when motivation drops.",
     image: "/NtlakaniphoBlouw.png",
     icon: "/eqlogo.png",
   },
@@ -160,138 +197,196 @@ export const TestimonialsCarousel = memo(({ tone = 'dark', className }: Testimon
   const [index, setIndex] = useState(0);
   const isLight = tone === 'light';
 
-  const nextSlide = () => setIndex((index + 1) % testimonials.length);
-  const prevSlide = () => setIndex((index - 1 + testimonials.length) % testimonials.length);
+  useEffect(() => {
+    if (testimonials.length <= 1) return;
+    const id = window.setInterval(() => {
+      setIndex((prev) => (prev + 1) % testimonials.length);
+    }, 8000);
+    return () => window.clearInterval(id);
+  }, []);
 
-  const currentTestimonial = useMemo(() => testimonials[index], [index]);
+  const currentTestimonial = useMemo(() => {
+    if (testimonials.length === 0) return null;
+    return testimonials[index] ?? testimonials[0];
+  }, [index]);
   if (!currentTestimonial) return null;
 
   return (
-    <motion.section {...fade} className={cn("relative mt-8 md:mt-12 w-full max-w-6xl mx-auto px-4 md:px-0", className)}>
-      {/* Minimalist header */}
+    <div
+      className={cn(
+        "testimonials-carousel relative mt-8 md:mt-12 w-full max-w-6xl mx-auto px-4 md:px-0",
+        className
+      )}
+      style={{ contentVisibility: 'visible', containIntrinsicSize: 'none', contain: 'none', overflow: 'visible' }}
+    >
       <div className="text-center mb-6 md:mb-8">
-        <h2 className="text-sm font-semibold tracking-wider uppercase mb-2 text-white/70">
-          Real Results
+        <h2
+          className={cn(
+            "text-xs font-semibold tracking-[0.24em] uppercase",
+            isLight ? "text-black/60" : "text-white/60"
+          )}
+        >
+          Trading Community
         </h2>
-        <p className="text-xl md:text-2xl font-semibold text-white">
-          What Our Traders Say About BullMoney
+        <p className={cn("mt-2 text-xl md:text-2xl font-semibold", isLight ? "text-black" : "text-white")}>
+          Real testimonials from real traders
+        </p>
+        <p className={cn("mt-2 text-sm", isLight ? "text-black/60" : "text-white/60")}>
+          Auto-rotating highlights from the BullMoney community
         </p>
       </div>
 
-      {/* Clean card design */}
       <div
         className={cn(
-          "relative h-[320px] md:h-[420px] overflow-hidden rounded-2xl md:rounded-3xl",
+          "relative rounded-2xl md:rounded-3xl border",
           isLight
-            ? "bg-white border border-black/10 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
-            : "bg-white/[0.02] backdrop-blur-xl border border-white/10"
+            ? "bg-white border-black/10 shadow-lg"
+            : "bg-neutral-950/60 border-white/10"
         )}
+        style={{ contentVisibility: 'visible', overflow: 'visible' }}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={index}
-            className="absolute inset-0 flex items-end justify-center p-6 md:p-8"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={(_e, { offset, velocity }) => {
-              if (offset.x < -50 || velocity.x < -200) nextSlide();
-              if (offset.x > 50 || velocity.x > 200) prevSlide();
-            }}
-          >
-            {/* Subtle background image */}
-            <Image
-              src={currentTestimonial.image}
-              alt={currentTestimonial.name}
-              fill
-              sizes="(min-width: 1024px) 900px, 100vw"
-              className={cn("object-cover", isLight ? "opacity-70" : "opacity-40")}
-              priority
-            />
-            {/* Overlay removed per request */}
-            
-            {/* Content - clean and spacious */}
-            <div className="relative text-white max-w-xl space-y-4">
-              <p className="text-base md:text-lg leading-relaxed text-white/90">
-                &ldquo;{currentTestimonial.text}&rdquo;
-              </p>
-              <div className="flex items-center gap-3 pt-2">
+        <div className={cn("p-5 md:p-8", isLight ? "" : "backdrop-blur")} style={{ minHeight: 220 }}>
+            <div className="grid gap-6 md:grid-cols-[280px_1fr]">
+              <div className="flex items-center gap-4">
                 <div
                   className={cn(
-                    "relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden",
-                    isLight ? "bg-black/5 border border-black/10" : "bg-white/5 border border-white/10"
+                    "relative h-16 w-16 rounded-full overflow-hidden border",
+                    isLight ? "border-black/10 bg-black/5" : "border-white/10 bg-white/5"
                   )}
                 >
-                  <Image
-                    src={currentTestimonial.icon}
-                    alt={`${currentTestimonial.name} icon`}
-                    fill
-                    className="object-contain p-2"
-                  />
+                  {currentTestimonial.image ? (
+                    <Image
+                      src={currentTestimonial.image}
+                      alt={currentTestimonial.name}
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                      priority={index === 0}
+                    />
+                  ) : null}
                 </div>
-                <div>
-                  <p className={cn("text-sm md:text-base font-medium", isLight ? "text-black" : "text-white")}>
-                    {currentTestimonial.name}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p
+                      className={cn(
+                        "text-base font-semibold truncate",
+                        isLight ? "text-black" : "text-white"
+                      )}
+                    >
+                      {currentTestimonial.name}
+                    </p>
+                    {currentTestimonial.icon ? (
+                      <span
+                        className={cn(
+                          "relative h-7 w-7 shrink-0 rounded-full overflow-hidden border",
+                          isLight ? "border-black/10 bg-white" : "border-white/10 bg-white/5"
+                        )}
+                        aria-hidden="true"
+                      >
+                        <Image
+                          src={currentTestimonial.icon}
+                          alt=""
+                          fill
+                          sizes="28px"
+                          className="object-contain p-1"
+                        />
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {currentTestimonial.role ? (
+                      <span className={cn("text-xs", isLight ? "text-black/60" : "text-white/60")}>
+                        {currentTestimonial.role}
+                      </span>
+                    ) : null}
+                    {currentTestimonial.handle ? (
+                      <span className={cn("text-xs", isLight ? "text-black/50" : "text-white/50")}>
+                        {currentTestimonial.handle}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-2 flex items-center gap-1" aria-label={`${currentTestimonial.rating} out of 5 stars`}>
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const filled = i < currentTestimonial.rating;
+                      return (
+                        <Star
+                          key={i}
+                          className={cn(
+                            "h-4 w-4",
+                            filled
+                              ? isLight
+                                ? "text-black"
+                                : "text-white"
+                              : isLight
+                                ? "text-black/20"
+                                : "text-white/20"
+                          )}
+                          strokeWidth={2}
+                          fill={filled ? "currentColor" : "none"}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-start gap-3">
+                  <Quote className={cn("mt-1 h-5 w-5 shrink-0", isLight ? "text-black/30" : "text-white/30")} />
+                  <p className={cn("text-sm md:text-base leading-relaxed", isLight ? "text-black/80" : "text-white/80")}>
+                    {currentTestimonial.text}
                   </p>
-                  <p className={cn("text-xs", isLight ? "text-black/50" : "text-white/50")}>BullMoney Member</p>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {currentTestimonial.highlight ? (
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold",
+                        isLight
+                          ? "border-black/10 bg-black/5 text-black/70"
+                          : "border-white/10 bg-white/5 text-white/70"
+                      )}
+                    >
+                      {currentTestimonial.highlight}
+                    </span>
+                  ) : null}
+                  {currentTestimonial.focus ? (
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full border px-3 py-1 text-xs",
+                        isLight
+                          ? "border-black/10 bg-white text-black/60"
+                          : "border-white/10 bg-neutral-950/40 text-white/60"
+                      )}
+                    >
+                      Focus: {currentTestimonial.focus}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Minimal navigation */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-3 md:px-4">
-          <button
-            onClick={prevSlide}
-            className={cn(
-              "pointer-events-auto w-8 h-8 md:w-10 md:h-10 rounded-full transition-all flex items-center justify-center border",
-              isLight
-                ? "bg-black/5 hover:bg-black/10 border-black/10"
-                : "bg-white/10 backdrop-blur-md hover:bg-white/20 border-white/10"
-            )}
-            aria-label="Previous"
-          >
-            <ChevronLeft size={18} className={isLight ? "text-black" : "text-white"} />
-          </button>
-          <button
-            onClick={nextSlide}
-            className={cn(
-              "pointer-events-auto w-8 h-8 md:w-10 md:h-10 rounded-full transition-all flex items-center justify-center border",
-              isLight
-                ? "bg-black/5 hover:bg-black/10 border-black/10"
-                : "bg-white/10 backdrop-blur-md hover:bg-white/20 border-white/10"
-            )}
-            aria-label="Next"
-          >
-            <ChevronRight size={18} className={isLight ? "text-black" : "text-white"} />
-          </button>
         </div>
       </div>
 
-      {/* Minimal pagination dots */}
-      <div className="flex justify-center mt-4 md:mt-6 gap-2">
-        {testimonials.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setIndex(i)}
+      <div className="mt-4 flex justify-center gap-2" aria-label="Active testimonial">
+        {testimonials.map((item, i) => (
+          <span
+            key={item.name}
             className={cn(
               "h-1.5 rounded-full transition-all",
               i === index
                 ? isLight
-                  ? "w-6 bg-black"
-                  : "w-6 bg-white"
+                  ? "w-8 bg-black"
+                  : "w-8 bg-white"
                 : isLight
-                  ? "w-1.5 bg-black/30 hover:bg-black/50"
-                  : "w-1.5 bg-white/30 hover:bg-white/50"
+                  ? "w-1.5 bg-black/25"
+                  : "w-1.5 bg-white/25"
             )}
-            aria-label={`Go to testimonial ${i + 1}`}
+            aria-hidden="true"
           />
         ))}
       </div>
-    </motion.section>
+    </div>
   );
 });

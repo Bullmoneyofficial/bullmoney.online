@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import dynamic from "next/dynamic";
 import { HeroSkeleton } from "@/components/MobileLazyLoadingFallback";
 import {
   HeroDesktop as DiscordDesktopHero,
@@ -13,6 +14,14 @@ import {
   BrokerSignupSectionDark,
 } from "@/components/home/dynamicImports";
 import { DiscordMobileHero } from "../dynamicComponents";
+
+const DesktopTestimonialsCarousel = dynamic(
+  () =>
+    import("@/components/TestimonialDesktop").then((mod) => ({
+      default: mod.DesktopTestimonialsCarousel,
+    })),
+  { ssr: false }
+);
 
 // ============================================================
 // HeroSection — Full #hero section JSX
@@ -388,7 +397,7 @@ export function HeroSection({
         >
           {hasMounted && showStage3 && (
             <div style={deferredSectionStyle}>
-              <TestimonialsCarousel />
+              {isMobile ? <TestimonialsCarousel /> : <DesktopTestimonialsCarousel />}
             </div>
           )}
         </div>
