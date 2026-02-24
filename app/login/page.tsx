@@ -1,6 +1,10 @@
 import { Login } from "@/components/login";
 import { Metadata } from "next";
 
+// Force dynamic rendering to reduce Vercel build time
+export const dynamic = 'force-dynamic';
+
+
 export const metadata: Metadata = {
   title: "Signup | Aceternity Template",
   description:

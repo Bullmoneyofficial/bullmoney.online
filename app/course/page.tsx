@@ -1,5 +1,8 @@
 import TradingCourse from '@/components/TradingCourse';
 
+// Force dynamic rendering to reduce build time
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Trading Course - Elite Trading Academy | BullMoney',
   description: 'Master trading with our comprehensive course. From beginner to advanced strategies. Better than TJR, Andrew Tate, or Alex G.',

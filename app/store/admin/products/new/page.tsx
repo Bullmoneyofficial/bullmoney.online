@@ -1,5 +1,9 @@
 import { AdminProductUpload } from '@/components/shop/admin/AdminProductUpload';
 
+// Force dynamic rendering to reduce Vercel build time
+export const dynamic = 'force-dynamic';
+
+
 // ============================================================================
 // ADMIN NEW PRODUCT PAGE
 // ============================================================================

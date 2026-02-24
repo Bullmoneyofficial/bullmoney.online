@@ -104,6 +104,7 @@ const HEAD_LINKS = [
 const BEFORE_INTERACTIVE_SCRIPTS: Array<{ id: string; src?: string; html?: string }> = [
   { id: "splash-init", src: "/scripts/splash-init.js" },
   { id: "compat-layer", src: "/scripts/BMBRAIN/compat-layer.js" },
+  { id: "first-visit-refresh", src: "/scripts/first-visit-refresh.js" },
   {
     id: "bm-defer-loader",
     html: `
@@ -155,7 +156,7 @@ const AFTER_INTERACTIVE_SRC_SCRIPTS: Array<{ id: string; src: string }> = [
   { id: "mobile-crash-shield", src: "/scripts/BMBRAIN/mobile-crash-shield.js" },
   { id: "inapp-shield", src: "/scripts/BMBRAIN/inapp-shield.js" },
   // First-time visitor: shows Apple toast then hard-reloads to seed the cache
-  { id: "first-visit-refresh", src: "/scripts/first-visit-refresh.js" },
+  // { id: "first-visit-refresh", src: "/scripts/first-visit-refresh.js" },
 ];
 
 type RootLayoutProps = Readonly<{ children: ReactNode; modal: ReactNode }>;

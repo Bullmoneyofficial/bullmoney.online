@@ -1,6 +1,10 @@
 import { Suspense } from 'react';
 import { AdminDashboard } from '@/components/shop/admin/AdminDashboard';
 
+// Force dynamic rendering to reduce Vercel build time
+export const dynamic = 'force-dynamic';
+
+
 // ============================================================================
 // ADMIN DASHBOARD HOME
 // ============================================================================

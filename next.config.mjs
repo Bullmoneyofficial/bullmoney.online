@@ -1011,6 +1011,14 @@ const nextConfig = {
     eslint: {
       ignoreDuringBuilds: true, // Skip ESLint
     },
+    
+    // FORCE DYNAMIC RENDERING - Global settings to reduce static generation
+    generateEtags: false, // Disable etags for speed
+    poweredByHeader: false, // Remove powered by header
+    compress: false, // Disable compression for speed
+    trailingSlash: false,
+    skipTrailingSlashRedirect: true,
+    skipMiddlewareUrlNormalize: true,
   } : {}),
 
   // Canonical route aliases for app/webview links

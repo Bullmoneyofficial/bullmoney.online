@@ -124,7 +124,7 @@
       dot.setAttribute('aria-hidden', 'true');
 
       var text = document.createElement('span');
-      text.textContent = 'Saving data for a faster experience\u2026';
+      text.textContent = 'Data save refresh';
 
       toast.appendChild(dot);
       toast.appendChild(text);
@@ -146,7 +146,8 @@
       });
 
       // 5. Hold → fade out → reload
-      var holdMs = 2400;
+      var isProd = window.location.hostname === 'bullmoney.online' || window.location.hostname === 'www.bullmoney.online';
+      var holdMs = isProd ? 2000 : 1000;
       var outMs  = 320;
 
       setTimeout(function () {

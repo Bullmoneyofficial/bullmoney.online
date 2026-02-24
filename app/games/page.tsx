@@ -4,6 +4,9 @@ import { GAME_SEO, VALID_GAMES } from './[game]/games/valid-games';
 
 import { GamesPageClient } from './GamesPageClient';
 
+// Force dynamic rendering to reduce build time
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Free Online Games (Demo) — Play in Your Browser',
   description:

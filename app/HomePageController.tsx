@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import { Suspense, useCallback, useEffect, useState, lazy } from "react";
 
 import { useUIState } from "@/contexts/UIStateHook";
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
@@ -18,36 +17,15 @@ import {
 
 type HomeView = "pagemode" | "loader" | "telegram" | "content";
 
-// IMPORTANT: Import PageMode directly.
-// Importing the aboveFold re-export barrel forces extra modules into the chunk.
-const PageMode = dynamic(() => import("@/components/SIGNUPS/pagemode"), {
-  ssr: false,
-  // Show a lightweight overlay while the heavy pagemode bundle loads
-  loading: () => (
-    <div className="fixed inset-0 z-[99999] bg-black flex items-center justify-center text-white text-sm tracking-tight">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-6 w-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-        <span>Preparing access…</span>
-      </div>
-    </div>
-  ),
-});
-
-// NOTE: Loader step removed for PageMode flow (go straight to Telegram/content)
-
-const TelegramUnlockScreen = dynamic(
-  () => import("@/components/SIGNUPS/TelegramConfirmationResponsive").then(mod => ({
-    default: mod.TelegramConfirmationResponsive,
-  })),
-  { ssr: false, loading: () => null }
-);
-
-const HomePageClient = dynamic(
-  () => import("./HomePageClient").then(m => ({ default: m.HomePageClient })),
-  { ssr: false, loading: () => null }
-);
+// 🚀 COMPILATION SPEED: Move dynamic imports INSIDE component to truly defer compilation
+// These heavy components are now only imported when actually needed, not during initial analysis
 
 export function HomePageController() {
+  // 🚀 COMPILATION SPEED: Lazy load heavy components only when needed
+  const [PageMode, setPageMode] = useState<React.ComponentType<any> | null>(null);
+  const [TelegramUnlockScreen, setTelegramUnlockScreen] = useState<React.ComponentType<any> | null>(null);
+  const [HomePageClient, setHomePageClient] = useState<React.ComponentType<any> | null>(null);
+
   const [{ currentView, shouldUnlock }, setViewState] = useState<{
     currentView: Exclude<HomeView, "loader">;
     shouldUnlock: boolean;
@@ -200,6 +178,27 @@ export function HomePageController() {
     setViewState({ currentView: "content", shouldUnlock: true });
   });
 
+  // 🚀 COMPILATION SPEED: Lazy load components only when needed
+  useEffect(() => {
+    if (currentView === "pagemode" && !PageMode) {
+      import("@/components/SIGNUPS/pagemode").then(mod => setPageMode(() => mod.default));
+    }
+  }, [currentView, PageMode]);
+
+  useEffect(() => {
+    if (currentView === "telegram" && !TelegramUnlockScreen) {
+      import("@/components/SIGNUPS/TelegramConfirmationResponsive").then(mod =>
+        setTelegramUnlockScreen(() => mod.TelegramConfirmationResponsive)
+      );
+    }
+  }, [currentView, TelegramUnlockScreen]);
+
+  useEffect(() => {
+    if (currentView === "content" && !HomePageClient) {
+      import("./HomePageClient").then(mod => setHomePageClient(() => mod.HomePageClient));
+    }
+  }, [currentView, HomePageClient]);
+
   // Ensure global loader state stays closed (loader step removed).
   useEffect(() => {
     setLoaderv2Open(false);
@@ -258,22 +257,46 @@ export function HomePageController() {
     <Suspense fallback={null}>
       {currentView === "pagemode" && (
         <div className="fixed inset-0 z-99999 bg-black">
-          <PageMode onUnlock={handlePageModeUnlock} />
+          {PageMode ? (
+            <PageMode onUnlock={handlePageModeUnlock} />
+          ) : (
+            // Loading state while component loads
+            <div className="flex items-center justify-center text-white text-sm tracking-tight">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-6 w-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <span>Preparing access…</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {currentView === "telegram" && (
         <div className="fixed inset-0 z-99999 bg-black">
-          <TelegramUnlockScreen
-            onUnlock={handleTelegramUnlock}
-            onConfirmationClicked={() => undefined}
-            isXM={false}
-            neonIconClass="neon-blue-icon"
-          />
+          {TelegramUnlockScreen ? (
+            <TelegramUnlockScreen
+              onUnlock={handleTelegramUnlock}
+              onConfirmationClicked={() => undefined}
+              isXM={false}
+              neonIconClass="neon-blue-icon"
+            />
+          ) : (
+            <div className="flex items-center justify-center text-white text-sm">
+              <div className="h-6 w-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+            </div>
+          )}
         </div>
       )}
 
-      {currentView === "content" && <HomePageClient initialView="content" skipInit={true} />}
+      {currentView === "content" && (
+        HomePageClient ? (
+          <HomePageClient initialView="content" skipInit={true} />
+        ) : (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="h-6 w-6 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" />
+          </div>
+        )
+      )}
     </Suspense>
   );
 }

@@ -1,6 +1,9 @@
 import TradingJournal from '@/components/TradingJournal';
 import type { Metadata } from 'next';
 
+// Force dynamic rendering to reduce build time
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Trading Journal | BullMoney',
   description: 'Track your trades, analyze performance, and improve your trading strategy. Supports stocks, crypto, forex, and all tradable assets.',

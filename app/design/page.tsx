@@ -3,6 +3,10 @@ import DesignShowcaseCards from "./DesignShowcaseCards";
 import DesignPageClientLoader from "./DesignPageClientLoader";
 import "./design.css";
 
+// Force dynamic rendering to reduce Vercel build time
+export const dynamic = 'force-dynamic';
+
+
 export default function DesignPage() {
   return (
     <main className="design-page-root">

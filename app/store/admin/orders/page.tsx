@@ -1,5 +1,9 @@
 import { AdminOrdersTable } from '@/components/shop/admin/AdminOrdersTable';
 
+// Force dynamic rendering to reduce Vercel build time
+export const dynamic = 'force-dynamic';
+
+
 // ============================================================================
 // ADMIN ORDERS PAGE
 // ============================================================================

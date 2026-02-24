@@ -1,6 +1,10 @@
 import { Metadata } from 'next';
 import { AdminProductsList } from '@/components/shop/admin/AdminProductsList';
 
+// Force dynamic rendering to reduce Vercel build time
+export const dynamic = 'force-dynamic';
+
+
 export const metadata: Metadata = {
   title: 'Products | Admin | Bullmoney Store',
   description: 'Manage your products',
