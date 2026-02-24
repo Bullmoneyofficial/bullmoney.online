@@ -15,6 +15,7 @@ import {
   useHydrated,
   useIdleCallback,
 } from "@/hooks/useHydrationOptimization";
+import { usePerformanceMonitor, useWebVitals } from "@/hooks/usePerformanceMonitor";
 
 // ✅ PERF: Heavy systems lazy-loaded — not in critical compile chain
 // UnifiedPerformanceSystem (1,641 lines), CrashTracker (1,008 lines),
@@ -63,6 +64,10 @@ function HomeContent({
   initialView = "content",
   skipInit = true,
 }: HomePageClientProps) {
+  // Performance monitoring
+  const { logRender } = usePerformanceMonitor('HomePageClient');
+  useWebVitals();
+  
   const { optimizeSection } = useLazyBigDeviceScrollOptimizer();
   const isHydrated = useHydrated();
 

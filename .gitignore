@@ -13,3 +13,12 @@ casino-backend/storage/logs/
 casino-backend/storage/framework/cache/
 casino-backend/storage/framework/sessions/
 casino-backend/storage/framework/views/
+
+# Performance monitoring
+lighthouse-report.json
+performance-report.json
+*.performance.json
+# Build cache (keep for faster rebuilds)
+# .next/cache/
+# Bundle analyzer
+bundle-analyzer-report.html

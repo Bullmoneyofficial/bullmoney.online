@@ -73,70 +73,90 @@ console.log(`[Next.js Config] ${platform} ${arch} | ${cpus} cores | Optimization
 // Auto-generate build timestamp for cache versioning
 const BUILD_TIMESTAMP = new Date().toISOString();
 
-// ALWAYS optimize heavy barrel-export packages — even in dev mode
-// This prevents Turbopack from parsing entire package entry points
-// when only a few exports are used (e.g., 34 icons from lucide-react = whole lib)
+// CRITICAL ONLY: Minimize for 5s compile time - only optimize the heaviest packages
 const optimizePackageImports = [
-  // Icons (huge barrel exports)
-  'lucide-react',
-  '@tabler/icons-react',
-  'react-icons',
-  // UI component libraries (barrel exports)
-  '@radix-ui/react-dialog',
-  '@radix-ui/react-dropdown-menu',
-  '@radix-ui/react-select',
-  '@radix-ui/react-tooltip',
-  '@radix-ui/react-tabs',
-  '@radix-ui/react-popover',
-  '@radix-ui/react-accordion',
-  '@radix-ui/react-hover-card',
-  '@radix-ui/react-label',
-  // Animation libraries
-  'framer-motion',
-  'gsap',
-  '@use-gesture/react',
-  // 3D libraries (very heavy)
-  'three',
-  '@react-three/fiber',
-  '@react-three/drei',
-  '@react-three/postprocessing',
-  // Utility libraries (barrel exports)
-  'date-fns',
-  'lodash',
-  'lodash-es',
-  'ramda',
-  // Data/charts
-  'recharts',
-  'd3',
-  // State management
-  'zustand',
-  'jotai',
-  'valtio',
-  // Supabase
-  '@supabase/supabase-js',
-  '@supabase/auth-ui-react',
-  '@supabase/auth-ui-shared',
-  '@supabase/ssr',
-  // Form libraries
-  '@hookform/resolvers',
-  'react-hook-form',
-  // Utilities
-  'class-variance-authority',
-  'clsx',
-  'tailwind-merge',
-  // Toast/notifications
-  'sonner',
-  'react-hot-toast',
-  // Particles
-  '@tsparticles/react',
-  '@tsparticles/engine',
-  '@tsparticles/slim',
+  // Only the absolute heaviest packages that cause the most compilation overhead
+  'lucide-react', // Huge icon library
+  'three', // Massive 3D library
+  '@react-three/fiber', // React Three Fiber
+  '@react-three/drei', // Three.js helpers
+  '@splinetool/react-spline', // Spline integration
+  '@tldraw/tldraw', // Drawing library
+  'face-api.js', // ML library
+  'framer-motion', // Animation library
+  'recharts', // Chart library
+  '@supabase/supabase-js', // Database client
 ];
 
 const nextConfig = {
   reactStrictMode: false, // Disable StrictMode in prod - reduces double renders
   compress: true,
   productionBrowserSourceMaps: false,
+  
+  // Performance optimizations
+  poweredByHeader: false, // Remove X-Powered-By header
+  generateEtags: false, // Disable etags for faster responses
+  
+  // Experimental features for maximum compilation speed
+  experimental: {
+    optimizePackageImports: optimizePackageImports,
+    optimizeCss: true, // Optimize CSS
+    scrollRestoration: true, // Better scroll restoration
+    typedRoutes: true, // Type-safe routing
+    optimizeServerReact: true, // Optimize server-side React
+    optimizeCss: true, // Optimize CSS imports
+    
+    // 🚀 AGGRESSIVE COMPILATION SPEED FEATURES
+    turbo: {
+      // Enable all turbo optimizations
+      rules: {
+        // Skip heavy processing for faster dev
+        '*.svg': false,
+        '*.png': false,
+        '*.jpg': false,
+        '*.jpeg': false,
+        '*.gif': false,
+        '*.webp': false,
+        '*.woff': false,
+        '*.woff2': false,
+        '*.ttf': false,
+        '*.eot': false,
+      },
+      resolveAlias: {
+        // Aggressive aliasing for faster resolution
+        'react': 'react',
+        'react-dom': 'react-dom',
+        'next': 'next',
+        '@': './',
+        '~': './',
+      },
+    },
+    
+    // Enable faster module resolution
+    esmExternals: 'loose',
+    
+    // Skip expensive optimizations in dev
+    optimizePackageImports: true,
+    
+    // Faster CSS processing
+    optimizeCss: true,
+    
+    // Enable incremental cache
+    incrementalCacheHandlerPath: require.resolve('./cache-handler.js'),
+    
+    // Aggressive server components optimization
+    serverComponentsExternalPackages: [],
+  },
+  
+  // Image optimization
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  
   ...(isDev ? { allowedDevOrigins: devAllowedOrigins } : {}),
   // COMPILATION SPEED: Disable source maps in development (massive speed boost)
   webpack: (config, { dev, isServer }) => {
@@ -148,6 +168,89 @@ const nextConfig = {
 
     if (dev) {
       config.devtool = false; // Disable source maps in dev = 2-3x faster compilation
+      
+      // 🚀 AGGRESSIVE DEV OPTIMIZATIONS FOR 5S COMPILE TIME
+      config.mode = 'development';
+      config.optimization = {
+        ...config.optimization,
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false, // Disable code splitting in dev for speed
+        minimize: false, // No minification in dev
+        concatenateModules: false, // Faster compilation
+      };
+      
+      // Skip expensive processing
+      config.module = config.module || {};
+      config.module.rules = config.module.rules || [];
+      
+      // Disable CSS processing overhead
+      config.module.rules.push({
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+        exclude: /node_modules/,
+      });
+      
+      // Aggressive caching
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
+        },
+        compression: false,
+        maxMemoryGenerations: 20,
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+      };
+      
+      // Faster module resolution
+      config.resolve = {
+        ...config.resolve,
+        extensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json'],
+        alias: {
+          ...config.resolve?.alias,
+          // Aggressive path aliases
+          '@': require('path').resolve(process.cwd()),
+        },
+        symlinks: false,
+        cacheWithContext: false,
+      };
+      
+      // Use all available cores for compilation
+      config.parallelism = cpus;
+    }
+    
+    // General performance optimizations for all platforms
+    config.optimization = config.optimization || {};
+    config.optimization.usedExports = true;
+    config.optimization.sideEffects = true;
+    config.optimization.moduleIds = 'deterministic';
+    config.optimization.chunkIds = 'deterministic';
+    
+    // Enable split chunks for better caching
+    if (!dev) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            priority: 10,
+          },
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+            name: 'react',
+            chunks: 'all',
+            priority: 20,
+          },
+          three: {
+            test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/,
+            name: 'three',
+            chunks: 'all',
+            priority: 15,
+          },
+        },
+      };
     }
     
     // Apple Silicon optimizations - use native ARM binaries
@@ -719,42 +822,103 @@ const nextConfig = {
     'metaapi.cloud-copyfactory-sdk',
   ],
 
-  // Turbopack configuration for faster dev compilation
+  // Turbopack configuration for MAXIMUM dev compilation speed
   turbopack: {
     // Reduce file resolution attempts - only look for these extensions
-    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json', '.css'],
-    // Module aliases — avoids repeated node_modules traversals for hot-path deps
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json'],
+    
+    // Aggressive module aliases — avoids repeated node_modules traversals
     resolveAlias: {
-      // Pin heavy packages so Turbopack doesn't search multiple node_modules dirs
-      'framer-motion': 'framer-motion',
-      'three': 'three',
-      'gsap': 'gsap',
-      'recharts': 'recharts',
-      'mongoose': 'mongoose',
-      'sonner': 'sonner',
-      'zustand': 'zustand',
-      // Additional pins — high-frequency imports save repeated node_modules traversal
+      // Core React/Next.js - pin to avoid resolution overhead
       'react': 'react',
       'react-dom': 'react-dom',
       'next': 'next',
+      'next/router': 'next/router',
+      'next/navigation': 'next/navigation',
+      'next/image': 'next/image',
+      'next/link': 'next/link',
+      
+      // UI libraries - high frequency
       'lucide-react': 'lucide-react',
+      'framer-motion': 'framer-motion',
+      '@radix-ui/react-dialog': '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu': '@radix-ui/react-dropdown-menu',
+      
+      // Utility libraries
       'clsx': 'clsx',
       'tailwind-merge': 'tailwind-merge',
       'class-variance-authority': 'class-variance-authority',
-      '@supabase/supabase-js': '@supabase/supabase-js',
-      '@supabase/ssr': '@supabase/ssr',
+      'zustand': 'zustand',
+      'sonner': 'sonner',
+      
+      // Path aliases for faster resolution
+      '@': './',
+      '@/components': './components',
+      '@/lib': './lib',
+      '@/hooks': './hooks',
+      '@/contexts': './contexts',
+      '@/types': './types',
+      '@/constants': './constants',
     },
-    // SPEED: Turbopack-specific rules to skip unnecessary processing
+    
+    // MAXIMUM SPEED: Skip all unnecessary processing
     rules: {
       // Skip type checking for .d.ts files during dev
       '*.d.ts': {
         loaders: [],
       },
-      // Skip processing markdown files
+      // Skip processing documentation files
       '*.md': {
         loaders: [],
       },
+      '*.mdx': {
+        loaders: [],
+      },
+      // Skip processing test files
+      '*.test.*': {
+        loaders: [],
+      },
+      '*.spec.*': {
+        loaders: [],
+      },
+      // Skip processing config files
+      '*.config.*': {
+        loaders: [],
+      },
+      // Skip processing asset files (handled by Next.js)
+      '*.svg': {
+        loaders: [],
+      },
+      '*.png': {
+        loaders: [],
+      },
+      '*.jpg': {
+        loaders: [],
+      },
+      '*.jpeg': {
+        loaders: [],
+      },
+      '*.gif': {
+        loaders: [],
+      },
+      '*.webp': {
+        loaders: [],
+      },
+      '*.woff': {
+        loaders: [],
+      },
+      '*.woff2': {
+        loaders: [],
+      },
+      '*.ttf': {
+        loaders: [],
+      },
+      '*.eot': {
+        loaders: [],
+      },
     },
+    
+    // Enable parallel processing (workers and memoryLimit removed - not valid in Next.js 16.1.6)
   },
 
   // Canonical route aliases for app/webview links

@@ -4,6 +4,9 @@ import { cn } from "@/lib/utils";
 import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";
 import { SPLASH_MIN_MS, SPLASH_FALLBACK_MS, SPLASH_MAX_MS, SPLASH_FADE_MS } from "@/components/splashConfig";
 
+// ✅ PERFORMANCE: Preload critical resources
+import { PreloadCriticalResources } from "@/components/PreloadCriticalResources";
+
 // ✅ CUSTOM EVENT TRACKING - Removed from layout (static import pulled analytics into every page)
 // Import trackEvent in individual client components that need it instead.
 
@@ -453,6 +456,8 @@ export default function RootLayout({ children, modal }: RootLayoutProps) {
       >
         {/* Splash screen – covers every page load on every route */}
         <SplashScreen />
+        {/* Preload critical resources for better performance */}
+        <PreloadCriticalResources />
         {/* All providers consolidated into AppProviders (heavy ones dynamically imported) */}
         <AppProviders>
           <LayoutProviders modal={modal}>
