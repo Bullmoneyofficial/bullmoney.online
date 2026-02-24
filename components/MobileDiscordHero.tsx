@@ -214,6 +214,10 @@ import Galaxy from './Galaxy';
 import LetterGlitch from './LetterGlitch';
 import Ballpit from './Ballpit';
 import GridDistortion from './GridDistortion';
+import BackgroundQuickMenu from './MobileDiscordHero/ui/BackgroundQuickMenu';
+import BackgroundSelectorPanel from './MobileDiscordHero/ui/BackgroundSelectorPanel';
+import SplineScenePanel from './MobileDiscordHero/ui/SplineScenePanel';
+import NewShopModal from './MobileDiscordHero/ui/NewShopModal';
 
 // =============================================================================
 // AESTHETIC LIGHTWEIGHT MOBILE HERO (CSS-only, no heavy libs)
@@ -2763,6 +2767,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   
   // Unified BG Picker menu state
   const [showBgMenu, setShowBgMenu] = useState(false);
+  const toggleBgMenu = useCallback(() => setShowBgMenu(prev => !prev), []);
 
   // Toggle spline-play-mode class on .hero-wrapper for mobile 3D interactivity
   useEffect(() => {
@@ -2800,6 +2805,11 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
     setToast(message);
     setTimeout(() => setToast(null), 2000);
   }, []);
+
+  const openPanelFromQuickMenu = useCallback(() => {
+    setShowPanel(true);
+    setShowBgMenu(false);
+  }, [setShowPanel]);
 
   // Switch to specific background (marks as user-picked so it persists across reloads)
   const switchToBackground = useCallback((index: number) => {
@@ -3044,6 +3054,22 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
     const modeNames = { color: 'Full Color', grayscale: 'Black & White', custom: 'Custom Color' };
     showToast(`${modeNames[mode]} mode`);
   }, [customColor, showToast]);
+
+  const cycleColorMode = useCallback(() => {
+    const modes: ('color' | 'grayscale' | 'custom')[] = ['color', 'grayscale', 'custom'];
+    const currentIndex = modes.indexOf(colorMode);
+    const nextMode = modes[(currentIndex + 1) % modes.length];
+    handleColorModeChange(nextMode);
+  }, [colorMode, handleColorModeChange]);
+
+  const toggle3DOverlay = useCallback(() => {
+    setShow3DOverlay(prev => {
+      const next = !prev;
+      setShowSpline(next);
+      showToast(`3D: ${next ? 'ON' : 'OFF'}`);
+      return next;
+    });
+  }, [showToast]);
 
   // Handle custom color changes
   const handleCustomColorChange = useCallback((color: { h: number, s: number, l: number, a: number }) => {
@@ -3314,246 +3340,21 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
         </div>
       )}
 
-      {/* Unified BG Picker Button */}
-      {/* Added safe-area-inset-top for mobile notches/cutouts */}
-      <div style={{ position: 'fixed', top: 'max(180px, calc(180px + env(safe-area-inset-top, 0px)))', left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, zIndex: 2147483647, pointerEvents: 'none' }}>
-        {/* Main BG Picker Button */}
-        <button 
-          className="bg-selector-toggle" 
-          style={{ 
-            position: 'relative', 
-            top: 'auto', 
-            left: 'auto', 
-            transform: 'none', 
-            pointerEvents: 'auto',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #ffffff 100%)',
-            color: '#000000',
-            border: '1px solid rgba(255, 255, 255, 0.8)',
-          }}
-          onClick={() => setShowBgMenu(!showBgMenu)}
-          title="Background Settings"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-          </svg>
-          <span style={{ color: '#000000' }}>BG Picker</span>
-          <svg 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="#000000" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-            style={{ 
-              width: 14, 
-              height: 14, 
-              marginLeft: 4,
-              transform: showBgMenu ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s ease'
-            }}
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
+      <BackgroundQuickMenu
+        effects={effects as BackgroundEffect[]}
+        currentIndex={currentIndex}
+        enabledEffects={enabledEffects}
+        colorMode={colorMode}
+        showBgMenu={showBgMenu}
+        toggleMenu={toggleBgMenu}
+        switchToBackground={switchToBackground}
+        onColorModeToggle={cycleColorMode}
+        is3DActive={show3DOverlay}
+        on3DToggle={toggle3DOverlay}
+        onMoreOptions={openPanelFromQuickMenu}
+      />
 
-        {/* Smart Dropdown Menu with Quick BG Picker */}
-        <AnimatePresence>
-          {showBgMenu && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              style={{
-                pointerEvents: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                padding: '12px',
-                background: 'rgba(0, 0, 0, 0.9)',
-                borderRadius: 16,
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
-                boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5)',
-                minWidth: 200,
-                maxWidth: 280,
-              }}
-            >
-              {/* Quick Background Switcher */}
-              <div style={{ marginBottom: 4 }}>
-                <div style={{ 
-                  fontSize: 10, 
-                  fontWeight: 600, 
-                  color: 'rgba(255,255,255,0.4)', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.1em',
-                  marginBottom: 8,
-                  paddingLeft: 4
-                }}>
-                  Quick Switch
-                </div>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(5, 1fr)', 
-                  gap: 6,
-                }}>
-                  {(effects as BackgroundEffect[]).slice(0, 10).map((effect, index) => {
-                    const isActive = currentIndex === index;
-                    const isEnabled = enabledEffects.includes(effect);
-                    const bgIcons: Record<string, string> = {
-                      'gridScan': '▦',
-                      'spline': '◇',
-                      'liquidEther': '◎',
-                      'galaxy': '✦',
-                      'terminal': '▤',
-                      'darkVeil': '◐',
-                      'lightPillar': '▮',
-                      'letterGlitch': 'A̷',
-                      'ballpit': '●',
-                      'gridDistortion': '◫'
-                    };
-                    return (
-                      <button
-                        key={effect}
-                        onClick={() => {
-                          if (isEnabled) {
-                            switchToBackground(index);
-                          }
-                        }}
-                        disabled={!isEnabled}
-                        title={EFFECT_NAMES[effect]}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 8,
-                          border: isActive ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)',
-                          background: isActive 
-                            ? 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)' 
-                            : 'rgba(255,255,255,0.05)',
-                          color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
-                          fontSize: 16,
-                          cursor: isEnabled ? 'pointer' : 'not-allowed',
-                          opacity: isEnabled ? 1 : 0.3,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.15s ease',
-                          transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                        }}
-                      >
-                        {bgIcons[effect] || '◌'}
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* Current BG Label */}
-                <div style={{ 
-                  fontSize: 11, 
-                  color: 'rgba(255,255,255,0.6)', 
-                  textAlign: 'center',
-                  marginTop: 8,
-                }}>
-                  {EFFECT_NAMES[effects[currentIndex] as BackgroundEffect]}
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-
-              {/* Quick Toggle Row */}
-              <div style={{ display: 'flex', gap: 6 }}>
-                {/* Color Toggle */}
-                <button
-                  onClick={() => {
-                    // Cycle through color modes
-                    const modes: ('color' | 'grayscale' | 'custom')[] = ['color', 'grayscale', 'custom'];
-                    const currentModeIndex = modes.indexOf(colorMode);
-                    const nextMode = modes[(currentModeIndex + 1) % modes.length];
-                    setColorMode(nextMode);
-                    setShowGrayscale(nextMode === 'grayscale');
-                    saveColorPreferences(nextMode, customColor);
-                    showToast(`Color: ${nextMode === 'grayscale' ? 'B&W' : nextMode === 'custom' ? 'Custom' : 'Normal'}`);
-                  }}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    padding: '10px 12px',
-                    background: colorMode !== 'color' ? 'rgba(41, 151, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                    border: colorMode !== 'color' ? '1px solid rgba(41, 151, 255, 0.4)' : '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 8,
-                    color: '#fff',
-                    fontSize: 11,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <span style={{ fontSize: 14 }}>{colorMode === 'grayscale' ? '◐' : colorMode === 'custom' ? '◉' : '○'}</span>
-                  {colorMode === 'grayscale' ? 'B&W' : colorMode === 'custom' ? 'Tint' : 'Color'}
-                </button>
-
-                {/* 3D Toggle */}
-                <button
-                  onClick={() => { 
-                    setShow3DOverlay(!show3DOverlay);
-                    setShowSpline(!show3DOverlay);
-                    showToast(`3D: ${!show3DOverlay ? 'ON' : 'OFF'}`);
-                  }}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    padding: '10px 12px',
-                    background: show3DOverlay ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                    border: show3DOverlay ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 8,
-                    color: show3DOverlay ? '#86efac' : '#fff',
-                    fontSize: 11,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <span style={{ fontSize: 14 }}>◇</span>
-                  3D {show3DOverlay ? 'ON' : 'OFF'}
-                </button>
-              </div>
-
-              {/* More Options */}
-              <button
-                onClick={() => { setShowPanel(true); setShowBgMenu(false); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  padding: '8px 12px',
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 8,
-                  color: 'rgba(255,255,255,0.5)',
-                  fontSize: 11,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                More Options →
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Interact 3D Button — toggles mobile Spline interactivity (only shows when 3D overlay is active) */}
+      {/* Interact 3D Button — toggles mobile Spline interactivity (only shows when 3D overlay is active) */}
         {show3DOverlay && (
           <button
             style={{
@@ -3594,193 +3395,30 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
             )}
           </button>
         )}
-      </div>
-
-      {/* Background Selector Panel */}
       {showPanel && (
-        <div className="bg-selector-panel" style={{ zIndex: 2147483647 }}>
-          <div className="bg-selector-header">
-            <div>
-              <h3 className="bg-selector-title">Background Effects</h3>
-              <p className="bg-selector-subtitle">Use Ctrl+1-0,-,= to quick switch</p>
-            </div>
-            <button 
-              onClick={() => setShowPanel(false)}
-              style={{ background: 'none', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer' }}
-            >
-              ×
-            </button>
-          </div>
-          
-          <div className="bg-selector-list">
-            {(effects as BackgroundEffect[]).map((effect, index) => {
-              const isActive = currentIndex === index;
-              const isEnabled = enabledEffects.includes(effect);
-              const isFavorite = favorites.includes(effect);
-              
-              return (
-                <div 
-                  key={effect}
-                  className={`bg-selector-item ${isActive ? 'active' : ''} ${!isEnabled ? 'disabled' : ''}`}
-                >
-                  <div 
-                    className={`bg-item-toggle ${isEnabled ? 'enabled' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); toggleEnabled(effect); }}
-                    title={isEnabled ? 'Click to disable' : 'Click to enable'}
-                  >
-                    {isEnabled ? '✓' : ''}
-                  </div>
-                  
-                  <div className="bg-item-info" onClick={() => isEnabled && switchToBackground(index)}>
-                    <div className="bg-item-name">{EFFECT_NAMES[effect]}</div>
-                    {index < 12 && (
-                      <div className="bg-item-shortcut">{getShortcutKey(index)}</div>
-                    )}
-                  </div>
-                  
-                  <button
-                    className={`bg-item-fav ${isFavorite ? 'favorited' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); toggleFavorite(effect); }}
-                    title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                  >
-                    {isFavorite ? '★' : '☆'}
-                  </button>
-                  
-                  <button
-                    className="bg-item-select"
-                    onClick={() => isEnabled && switchToBackground(index)}
-                    disabled={!isEnabled}
-                  >
-                    {isActive ? 'Active' : 'Select'}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-          
-          <div className="bg-selector-footer">
-            <button className="bg-footer-btn" onClick={enableAll}>
-              Enable All
-            </button>
-            <button className="bg-footer-btn primary" onClick={enableFavoritesOnly}>
-              Favorites Only
-            </button>
-          </div>
-        </div>
+        <BackgroundSelectorPanel
+          effects={effects as BackgroundEffect[]}
+          enabledEffects={enabledEffects}
+          favorites={favorites}
+          currentIndex={currentIndex}
+          onClose={() => setShowPanel(false)}
+          toggleEnabled={toggleEnabled}
+          toggleFavorite={toggleFavorite}
+          switchToBackground={switchToBackground}
+        />
       )}
 
-      {/* Spline Scene Selector Panel */}
-      {showSplinePanel && (
-        <div className="bg-selector-panel" style={{ top: '140px', zIndex: 2147483647 }}>
-          <div className="bg-selector-header">
-            <div>
-              <h3 className="bg-selector-title">3D Spline Scenes</h3>
-              <p className="bg-selector-subtitle">Hold 3D button to open • Click to switch</p>
-            </div>
-            <button 
-              onClick={() => setShowSplinePanel(false)}
-              style={{ background: 'none', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer' }}
-            >
-              ×
-            </button>
-          </div>
-          
-          <div className="bg-selector-list">
-            {SPLINE_SCENES.map((sceneUrl, index) => {
-              const isActive = currentSplineScene === sceneUrl;
-              const isDownloading = downloadingScenes.has(sceneUrl);
-              // cacheVersion forces re-eval after clear/download
-              const isCached = cacheVersion >= 0 && isSplineCached(sceneUrl);
-              const isDefault = index === 0; // scene1 = always available
-              
-              return (
-                <div 
-                  key={sceneUrl}
-                  className={`bg-selector-item ${isActive ? 'active' : ''}`}
-                >
-                  <div 
-                    className="bg-item-toggle enabled"
-                    style={{ fontSize: '12px', fontWeight: 'bold' }}
-                  >
-                    {index + 1}
-                  </div>
-                  
-                  <div className="bg-item-info" onClick={() => {
-                    if (isCached || isDefault) {
-                      switchSplineScene(sceneUrl);
-                    } else {
-                      // Must download first — don't auto-switch
-                      showToast('Download this scene first');
-                    }
-                  }}>
-                    <div className="bg-item-name">
-                      {SPLINE_SCENE_NAMES[sceneUrl]}
-                      {isDefault && <span style={{ marginLeft: 6, fontSize: '9px', opacity: 0.5 }}>DEFAULT</span>}
-                      {!isDefault && isCached && <span style={{ marginLeft: 6, fontSize: '9px', opacity: 0.5 }}>CACHED</span>}
-                    </div>
-                  </div>
-                  
-                  {!isDefault && (
-                    <button
-                      className="bg-item-fav"
-                      onClick={(e) => { e.stopPropagation(); downloadSplineScene(sceneUrl); }}
-                      disabled={isDownloading || isCached}
-                      title={isCached ? 'Scene cached in app' : 'Cache this scene to app'}
-                      style={{ opacity: isDownloading ? 0.5 : isCached ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                      {isDownloading ? (
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: 'spline-dl-spin 1s linear infinite' }}>
-                          <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
-                        </svg>
-                      ) : isCached ? (
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                          <path d="M3 8.5L6.5 12L13 4" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                          <path d="M8 2v8m0 0L5 7m3 3l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                      )}
-                    </button>
-                  )}
-                  
-                  <button
-                    className="bg-item-select"
-                    onClick={() => switchSplineScene(sceneUrl)}
-                  >
-                    {isActive ? 'Active' : 'Select'}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-          
-          <div className="bg-selector-footer">
-            <button 
-              className="bg-footer-btn" 
-              onClick={downloadAllSplineScenes}
-              disabled={downloadingScenes.size > 0}
-            >
-              Cache All ({SPLINE_SCENES.length})
-            </button>
-            <button 
-              className="bg-footer-btn" 
-              onClick={clearAllSplineCache}
-              disabled={downloadingScenes.size > 0}
-              style={{ color: '#ff6b6b' }}
-            >
-              Clear Cache
-            </button>
-            <button 
-              className="bg-footer-btn primary" 
-              onClick={() => setShowSplinePanel(false)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      <SplineScenePanel
+        open={showSplinePanel}
+        onClose={() => setShowSplinePanel(false)}
+        currentSplineScene={currentSplineScene}
+        downloadingScenes={downloadingScenes}
+        cacheVersion={cacheVersion}
+        onSwitchScene={switchSplineScene}
+        onDownloadScene={downloadSplineScene}
+        onDownloadAll={downloadAllSplineScenes}
+        onClearCache={clearAllSplineCache}
+      />
 
       {/* Color Picker Panel */}
       <ColorPickerPanel
@@ -4048,66 +3686,7 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
         )}
       </AnimatePresence>
 
-      {/* New Shop Modal */}
-      {showNewShopModal && (
-        <div className="modal-overlay" onClick={() => setShowNewShopModal(false)}>
-          <div className="modal-content modal-content-hub" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowNewShopModal(false)}>×</button>
-            <div style={{
-              width: '100%',
-              height: '100%',
-              background: 'linear-gradient(135deg, #0a0a0c 0%, #151518 100%)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '40px',
-              color: '#fff',
-              textAlign: 'center'
-            }}>
-              <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', fontWeight: 700 }}>🛒 BullMoney Shop</h2>
-              <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', marginBottom: '40px', maxWidth: '500px' }}>
-                Premium trading merchandise, courses, and exclusive VIP access coming soon.
-              </p>
-              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <div style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '16px',
-                  padding: '30px',
-                  width: '200px'
-                }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '15px' }}>📚</div>
-                  <h3 style={{ fontSize: '1.1rem', marginBottom: '10px' }}>Trading Courses</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>Coming Soon</p>
-                </div>
-                <div style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '16px',
-                  padding: '30px',
-                  width: '200px'
-                }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '15px' }}>👕</div>
-                  <h3 style={{ fontSize: '1.1rem', marginBottom: '10px' }}>Merch Store</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>Coming Soon</p>
-                </div>
-                <div style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '16px',
-                  padding: '30px',
-                  width: '200px'
-                }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '15px' }}>💎</div>
-                  <h3 style={{ fontSize: '1.1rem', marginBottom: '10px' }}>VIP Membership</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>Coming Soon</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <NewShopModal open={showNewShopModal} onClose={() => setShowNewShopModal(false)} />
     </>
   );
 }

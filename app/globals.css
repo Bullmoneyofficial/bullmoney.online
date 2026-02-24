@@ -732,12 +732,36 @@ body[data-modal-open="true"] button[title*="Close" i]:hover {
   background-clip: text;
 }
 
-/* Glassmorphism effect */
+/* Glassmorphism effect — lightweight version that works everywhere */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  backdrop-filter: blur(12px) saturate(1.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile/in-app/low-memory: cut blur in half, boost opacity so it stays visible */
+@media (max-width: 768px) {
+  .glass {
+    background: rgba(255, 255, 255, 0.09);
+    -webkit-backdrop-filter: blur(8px) saturate(1.4);
+    backdrop-filter: blur(8px) saturate(1.4);
+  }
+}
+
+/* In-app browsers (Instagram, TikTok, etc): use even lighter blur */
+.is-in-app-browser .glass {
+  background: rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Fallback for browsers that don't support backdrop-filter (very rare) */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: rgba(20, 20, 20, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
 }
 
 /* Store button styles */

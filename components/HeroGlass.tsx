@@ -12,7 +12,7 @@
  * which adds the class `.bm-ready` to `#bm-splash`.
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
 // ─── Typewriter hook ──────────────────────────────────────────────────────────
@@ -45,34 +45,6 @@ function useTypewriter(text: string, speed = 30, active = false): string {
   return displayed;
 }
 
-// ─── Motion variants ──────────────────────────────────────────────────────────
-
-const glassVariants = {
-  hidden: { x: '-130%', opacity: 0 },
-  visible: {
-    x: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.9,
-      ease: [0.0, 0.0, 0.2, 1] as [number, number, number, number],
-    },
-  },
-};
-
-const headlineVariants = {
-  hidden: { opacity: 0, scale: 0.92 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.45, ease: 'easeOut' as const },
-  },
-};
-
-const subtitleVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.2 } },
-};
-
 // ─── Grain overlay (inline SVG — zero network request) ────────────────────────
 
 const GRAIN_SVG =
@@ -85,10 +57,56 @@ const SUBTITLE_TEXT = 'BULLMONEY  |  DAILY TRADING';
 export function HeroGlass() {
   const [glassSlid, setGlassSlid] = useState(false);
   const [headlineDone, setHeadlineDone] = useState(false);
+  // Detect device capability for performance tuning
+  const [isLiteMode, setIsLiteMode] = useState(false);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const isSafari = html.classList.contains('is-safari') || html.classList.contains('is-ios-safari');
+    const isInApp = html.classList.contains('is-in-app-browser');
+    const isMobile = window.innerWidth < 769;
+    const mem = (navigator as { deviceMemory?: number }).deviceMemory ?? 0;
+    const lowMem = mem > 0 && mem <= 4;
+    if (isSafari || isInApp || (isMobile && lowMem)) {
+      setIsLiteMode(true);
+    }
+  }, []);
 
   // Typewriter activates once glass has settled
   const subtitle = useTypewriter(SUBTITLE_TEXT, 30, glassSlid);
   const subtitleDone = subtitle.length === SUBTITLE_TEXT.length;
+
+  // Blur radius: heavy on desktop Chrome/Firefox, lightweight on Safari/mobile/in-app
+  const blurRadius = isLiteMode ? '8px' : '18px';
+
+  // Animation duration: faster on lite mode devices
+  const slideDuration = isLiteMode ? 0.55 : 0.9;
+
+  const glassVariants = {
+    hidden: { x: '-130%', opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        duration: slideDuration,
+        ease: [0.0, 0.0, 0.2, 1] as [number, number, number, number],
+      },
+    },
+  };
+
+  const headlineVariants = {
+    hidden: { opacity: 0, scale: 0.92 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: isLiteMode ? 0.25 : 0.45, ease: 'easeOut' as const },
+    },
+  };
+
+  const subtitleVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.2 } },
+  };
 
   return (
     <div
@@ -122,41 +140,53 @@ export function HeroGlass() {
       <div
         style={{
           position: 'relative',
-          /* Fluid sizing: starts small on mobile, grows on desktop */
-          width: 'min(320px, 88vw)',
-          height: 'min(400px, 58vh)',
+          /* Square container — keeps icon at its natural square aspect ratio */
+          width: 'min(300px, 84vw)',
+          height: 'min(300px, 84vw)',
           marginBottom: '36px',
           flexShrink: 0,
           zIndex: 1,
         }}
       >
-        {/* BM + Bull logo — sits behind the glass via natural stacking */}
+        {/* BM logo — square icon, centered, sits behind the sliding glass panel */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
             paddingRight: '0px',
             zIndex: 1,
+            overflow: 'hidden',
+            borderRadius: '8px',
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/IMG_2921 4.PNG"
-            alt="BullMoney BM logo"
+            src="/bm-logo-hd.webp"
+            alt="BullMoney logo"
             draggable={false}
+            // 1024×1024 WebP — HD on 3× retina mobile, 50KB vs 273KB PNG
+            fetchPriority="high"
+            decoding="async"
             style={{
-              width: '78%',
+              /* Width-only sizing — height:auto preserves the 1:1 square aspect ratio */
+              width: '86%',
               height: 'auto',
+              display: 'block',
               objectFit: 'contain',
-              /* Crop the black bar on the right edge of the PNG canvas */
-              clipPath: 'inset(0 9% 0 0)',
-              filter: 'drop-shadow(0 10px 28px rgba(0,0,0,0.14))',
+              /*
+               * Single-layer gradient mask — universally supported in all browsers
+               * including iOS WKWebView (in-app browsers) and Android WebView.
+               * Dual-layer maskComposite:'intersect' breaks in those environments.
+               * overflow:hidden on the parent clips top/bottom; this gradient
+               * handles the left/right edge fade and kills the right black bar.
+               */
+              maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 78%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 78%, transparent 100%)',
               userSelect: 'none',
               pointerEvents: 'none',
-              /* GPU layer */
               willChange: 'transform',
             }}
           />
@@ -175,9 +205,9 @@ export function HeroGlass() {
             bottom: '6%',
             width: '56%',
             borderRadius: '22px',
-            /* Glassmorphism */
-            backdropFilter: 'blur(18px)',
-            WebkitBackdropFilter: 'blur(18px)',
+            /* Glassmorphism — reduced blur on Safari/mobile for smoother performance */
+            backdropFilter: `blur(${blurRadius})`,
+            WebkitBackdropFilter: `blur(${blurRadius})`,
             background:
               'linear-gradient(145deg, rgba(255,255,255,0.78) 0%, rgba(240,240,242,0.52) 100%)',
             border: '1px solid rgba(255,255,255,0.68)',

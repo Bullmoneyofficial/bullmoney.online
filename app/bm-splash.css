@@ -9,12 +9,23 @@ html:has(#bm-splash:not(.hide)),html:has(#bm-splash:not(.hide)) body{overflow:hi
 
 #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);animation:none!important;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);}
 
-/* Safari/iOS fallback: reduce compositor stress only in lite mode */
+/* Safari/iOS: always reduce compositor stress — lite mode is auto-applied via JS */
 html.is-safari #bm-splash,html.is-ios-safari #bm-splash{left:0;right:0;width:100%;height:100%;min-height:100vh;min-height:-webkit-fill-available;transform:translateZ(0);-webkit-transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+/* Safari: always kill heavy background/orb animations (not just in lite mode) */
+html.is-safari #bm-splash::before,html.is-safari #bm-splash::after,html.is-ios-safari #bm-splash::before,html.is-ios-safari #bm-splash::after{animation:none!important;filter:none!important;}
+html.is-safari #bm-splash .bm-orb,html.is-ios-safari #bm-splash .bm-orb{display:none!important;}
+html.is-safari #bm-splash .bm-status,html.is-ios-safari #bm-splash .bm-status{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+html.is-safari #bm-splash .bm-bar-outer::after,html.is-ios-safari #bm-splash .bm-bar-outer::after{animation:none!important;opacity:.35!important;}
+html.is-safari #bm-splash .bm-bar-inner,html.is-ios-safari #bm-splash .bm-bar-inner{animation:none!important;background:#18181b!important;}
+/* Safari: disable ALL finale filter animations — these are the biggest lag source */
+html.is-safari #bm-splash.bm-splash-finale .bm-logo-wrap svg,html.is-safari #bm-splash.bm-splash-finale .bm-logo-wrap img,html.is-ios-safari #bm-splash.bm-splash-finale .bm-logo-wrap svg,html.is-ios-safari #bm-splash.bm-splash-finale .bm-logo-wrap img{animation:none!important;filter:invert(1)!important;-webkit-filter:invert(1)!important;}
+/* Safari: no idle bg cycle or spin */
+html.is-safari #bm-splash.bm-splash-finale.bm-splash-idle,html.is-ios-safari #bm-splash.bm-splash-finale.bm-splash-idle{animation:none!important;}
+/* Still keep lite-mode overrides for other cases */
 html.is-safari #bm-splash.bm-splash-lite::before,html.is-safari #bm-splash.bm-splash-lite::after,html.is-ios-safari #bm-splash.bm-splash-lite::before,html.is-ios-safari #bm-splash.bm-splash-lite::after{animation:none!important;filter:none!important;}
-html.is-safari #bm-splash.bm-splash-lite .bm-orb,html.is-ios-safari #bm-splash.bm-splash-lite .bm-orb{display:none;}
-html.is-safari #bm-splash.bm-splash-lite .bm-status,html.is-ios-safari #bm-splash.bm-splash-lite .bm-status{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
 html.is-safari #bm-splash.bm-splash-lite .bm-logo-wrap,html.is-safari #bm-splash.bm-splash-lite .bm-progress-wrap,html.is-ios-safari #bm-splash.bm-splash-lite .bm-logo-wrap,html.is-ios-safari #bm-splash.bm-splash-lite .bm-progress-wrap{animation:none!important;}
+/* Safari: faster hide */
+html.is-safari #bm-splash.hide,html.is-ios-safari #bm-splash.hide{transition:opacity .3s ease,visibility .3s ease!important;}
 
 /* Subtle radial gradient overlay */
 #bm-splash::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0.02) 0%,rgba(255,255,255,0) 70%);z-index:0;}

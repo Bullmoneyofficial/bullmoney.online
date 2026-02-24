@@ -67,6 +67,8 @@ const HEAD_LINKS = [
   { rel: "dns-prefetch", href: "https://www.googletagmanager.com" },
   { rel: "dns-prefetch", href: "https://images.unsplash.com" },
   { rel: "preload", href: "/ONcc2l601.svg", as: "image", fetchPriority: "high" },
+  // Preload the splash logo (50 KB WebP, 1024×1024 — HD for 3× retina mobile)
+  { rel: "preload", href: "/bm-logo-hd.webp", as: "image", fetchPriority: "high" },
   { rel: "manifest", href: "/manifest.json" },
   { rel: "alternate", href: "https://www.bullmoney.shop" },
   { rel: "alternate", href: "https://www.bullmoney.online" },
@@ -149,6 +151,8 @@ const AFTER_INTERACTIVE_SRC_SCRIPTS: Array<{ id: string; src: string }> = [
   { id: "bmbrain-global", src: "/scripts/BMBRAIN/bmbrain-global.js" },
   { id: "mobile-crash-shield", src: "/scripts/BMBRAIN/mobile-crash-shield.js" },
   { id: "inapp-shield", src: "/scripts/BMBRAIN/inapp-shield.js" },
+  // First-time visitor: shows Apple toast then hard-reloads to seed the cache
+  { id: "first-visit-refresh", src: "/scripts/first-visit-refresh.js" },
 ];
 
 type RootLayoutProps = Readonly<{ children: ReactNode; modal: ReactNode }>;

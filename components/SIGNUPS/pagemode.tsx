@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, memo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, memo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import type { SplineWrapperProps } from '@/lib/spline-wrapper';
@@ -146,6 +146,7 @@ import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import { WelcomeStep } from "./pagemode/steps/WelcomeStep";
 import { WelcomeStepMobile } from "./pagemode/steps/WelcomeStepMobile";
 import { WelcomeStepGuest } from "./pagemode/steps/WelcomeStepGuest";
+import { MatrixTerminalBg } from "./pagemode/MatrixTerminalBg";
 
 // --- IMPORT SEPARATE LOADER COMPONENT (lazy, event-driven) ---
 const TelegramConfirmationResponsive = dynamic(() => import("./TelegramConfirmationResponsive").then(m => ({ default: m.TelegramConfirmationResponsive })), { ssr: false, loading: () => null });
@@ -262,14 +263,53 @@ const isLowMemoryDevice = (): boolean => {
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground({ isDesktop }: { isDesktop: boolean }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [allowLoad, setAllowLoad] = useState(false);
+  // Covers Spline with the terminal whenever it may have gone black (tab switch / context loss)
+  const [splineCovered, setSplineCovered] = useState(false);
+  const coverTimerRef = useRef<number | null>(null);
+  const splineWrapRef = useRef<HTMLDivElement>(null);
+
+  // 50/50 per page-load: either show Spline or keep the terminal as the background
+  const useSpline = useRef(Math.random() < 0.5).current;
 
   const scene = SPLINE_SCENE;
 
-  // Kick off preloading after a short delay (desktop) to protect TTFB
+  // When tab becomes visible again, briefly re-show terminal while Spline's WebGL context recovers
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!useSpline) return;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') return;
+      // Tab came back — cover Spline until it resumes rendering (~1.5 s is enough)
+      if (!isLoaded) return; // already covered by normal loading state
+      setSplineCovered(true);
+      if (coverTimerRef.current) window.clearTimeout(coverTimerRef.current);
+      coverTimerRef.current = window.setTimeout(() => setSplineCovered(false), 1500);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (coverTimerRef.current) window.clearTimeout(coverTimerRef.current);
+    };
+  }, [useSpline, isLoaded]);
+
+  // If the GPU context is permanently lost, keep the terminal up
+  useEffect(() => {
+    const el = splineWrapRef.current;
+    if (!el) return;
+    const canvas = el.querySelector('canvas');
+    if (!canvas) return;
+    const onLost = () => {
+      setSplineCovered(true);
+      if (coverTimerRef.current) window.clearTimeout(coverTimerRef.current);
+    };
+    canvas.addEventListener('webglcontextlost', onLost);
+    return () => canvas.removeEventListener('webglcontextlost', onLost);
+  });
+
+  // Kick off preloading immediately — only when Spline was chosen this session
+  useEffect(() => {
+    if (!useSpline || typeof window === 'undefined') return;
     let cancelled = false;
-    const delay = isDesktop ? 1200 : 0;
+    const delay = 0; // start immediately on all devices for faster Spline paint
     let link: HTMLLinkElement | null = null;
     const timer = window.setTimeout(() => {
       const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection || {};
@@ -311,7 +351,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground({ isDeskto
       window.clearTimeout(timer);
       if (link && link.parentNode) link.parentNode.removeChild(link);
     };
-  }, [scene, isDesktop]);
+  }, [scene, isDesktop, useSpline]);
 
   const handleLoad = useCallback((_splineApp?: any) => {
     setIsLoaded(true);
@@ -328,20 +368,13 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground({ isDeskto
         backgroundColor: '#000',
       }}
     >
-      {/* Gradient fallback — always visible until Spline is loaded, then fades out */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(135deg, rgba(15,15,15,1) 0%, rgba(30,30,30,1) 50%, rgba(10,10,10,1) 100%)',
-          opacity: isLoaded ? 0 : 1,
-          transition: 'opacity 700ms ease-out',
-        }}
-      />
+      {/* Matrix terminal — shown while loading OR whenever Spline goes black (tab switch / context loss) */}
+      <MatrixTerminalBg visible={!isLoaded || splineCovered} />
 
-      {/* Spline — ALWAYS renders on ALL devices (iOS, in-app browsers, low memory) */}
-      {/* neverDisable=true bypasses battery saver and emergency shutdown for hero scenes */}
-      {allowLoad && (
+      {/* Spline — only mounts on the 50% of sessions where it was chosen */}
+      {useSpline && allowLoad && (
         <div
+          ref={splineWrapRef}
           className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         >
           <Spline

@@ -93,7 +93,9 @@
   }
   var finaleStarted = false;
   var finaleStartedAt = 0;
-  var minFinaleMs = isInAppBrowser ? 1200 : 650;
+  var isSafari = document.documentElement.classList.contains('is-safari');
+  var isIosSafari = document.documentElement.classList.contains('is-ios-safari');
+  var minFinaleMs = isInAppBrowser ? 1200 : (isSafari ? 400 : 650);
   var mem = (navigator && navigator.deviceMemory) ? navigator.deviceMemory : 0;
   var lowMemory = mem > 0 && mem <= 4;
   var prefersReduced = false;
@@ -103,10 +105,10 @@
     }
   } catch (e) {}
 
-  // In-app webviews can be fragile with filter/keyframe-heavy animations.
-  // Only enable lite mode when reduced motion or low-memory is detected.
+  // Safari and in-app browsers can be fragile with filter/keyframe-heavy animations.
+  // Enable lite mode automatically for Safari, low-memory, or prefers-reduced-motion.
   try {
-    if (lowMemory || prefersReduced) splash.classList.add('bm-splash-lite');
+    if (isSafari || lowMemory || prefersReduced) splash.classList.add('bm-splash-lite');
   } catch (e) {}
 
   var minVisibleMs = isInAppBrowser ? 2200 : 200;
@@ -566,7 +568,8 @@
         if (window.matchMedia) {
           snapPrefersReduced = !!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         }
-        if (!snapPrefersReduced) {
+        // Skip blur snap on Safari — filter animations are slow and cause jank
+        if (!snapPrefersReduced && !isSafari) {
           logoWrap.style.filter = 'blur(8px)';
           logoWrap.style.webkitFilter = 'blur(8px)';
           // Ensure blur applies before we start transitioning it away
@@ -602,13 +605,13 @@
         // Fallback: if setProperty fails for any reason, do nothing.
       }
 
-      // Snap to sharp near the end of the grow.
+      // Snap to sharp near the end of the grow (skip on Safari — no blur applied above).
       try {
         var snapPrefersReduced2 = false;
         if (window.matchMedia) {
           snapPrefersReduced2 = !!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         }
-        if (!snapPrefersReduced2) {
+        if (!snapPrefersReduced2 && !isSafari) {
           setTimeout(function() {
             if (!splash || splash.classList.contains('hide') || !logoWrap) return;
             logoWrap.style.transition = (logoWrap.style.transition ? (logoWrap.style.transition + ',') : '') + 'filter 260ms cubic-bezier(.22,1,.36,1)';
@@ -621,13 +624,13 @@
       }
 
       // After the grow finishes, keep the logo subtly animating in its big state.
-      // Respect reduced motion.
+      // Respect reduced motion. Skip on Safari to avoid heavy GPU usage.
       try {
         var prefersReduced = false;
         if (window.matchMedia) {
           prefersReduced = !!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         }
-        if (!prefersReduced) {
+        if (!prefersReduced && !isSafari) {
           setTimeout(function() {
             if (!splash || splash.classList.contains('hide')) return;
             splash.classList.add('bm-splash-idle');

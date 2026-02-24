@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, User } from 'lucide-react';
 import { UI_Z_INDEX } from "@/contexts/UIStateContext";
 import type { SplineWrapperProps } from '@/lib/spline-wrapper';
+import { MatrixTerminalBg } from "@/components/SIGNUPS/pagemode/MatrixTerminalBg";
 
 // Lazy-load heavy pieces only when needed
 const LegalDisclaimerModal = dynamic(
@@ -22,12 +23,50 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground({ enable }
   const [isLoaded, setIsLoaded] = useState(false);
   const [allowLoad, setAllowLoad] = useState(false);
   const [SplineComp, setSplineComp] = useState<React.ComponentType<SplineWrapperProps> | null>(null);
+  // Covers Spline with the terminal whenever it may have gone black (tab switch / context loss)
+  const [splineCovered, setSplineCovered] = useState(false);
+  const coverTimerRef = useRef<number | null>(null);
+  const splineWrapRef = useRef<HTMLDivElement>(null);
+
+  // 50/50 per page-load: either show Spline or keep the terminal as the background
+  const useSpline = useRef(Math.random() < 0.5).current;
 
   const scene = SPLINE_SCENES[0]; // Always use scene1 for fastest cold start
 
-  // Preload after a short delay and only when enabled
+  // When tab becomes visible again, briefly re-show terminal while Spline's WebGL context recovers
   useEffect(() => {
-    if (!enable || typeof window === 'undefined') return;
+    if (!useSpline) return;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') return;
+      if (!isLoaded) return; // already covered by normal loading state
+      setSplineCovered(true);
+      if (coverTimerRef.current) window.clearTimeout(coverTimerRef.current);
+      coverTimerRef.current = window.setTimeout(() => setSplineCovered(false), 1500);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (coverTimerRef.current) window.clearTimeout(coverTimerRef.current);
+    };
+  }, [useSpline, isLoaded]);
+
+  // If the GPU context is permanently lost, keep the terminal up
+  useEffect(() => {
+    const el = splineWrapRef.current;
+    if (!el) return;
+    const canvas = el.querySelector('canvas');
+    if (!canvas) return;
+    const onLost = () => {
+      setSplineCovered(true);
+      if (coverTimerRef.current) window.clearTimeout(coverTimerRef.current);
+    };
+    canvas.addEventListener('webglcontextlost', onLost);
+    return () => canvas.removeEventListener('webglcontextlost', onLost);
+  });
+
+  // Preload immediately — only when Spline was chosen this session
+  useEffect(() => {
+    if (!enable || !useSpline || typeof window === 'undefined') return;
     let cancelled = false;
     let link: HTMLLinkElement | null = null;
     const timer = window.setTimeout(() => {
@@ -65,14 +104,14 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground({ enable }
       fetch(scene, { cache: 'force-cache', priority: preloadPriority as RequestPriority }).catch(() => undefined);
 
       if (!cancelled) setAllowLoad(true);
-    }, 1200);
+    }, 0); // start immediately — no delay for fastest Spline paint
 
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
       if (link && link.parentNode) link.parentNode.removeChild(link);
     };
-  }, [scene, enable]);
+  }, [scene, enable, useSpline]);
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -88,20 +127,14 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground({ enable }
         backgroundColor: '#000',
       }}
     >
-      {/* Gradient fallback — always visible until Spline is loaded, then fades out */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(135deg, rgba(15,15,15,1) 0%, rgba(30,30,30,1) 50%, rgba(10,10,10,1) 100%)',
-          opacity: isLoaded ? 0 : 1,
-          transition: 'opacity 700ms ease-out',
-        }}
-      />
+      {/* Matrix terminal — shown while loading OR whenever Spline goes black (tab switch / context loss) */}
+      <MatrixTerminalBg visible={!isLoaded || splineCovered} />
 
-      {/* Spline — only mounts after acquiring load lock (prevents GPU contention) */}
-      {allowLoad && SplineComp && (
+      {/* Spline — only mounts on the 50% of sessions where it was chosen */}
+      {useSpline && allowLoad && SplineComp && (
         <div
-          className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          ref={splineWrapRef}
+          className={`absolute inset-0 transition-opacity duration-700 ${isLoaded && !splineCovered ? 'opacity-100' : 'opacity-0'}`}
           style={{
             filter: 'grayscale(100%) saturate(0)',
             WebkitFilter: 'grayscale(100%) saturate(0)',
