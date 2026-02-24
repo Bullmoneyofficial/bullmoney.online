@@ -17,6 +17,28 @@ const CONSENT_COOKIE = 'bullmoney-cookie-consent';
 const PAGE_LOAD_COOKIE = 'bullmoney-page-loads';
 const COOKIE_EXPIRY = 365; // days
 
+// localStorage fallbacks (covers PWA/standalone contexts or browsers that block non-essential cookies)
+const CONSENT_PREFS_STORAGE_KEY = 'bullmoney-cookie-consent-prefs';
+const PAGE_LOAD_STORAGE_KEY = PAGE_LOAD_COOKIE;
+
+function safeLocalStorageGet(key: string): string | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageSet(key: string, value: string): void {
+  try {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+}
+
 // Map every known cookie to a consent category
 const COOKIE_CATEGORY_MAP: Record<string, CookieCategory> = {
   // Essential – always allowed
@@ -73,8 +95,10 @@ function dispatchConsentChange(prefs: CookiePreferences) {
 export function getConsentPreferences(): CookiePreferences | null {
   try {
     const raw = Cookies.get(CONSENT_COOKIE);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as CookiePreferences;
+    const fallback = safeLocalStorageGet(CONSENT_PREFS_STORAGE_KEY);
+    const source = raw || fallback;
+    if (!source) return null;
+    const parsed = JSON.parse(source) as CookiePreferences;
     // Essential is always true
     parsed.essential = true;
     return parsed;
@@ -145,6 +169,9 @@ export function saveConsentPreferences(prefs: Partial<CookiePreferences>): void 
     path: '/',
   });
 
+  // Always mirror full prefs to localStorage as a persistence fallback.
+  safeLocalStorageSet(CONSENT_PREFS_STORAGE_KEY, JSON.stringify(full));
+
   // Mirror to localStorage for AutoTranslateProvider compatibility
   if (full.functional || full.analytics || full.marketing) {
     localStorage.setItem('bullmoney-cookie-consent', 'accepted');
@@ -208,8 +235,11 @@ export function shouldShowBanner(): boolean {
   if (!hasConsentBeenGiven()) return true;
 
   // Track page loads
-  const raw = Cookies.get(PAGE_LOAD_COOKIE);
-  const count = raw ? parseInt(raw, 10) : 0;
+  const rawCookie = Cookies.get(PAGE_LOAD_COOKIE);
+  const cookieCount = rawCookie ? parseInt(rawCookie, 10) : NaN;
+  const rawStorage = safeLocalStorageGet(PAGE_LOAD_STORAGE_KEY);
+  const storageCount = rawStorage ? parseInt(rawStorage, 10) : NaN;
+  const count = Number.isFinite(cookieCount) ? cookieCount : Number.isFinite(storageCount) ? storageCount : 0;
   const next = count + 1;
 
   Cookies.set(PAGE_LOAD_COOKIE, String(next), {
@@ -217,6 +247,9 @@ export function shouldShowBanner(): boolean {
     sameSite: 'lax',
     path: '/',
   });
+
+  // Mirror to localStorage so the counter behaves consistently even when cookies are not persisted.
+  safeLocalStorageSet(PAGE_LOAD_STORAGE_KEY, String(next));
 
   // Show every 5 loads
   return next % 5 === 0;
@@ -231,4 +264,6 @@ export function resetPageLoadCounter(): void {
     sameSite: 'lax',
     path: '/',
   });
+
+  safeLocalStorageSet(PAGE_LOAD_STORAGE_KEY, '0');
 }

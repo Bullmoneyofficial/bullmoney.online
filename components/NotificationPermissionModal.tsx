@@ -166,9 +166,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
       const hasNotificationAPI = 'Notification' in window;
       const hasServiceWorker = 'serviceWorker' in navigator;
       const hasPushManager = 'PushManager' in window;
-      
-      console.log('[NotificationModal] Support check:', { isSecure, hasNotificationAPI, hasServiceWorker, hasPushManager });
-      
+
       if (!isSecure || !hasNotificationAPI || !hasServiceWorker || !hasPushManager) {
         console.log('[NotificationModal] Not supported, hiding modal');
         setIsVisible(false);
@@ -275,11 +273,16 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
         className="absolute top-3.5 right-3.5 w-8 h-8 flex items-center justify-center rounded-full
-                   border border-black/10 bg-black/[0.03]
-                   hover:bg-black/[0.06] hover:border-black/20
+                   border border-black/10 bg-black/3
+                   hover:bg-black/6 hover:border-black/20
                    active:scale-90
                    transition-all duration-200 ease-out z-50 cursor-pointer"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
+        style={{
+          WebkitTapHighlightColor: 'transparent',
+          backgroundColor: 'rgba(0,0,0,0.03)',
+          borderColor: 'rgba(0,0,0,0.10)',
+          color: 'rgba(0,0,0,0.60)',
+        }}
       >
         <X className="w-3.5 h-3.5 text-black/60" strokeWidth={2.5} />
       </button>
@@ -288,7 +291,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
         <>
           {/* Bell icon */}
           <motion.div
-            className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/[0.03] flex items-center justify-center relative"
+            className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/3 flex items-center justify-center relative"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -332,7 +335,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
               <div
                 key={i}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                           border border-black/10 bg-black/[0.03]"
+                           border border-black/10 bg-black/3"
               >
                 <feature.icon className="w-3.5 h-3.5 text-black/60" strokeWidth={2} />
                 <span className="text-[11px] text-black/60 font-medium tracking-wide">{feature.text}</span>
@@ -351,7 +354,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                        active:scale-[0.97] active:bg-black/80
                        transition-all duration-200 ease-out
                        cursor-pointer disabled:opacity-50"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: '#000', color: '#fff' }}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.28, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
@@ -379,11 +382,16 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             className="w-full py-2.5 mt-2.5 rounded-xl font-medium text-[13px] tracking-wide
                        text-black/60
                        border border-black/15
-                       hover:text-black/80 hover:bg-black/[0.04] hover:border-black/25
+                       hover:text-black/80 hover:bg-black/4 hover:border-black/25
                        active:scale-[0.97]
                        transition-all duration-200 ease-out
                        cursor-pointer"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              color: 'rgba(0,0,0,0.60)',
+              borderColor: 'rgba(0,0,0,0.15)',
+              backgroundColor: 'transparent',
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.34, duration: 0.3 }}
@@ -396,7 +404,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
       {step === 'success' && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2 pb-2">
           <motion.div
-            className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/[0.03] flex items-center justify-center"
+            className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/3 flex items-center justify-center"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', damping: 15 }}
@@ -414,7 +422,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
           animate={{ opacity: 1, scale: 1 }}
           className="text-center pt-2 pb-2"
         >
-          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/[0.03] flex items-center justify-center">
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/3 flex items-center justify-center">
             <BellOff className="w-6 h-6 text-black/50" strokeWidth={1.5} />
           </div>
           <h3 className="text-[22px] font-semibold text-black text-center tracking-tight mb-1.5">Notifications Off</h3>
@@ -423,9 +431,14 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
             className="px-8 py-2.5 rounded-xl font-medium text-[13px] tracking-wide
                        text-black/70 border border-black/20
-                       hover:bg-black/[0.04] hover:border-black/30
+                       hover:bg-black/4 hover:border-black/30
                        active:scale-[0.97]
                        transition-all duration-200 ease-out cursor-pointer"
+            style={{
+              color: 'rgba(0,0,0,0.70)',
+              borderColor: 'rgba(0,0,0,0.20)',
+              backgroundColor: 'transparent',
+            }}
           >
             Got It
           </button>
@@ -434,7 +447,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
 
       {step === 'blocked' && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2 pb-2">
-          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/[0.03] flex items-center justify-center">
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/3 flex items-center justify-center">
             <BellOff className="w-6 h-6 text-black/50" strokeWidth={1.5} />
           </div>
           <h3 className="text-[22px] font-semibold text-black text-center tracking-tight mb-1.5">Blocked by Browser</h3>
@@ -442,7 +455,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             Notifications were previously blocked
           </p>
           
-          <div className="rounded-xl border border-black/10 bg-black/[0.03] p-4 mb-5 text-left space-y-2.5">
+          <div className="rounded-xl border border-black/10 bg-black/3 p-4 mb-5 text-left space-y-2.5">
             {[
               'Tap the lock icon in the address bar',
               'Find "Notifications" and change to "Allow"',
@@ -462,6 +475,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                          bg-black text-white border border-black/20
                          hover:bg-black/90 active:scale-[0.97] active:bg-black/80
                          transition-all duration-200 ease-out cursor-pointer"
+              style={{ backgroundColor: '#000', color: '#fff' }}
             >
               Refresh
             </button>
@@ -469,9 +483,14 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
               className="flex-1 py-3 rounded-xl font-medium text-[14px] tracking-wide
                          text-black/70 border border-black/20
-                         hover:bg-black/[0.04] hover:border-black/30
+                           hover:bg-black/4 hover:border-black/30
                          active:scale-[0.97]
                          transition-all duration-200 ease-out cursor-pointer"
+              style={{
+                color: 'rgba(0,0,0,0.70)',
+                borderColor: 'rgba(0,0,0,0.20)',
+                backgroundColor: 'transparent',
+              }}
             >
               Close
             </button>
@@ -516,9 +535,9 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                     className="relative w-full overflow-hidden rounded-2xl bg-white"
                     style={{ transition: 'transform 0.15s ease-out' }}
                   >
-                    <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
+                    <div className="absolute top-0 left-8 right-8 h-px bg-linear-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
                     <div className="absolute inset-0 border border-black/10 rounded-2xl pointer-events-none z-2" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/[0.03] via-transparent to-transparent pointer-events-none rounded-2xl" />
+                    <div className="absolute inset-0 bg-linear-to-b from-black/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
                     {popupContent}
                   </motion.div>
                 </HoverBorderGradient>
@@ -535,7 +554,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-sm scale-[0.7] origin-center overflow-hidden rounded-2xl bg-white border border-black/10 shadow-2xl"
           >
-            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-8 right-8 h-px bg-linear-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
             {popupContent}
           </motion.div>
         )}
