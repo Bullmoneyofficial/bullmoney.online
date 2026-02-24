@@ -202,3 +202,18 @@ img[width][height] {
 [data-modal] {
   contain: layout style;
 }
+
+/* ============================================================================
+   DESKTOP CLS FIX: stable scrollbar gutter
+   Without this, the scrollbar appears after the splash dismisses (~2.8s),
+   shifting content by 15-17px and causing a large CLS spike.
+   scrollbar-gutter: stable reserves the gutter width unconditionally so
+   the layout never shifts when the scrollbar becomes visible.
+   Applied from the very first paint — no class dependency.
+   ============================================================================ */
+@media (min-width: 769px) {
+  html {
+    overflow-y: scroll !important;
+    scrollbar-gutter: stable !important;
+  }
+}

@@ -62,8 +62,8 @@ const HEAD_META = [
 const HEAD_LINKS = [
   { rel: "preload", href: "/styles/layout-critical.css", as: "style" },
   { rel: "stylesheet", href: "/styles/layout-critical.css" },
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+  // Note: Google Fonts preconnects removed — app uses system fonts (font-sans).
+  // The unused TCP/TLS connections consumed network slots needed by critical resources.
   { rel: "dns-prefetch", href: "https://prod.spline.design" },
   { rel: "dns-prefetch", href: "https://cdn.spline.design" },
   { rel: "dns-prefetch", href: "https://va.vercel-scripts.com" },
@@ -104,7 +104,9 @@ const HEAD_LINKS = [
 const BEFORE_INTERACTIVE_SCRIPTS: Array<{ id: string; src?: string; html?: string }> = [
   { id: "splash-init", src: "/scripts/splash-init.js" },
   { id: "compat-layer", src: "/scripts/BMBRAIN/compat-layer.js" },
-  { id: "first-visit-refresh", src: "/scripts/first-visit-refresh.js" },
+  // first-visit-refresh moved to afterInteractive — the script's own comments confirm
+  // it works fine post-hydration (uses polling to find #bm-splash). Removing it from
+  // beforeInteractive unblocks the render pipeline and improves desktop FCP.
   {
     id: "bm-defer-loader",
     html: `
@@ -155,8 +157,10 @@ const AFTER_INTERACTIVE_SRC_SCRIPTS: Array<{ id: string; src: string }> = [
   { id: "bmbrain-global", src: "/scripts/BMBRAIN/bmbrain-global.js" },
   { id: "mobile-crash-shield", src: "/scripts/BMBRAIN/mobile-crash-shield.js" },
   { id: "inapp-shield", src: "/scripts/BMBRAIN/inapp-shield.js" },
-  // First-time visitor: shows Apple toast then hard-reloads to seed the cache
-  // { id: "first-visit-refresh", src: "/scripts/first-visit-refresh.js" },
+  // First-time visitor: shows Apple toast then hard-reloads to seed the cache.
+  // Runs afterInteractive — splash is still visible at hydration time, and the
+  // script uses polling to locate #bm-splash, so timing is robust.
+  { id: "first-visit-refresh", src: "/scripts/first-visit-refresh.js" },
 ];
 
 type RootLayoutProps = Readonly<{ children: ReactNode; modal: ReactNode }>;
@@ -351,9 +355,14 @@ export default function RootLayout({ children, modal }: RootLayoutProps) {
                     document.documentElement.classList.contains('is-in-app-browser')
                   );
 
-                  var MIN      = isInApp ? 2400 : ${SPLASH_MIN_MS};
-                  var FALLBACK = isInApp ? 3000 : ${SPLASH_FALLBACK_MS};
-                  var MAX      = ${SPLASH_MAX_MS};
+                  // Desktop gets shorter splash timing — the glass-slide animation
+                  // finishes at 900ms, leaving enough breathing room at 1500ms MIN.
+                  // This directly improves desktop FCP and LCP without touching mobile.
+                  var isDesktop = !isInApp && typeof window.innerWidth === 'number' && window.innerWidth >= 1024;
+
+                  var MIN      = isInApp ? 2400 : (isDesktop ? 1500 : ${SPLASH_MIN_MS});
+                  var FALLBACK = isInApp ? 3000 : (isDesktop ? 1800 : ${SPLASH_FALLBACK_MS});
+                  var MAX      = isDesktop ? 5000 : ${SPLASH_MAX_MS};
 
                   var minDone    = false;
                   var splineDone = false;

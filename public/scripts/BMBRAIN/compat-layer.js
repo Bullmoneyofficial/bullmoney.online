@@ -499,20 +499,31 @@ cssRules.push(
   '}'
 );
 
-// Fix for Samsung Internet scrollbar issues
+// Fix for Samsung Internet scrollbar issues — mobile viewports only.
+// The original query (-webkit-min-device-pixel-ratio:0) matched ALL webkit browsers
+// including desktop Chrome and Safari, overriding the overflow-y:scroll that
+// splash-init.js + desktop-cls-prevention.js set for desktop.
+// Adding max-width:768px prevents the !important override on desktop, fixing CLS.
 cssRules.push(
-  '/* Samsung Internet scroll fix */',
-  '@media screen and (-webkit-min-device-pixel-ratio:0){',
+  '/* Samsung Internet scroll fix — mobile only */',
+  '@media screen and (-webkit-min-device-pixel-ratio:0) and (max-width:768px){',
   '  html,body{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;}',
   '}'
 );
 
-// Fix for Firefox Android touch-action
+// Fix for Firefox Android touch-action — keep touch/interaction fixes for all Firefox,
+// but scope overflow-y:auto to mobile to avoid killing the desktop scrollbar gutter.
 cssRules.push(
   '/* Firefox touch-action fix */',
   '@-moz-document url-prefix(){',
-  '  html,body{touch-action:pan-y pan-x!important;overflow-y:auto!important;}',
+  '  html,body{touch-action:pan-y pan-x!important;}',
   '  a,button,[role="button"]{touch-action:manipulation!important;}',
+  '}',
+  '/* Firefox mobile-only overflow reset — nested @media inside @-moz-document */',
+  '@-moz-document url-prefix(){',
+  '  @media (max-width:768px){',
+  '    html,body{overflow-y:auto!important;}',
+  '  }',
   '}'
 );
 
