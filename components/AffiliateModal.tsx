@@ -612,7 +612,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
   
   // Step management
   const [step, setStep] = useState<ModalStep>('intro');
-  const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
+  const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('XM');
   
   // Form state
   const [formData, setFormData] = useState<FormData>({

@@ -181,13 +181,13 @@ export function HomePageController() {
   // 🚀 COMPILATION SPEED: Lazy load components only when needed
   useEffect(() => {
     if (currentView === "pagemode" && !PageMode) {
-      import("@/components/SIGNUPS/pagemode").then(mod => setPageMode(() => mod.default));
+      import("@/components/signups/pagemode").then(mod => setPageMode(() => mod.default));
     }
   }, [currentView, PageMode]);
 
   useEffect(() => {
     if (currentView === "telegram" && !TelegramUnlockScreen) {
-      import("@/components/SIGNUPS/TelegramConfirmationResponsive").then(mod =>
+      import("@/components/signups/TelegramConfirmationResponsive").then(mod =>
         setTelegramUnlockScreen(() => mod.TelegramConfirmationResponsive)
       );
     }

@@ -13,7 +13,7 @@ import dynamic from 'next/dynamic';
 
 export const TelegramUnlockScreen = dynamic(
   () =>
-    import('@/components/SIGNUPS/TelegramConfirmationStoreResponsive').then((mod) => ({
+    import('@/components/signups/TelegramConfirmationStoreResponsive').then((mod) => ({
       default: mod.TelegramConfirmationStoreResponsive,
     })),
   {

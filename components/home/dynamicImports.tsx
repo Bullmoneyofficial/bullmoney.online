@@ -23,7 +23,7 @@ export const HeroDesktop = dynamic(
 );
 
 export const PageMode = dynamic(
-  () => import("@/components/SIGNUPS/pagemode"),
+  () => import("@/components/signups/pagemode"),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 

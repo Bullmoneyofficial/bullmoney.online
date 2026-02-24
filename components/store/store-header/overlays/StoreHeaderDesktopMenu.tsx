@@ -94,9 +94,9 @@ export const StoreHeaderDesktopMenu = memo(function StoreHeaderDesktopMenu({
       {desktopMenuOpen &&
         createPortal(
           <>
-            <div className="fixed inset-0 hidden lg:block z-[899]" onClick={() => setDesktopMenuOpen(false)} />
+            <div className="fixed inset-0 hidden lg:block z-899" onClick={() => setDesktopMenuOpen(false)} />
             <div
-              className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none z-[900]"
+              className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none z-900"
               style={{
                 top: '48px',
                 background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.95)',
@@ -108,7 +108,7 @@ export const StoreHeaderDesktopMenu = memo(function StoreHeaderDesktopMenu({
 
       {createPortal(
         <div
-          className={`fixed left-0 right-0 z-[950] hidden lg:block transition-opacity ${
+          className={`fixed left-0 right-0 z-950 hidden lg:block transition-opacity ${
             desktopMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
           style={{
@@ -123,7 +123,7 @@ export const StoreHeaderDesktopMenu = memo(function StoreHeaderDesktopMenu({
           onMouseLeave={scheduleDesktopMenuClose}
         >
           <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
-            <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
+            <div className="max-w-300 mx-auto px-10 py-10 grid grid-cols-3 gap-10">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>
                   Shop
@@ -265,7 +265,7 @@ export const StoreHeaderDesktopMenu = memo(function StoreHeaderDesktopMenu({
                   Preferences
                 </p>
                 <div className="mt-5 space-y-3">
-                  <div className="max-w-[260px]">
+                  <div className="max-w-65">
                     <LanguageToggle
                       variant="row"
                       dropDirection="down"

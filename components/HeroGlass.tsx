@@ -12,7 +12,7 @@
  * which adds the class `.bm-ready` to `#bm-splash`.
  */
 
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
 // ─── Typewriter hook ──────────────────────────────────────────────────────────
@@ -55,12 +55,19 @@ const GRAIN_SVG =
 const SUBTITLE_TEXT = 'BULLMONEY  |  DAILY TRADING';
 
 export function HeroGlass() {
+  const [disclaimerDone, setDisclaimerDone] = useState(false);
   const [glassSlid, setGlassSlid] = useState(false);
   const [headlineDone, setHeadlineDone] = useState(false);
   // Detect device capability for performance tuning
   const [isLiteMode, setIsLiteMode] = useState(false);
   // Loading bar — ticks via setInterval, pure inline width
   const [barWidth, setBarWidth] = useState(0);
+
+  // Dismiss disclaimer after 0.6s
+  useEffect(() => {
+    const t = setTimeout(() => setDisclaimerDone(true), 600);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -212,8 +219,8 @@ export function HeroGlass() {
         <motion.div
           variants={glassVariants}
           initial="hidden"
-          animate="visible"
-          onAnimationComplete={() => setGlassSlid(true)}
+          animate={disclaimerDone ? 'visible' : 'hidden'}
+          onAnimationComplete={() => { if (disclaimerDone) setGlassSlid(true); }}
           style={{
             position: 'absolute',
             left: 0,
@@ -396,6 +403,76 @@ export function HeroGlass() {
           `,
         }}
       />
+
+      {/* ── Disclaimer overlay — shows for ~0.6s before main splash animates ── */}
+      <AnimatePresence>
+        {!disclaimerDone && (
+          <motion.div
+            key="bm-disclaimer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } }}
+            exit={{ opacity: 0, transition: { duration: 0.35, ease: 'easeIn' } }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
+              padding: '24px',
+            }}
+          >
+            <div
+              style={{
+                backdropFilter: 'blur(18px)',
+                WebkitBackdropFilter: 'blur(18px)',
+                background: 'linear-gradient(145deg, rgba(255,255,255,0.88) 0%, rgba(240,240,242,0.72) 100%)',
+                border: '1px solid rgba(255,255,255,0.72)',
+                boxShadow: '0 4px 32px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.9) inset',
+                borderRadius: '16px',
+                maxWidth: '260px',
+                width: '100%',
+                padding: '16px 18px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '6px',
+                textAlign: 'center',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(0,0,0,0.36)',
+                  userSelect: 'none',
+                }}
+              >
+                Disclaimer
+              </span>
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  color: 'rgba(0,0,0,0.65)',
+                  lineHeight: 1.5,
+                  letterSpacing: '-0.01em',
+                  userSelect: 'none',
+                }}
+              >
+                Not a registered financial adviser or signal provider.<br />
+                No investment advice offered.<br />
+                Educational content only.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

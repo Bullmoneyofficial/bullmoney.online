@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, User } from 'lucide-react';
 import { UI_Z_INDEX } from "@/contexts/UIStateContext";
 import type { SplineWrapperProps } from '@/lib/spline-wrapper';
-import { MatrixTerminalBg } from "@/components/SIGNUPS/pagemode/MatrixTerminalBg";
+import { MatrixTerminalBg } from "@/components/signups/pagemode/MatrixTerminalBg";
 
 // Lazy-load heavy pieces only when needed
 const LegalDisclaimerModal = dynamic(

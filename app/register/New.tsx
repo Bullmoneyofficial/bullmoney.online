@@ -318,7 +318,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'register' | 'login'>('register');
   const [step, setStep] = useState(0);
-  const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
+  const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('XM');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

@@ -438,6 +438,22 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       removeOverlay();
       detach();
 
+      // ── Disclaimer toast — appears after "Cached ✓" fades out ──
+      addTimeout(() => {
+        const toast = document.createElement("div");
+        toast.id = "_sc_disclaimer";
+        toast.style.cssText =
+          "position:fixed;inset:0;z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .35s";
+        toast.innerHTML =
+          '<div style="background:rgba(0,0,0,.72);color:rgba(255,255,255,.82);font-size:11px;font-weight:500;padding:12px 20px;border-radius:18px;max-width:220px;text-align:center;line-height:1.5;font-family:-apple-system,BlinkMacSystemFont,&quot;Helvetica Neue&quot;,Arial,sans-serif;letter-spacing:0.01em">Not a financial adviser or signal provider.<br>No investment advice offered.<br>Educational content only.</div>';
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => { toast.style.opacity = "1"; });
+        addTimeout(() => {
+          toast.style.opacity = "0";
+          addTimeout(() => toast.remove(), 400);
+        }, 1400);
+      }, 950);
+
     };
 
     run();

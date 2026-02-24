@@ -32,7 +32,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // Steps: 1=Broker, 2=MT5, 3=Email, 4=Submitting, 5=Success
   // WE START AT STEP 1 (Broker) - No "Full Name" step 0
   const [step, setStep] = useState(1);
-  const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
+  const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('XM');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -187,13 +187,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <span className="absolute -inset-full animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
         </div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/20 via-black to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-white/20 via-black to-black" />
         
         <div className="bg-black/80 border-2 border-white/40 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(255, 255, 255,0.3)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
           <div className="mx-auto w-24 h-24 relative mb-6">
             <div className="absolute inset-0 rounded-full border-2 border-white/50 animate-[spin_3s_linear_infinite]" />
             <div className="absolute inset-0 bg-white rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
-              <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
+              <Check className="w-12 h-12 text-white stroke-3 opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
             </div>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Registration Complete</h2>

@@ -43,7 +43,7 @@ const STEPS = [
 /** Apple-style broker signup section for the Store page.
  *  Same links, codes, and logic as components/REGISTER USERS/pagemode.tsx */
 export const BrokerSignupSection = memo(function BrokerSignupSection() {
-  const [activeBroker, setActiveBroker] = useState<BrokerName>('Vantage');
+  const [activeBroker, setActiveBroker] = useState<BrokerName>('XM');
   const [copied, setCopied] = useState(false);
   const [hoverBroker, setHoverBroker] = useState<BrokerName | null>(null);
   const broker = BROKER_CONFIG[activeBroker];

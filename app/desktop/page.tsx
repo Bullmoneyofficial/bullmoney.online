@@ -56,7 +56,7 @@ import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 const DesktopKeyNavigator = dynamic(() => import("@/components/navigation/DesktopKeyNavigator"), { ssr: false }) as any;
 
 // Import pagemode (loader step removed)
-const PageMode = dynamic(() => import("@/components/SIGNUPS/pagemode"), { ssr: false }) as any;
+const PageMode = dynamic(() => import("@/components/signups/pagemode"), { ssr: false }) as any;
 
 // Lazy imports for 3D components - Desktop optimized
 const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false }) as any;

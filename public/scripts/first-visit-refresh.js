@@ -156,8 +156,18 @@
         setTimeout(function () {
           if (dismissObserver) { try { dismissObserver.disconnect(); } catch (e) {} }
           try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
-          try { window.location.reload(); } catch (e) {
-            try { window.location.href = window.location.href; } catch (e2) {}
+          // Hard reload: fetch the page bypassing cache first, then reload
+          try {
+            fetch(window.location.href, {
+              cache: 'no-store',
+              headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+            }).then(function () {
+              window.location.reload();
+            }).catch(function () {
+              window.location.reload();
+            });
+          } catch (e) {
+            try { window.location.reload(); } catch (e2) {}
           }
         }, outMs + 80);
       }, holdMs);
@@ -194,7 +204,11 @@
       clearInterval(pollId);
       if (!intercepted) {
         try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
-        try { window.location.reload(); } catch (e) {}
+        try {
+          fetch(window.location.href, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } })
+            .then(function () { window.location.reload(); })
+            .catch(function () { window.location.reload(); });
+        } catch (e) { try { window.location.reload(); } catch (e2) {} }
       }
     }, 10000);
 

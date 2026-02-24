@@ -41,7 +41,7 @@ const STEPS = [
 /** Dark-themed broker signup section for the Home page.
  *  Same links, codes, and logic as components/REGISTER USERS/pagemode.tsx */
 export const BrokerSignupSectionDark = memo(function BrokerSignupSectionDark() {
-  const [activeBroker, setActiveBroker] = useState<BrokerName>('Vantage');
+  const [activeBroker, setActiveBroker] = useState<BrokerName>('XM');
   const [copied, setCopied] = useState(false);
   const [hoverBroker, setHoverBroker] = useState<BrokerName | null>(null);
   const broker = BROKER_CONFIG[activeBroker];

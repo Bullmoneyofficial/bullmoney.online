@@ -24,9 +24,9 @@ export const StoreHeaderManualDropdown = memo(function StoreHeaderManualDropdown
       {manualDropdownOpen &&
         createPortal(
           <>
-            <div className="fixed inset-0 hidden lg:block z-[899]" onClick={() => setManualDropdownOpen(false)} />
+            <div className="fixed inset-0 hidden lg:block z-899" onClick={() => setManualDropdownOpen(false)} />
             <div
-              className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none z-[900]"
+              className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none z-900"
               style={{
                 top: '48px',
                 background: 'rgba(255,255,255,0.95)',
@@ -41,7 +41,7 @@ export const StoreHeaderManualDropdown = memo(function StoreHeaderManualDropdown
       {createPortal(
         <>
           <div
-            className={`fixed left-0 right-0 z-[950] hidden lg:block transition-opacity ${
+            className={`fixed left-0 right-0 z-950 hidden lg:block transition-opacity ${
               manualDropdownOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
             style={{
@@ -54,7 +54,7 @@ export const StoreHeaderManualDropdown = memo(function StoreHeaderManualDropdown
             }}
           >
             <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
-              <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
+              <div className="max-w-300 mx-auto px-10 py-10 grid grid-cols-3 gap-10">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>
                     How to Play
@@ -155,7 +155,7 @@ export const StoreHeaderManualDropdown = memo(function StoreHeaderManualDropdown
           </div>
 
           <div
-            className={`fixed left-0 right-0 z-[950] lg:hidden transition-all ${
+            className={`fixed left-0 right-0 z-950 lg:hidden transition-all ${
               manualDropdownOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
             style={{

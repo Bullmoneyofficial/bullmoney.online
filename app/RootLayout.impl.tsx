@@ -157,9 +157,7 @@ const AFTER_INTERACTIVE_SRC_SCRIPTS: Array<{ id: string; src: string }> = [
   { id: "bmbrain-global", src: "/scripts/BMBRAIN/bmbrain-global.js" },
   { id: "mobile-crash-shield", src: "/scripts/BMBRAIN/mobile-crash-shield.js" },
   { id: "inapp-shield", src: "/scripts/BMBRAIN/inapp-shield.js" },
-  // First-time visitor: shows Apple toast then hard-reloads to seed the cache.
-  // Runs afterInteractive — splash is still visible at hydration time, and the
-  // script uses polling to locate #bm-splash, so timing is robust.
+  // First-time visitor: hard-reloads to seed the cache.
   { id: "first-visit-refresh", src: "/scripts/first-visit-refresh.js" },
 ];
 

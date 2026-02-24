@@ -79,7 +79,7 @@ export const DiscordMobileHero = dynamic(
 export const TelegramUnlockScreen = dynamic(
   () =>
     import(
-      "@/components/SIGNUPS/TelegramConfirmationResponsive"
+      "@/components/signups/TelegramConfirmationResponsive"
     ).then((mod) => ({
       default: mod.TelegramConfirmationResponsive,
     })),

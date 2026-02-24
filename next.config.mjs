@@ -1007,11 +1007,6 @@ const nextConfig = {
       ignoreBuildErrors: true, // Skip type checking
     },
     
-    // Disable ESLint
-    eslint: {
-      ignoreDuringBuilds: true, // Skip ESLint
-    },
-    
     // FORCE DYNAMIC RENDERING - Global settings to reduce static generation
     generateEtags: false, // Disable etags for speed
     poweredByHeader: false, // Remove powered by header

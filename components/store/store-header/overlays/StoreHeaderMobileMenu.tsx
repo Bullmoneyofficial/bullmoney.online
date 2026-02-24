@@ -104,7 +104,7 @@ export const StoreHeaderMobileMenu = memo(function StoreHeaderMobileMenu({
             exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
             transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.1 }}
             onClick={handleCloseMobileMenu}
-            className="fixed inset-0 z-[1200]"
+            className="fixed inset-0 z-1200"
             data-storeheader-lock-ui="true"
             style={{
               background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.18)',
@@ -120,7 +120,7 @@ export const StoreHeaderMobileMenu = memo(function StoreHeaderMobileMenu({
                 ? { duration: 0 }
                 : { type: 'tween', duration: 0.14, ease: [0.25, 1, 0.5, 1] }
             }
-            className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto overscroll-contain touch-pan-y"
+            className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-1300 p-4 flex flex-col overflow-y-auto overscroll-contain touch-pan-y"
             data-storeheader-lock-ui="true"
             style={{
               background: 'rgb(255,255,255)',

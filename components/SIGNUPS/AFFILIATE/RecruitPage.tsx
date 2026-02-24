@@ -32,7 +32,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // Steps: 1=Broker, 2=MT5, 3=Email, 4=Submitting, 5=Success
   // WE START AT STEP 1 (Broker) - No "Full Name" step 0
   const [step, setStep] = useState(1); 
-  const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
+  const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('XM');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
